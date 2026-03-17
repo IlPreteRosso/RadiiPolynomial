@@ -1,0 +1,124 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["cac869784bb5b01b.olean"],
+  "i": "334b724e09c261e6.ilean",
+  "c": "78dc3149addee939.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/Cli/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/batteries/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/Qq/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/aesop/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/importGraph/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/plausible/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/checkdecls/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/mathlib/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/LeanCert/leancert/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/build/lib/lean /Users/ilpreterosso/.elan/toolchains/leanprover--lean4---v4.28.0/bin/lean /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/RadiiPolynomial/examples/Example83/Algebra.lean -o /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/build/lib/lean/RadiiPolynomial/examples/Example83/Algebra.olean -i /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/build/lib/lean/RadiiPolynomial/examples/Example83/Algebra.ilean -c /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/build/ir/RadiiPolynomial/examples/Example83/Algebra.c --setup /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/build/ir/RadiiPolynomial/examples/Example83/Algebra.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:100:54: 'push_cast' tactic does nothing\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:128:41: This simp argument is unused:\n  BlockDiagOp.tailDiag\n\nHint: Omit it from the simp argument list.\n  simp only [approxInverse, approxDeriv,̵ ̵B̵l̵o̵c̵k̵D̵i̵a̵g̵O̵p̵.̵t̵a̵i̵l̵D̵i̵a̵g̵]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:665:29: This simp argument is unused:\n  lpWeighted.sub_toSeq\n\nHint: Omit it from the simp argument list.\n  simp [̵l̵p̵W̵e̵i̵g̵h̵t̵e̵d̵.̵s̵u̵b̵_̵t̵o̵S̵e̵q̵,̵ ̵s̵h̵i̵f̵t̵D̵i̵v̵N̵_̵C̵L̵M̵_̵a̵p̵p̵l̵y̵]̵[̲s̲h̲i̲f̲t̲D̲i̲v̲N̲_̲C̲L̲M̲_̲a̲p̲p̲l̲y̲]̲\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:834:30: This simp argument is unused:\n  Fin.val_zero\n\nHint: Omit it from the simp argument list.\n  simp only [DF_expected_Q,̵ ̵F̵i̵n̵.̵v̵a̵l̵_̵z̵e̵r̵o̵]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:843:14: This simp argument is unused:\n  DF_expected_Q\n\nHint: Omit it from the simp argument list.\n  simp [D̵F̵_̵e̵x̵p̵e̵c̵t̵e̵d̵_̵Q̵,̵ ̵Ne.symm hm]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:846:30: This simp argument is unused:\n  DF_expected_Q\n\nHint: Omit it from the simp argument list.\n  simp [̵D̵F̵_̵e̵x̵p̵e̵c̵t̵e̵d̵_̵Q̵,̵ ̵F̵i̵n̵.̵e̵x̵t̵_̵i̵f̵f̵.̵n̵o̵t̵.̵m̵p̵[̲F̲i̲n̲.̲e̲x̲t̲_̲i̲f̲f̲.̲n̲o̲t̲.̲m̲p̲ hp]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:848:10: This simp argument is unused:\n  DF_expected_Q\n\nHint: Omit it from the simp argument list.\n  simp [̵D̵F̵_̵e̵x̵p̵e̵c̵t̵e̵d̵_̵Q̵,̵ ̵t̵o̵C̵o̵e̵f̵f̵]̵[̲t̲o̲C̲o̲e̲f̲f̲]̲\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:871:6: This simp argument is unused:\n  ContinuousLinearMap.fderiv\n\nHint: Omit it from the simp argument list.\n  simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.comp_apply, C̵o̵n̵t̵i̵n̵u̵o̵u̵s̵L̵i̵n̵e̵a̵r̵M̵a̵p̵.̵f̵d̵e̵r̵i̵v̵,̵ ̵smul_eq_mul, proj_L,\n  ̲  ̲ ̲ ̲ ̲ ̲ContinuousLinearMap.proj_apply]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:948:50: This simp argument is unused:\n  and_true\n\nHint: Omit it from the simp argument list.\n  simp only [show (0 : Fin L).val = 0 from rfl, show (1 : Fin L).val = 1 from rfl,\n          show (2 : Fin L).val = 2 from rfl, show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide, ite_true, ite_false, true_and, false_and,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲a̵n̵d̵_̵t̵r̵u̵e̵,̵ ̵and_false, mul_one, mul_zero, sub_zero, zero_sub, zero_mul, neg_zero, add_zero, zero_add]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:948:60: This simp argument is unused:\n  and_false\n\nHint: Omit it from the simp argument list.\n  simp only [show (0 : Fin L).val = 0 from rfl, show (1 : Fin L).val = 1 from rfl,\n          show (2 : Fin L).val = 2 from rfl, show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide, ite_true, ite_false, true_and, false_and, and_true,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲a̵n̵d̵_̵f̵a̵l̵s̵e̵,̵mul_one, mul_zero, sub_zero, zero_sub, zero_mul, neg_zero, add_zero, zero_add]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:949:57: This simp argument is unused:\n  neg_zero\n\nHint: Omit it from the simp argument list.\n  simp only [show (0 : Fin L).val = 0 from rfl, show (1 : Fin L).val = 1 from rfl,\n          show (2 : Fin L).val = 2 from rfl, show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide, ite_true, ite_false, true_and, false_and, and_true,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲and_false, mul_one, mul_zero, sub_zero, zero_sub, zero_mul, n̵e̵g̵_̵z̵e̵r̵o̵,̵ ̵add_zero, zero_add]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:949:67: This simp argument is unused:\n  add_zero\n\nHint: Omit it from the simp argument list.\n  simp only [show (0 : Fin L).val = 0 from rfl, show (1 : Fin L).val = 1 from rfl,\n          show (2 : Fin L).val = 2 from rfl, show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide, ite_true, ite_false, true_and, false_and, and_true,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲and_false, mul_one, mul_zero, sub_zero, zero_sub, zero_mul, neg_zero, a̵d̵d̵_̵z̵e̵r̵o̵,̵ ̵zero_add]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:949:77: This simp argument is unused:\n  zero_add\n\nHint: Omit it from the simp argument list.\n  simp only [show (0 : Fin L).val = 0 from rfl, show (1 : Fin L).val = 1 from rfl,\n          show (2 : Fin L).val = 2 from rfl, show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide, ite_true, ite_false, true_and, false_and, and_true,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲and_false, mul_one, mul_zero, sub_zero, zero_sub, zero_mul, neg_zero, a̵d̵d̵_̵z̵e̵r̵o̵,̵ ̵z̵e̵r̵o̵_̵a̵d̵d̵]̵a̲d̲d̲_̲z̲e̲r̲o̲]̲\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:997:50: This simp argument is unused:\n  and_true\n\nHint: Omit it from the simp argument list.\n  simp only [show (0 : Fin L).val = 0 from rfl, show (1 : Fin L).val = 1 from rfl,\n          show (2 : Fin L).val = 2 from rfl, show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide, ite_true, ite_false, true_and, false_and,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲a̵n̵d̵_̵t̵r̵u̵e̵,̵ ̵and_false, mul_one, mul_zero, sub_zero, zero_sub, zero_mul, neg_zero, add_zero, zero_add]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:997:60: This simp argument is unused:\n  and_false\n\nHint: Omit it from the simp argument list.\n  simp only [show (0 : Fin L).val = 0 from rfl, show (1 : Fin L).val = 1 from rfl,\n          show (2 : Fin L).val = 2 from rfl, show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide, ite_true, ite_false, true_and, false_and, and_true,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲a̵n̵d̵_̵f̵a̵l̵s̵e̵,̵mul_one, mul_zero, sub_zero, zero_sub, zero_mul, neg_zero, add_zero, zero_add]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:998:27: This simp argument is unused:\n  sub_zero\n\nHint: Omit it from the simp argument list.\n  simp only [show (0 : Fin L).val = 0 from rfl, show (1 : Fin L).val = 1 from rfl,\n          show (2 : Fin L).val = 2 from rfl, show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide, ite_true, ite_false, true_and, false_and, and_true,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲and_false, mul_one, mul_zero, s̵u̵b̵_̵z̵e̵r̵o̵,̵ ̵zero_sub, zero_mul, neg_zero, add_zero, zero_add]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:998:37: This simp argument is unused:\n  zero_sub\n\nHint: Omit it from the simp argument list.\n  simp only [show (0 : Fin L).val = 0 from rfl, show (1 : Fin L).val = 1 from rfl,\n          show (2 : Fin L).val = 2 from rfl, show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵0̵:̵ℕ̵)̵(̲0̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵1̵:̵ℕ̵)̵(̲1̲ ̲:̲ ̲ℕ̲)̲ = 2 ↔ False from by decide, show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 0 ↔ False from by decide,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲show (̵2̵:̵ℕ̵)̵(̲2̲ ̲:̲ ̲ℕ̲)̲ = 1 ↔ False from by decide, ite_true, ite_false, true_and, false_and, and_true,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲and_false, mul_one, mul_zero, sub_zero, z̵e̵r̵o̵_̵s̵u̵b̵,̵ ̵zero_mul, neg_zero, add_zero, zero_add]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:1006:19: This simp argument is unused:\n  Fin.val_mk\n\nHint: Omit it from the simp argument list.\n  simp only [̵F̵i̵n̵.̵v̵a̵l̵_̵m̵k̵,̵ ̵i̵t̵e̵_̵t̵r̵u̵e̵]̵[̲i̲t̲e̲_̲t̲r̲u̲e̲]̲\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:931:57: this tactic is never executed\n\nNote: This linter can be disabled with `set_option linter.unreachableTactic false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:889:46: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:889:60: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:889:50: 'push_cast' tactic does nothing\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`",
+   "level": "warning"},
+  {"message":
+   "RadiiPolynomial/examples/Example83/Algebra.lean:931:57: 'ring' tactic does nothing\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`",
+   "level": "warning"}],
+ "inputs":
+ [["RadiiPolynomial.examples.Example83.Algebra:deps",
+   [["deps",
+     [["RadiiPolynomial/RadiiPolynomial:extraDep",
+       [["@RadiiPolynomial:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["RadiiPolynomial.source.BlockDiag.Concrete transitive imports (legacy)",
+         "ef31f5f73c7b1e40"],
+        ["RadiiPolynomial.source.BlockDiag.Concrete:importAllArts",
+         "78dd14a6b52e8e06"],
+        ["RadiiPolynomial.source.LeanCertEval transitive imports (legacy)",
+         "3893021f4ba9b86a"],
+        ["RadiiPolynomial.source.LeanCertEval:importAllArts",
+         "22643b464cef0efd"],
+        ["RadiiPolynomial.source.lpSpace.OmegaWeighted transitive imports (legacy)",
+         "fa958a3967509d97"],
+        ["RadiiPolynomial.source.lpSpace.OmegaWeighted:importAllArts",
+         "6ffe219036639e68"],
+        ["RadiiPolynomial.source.lpSpace.lpWeightedDeriv transitive imports (legacy)",
+         "febc41c6050e358c"],
+        ["RadiiPolynomial.source.lpSpace.lpWeightedDeriv:importAllArts",
+         "0f4b1a067feb935c"],
+        ["RadiiPolynomial.source.IVP.Setup transitive imports (legacy)",
+         "d0badc754a174742"],
+        ["RadiiPolynomial.source.IVP.Setup:importAllArts", "de185cfed2820cc7"],
+        ["RadiiPolynomial.source.Tactic.AutoPolyFDeriv transitive imports (legacy)",
+         "351d1e121d81a7b1"],
+        ["RadiiPolynomial.source.Tactic.AutoPolyFDeriv:importAllArts",
+         "20f8500be3d3eca6"],
+        ["RadiiPolynomial.examples.Example83.Numbers transitive imports (legacy)",
+         "c7c740d8bff3eb3e"],
+        ["RadiiPolynomial.examples.Example83.Numbers:importAllArts",
+         "a3cb8bd9f5b79f7a"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.28.0, commit 7e01a1bf5c70fc6167d49c345d3bf80596e9a79b",
+   "a96bc04a2e5e9630"],
+  ["/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/RadiiPolynomial/examples/Example83/Algebra.lean",
+   "d3dc2da54b8aa870"],
+  ["options", "00000000000006bb"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "6e54c0775311f57f"}

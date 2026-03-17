@@ -1,0 +1,32 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["52fea5d016ef3068.olean"],
+  "i": "e4d16667a23e233b.ilean",
+  "c": "32b32afcb308e9ba.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/Cli/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/batteries/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/Qq/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/aesop/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/importGraph/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/plausible/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/checkdecls/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/packages/mathlib/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/LeanCert/leancert/.lake/build/lib/lean:/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/build/lib/lean /Users/ilpreterosso/.elan/toolchains/leanprover--lean4---v4.28.0/bin/lean /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/RadiiPolynomial/source/lpSpace/OmegaWeighted.lean -o /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/build/lib/lean/RadiiPolynomial/source/lpSpace/OmegaWeighted.olean -i /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/build/lib/lean/RadiiPolynomial/source/lpSpace/OmegaWeighted.ilean -c /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/build/ir/RadiiPolynomial/source/lpSpace/OmegaWeighted.c --setup /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/.lake/build/ir/RadiiPolynomial/source/lpSpace/OmegaWeighted.setup.json --json",
+   "level": "trace"}],
+ "inputs":
+ [["RadiiPolynomial.source.lpSpace.OmegaWeighted:deps",
+   [["deps",
+     [["RadiiPolynomial/RadiiPolynomial:extraDep",
+       [["@RadiiPolynomial:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["RadiiPolynomial.source.lpSpace.lpWeighted transitive imports (legacy)",
+         "b075e29e73ec811c"],
+        ["RadiiPolynomial.source.lpSpace.lpWeighted:importAllArts",
+         "22d307d643f024d0"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.28.0, commit 7e01a1bf5c70fc6167d49c345d3bf80596e9a79b",
+   "a96bc04a2e5e9630"],
+  ["/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/RadiiPolynomial/source/lpSpace/OmegaWeighted.lean",
+   "0ed0a8884378feaa"],
+  ["options", "00000000000006bb"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "fdb50e9f120314d4"}

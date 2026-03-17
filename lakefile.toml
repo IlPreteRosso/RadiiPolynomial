@@ -1,0 +1,19 @@
+name = "RadiiPolynomial"
+version = "0.1.0"
+defaultTargets = ["RadiiPolynomial"]
+
+[[lean_lib]]
+name = "RadiiPolynomial"
+
+[[require]]
+name = "checkdecls"
+git = "https://github.com/PatrickMassot/checkdecls.git"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "v4.28.0"
+
+[[require]]
+name = "LeanCert"
+path = "/Users/ilpreterosso/VSCode/Lean/LeanCert/leancert"
