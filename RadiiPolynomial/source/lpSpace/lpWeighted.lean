@@ -361,6 +361,71 @@ noncomputable def trunc_CLM (N : ℕ) : l1Weighted ν →L[ℝ] l1Weighted ν :=
 
 end Truncation
 
+section TailProjection
+
+/-- Tail projection at order `N` in `ℓ¹_ν`: complement of `trunc`.
+Ref: §8.2 — `π_{N,∞} = I − π_N`. -/
+def tailProj (N : ℕ) (a : l1Weighted ν) : l1Weighted ν :=
+  lpWeighted.mk (fun n => if N < n then toSeq a n else 0) (by
+    rw [mem_iff]
+    have h : (fun n => |(if N < n then toSeq a n else 0 : ℝ)| * (ν : ℝ) ^ n) =
+        fun n => if N < n then |toSeq a n| * (ν : ℝ) ^ n else 0 := by
+      ext n; split_ifs <;> simp
+    rw [h]
+    exact (summable_weighted a).of_nonneg_of_le
+      (fun n => by split_ifs <;>
+        simp [mul_nonneg (abs_nonneg _) (pow_nonneg (PosReal.coe_nonneg ν) _)])
+      (fun n => by split_ifs <;>
+        simp [mul_nonneg (abs_nonneg _) (pow_nonneg (PosReal.coe_nonneg ν) _)]))
+
+lemma coeff_tailProj (N : ℕ) (a : l1Weighted ν) (n : ℕ) :
+    toSeq (tailProj N a) n = if N < n then toSeq a n else 0 := by
+  simp [tailProj, lpWeighted.mk]
+
+private lemma tailProj_add (N : ℕ) (a b : l1Weighted ν) :
+    tailProj N (a + b) = tailProj N a + tailProj N b := by
+  apply lpWeighted.ext; intro n
+  simp only [coeff_tailProj, lpWeighted.add_toSeq]
+  split_ifs <;> simp
+
+private lemma tailProj_smul (N : ℕ) (c : ℝ) (a : l1Weighted ν) :
+    tailProj N (c • a) = c • tailProj N a := by
+  apply lpWeighted.ext; intro n
+  simp only [coeff_tailProj, lpWeighted.smul_toSeq]
+  split_ifs <;> simp
+
+private lemma tailProj_norm_le (N : ℕ) (a : l1Weighted ν) :
+    ‖tailProj N a‖ ≤ 1 * ‖a‖ := by
+  rw [one_mul, norm_eq_tsum, norm_eq_tsum]
+  exact ((mem_iff _).mp (tailProj N a).2).tsum_le_tsum (fun n => by
+    simp only [coeff_tailProj]
+    split_ifs <;> simp [mul_nonneg (abs_nonneg _) (pow_nonneg (PosReal.coe_nonneg ν) _)])
+    ((mem_iff _).mp a.2)
+
+/-- Tail projection as a continuous linear map on `ℓ¹_ν`.
+Ref: §8.2 — `π_{N,∞} = I − π_N`, with `‖π_{N,∞}‖ ≤ 1`. -/
+noncomputable def tailProj_CLM (N : ℕ) : l1Weighted ν →L[ℝ] l1Weighted ν :=
+  LinearMap.mkContinuous
+    { toFun := tailProj N
+      map_add' := tailProj_add N
+      map_smul' := fun c a => by simp [tailProj_smul] }
+    1
+    (tailProj_norm_le N)
+
+@[simp] lemma tailProj_CLM_apply (N : ℕ) (a : l1Weighted ν) :
+    tailProj_CLM N a = tailProj N a := rfl
+
+-- /-- Truncation and tail projection are complementary: `π_N + π_{N,∞} = I`. -/
+-- lemma trunc_add_tailProj (N : ℕ) (a : l1Weighted ν) :
+--     trunc N a + tailProj N a = a := by
+--   apply lpWeighted.ext; intro n
+--   simp only [lpWeighted.add_toSeq, coeff_trunc, coeff_tailProj]
+--   by_cases hn : n ≤ N
+--   · rw [if_pos hn, if_neg (not_lt.mpr hn), add_zero]
+--   · rw [if_neg hn, if_pos (lt_of_not_le hn), zero_add]
+
+end TailProjection
+
 end l1Weighted
 
 end RadiiPolynomial

@@ -140,6 +140,26 @@ macro "auto_poly_fderiv" "[" extras:simpLemma,* "]" : tactic => `(tactic| (
       | (repeat unfold Nat.descFactorial; push_cast; ring)
       | (ring_nf; try simp [$extras,*])))
 
+/-! ## `auto_hasFDerivAt` — Close `HasFDerivAt f f' a` in one step
+
+Combines `fun_prop` (differentiability) + `auto_poly_fderiv` (fderiv computation):
+1. Prove `DifferentiableAt ℝ f a` via `fun_prop`
+2. Extract `HasFDerivAt f (fderiv ℝ f a) a` via `DifferentiableAt.hasFDerivAt`
+3. Show `fderiv ℝ f a = f'` via `auto_poly_fderiv`
+4. Close via `HasFDerivAt.congr_fderiv`
+
+Eliminates the 3-step fderiv/differentiable/HasFDerivAt dance. -/
+
+open Lean.Parser.Tactic in
+macro "auto_hasFDerivAt" : tactic => `(tactic|
+  (refine DifferentiableAt.hasFDerivAt (by fun_prop) |>.congr_fderiv ?_
+   auto_poly_fderiv))
+
+open Lean.Parser.Tactic in
+macro "auto_hasFDerivAt" "[" extras:simpLemma,* "]" : tactic => `(tactic|
+  (refine DifferentiableAt.hasFDerivAt (by fun_prop) |>.congr_fderiv ?_
+   auto_poly_fderiv [$extras,*]))
+
 /-! ## Tests -/
 
 section tests
@@ -204,5 +224,25 @@ example {ν : PosReal} (a : Fin 3 → l1Weighted ν) :
     (l1Weighted.leftMul (a 0)).comp (ContinuousLinearMap.proj 2) +
     (l1Weighted.leftMul (a 2)).comp (ContinuousLinearMap.proj 0) := by
   auto_poly_fderiv
+
+-- === auto_hasFDerivAt tests ===
+
+-- HasFDerivAt: scalar x^2
+open ContinuousLinearMap in
+example (x : ℝ) :
+    HasFDerivAt (fun y => y ^ 2) ((2 • x ^ 1) • ContinuousLinearMap.id ℝ ℝ) x := by
+  auto_hasFDerivAt
+
+-- HasFDerivAt: Banach algebra x^2 (l1Weighted)
+open RadiiPolynomial in
+example {ν : PosReal} (a : l1Weighted ν) :
+    HasFDerivAt (fun x => x ^ 2) ((2 : ℝ) • l1Weighted.leftMul a) a := by
+  auto_hasFDerivAt
+
+-- HasFDerivAt: x^2 - c (constant offset, uses extras)
+open ContinuousLinearMap in
+example (x c : ℝ) :
+    HasFDerivAt (fun y => y ^ 2 - c) ((2 • x ^ 1) • ContinuousLinearMap.id ℝ ℝ) x := by
+  auto_hasFDerivAt
 
 end tests

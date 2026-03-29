@@ -189,6 +189,46 @@ lemma apply_of_support_le_split {a h : ℕ → R} {N n : ℕ}
   · simp only [Finset.mem_Icc]
     omega
 
+/-- CauchyProduct as `Fin (N+1)`-indexed sum (Toeplitz form).
+
+For `n ≤ N`, the antidiagonal sum `Σ_{k+l=n} f(k) * g(l)` can be rewritten as
+a `Fin (N+1)`-indexed sum: `Σ_{p : Fin (N+1)} (if p ≤ n then f(n-p) else 0) * g(p)`.
+Since all `l ≤ n ≤ N`, the `Fin (N+1)` range captures every antidiagonal pair.
+
+This form matches `Matrix.mulVec` of a lower-triangular Toeplitz matrix built from `f`.
+Used in `fderiv_F_coeffs_eq` to connect CauchyProduct (from `fderiv_evalInBanach`)
+to the Jacobian matrix entries (from `DF_col`/`native_decide`). -/
+lemma eq_sum_fin {N : ℕ} (f g : ℕ → R) {n : ℕ} (hn : n ≤ N) :
+    CauchyProduct f g n =
+      ∑ p : Fin (N + 1), (if (p : ℕ) ≤ n then f (n - (p : ℕ)) else 0) * g p := by
+  rw [apply_range]
+  -- Extend range(n+1) sum to range(N+1) with if-guarded zero padding
+  have hext : (∑ j ∈ Finset.range (n + 1), f (n - j) * g j) =
+      ∑ j ∈ Finset.range (N + 1), if j ≤ n then f (n - j) * g j else 0 := by
+    rw [← Finset.sum_filter]
+    congr 1; ext j; simp only [Finset.mem_filter, Finset.mem_range]; omega
+  rw [hext, ← Fin.sum_univ_eq_sum_range]
+  congr 1; ext p; split_ifs <;> simp
+
+/-- CauchyProduct with a Kronecker delta: `δ₀ · r ∗ f = r · f`.
+Scalar multiplication in the power series ring. -/
+@[simp] lemma delta_left (r : R) (f : ℕ → R) (n : ℕ) :
+    CauchyProduct (fun k => if k = 0 then r else 0) f n = r * f n := by
+  rw [apply_range]
+  rw [Finset.sum_eq_single n
+    (fun j hm hj => by have := Finset.mem_range.mp hm; simp [show n - j ≠ 0 from by omega])
+    (fun h => absurd (Finset.mem_range.mpr (by omega)) h)]
+  simp
+
+/-- CauchyProduct with a Kronecker delta on the right: `f ∗ δ₀ · r = f · r`. -/
+@[simp] lemma delta_right (f : ℕ → R) (r : R) (n : ℕ) :
+    CauchyProduct f (fun k => if k = 0 then r else 0) n = f n * r := by
+  rw [apply_range]
+  rw [Finset.sum_eq_single 0
+    (fun j _ hj => by simp [hj])
+    (fun h => absurd (Finset.mem_range.mpr (by omega)) h)]
+  simp
+
 end Semiring
 
 section CommSemiring

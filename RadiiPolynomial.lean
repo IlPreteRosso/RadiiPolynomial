@@ -23,8 +23,19 @@ import RadiiPolynomial.source.WitnessSpec
 import RadiiPolynomial.source.LeanCertEval
 -- IVP infrastructure
 import RadiiPolynomial.source.IVP.Setup
+import RadiiPolynomial.source.IVP.Theorem
+import RadiiPolynomial.source.IVP.DFBlock
+import RadiiPolynomial.source.IVP.StandardIVP
 -- Tactics
 import RadiiPolynomial.source.Tactic.AutoPolyFDeriv
+import RadiiPolynomial.source.Tactic.PDerivSimp
 -- import RadiiPolynomial.source.Tactic.FinMatrixBound  -- requires LeanCert rebuild
+-- Z₂ affine bounds
+import RadiiPolynomial.source.Z2Affine
 -- MvPolyBridge
 import RadiiPolynomial.source.MvPolyBridge.Basic
+-- Chebyshev infrastructure
+import RadiiPolynomial.source.Chebyshev.ScaledRealZ
+import RadiiPolynomial.source.lpSpace.DiscreteConvolutionRing
+import RadiiPolynomial.source.lpSpace.AddLp
+import RadiiPolynomial.source.Chebyshev.L1ChebyshevAlgebra

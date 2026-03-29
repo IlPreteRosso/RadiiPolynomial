@@ -135,6 +135,25 @@ def one (ν : PosReal) : l1Weighted ν := lpWeighted.mk CauchyProduct.one (one_m
 @[simp] lemma one_toSeq_succ (n : ℕ) : lpWeighted.toSeq (one ν) (n + 1) = 0 := rfl
 @[simp] lemma one_toSeq : lpWeighted.toSeq (one ν) = CauchyProduct.one := rfl
 
+/-- `toSeq` of `one ν` at any index (combining zero/succ cases). -/
+@[simp] lemma one_toSeq_eq (n : ℕ) :
+    lpWeighted.toSeq (one ν) n = if n = 0 then 1 else 0 := by
+  cases n with | zero => rfl | succ m => rfl
+
+/-- `toSeq` of `c • a - one ν` in terms of coefficient access.
+Useful for computing norm bounds of linearizations like `2ā - 1`. -/
+lemma toSeq_smul_sub_one (c : ℝ) (a : l1Weighted ν) (n : ℕ) :
+    toSeq (c • a - one ν) n =
+      c * toSeq a n - if n = 0 then 1 else 0 := by
+  simp only [toSeq, lpWeighted.sub_toSeq, lpWeighted.smul_toSeq, one_toSeq_eq]
+
+/-- `toSeq` of `(k : ℕ) • a - one ν` — converts `ℕ` smul to `ℝ` smul. -/
+lemma toSeq_nsmul_sub_one (k : ℕ) (a : l1Weighted ν) (n : ℕ) :
+    toSeq ((k : ℕ) • a - one ν) n =
+      (k : ℝ) * toSeq a n - if n = 0 then 1 else 0 := by
+  rw [show (k : ℕ) • a = (k : ℝ) • a from by norm_cast]
+  exact toSeq_smul_sub_one k a n
+
 lemma mul_one (a : l1Weighted ν) : mul a (one ν) = a := by
   apply lpWeighted.ext
   intro n
@@ -169,6 +188,10 @@ instance instRing : Ring (l1Weighted ν) where
   right_distrib := right_distrib
   zero_mul := zero_mul
   mul_zero := mul_zero
+
+/-- `toSeq` of l1Weighted multiplication = CauchyProduct of `toSeq`. -/
+@[simp] lemma toSeq_mul (a b : l1Weighted ν) (n : ℕ) :
+    toSeq (a * b) n = CauchyProduct (toSeq a) (toSeq b) n := rfl
 
 /-- Commutative ring structure on `l1Weighted ν`.
 
@@ -222,6 +245,21 @@ lemma norm_algebraMap (r : ℝ) : ‖algebraMap ℝ (l1Weighted ν) r‖ = ‖r�
 instance instNormedAlgebra : NormedAlgebra ℝ (l1Weighted ν) where
   norm_smul_le := fun r a => by rw [norm_smul]
 
+/-- Algebra ℚ instance via the chain ℚ →(algebraMap) ℝ →(algebraMap) l1Weighted.
+Needed for `MvPolynomial.aeval` to target `l1Weighted ν`. -/
+instance instAlgebraRat : Algebra ℚ (l1Weighted ν) :=
+  RingHom.toAlgebra ((algebraMap ℝ (l1Weighted ν)).comp (algebraMap ℚ ℝ))
+
+/-- ℚ-scalar action on l1Weighted agrees with ℝ-scalar action via cast.
+Bridges `(q : ℚ) • x` to `((q : ℚ) : ℝ) • x` for `simp`. -/
+@[simp] lemma ratSmul_eq (q : ℚ) (x : l1Weighted ν) :
+    (q • x : l1Weighted ν) = ((q : ℝ) • x : l1Weighted ν) := by
+  show algebraMap ℚ (l1Weighted ν) q * x = (q : ℝ) • x
+  have : algebraMap ℚ (l1Weighted ν) q = (q : ℝ) • 1 := by
+    show (algebraMap ℝ (l1Weighted ν)).comp (algebraMap ℚ ℝ) q = _
+    simp [algebraMap_apply]
+  rw [this, smul_mul_assoc]; simp
+
 end CauchyProductBanachAlgebra
 
 /-! ### Left multiplication CLM (alias to Mathlib's `ContinuousLinearMap.mul`)
@@ -264,6 +302,25 @@ Handles arbitrary degree: `leftMul (n • a) = (↑n : ℝ) • leftMul a`. -/
 lemma leftMul_nsmul (n : ℕ) (a : l1Weighted ν) :
     leftMul (n • a) = (↑n : ℝ) • leftMul a := by
   rw [← Nat.cast_smul_eq_nsmul ℝ n a, leftMul_smul]
+
+end l1Weighted
+
+/-! ## CLM Operator Norm Bounds
+
+These expose the continuity bounds used internally by `mkContinuous`
+as public operator-norm lemmas. -/
+
+namespace l1Weighted
+
+variable {ν : PosReal}
+
+/-- Operator norm bound: `‖π_N‖ ≤ 1` (truncation is a contraction). -/
+lemma norm_trunc_CLM_le (N : ℕ) : ‖trunc_CLM (ν := ν) N‖ ≤ 1 :=
+  LinearMap.mkContinuous_norm_le _ zero_le_one _
+
+/-- Operator norm bound: `‖π_{N,∞}‖ ≤ 1` (tail projection is a contraction). -/
+lemma norm_tailProj_CLM_le (N : ℕ) : ‖tailProj_CLM (ν := ν) N‖ ≤ 1 :=
+  LinearMap.mkContinuous_norm_le _ zero_le_one _
 
 end l1Weighted
 

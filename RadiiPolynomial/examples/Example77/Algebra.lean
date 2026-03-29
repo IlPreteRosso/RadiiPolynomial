@@ -1,15 +1,17 @@
 import RadiiPolynomial.source.BlockDiag.Scalar
 import RadiiPolynomial.source.Tactic.AutoPolyFDeriv
+import RadiiPolynomial.source.Z2Affine
 
 /-!
 # Example 7.7 — Algebraic Infrastructure
 
 Problem-specific algebra for the parameterized equilibrium `x² - λ = 0`.
-Uses the `RadiiPolynomial/BlockDiagSystem` API exclusively (no `TaylorODE_Direct` dependency).
+Uses the `RadiiPolynomial/BlockDiagSystem` API exclusively.
 
 ## Contents
 
-1. **Fréchet derivative**: `leftMul`, `sq`, `F_sub_const`, and their derivatives
+1. **Fréchet derivative**: `HasFDerivAt` via `auto_hasFDerivAt`, with `fderiv`/`Differentiable`
+   derived from it. Affine fderiv form (`fderiv_F_sub_const_affine`) for Z₂.
 2. **Problem data**: `paramSeq`, `ApproxSolution`, `F`, `F_toSeq`
 3. **Operator construction**: `approxDeriv`, `approxInverse` as `ScalarBlockDiagData`
 4. **Z₁ infrastructure**: `shiftedSeq`/`shiftedL1` (shifted coefficient sequence),
@@ -17,7 +19,8 @@ Uses the `RadiiPolynomial/BlockDiagSystem` API exclusively (no `TaylorODE_Direct
    `approxDeriv_sub_fderiv_fin_kill` (fin modes vanish via `toScalarCLM_toSeq_fin_eq_cauchy`),
    `approxDeriv_sub_fderiv_tail_eq` (tail equals `-2•leftMul(shiftedL1)`),
    `Z₁_le_via_eval` (chains `Z₁_le_of_fin_kill_tail_dom`)
-5. **Z₂ and main theorem**: structural reductions to evaluable forms
+5. **Z₂**: via `Z₂_ball_bound_of_affine_leftMul` from `Z2Affine.lean`
+6. **Main theorem**: `existsUnique` skeleton via `general_radii_polynomial_theorem`
 -/
 
 open scoped BigOperators Topology
@@ -56,41 +59,34 @@ lemma F_sub_const_eq_fun (c : l1Weighted ν) :
 Pattern: `rw` unfolds the named def, then `auto_poly_fderiv` computes + normalizes
 (Banach algebra bridge lemmas are built into the main simp phase). -/
 
-theorem fderiv_sq (a : l1Weighted ν) :
-    fderiv ℝ sq a = (2 : ℝ) • leftMul a := by
-  rw [sq_eq_fun]; auto_poly_fderiv
-
-theorem differentiable_sq : Differentiable ℝ (sq : l1Weighted ν → l1Weighted ν) := by
-  rw [sq_eq_fun]; fun_prop
-
 theorem hasFDerivAt_sq (a : l1Weighted ν) :
-    HasFDerivAt sq ((2 : ℝ) • leftMul a) a :=
-  (differentiable_sq a).hasFDerivAt.congr_fderiv (fderiv_sq a)
+    HasFDerivAt sq ((2 : ℝ) • leftMul a) a := by
+  rw [sq_eq_fun]; auto_hasFDerivAt
 
-theorem fderiv_F_sub_const (c a : l1Weighted ν) :
-    fderiv ℝ (F_sub_const c) a = (2 : ℝ) • leftMul a := by
-  rw [F_sub_const_eq_fun]; auto_poly_fderiv
+theorem fderiv_sq (a : l1Weighted ν) :
+    fderiv ℝ sq a = (2 : ℝ) • leftMul a :=
+  (hasFDerivAt_sq a).fderiv
+
+theorem differentiable_sq : Differentiable ℝ (sq : l1Weighted ν → l1Weighted ν) :=
+  fun a => (hasFDerivAt_sq a).differentiableAt
 
 theorem hasFDerivAt_F_sub_const (c a : l1Weighted ν) :
-    HasFDerivAt (F_sub_const c) ((2 : ℝ) • leftMul a) a :=
-  (hasFDerivAt_sq a).sub_const c
+    HasFDerivAt (F_sub_const c) ((2 : ℝ) • leftMul a) a := by
+  rw [F_sub_const_eq_fun]; auto_hasFDerivAt
+
+theorem fderiv_F_sub_const (c a : l1Weighted ν) :
+    fderiv ℝ (F_sub_const c) a = (2 : ℝ) • leftMul a :=
+  (hasFDerivAt_F_sub_const c a).fderiv
 
 theorem differentiable_F_sub_const (c : l1Weighted ν) :
     Differentiable ℝ (F_sub_const c) :=
   fun a => (hasFDerivAt_F_sub_const c a).differentiableAt
 
-/-- DF(c) - DF(ā) = 2 • leftMul(c - ā). Used for Z₂. -/
-lemma fderiv_F_diff_eq (c_seq : l1Weighted ν) (a b : l1Weighted ν) :
-    fderiv ℝ (F_sub_const c_seq) a - fderiv ℝ (F_sub_const c_seq) b =
-    (2 : ℝ) • leftMul (a - b) := by
-  rw [fderiv_F_sub_const, fderiv_F_sub_const, ← smul_sub, leftMul_sub]
-
-/-- ‖DF(c) - DF(ā)‖ ≤ 2 * ‖c - ā‖. Used for Z₂. -/
-lemma norm_fderiv_F_diff_le (c_seq : l1Weighted ν) (a b : l1Weighted ν) :
-    ‖fderiv ℝ (F_sub_const c_seq) a - fderiv ℝ (F_sub_const c_seq) b‖ ≤
-    2 * ‖a - b‖ := by
-  rw [fderiv_F_diff_eq, norm_smul, Real.norm_ofNat]
-  gcongr; exact norm_leftMul_le _
+/-- The fderiv of `F_sub_const c` is affine in `leftMul` with `α = 2, K = 0`.
+This is the hypothesis needed by `Z₂_ball_bound_of_affine_leftMul`. -/
+lemma fderiv_F_sub_const_affine (c : l1Weighted ν) :
+    ∀ x, fderiv ℝ (F_sub_const c) x = (2 : ℝ) • leftMul x + 0 :=
+  fun x => by rw [fderiv_F_sub_const, add_zero]
 
 /-! ## 2. Problem Data -/
 
@@ -341,26 +337,10 @@ lemma Z₁_le_via_eval {N : ℕ} {ν : PosReal}
           ((norm_leftMul_le _).trans_eq (shiftedL1_norm sol)) (by positivity)))
       (approxInverse sol A_mat).tailBound_nonneg))
 
-/-! ### Z₂: reduces to 2 * ‖A‖ * r₀ -/
+/-! ### Z₂: via `Z₂_ball_bound_of_affine_leftMul` from Z2Affine.lean
 
-/-- Z₂ structural bound: ‖A ∘ (DF(c) - DF(ā))‖ ≤ 2 * ‖A‖ * ‖c - ā‖. -/
-lemma Z₂_structural {N : ℕ} (sol : ApproxSolution N)
-    (A_mat : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
-    (lam0 : ℝ) (c_val : l1Weighted ν) :
-    Z₂_norm (F lam0) sol.toL1
-      ((approxInverse sol A_mat).toScalarCLM (ν := ν)) c_val ≤
-    2 * ‖(approxInverse sol A_mat).toScalarCLM (ν := ν)‖ *
-      ‖c_val - (sol.toL1 : l1Weighted ν)‖ := by
-  show ‖_‖ ≤ _
-  rw [show fderiv ℝ (F lam0) c_val - fderiv ℝ (F lam0) (sol.toL1 : l1Weighted ν) =
-      (2 : ℝ) • leftMul (c_val - sol.toL1) from fderiv_F_diff_eq _ _ _]
-  refine (ContinuousLinearMap.opNorm_comp_le _ _).trans ?_
-  rw [norm_smul, Real.norm_ofNat]
-  have := norm_leftMul_le (ν := ν) (c_val - sol.toL1)
-  have := norm_nonneg ((approxInverse sol A_mat).toScalarCLM (ν := ν))
-  nlinarith
-
-/-! ### Z₂ corollary: for c ∈ closedBall(ā, r₀) -/
+The fderiv of F is affine in `leftMul` with α = 2, K = 0, so the generic
+`Z₂_ball_bound_of_affine_leftMul` gives `Z₂_norm ≤ |2| * ‖A‖ * r₀ = 2 * ‖A‖ * r₀`. -/
 
 lemma Z₂_ball_bound {N : ℕ} (sol : ApproxSolution N)
     (A_mat : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
@@ -371,10 +351,11 @@ lemma Z₂_ball_bound {N : ℕ} (sol : ApproxSolution N)
     Z₂_norm (F lam0) sol.toL1
       ((approxInverse sol A_mat).toScalarCLM (ν := ν)) c_val ≤
     Z₂_val * r₀ := by
-  rw [Metric.mem_closedBall, dist_eq_norm] at hc
-  exact (Z₂_structural sol A_mat lam0 c_val).trans
-    ((mul_le_mul_of_nonneg_right hA (norm_nonneg _)).trans
-      (mul_le_mul_of_nonneg_left hc (le_trans (by positivity) hA)))
+  have h := Z₂_ball_bound_of_affine_leftMul (f := F lam0) (fderiv_F_sub_const_affine _)
+    ((approxInverse sol A_mat).toScalarCLM (ν := ν)) sol.toL1 c_val hc
+  simp only [abs_two] at h
+  exact h.trans (mul_le_mul_of_nonneg_right hA
+    (le_trans dist_nonneg (Metric.mem_closedBall.mp hc)))
 
 /-! ### Main theorem skeleton -/
 

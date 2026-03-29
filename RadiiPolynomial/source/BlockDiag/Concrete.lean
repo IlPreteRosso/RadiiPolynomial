@@ -11,6 +11,10 @@ Concrete `l1Weighted` realization of `SystemBlockDiagData`:
 - `defectOfBlockDiagOp`: defect from bounded A + unbounded B (for IVP case)
 - Z₁ infrastructure: `norm_comp_of_fin_kill`, `Z₁_le_of_fin_kill_tail_dom`
 - injectivity: `injective_toCLM_of_finite_part_injective`
+- system Neumann criterion: `isUnit_toMatrix_of_blockNorm_lt_one` (analogous to
+  `FinWeightedMatrix.matrix_invertible_of_norm_lt_one` for the scalar case)
+- `finite_block_injective_of_defect_norm_lt_one`: bridges block defect norm to
+  the `h_fin` hypothesis of `injective_toCLM_of_finite_part_injective`
 -/
 
 open scoped Topology
@@ -64,6 +68,38 @@ lemma toCoeff_mem (x : XL1 ν L) (l : Fin L) :
     (c : SystemCoeff L) (hc : ∀ l : Fin L, lpWeighted.Mem ν 1 (c l))
     (l : Fin L) :
     ofCoeff (ν := ν) c hc l = lpWeighted.mk (c l) (hc l) := rfl
+
+/-- `toCoeff` is injective: elements of `(ℓ¹_ν)^L` are determined by their coefficients. -/
+lemma toCoeff_injective : Function.Injective (toCoeff (ν := ν) (L := L)) := by
+  intro x y h
+  funext l
+  apply lpWeighted.ext
+  exact fun n => congr_fun (congr_fun h l) n
+
+/-- Extensionality for `XL1`: two elements are equal iff their coefficients agree. -/
+@[ext]
+lemma XL1.ext {x y : XL1 ν L} (h : ∀ l n, toCoeff x l n = toCoeff y l n) : x = y :=
+  toCoeff_injective (funext fun l => funext fun n => h l n)
+
+@[simp] lemma toCoeff_zero (l : Fin L) (n : ℕ) :
+    toCoeff (ν := ν) (0 : XL1 ν L) l n = 0 := by
+  simp [toCoeff]
+
+@[simp] lemma toCoeff_add (x y : XL1 ν L) (l : Fin L) (n : ℕ) :
+    toCoeff (ν := ν) (x + y) l n = toCoeff x l n + toCoeff y l n := by
+  simp [toCoeff]
+
+@[simp] lemma toCoeff_neg (x : XL1 ν L) (l : Fin L) (n : ℕ) :
+    toCoeff (ν := ν) (-x) l n = -toCoeff x l n := by
+  simp [toCoeff]
+
+@[simp] lemma toCoeff_sub (x y : XL1 ν L) (l : Fin L) (n : ℕ) :
+    toCoeff (ν := ν) (x - y) l n = toCoeff x l n - toCoeff y l n := by
+  simp [toCoeff]
+
+@[simp] lemma toCoeff_smul (r : ℝ) (x : XL1 ν L) (l : Fin L) (n : ℕ) :
+    toCoeff (ν := ν) (r • x) l n = r * toCoeff x l n := by
+  simp [toCoeff]
 
 lemma SystemBlockDiagData.actionFinite_mem
     (A : SystemBlockDiagData L N) (c : SystemCoeff L) (l : Fin L) :
@@ -549,6 +585,14 @@ lemma SystemBlockDiagData.norm_toCLM_le [NeZero L]
     (add_nonneg (finiteBlockMatrixNorm_nonneg (ν := ν) A.finBlock) (A.tailBound_nonneg))
     (A.toLinearMap_bound (ν := ν))
 
+/-- One-shot bound: `‖A.toCLM x‖ ≤ (finiteBlockMatrixNorm + tailBound) * ‖x‖`. -/
+lemma SystemBlockDiagData.norm_toCLM_apply_le_norm [NeZero L]
+    (A : SystemBlockDiagData L N) (x : XL1 ν L) :
+    ‖A.toCLM (ν := ν) x‖ ≤
+      (finiteBlockMatrixNorm ν A.finBlock + A.tailBound) * ‖x‖ := by
+  simp only [SystemBlockDiagData.toCLM_apply]
+  exact A.toLinearMap_bound (ν := ν) x
+
 lemma toCLM_ext_of_toCoeff_eq [NeZero L]
     (T S : XL1 ν L →L[ℝ] XL1 ν L)
     (hcoeff : ∀ x : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ,
@@ -985,12 +1029,130 @@ If `‖I - A·B‖ < 1` as a block matrix norm, then the block product `A·B` is
 the identity, so `A` is injective on finite modes. This bridges the numerical defect
 bound to the `h_fin` hypothesis of `injective_toCLM_of_finite_part_injective`. -/
 
+/-- System-level Neumann criterion: if the block defect `‖δI - ∑ A*B‖_{block,ν} < 1`,
+then `A.toMatrix` is a unit (invertible as a flat matrix).
+Analogous to `FinWeightedMatrix.matrix_invertible_of_norm_lt_one`. -/
+lemma FiniteBlockMatrix.isUnit_toMatrix_of_blockNorm_lt_one [NeZero L]
+    {ν : PosReal} (A B : FiniteBlockMatrix L N)
+    (hlt : finiteBlockMatrixNorm ν
+      (fun l j => (if l = j then (1 : Matrix _ _ ℝ) else 0) - ∑ m, A l m * B m j) < 1) :
+    IsUnit (FiniteBlockMatrix.toMatrix A) := by
+  -- Step 1: Build a SystemBlockDiagData for the defect with tailDiag = 0, tailBound = 0
+  let D : SystemBlockDiagData L N :=
+    { finBlock := fun l j => (if l = j then 1 else 0) - ∑ m, A l m * B m j
+      tailDiag := fun _ _ => 0
+      tailBound := 0
+      tailBound_spec := by intro l n _; simp }
+  -- Step 2: ‖D.toCLM‖ < 1
+  have hD_norm : ‖D.toCLM (ν := ν)‖ < 1 := by
+    have h := D.norm_toCLM_le (ν := ν)
+    have htb : D.tailBound = 0 := rfl
+    rw [htb, add_zero] at h
+    exact lt_of_le_of_lt h hlt
+  -- Step 3: P = id - D.toCLM is invertible
+  set P := ContinuousLinearMap.id ℝ (XL1 ν L) - D.toCLM (ν := ν) with hP_def
+  have hP_sub : ContinuousLinearMap.id ℝ (XL1 ν L) - P = D.toCLM (ν := ν) := by
+    simp [hP_def]
+  obtain ⟨G, _, hGP⟩ := invertible_comp_form (E := XL1 ν L)
+    (show ‖ContinuousLinearMap.id ℝ (XL1 ν L) - P‖ < 1 by rw [hP_sub]; exact hD_norm)
+  -- Step 4: P is injective (G is a left inverse)
+  have hP_inj : Function.Injective P := by
+    intro x y hxy
+    have := congr_arg G hxy
+    rwa [show G (P x) = x from by
+          change (G.comp P) x = x; rw [hGP]; rfl,
+         show G (P y) = y from by
+          change (G.comp P) y = y; rw [hGP]; rfl] at this
+  -- Step 5: (toMatrix A * toMatrix B).mulVec is injective via XL1 lifting
+  set M_A := FiniteBlockMatrix.toMatrix A
+  set M_B := FiniteBlockMatrix.toMatrix B
+  have h_prod_inj : Function.Injective (M_A * M_B).mulVec := by
+    intro v₁ v₂ hv_eq
+    suffices h : v₁ - v₂ = 0 from sub_eq_zero.mp h
+    set v := v₁ - v₂ with hv_def
+    have hv : (M_A * M_B).mulVec v = 0 := by
+      simp only [hv_def, Matrix.mulVec_sub, sub_eq_zero]; exact hv_eq
+    -- Lift v to XL1 ν L
+    let c : SystemCoeff L := fun l n =>
+      if h : n < N + 1 then v (l, ⟨n, h⟩) else 0
+    have hc_tail : ∀ l n, ¬(n < N + 1) → c l n = 0 := fun l n h => dif_neg h
+    have hc_mem : ∀ l : Fin L, lpWeighted.Mem ν 1 (c l) := by
+      intro l; rw [l1Weighted.mem_iff]
+      exact summable_of_ne_finset_zero (s := Finset.range (N + 1))
+        (fun n hn => by
+          simp only [Finset.mem_range, not_lt] at hn
+          simp [hc_tail l n (by omega), abs_zero, zero_mul])
+    let x := ofCoeff (ν := ν) c hc_mem
+    have hxc : toCoeff (ν := ν) x = c := by
+      funext l n; exact toCoeff_ofCoeff c hc_mem l n
+    -- Show P x = 0
+    have hPx_zero : P x = 0 := by
+      apply XL1.ext; intro l n
+      rw [toCoeff_zero]
+      have hPx_coeff : toCoeff (ν := ν) (P x) l n = c l n - D.action c l n := by
+        simp only [hP_def, ContinuousLinearMap.sub_apply, ContinuousLinearMap.coe_id',
+          id_eq]
+        show toCoeff (ν := ν) x l n - D.action (toCoeff (ν := ν) x) l n =
+          c l n - D.action c l n
+        rw [hxc]
+      rw [hPx_coeff]
+      by_cases hn : n ≤ N
+      · set n' : Fin (N + 1) := ⟨n, Nat.lt_succ_of_le hn⟩
+        rw [SystemBlockDiagData.action_finite D c l n hn]
+        simp only [D, Matrix.sub_apply, sub_mul, Finset.sum_sub_distrib]
+        have hid := block_identity_action c l n'
+        -- Product sum equals 0 via (M_A * M_B).mulVec v = 0
+        have hprod_zero : ∑ j : Fin L, ∑ k : Fin (N + 1),
+            (∑ m : Fin L, A l m * B m j) n' k * c j ↑k = 0 := by
+          have h0 := congr_fun hv ⟨l, n'⟩
+          simp only [Pi.zero_apply, Matrix.mulVec, dotProduct,
+            M_A, M_B, Fintype.sum_prod_type, Matrix.mul_apply,
+            FiniteBlockMatrix.toMatrix] at h0
+          have hblock : ∀ (j : Fin L) (k : Fin (N + 1)),
+              (∑ m : Fin L, A l m * B m j) n' k =
+              ∑ m : Fin L, ∑ p : Fin (N + 1),
+                A l m n' p * B m j p k :=
+            fun j k => (congrFun (Fintype.sum_apply n'
+              (fun m => A l m * B m j)) k).trans
+              (Fintype.sum_apply k
+                (fun m => (A l m * B m j) n'))
+          have hterm : ∀ (j : Fin L) (k : Fin (N + 1)),
+              (∑ m : Fin L, A l m * B m j) n' k * c j ↑k =
+              (∑ m : Fin L, ∑ p : Fin (N + 1),
+                A l m n' p * B m j p k) * v (j, k) := by
+            intro j k; rw [hblock]; show _ * c j ↑k = _ * v (j, k)
+            congr 1; exact dif_pos k.prop
+          simp_rw [hterm]
+          exact h0
+        linarith
+      · have hlt_n : N < n := by omega
+        rw [SystemBlockDiagData.action_tail D c l n hlt_n]
+        simp [D, hc_tail l n (by omega)]
+    have hx_zero : x = 0 := hP_inj (hPx_zero.trans (map_zero P).symm)
+    funext ⟨l, n'⟩
+    show v (l, n') = 0
+    have h1 : c l ↑n' = 0 := by
+      have := congr_fun (congr_fun hxc l) ↑n'
+      rw [show toCoeff (ν := ν) x l ↑n' = 0 from by
+        simp [toCoeff, hx_zero]] at this
+      exact this.symm
+    simp only [c, show (↑n' : ℕ) < N + 1 from n'.prop, dite_true] at h1
+    exact h1
+  -- Step 6: IsUnit (M_A * M_B) from mulVec injectivity
+  have h_prod_unit : IsUnit (M_A * M_B) :=
+    Matrix.mulVec_injective_iff_isUnit.mp h_prod_inj
+  -- Step 7: IsUnit M_A via det argument
+  rw [Matrix.isUnit_iff_isUnit_det]
+  show IsUnit (M_A.det)
+  rw [Matrix.isUnit_iff_isUnit_det] at h_prod_unit
+  rw [Matrix.det_mul] at h_prod_unit
+  exact isUnit_of_mul_isUnit_left h_prod_unit
+
 /-- If the finite-block defect `‖δI - ∑ A*B‖ < 1`, then `A` is injective on finite
 coefficients: `∀ d, (∀ l n, ∑ A*d = 0) → (∀ l n, d = 0)`.
 
-Proof strategy: the block product `M = ∑_m A_{l,m} * B_{m,j}` satisfies `‖I - M‖ < 1`
-as a linear map on `(Fin L × Fin (N+1) → ℝ)`, hence `M` is a unit, hence injective,
-and `A·d = 0` implies `M·d = 0` implies `d = 0`. -/
+Uses `FiniteBlockMatrix.isUnit_toMatrix_of_blockNorm_lt_one` to get
+`IsUnit (FiniteBlockMatrix.toMatrix A.finBlock)`, then extracts `mulVec` injectivity. -/
 lemma finite_block_injective_of_defect_norm_lt_one [NeZero L]
     {ν : PosReal}
     (A : SystemBlockDiagData L N) (B : BlockDiagOp L N)
@@ -999,7 +1161,22 @@ lemma finite_block_injective_of_defect_norm_lt_one [NeZero L]
       (∀ l : Fin L, ∀ n : Fin (N + 1),
         (∑ j : Fin L, ∑ k : Fin (N + 1), A.finBlock l j n k * d j k) = 0) →
       (∀ l : Fin L, ∀ n : Fin (N + 1), d l n = 0) := by
-  sorry -- TODO: Neumann series argument on finite-dimensional block matrix
+  -- The defect finBlock matches the signature of isUnit_toMatrix_of_blockNorm_lt_one
+  have h_A_unit : IsUnit (FiniteBlockMatrix.toMatrix A.finBlock) :=
+    FiniteBlockMatrix.isUnit_toMatrix_of_blockNorm_lt_one A.finBlock B.finBlock hlt
+  have h_A_inj : Function.Injective (FiniteBlockMatrix.toMatrix A.finBlock).mulVec :=
+    Matrix.mulVec_injective_of_isUnit h_A_unit
+  intro d hd l n
+  let v : Fin L × Fin (N + 1) → ℝ := fun ⟨j, k⟩ => d j ↑k
+  have hv : (FiniteBlockMatrix.toMatrix A.finBlock).mulVec v = 0 := by
+    ext ⟨l', n'⟩
+    simp only [Matrix.mulVec, dotProduct, Pi.zero_apply, FiniteBlockMatrix.toMatrix]
+    rw [show ∑ x : Fin L × Fin (N + 1),
+        A.finBlock l' x.1 n' x.2 * d x.1 ↑x.2 =
+        ∑ j : Fin L, ∑ k : Fin (N + 1), A.finBlock l' j n' k * d j ↑k from
+      Fintype.sum_prod_type _]
+    exact hd l' n'
+  exact congr_fun (h_A_inj (hv.trans (Matrix.mulVec_zero _).symm)) ⟨l, n⟩
 
 end SystemBlockDiagConcrete
 

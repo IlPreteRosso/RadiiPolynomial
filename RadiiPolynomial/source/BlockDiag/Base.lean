@@ -9,6 +9,7 @@ import RadiiPolynomial.source.lpSpace.OperatorNorm
 
 Core structural layer for Section 8.2 operators:
 - finite `L×L` block norm aggregation
+- `FiniteBlockMatrix.toMatrix`: flatten block structure to single matrix on `Fin L × Fin (N+1)`
 - `BlockDiagOp`: lightweight (finBlock + tailDiag, no tailBound) for unbounded operators (e.g. IVP A†)
 - `SystemBlockDiagData`: full (+ tailBound) for bounded operators (A, defect)
 - coefficient-level block-diagonal data and composition
@@ -77,6 +78,50 @@ lemma finiteBlockMatrixNorm_le_of_blockRowNorm_le
     exact hrow l)
 
 end FiniteBlockNorm
+
+/-! ## 1b. Flattened Matrix API for Finite Block Matrices -/
+
+section FiniteBlockMatrix
+
+variable {L N : ℕ}
+
+/-- Flatten an `L × L` system of `(N+1)×(N+1)` blocks into a single matrix
+on `Fin L × Fin (N+1)`. -/
+def FiniteBlockMatrix.toMatrix (A : FiniteBlockMatrix L N) :
+    Matrix (Fin L × Fin (N + 1)) (Fin L × Fin (N + 1)) ℝ :=
+  fun ⟨l, n⟩ ⟨j, k⟩ => A l j n k
+
+@[simp] lemma FiniteBlockMatrix.toMatrix_apply (A : FiniteBlockMatrix L N)
+    (l j : Fin L) (n k : Fin (N + 1)) :
+    A.toMatrix (l, n) (j, k) = A l j n k := rfl
+
+/-- Block identity flattens to matrix identity. -/
+lemma FiniteBlockMatrix.toMatrix_blockId :
+    FiniteBlockMatrix.toMatrix
+      (fun l j => if l = j then (1 : Matrix (Fin (N+1)) (Fin (N+1)) ℝ) else 0 :
+        FiniteBlockMatrix L N) = 1 := by
+  ext ⟨l, n⟩ ⟨j, k⟩
+  simp only [FiniteBlockMatrix.toMatrix, Matrix.one_apply, Prod.mk.injEq]
+  by_cases hl : l = j
+  · subst hl
+    simp only [true_and]
+    exact ite_congr rfl (fun _ => rfl) (fun _ => rfl)
+  · simp only [hl, ite_false, Matrix.zero_apply, false_and, ite_false]
+
+/-- Block-matrix product flattens to matrix product. -/
+lemma FiniteBlockMatrix.toMatrix_blockMul (A B : FiniteBlockMatrix L N) :
+    FiniteBlockMatrix.toMatrix
+      (fun l j => ∑ m : Fin L, A l m * B m j : FiniteBlockMatrix L N) =
+    A.toMatrix * B.toMatrix := by
+  ext ⟨l, n⟩ ⟨j, k⟩
+  -- LHS: (∑ m, A l m * B m j) n k
+  -- RHS: ∑ (x : Fin L × Fin (N+1)), A l x.1 n x.2 * B x.1 j x.2 k
+  show (∑ m, A l m * B m j) n k =
+    ∑ x : Fin L × Fin (N + 1), A l x.1 n x.2 * B x.1 j x.2 k
+  simp only [Matrix.sum_apply, Matrix.mul_apply]
+  rw [← Fintype.sum_prod_type']
+
+end FiniteBlockMatrix
 
 /-! ## 2. Coefficient-Level Block-Diagonal Data -/
 
@@ -315,7 +360,7 @@ lemma SystemBlockDiagData.fderiv_action_fin {E : Type*}
       HasFDerivAt.sum fun k (_ : k ∈ Finset.univ) =>
         (hb j k x).hasFDerivAt.const_mul
           (A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k)
-    convert this using 1 <;> (ext a; simp [Finset.sum_apply])
+    convert this using 1; (ext a; simp [Finset.sum_apply])
   rw [hfderiv.fderiv]
   simp only [ContinuousLinearMap.sum_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
   symm; exact (hact _).trans (A.actionFinite_finite _ l n hn)

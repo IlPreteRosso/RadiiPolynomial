@@ -315,6 +315,89 @@ lemma l1Omega.mem_deriv_shift_sub (a : l1Weighted ν) (φ : l1Weighted ν) (c₀
 
 end Bridges
 
+section Shift
+
+variable {ν : PosReal}
+
+/-- Right-shift sequence: `(S a)_0 = 0`, `(S a)_{k+1} = a_k`.
+Ref: §8.2, eq. (8.25). -/
+private def shift_seq (a : l1Weighted ν) : ℕ → ℝ
+  | 0 => 0
+  | n + 1 => l1Weighted.toSeq a n
+
+private lemma shift_mem (a : l1Weighted ν) : lpWeighted.Mem ν 1 (shift_seq a) := by
+  rw [l1Weighted.mem_iff, ← summable_nat_add_iff (k := 1)]
+  have h : ∀ n, |shift_seq a (n + 1)| * (ν : ℝ) ^ (n + 1) =
+      (ν : ℝ) * (|l1Weighted.toSeq a n| * (ν : ℝ) ^ n) := by
+    intro n; simp only [shift_seq, pow_succ]; ring
+  simp_rw [h]
+  exact (l1Weighted.summable_weighted a).mul_left _
+
+/-- The right-shift operator on `l1Weighted ν`.
+Ref: §8.2, eq. (8.25) — `(S a)_k = a_{k-1}` for `k ≥ 1`, zero at `k = 0`.
+Bounded: `‖S a‖ ≤ ν · ‖a‖`. -/
+noncomputable def shift (a : l1Weighted ν) : l1Weighted ν :=
+  lpWeighted.mk (shift_seq a) (shift_mem a)
+
+@[simp] lemma shift_zero_mode (a : l1Weighted ν) :
+    l1Weighted.toSeq (shift a) 0 = 0 := by
+  simp [shift, shift_seq, l1Weighted.toSeq, lpWeighted.toSeq, lpWeighted.mk]
+
+@[simp] lemma shift_succ_mode (a : l1Weighted ν) (n : ℕ) :
+    l1Weighted.toSeq (shift a) (n + 1) = l1Weighted.toSeq a n := by
+  simp [shift, shift_seq, l1Weighted.toSeq, lpWeighted.toSeq, lpWeighted.mk]
+
+private lemma shift_toSeq (a : l1Weighted ν) (n : ℕ) :
+    lpWeighted.toSeq (shift a) n = shift_seq a n := by
+  simp [shift, lpWeighted.toSeq, lpWeighted.mk]
+
+lemma shift_linear_add (a b : l1Weighted ν) :
+    shift (a + b) = shift a + shift b := by
+  apply lpWeighted.ext; intro n
+  simp only [shift_toSeq, lpWeighted.add_toSeq]
+  cases n with
+  | zero => simp [shift_seq]
+  | succ n => simp [shift_seq]
+
+lemma shift_linear_smul (r : ℝ) (a : l1Weighted ν) :
+    shift (r • a) = r • shift a := by
+  apply lpWeighted.ext; intro n
+  simp only [shift_toSeq, lpWeighted.smul_toSeq]
+  cases n with
+  | zero => simp [shift_seq]
+  | succ n => simp [shift_seq]
+
+lemma shift_norm_le (a : l1Weighted ν) :
+    ‖shift a‖ ≤ (ν : ℝ) * ‖a‖ := by
+  rw [l1Weighted.norm_eq_tsum, l1Weighted.norm_eq_tsum]
+  conv_lhs => arg 1; ext n; rw [show l1Weighted.toSeq (shift a) n = shift_seq a n
+    from shift_toSeq a n]
+  have hsumm : Summable (fun n => |shift_seq a n| * (ν : ℝ) ^ n) :=
+    (l1Weighted.mem_iff _).mp (shift_mem a)
+  have hb : Summable (fun n => |l1Weighted.toSeq a n| * (ν : ℝ) ^ n) :=
+    l1Weighted.summable_weighted a
+  rw [hsumm.tsum_eq_zero_add]
+  simp only [shift_seq, abs_zero, zero_mul, zero_add]
+  rw [← tsum_mul_left]
+  exact ((summable_nat_add_iff (k := 1)).mpr hsumm).tsum_le_tsum
+    (fun n => le_of_eq (by simp only [pow_succ]; ring))
+    (hb.mul_left _)
+
+/-- The right-shift operator as a CLM on `l1Weighted ν`.
+Ref: §8.2, eq. (8.25) — `‖S‖ = ν`. -/
+noncomputable def shift_CLM : l1Weighted ν →L[ℝ] l1Weighted ν :=
+  LinearMap.mkContinuous
+    { toFun := shift
+      map_add' := shift_linear_add
+      map_smul' := fun r a => by simp [shift_linear_smul] }
+    (ν : ℝ)
+    shift_norm_le
+
+@[simp] lemma shift_CLM_apply (a : l1Weighted ν) :
+    shift_CLM a = shift a := rfl
+
+end Shift
+
 section ShiftDivN
 
 variable {ν : PosReal}
@@ -455,5 +538,93 @@ noncomputable def shiftDivN_CLM : l1Weighted ν →L[ℝ] l1Weighted ν :=
     shiftDivN_CLM b = shiftDivN b := rfl
 
 end ShiftDivN
+
+section LambdaN
+
+variable {ν : PosReal}
+
+/-- Tail divide-by-index sequence: 0 for `k ≤ N`, `a_k / k` for `k ≥ N + 1`.
+Ref: §8.2, eq. (8.26). -/
+private def lambdaN_seq (N : ℕ) (a : l1Weighted ν) (n : ℕ) : ℝ :=
+  if N < n then l1Weighted.toSeq a n / (n : ℝ) else 0
+
+private lemma lambdaN_mem (N : ℕ) (a : l1Weighted ν) :
+    lpWeighted.Mem ν 1 (lambdaN_seq N a) := by
+  rw [l1Weighted.mem_iff]
+  refine (l1Weighted.summable_weighted a).of_nonneg_of_le
+    (fun n => mul_nonneg (abs_nonneg _) (pow_nonneg ν.2.le _))
+    fun n => ?_
+  simp only [lambdaN_seq]
+  split_ifs with hn
+  · have hn1 : (1 : ℝ) ≤ (n : ℝ) := Nat.one_le_cast.mpr (by omega)
+    apply mul_le_mul_of_nonneg_right _ (pow_nonneg ν.2.le _)
+    rw [abs_div, abs_of_pos (lt_of_lt_of_le one_pos hn1)]
+    exact div_le_self (abs_nonneg _) hn1
+  · simp only [abs_zero, zero_mul]
+    exact mul_nonneg (abs_nonneg _) (pow_nonneg ν.2.le _)
+
+/-- Tail divide-by-index operator on `l1Weighted ν`.
+Ref: §8.2, eq. (8.26) — `(Λ_N a)_k = 0` for `k ≤ N`, `a_k / k` for `k ≥ N + 1`.
+Bounded: `‖Λ_N a‖ ≤ 1/(N+1) · ‖a‖` (Lemma 8.2.4). -/
+noncomputable def lambdaN (N : ℕ) (a : l1Weighted ν) : l1Weighted ν :=
+  lpWeighted.mk (lambdaN_seq N a) (lambdaN_mem N a)
+
+@[simp] lemma lambdaN_le_mode (N : ℕ) (a : l1Weighted ν) (n : ℕ) (hn : n ≤ N) :
+    l1Weighted.toSeq (lambdaN N a) n = 0 := by
+  simp [lambdaN, lambdaN_seq, l1Weighted.toSeq, lpWeighted.toSeq, lpWeighted.mk,
+    not_lt.mpr hn]
+
+@[simp] lemma lambdaN_gt_mode (N : ℕ) (a : l1Weighted ν) (n : ℕ) (hn : N < n) :
+    l1Weighted.toSeq (lambdaN N a) n = l1Weighted.toSeq a n / (n : ℝ) := by
+  simp [lambdaN, lambdaN_seq, l1Weighted.toSeq, lpWeighted.toSeq, lpWeighted.mk, hn]
+
+private lemma lambdaN_toSeq (N : ℕ) (a : l1Weighted ν) (n : ℕ) :
+    lpWeighted.toSeq (lambdaN N a) n = lambdaN_seq N a n := by
+  simp [lambdaN, lpWeighted.toSeq, lpWeighted.mk]
+
+lemma lambdaN_linear_add (N : ℕ) (a b : l1Weighted ν) :
+    lambdaN N (a + b) = lambdaN N a + lambdaN N b := by
+  apply lpWeighted.ext; intro n
+  simp only [lambdaN_toSeq, lpWeighted.add_toSeq, lambdaN_seq]
+  split_ifs <;> simp [add_div]
+
+lemma lambdaN_linear_smul (N : ℕ) (r : ℝ) (a : l1Weighted ν) :
+    lambdaN N (r • a) = r • lambdaN N a := by
+  apply lpWeighted.ext; intro n
+  simp only [lambdaN_toSeq, lpWeighted.smul_toSeq, lambdaN_seq]
+  split_ifs <;> simp [mul_div_assoc]
+
+lemma lambdaN_norm_le (N : ℕ) (a : l1Weighted ν) :
+    ‖lambdaN N a‖ ≤ 1 / (↑(N + 1) : ℝ) * ‖a‖ := by
+  unfold lambdaN
+  refine l1Weighted.norm_mk_le_of_pointwise _ _ a _ fun n => ?_
+  simp only [lambdaN_seq]
+  split_ifs with hn
+  · have hn1 : (0 : ℝ) < ↑(N + 1) := by positivity
+    have hle : (↑(N + 1) : ℝ) ≤ (n : ℝ) := Nat.cast_le.mpr (by omega)
+    have hn_pos : (0 : ℝ) < (n : ℝ) := lt_of_lt_of_le hn1 hle
+    rw [abs_div, abs_of_pos hn_pos]
+    calc |l1Weighted.toSeq a n| / (n : ℝ)
+        = |l1Weighted.toSeq a n| * ((n : ℝ)⁻¹) := div_eq_mul_inv _ _
+      _ ≤ |l1Weighted.toSeq a n| * ((↑(N + 1) : ℝ)⁻¹) :=
+          mul_le_mul_of_nonneg_left (by rwa [inv_le_inv₀ hn_pos hn1]) (abs_nonneg _)
+      _ = 1 / (↑(N + 1) : ℝ) * |l1Weighted.toSeq a n| := by rw [one_div]; ring
+  · simp only [abs_zero]
+    exact mul_nonneg (by positivity) (abs_nonneg _)
+
+/-- Tail divide-by-index as a CLM on `l1Weighted ν`.
+Ref: §8.2, eq. (8.26) — `‖Λ_N‖ ≤ 1/(N+1)` (Lemma 8.2.4). -/
+noncomputable def lambdaN_CLM (N : ℕ) : l1Weighted ν →L[ℝ] l1Weighted ν :=
+  LinearMap.mkContinuous
+    { toFun := lambdaN N
+      map_add' := lambdaN_linear_add N
+      map_smul' := fun r a => by simp [lambdaN_linear_smul] }
+    (1 / (↑(N + 1) : ℝ))
+    (lambdaN_norm_le N)
+
+@[simp] lemma lambdaN_CLM_apply (N : ℕ) (a : l1Weighted ν) :
+    lambdaN_CLM N a = lambdaN N a := rfl
+
+end LambdaN
 
 end RadiiPolynomial
