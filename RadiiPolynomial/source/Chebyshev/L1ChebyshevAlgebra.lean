@@ -59,6 +59,12 @@ instance ScaledRealZ.addLpWeightSubMul (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] 
       _ ≤ (ν : ℝ) ^ k.natAbs := by
           apply pow_le_pow_left₀ (by positivity : (0 : ℝ) ≤ 1) Fact.out
 
+/-! ### AddLpSmulCompat: scalar multiplication commutes with toReal (trivially for ℝ) -/
+
+instance ScaledRealZ.addLpSmulCompat (ν : PosReal) :
+    AddLpSmulCompat ℤ (ScaledRealZ ν) where
+  toReal_smul _ _ _ := rfl
+
 /-! ### l1Chebyshev: the Chebyshev Banach algebra -/
 
 /-- Chebyshev ℓ¹ Banach algebra: ℤ-indexed sequences with norm `∑|a_k|·ν^{|k|}`

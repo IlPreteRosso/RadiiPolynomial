@@ -39,3 +39,4 @@ import RadiiPolynomial.source.Chebyshev.ScaledRealZ
 import RadiiPolynomial.source.lpSpace.DiscreteConvolutionRing
 import RadiiPolynomial.source.lpSpace.AddLp
 import RadiiPolynomial.source.Chebyshev.L1ChebyshevAlgebra
+import RadiiPolynomial.source.Chebyshev.ChebyshevIVP

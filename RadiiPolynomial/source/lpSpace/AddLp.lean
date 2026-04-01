@@ -30,6 +30,15 @@ class AddLpRingData (M : Type*) (E : M → Type*)
   toReal_neg : ∀ m x, toReal m (-x) = -(toReal m x)
   norm_ofReal_eq : ∀ m r, ‖ofReal m r‖ = |r| * ‖ofReal m 1‖
 
+/-- Scalar compatibility: `toReal` respects ℝ-scalar multiplication.
+Needed for Algebra ℝ instance. Separated from `AddLpRingData` because it
+requires `NormedSpace ℝ (E m)` which not all ring applications need. -/
+class AddLpSmulCompat (M : Type*) (E : M → Type*)
+    [AddGroup M] [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace ℝ (E m)]
+    [AddLpRingData M E] where
+  toReal_smul : ∀ m (r : ℝ) (x : E m),
+    AddLpRingData.toReal m (r • x) = r * AddLpRingData.toReal m x
+
 class AddLpWeightSubMul (M : Type*) (E : M → Type*)
     [AddGroup M] [∀ m, NormedAddCommGroup (E m)] [AddLpRingData M E] where
   norm_ofReal_mul_le : ∀ (j l : M) (a b : ℝ),
@@ -80,6 +89,16 @@ theorem summable_norm (f : AddLp M E) : Summable (fun m => ‖f m‖) := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)] at hf
   simpa using hf
 
+/-- Shifted norm sums are summable: `∑ ‖f(m + s)‖ < ∞` for any `s`.
+
+**API design note**: proved at the generic `AddLp M E` level where `‖f m‖` stays opaque.
+If proved downstream (e.g., at `l1Chebyshev`), `comp_injective` triggers 800k+ heartbeat
+timeout because Lean unfolds `‖f m‖` through `lp → Subtype → CoeFun → ScaledRealZ.norm`.
+At the generic level, `comp_injective` resolves instantly. -/
+theorem summable_norm_shift [AddGroup M] (f : AddLp M E) (s : M) :
+    Summable (fun m => ‖f (m + s)‖) :=
+  (summable_norm f).comp_injective (add_left_injective s)
+
 /-! ### Underlying ℝ Sequence -/
 
 variable [AddGroup M] [AddLpRingData M E]
@@ -123,13 +142,53 @@ theorem convSummable (f g : AddLp M E) (x : M) :
 
 /-! ### Mul Membership and Norm -/
 
-/-- Per-index bound: `‖ofReal k (conv k)‖ ≤ ∑' ab : fiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖`.
-Uses norm_ofReal_eq + norm_tsum_le_tsum_norm + weight submultiplicativity. -/
+/-- Per-index bound: `‖ofReal k (conv k)‖ ≤ ∑' ab : fiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖`. -/
 private theorem norm_conv_le_fiber (f g : AddLp M E) (k : M) :
     ‖AddLpRingData.ofReal (E := E) k
       (DiscreteConvolution.addRingConvolution (toRealSeq f) (toRealSeq g) k)‖ ≤
     ∑' ab : DiscreteConvolution.addFiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖ := by
-  sorry
+  rw [AddLpRingData.norm_ofReal_eq, DiscreteConvolution.addRingConvolution_apply_eq]
+  have hnorm_fiber : Summable (fun ab : DiscreteConvolution.addFiber k =>
+      ‖f ab.1.1‖ * ‖g ab.1.2‖) :=
+    ((summable_norm f).mul_of_nonneg (summable_norm g)
+      (fun _ => norm_nonneg _) (fun _ => norm_nonneg _)).subtype _
+  have habs_fiber : Summable (fun ab : DiscreteConvolution.addFiber k =>
+      |toRealSeq f ab.1.1| * |toRealSeq g ab.1.2|) :=
+    (summable_abs_toRealSeq_mul f g).subtype _
+  -- Per-element weight bound
+  have h_elem (ab : DiscreteConvolution.addFiber k) :
+      |toRealSeq f ab.1.1| * |toRealSeq g ab.1.2| *
+        ‖AddLpRingData.ofReal (E := E) k 1‖ ≤
+      ‖f ab.1.1‖ * ‖g ab.1.2‖ := by
+    obtain ⟨⟨j, l⟩, hjl⟩ := ab
+    rw [DiscreteConvolution.mem_addFiber] at hjl; subst hjl
+    rw [norm_eq_abs_toReal_mul_weight f j, norm_eq_abs_toReal_mul_weight g l]
+    have hw := AddLpWeightSubMul.norm_ofReal_mul_le (E := E) j l 1 1
+    simp only [mul_one] at hw
+    calc |toRealSeq f j| * |toRealSeq g l| *
+          ‖AddLpRingData.ofReal (E := E) (j + l) 1‖
+        ≤ |toRealSeq f j| * |toRealSeq g l| *
+          (‖AddLpRingData.ofReal (E := E) j 1‖ *
+           ‖AddLpRingData.ofReal (E := E) l 1‖) :=
+          mul_le_mul_of_nonneg_left hw (mul_nonneg (abs_nonneg _) (abs_nonneg _))
+      _ = (|toRealSeq f j| * ‖AddLpRingData.ofReal (E := E) j 1‖) *
+          (|toRealSeq g l| * ‖AddLpRingData.ofReal (E := E) l 1‖) := by ring
+  -- Triangle: ‖∑' f*g‖ ≤ ∑' |f|*|g| (via tsum_of_norm_bounded on ℝ)
+  have h_tri : ‖∑' ab : DiscreteConvolution.addFiber k,
+      toRealSeq f ab.1.1 * toRealSeq g ab.1.2‖ ≤
+      ∑' ab : DiscreteConvolution.addFiber k,
+        |toRealSeq f ab.1.1| * |toRealSeq g ab.1.2| :=
+    tsum_of_norm_bounded habs_fiber.hasSum
+      fun ab => le_of_eq (by rw [Real.norm_eq_abs, abs_mul])
+  rw [Real.norm_eq_abs] at h_tri
+  -- LHS summability for tsum_le_tsum
+  have hlhs := Summable.of_nonneg_of_le
+    (fun _ => mul_nonneg (mul_nonneg (abs_nonneg _) (abs_nonneg _)) (norm_nonneg _))
+    h_elem hnorm_fiber
+  -- Assemble: |∑'| * w(k) ≤ (∑' |f|*|g|) * w(k) ≤ ∑' ‖f‖*‖g‖
+  refine (mul_le_mul_of_nonneg_right h_tri (norm_nonneg _)).trans ?_
+  rw [← tsum_mul_right]
+  exact Summable.tsum_le_tsum h_elem hlhs hnorm_fiber
 
 theorem mul_memℓp (f g : AddLp M E) :
     Memℓp (fun k => AddLpRingData.ofReal (E := E) k
@@ -169,12 +228,83 @@ theorem norm_mul_le' (f g : AddLp M E) :
     (summable_norm f).tsum_mul_tsum (summable_norm g) hprod ▸
     DiscreteConvolution.sigmaAddFiberEquiv.tsum_eq (fun p => ‖f p.1‖ * ‖g p.2‖)
 
+/-- Triple products summable over `tripleAddFiber x`. -/
+private theorem tripleConvSummable (f g h : AddLp M E) (x : M) :
+    Summable fun p : DiscreteConvolution.tripleAddFiber x =>
+      toRealSeq f p.1.1 * toRealSeq g p.1.2.1 * toRealSeq h p.1.2.2 := by
+  have hfg := summable_abs_toRealSeq_mul f g
+  have hfgh : Summable fun abc : M × M × M =>
+      |toRealSeq f abc.1| * |toRealSeq g abc.2.1| * |toRealSeq h abc.2.2| :=
+    (Equiv.prodAssoc M M M).symm.summable_iff.mpr (hfg.mul_of_nonneg (summable_abs_toRealSeq h)
+      (fun _ => mul_nonneg (abs_nonneg _) (abs_nonneg _)) (fun _ => abs_nonneg _))
+  refine (hfgh.subtype _).of_norm_bounded fun ⟨⟨_, _, _⟩, _⟩ => ?_
+  simp only [Real.norm_eq_abs, abs_mul, Function.comp_def]; exact le_refl _
+
+/-- Left-associated sum equals triple fiber sum. -/
+private theorem conv_assoc_left (f g h : AddLp M E) (x : M) :
+    ∑' cd : DiscreteConvolution.addFiber x,
+      (∑' ab : DiscreteConvolution.addFiber cd.1.1,
+        toRealSeq f ab.1.1 * toRealSeq g ab.1.2) * toRealSeq h cd.1.2 =
+    ∑' p : DiscreteConvolution.tripleAddFiber x,
+      toRealSeq f p.1.1 * toRealSeq g p.1.2.1 * toRealSeq h p.1.2.2 := by
+  -- Step 1: push h(cd.2) inside inner tsum via tsum_mul_right
+  have h1 : ∀ cd : DiscreteConvolution.addFiber x,
+      (∑' ab : DiscreteConvolution.addFiber cd.1.1,
+        toRealSeq f ab.1.1 * toRealSeq g ab.1.2) * toRealSeq h cd.1.2 =
+      ∑' ab : DiscreteConvolution.addFiber cd.1.1,
+        (toRealSeq f ab.1.1 * toRealSeq g ab.1.2) * toRealSeq h cd.1.2 := by
+    intro cd; rw [tsum_mul_right]
+  rw [tsum_congr h1]
+  -- Step 2: flatten via leftAddAssocEquiv + tsum_sigma'
+  have hsigmaL : Summable fun p : Σ cd : DiscreteConvolution.addFiber x,
+      DiscreteConvolution.addFiber cd.1.1 =>
+      (toRealSeq f p.2.1.1 * toRealSeq g p.2.1.2) * toRealSeq h p.1.1.2 := by
+    convert (DiscreteConvolution.leftAddAssocEquiv x).summable_iff.mpr
+      (tripleConvSummable f g h x) using 1
+  have hfiberL (cd : DiscreteConvolution.addFiber x) :
+      Summable fun ab : DiscreteConvolution.addFiber cd.1.1 =>
+        (toRealSeq f ab.1.1 * toRealSeq g ab.1.2) * toRealSeq h cd.1.2 :=
+    Summable.mul_right _ (convSummable f g cd.1.1)
+  rw [← (DiscreteConvolution.leftAddAssocEquiv x).tsum_eq _, ←
+    hsigmaL.tsum_sigma' hfiberL]; rfl
+
+/-- Right-associated sum equals triple fiber sum. -/
+private theorem conv_assoc_right (f g h : AddLp M E) (x : M) :
+    ∑' ae : DiscreteConvolution.addFiber x,
+      toRealSeq f ae.1.1 * (∑' bd : DiscreteConvolution.addFiber ae.1.2,
+        toRealSeq g bd.1.1 * toRealSeq h bd.1.2) =
+    ∑' p : DiscreteConvolution.tripleAddFiber x,
+      toRealSeq f p.1.1 * toRealSeq g p.1.2.1 * toRealSeq h p.1.2.2 := by
+  -- Step 1: push f(ae.1) inside inner tsum via tsum_mul_left
+  have h1 : ∀ ae : DiscreteConvolution.addFiber x,
+      toRealSeq f ae.1.1 * (∑' bd : DiscreteConvolution.addFiber ae.1.2,
+        toRealSeq g bd.1.1 * toRealSeq h bd.1.2) =
+      ∑' bd : DiscreteConvolution.addFiber ae.1.2,
+        toRealSeq f ae.1.1 * (toRealSeq g bd.1.1 * toRealSeq h bd.1.2) := by
+    intro ae; rw [tsum_mul_left]
+  rw [tsum_congr h1]
+  -- Step 2: flatten via rightAddAssocEquiv + tsum_sigma'
+  have hsigmaR : Summable fun p : Σ ae : DiscreteConvolution.addFiber x,
+      DiscreteConvolution.addFiber ae.1.2 =>
+      toRealSeq f p.1.1.1 * (toRealSeq g p.2.1.1 * toRealSeq h p.2.1.2) := by
+    simp_rw [← mul_assoc]
+    convert (DiscreteConvolution.rightAddAssocEquiv x).summable_iff.mpr
+      (tripleConvSummable f g h x) using 1
+  have hfiberR (ae : DiscreteConvolution.addFiber x) :
+      Summable fun bd : DiscreteConvolution.addFiber ae.1.2 =>
+        toRealSeq f ae.1.1 * (toRealSeq g bd.1.1 * toRealSeq h bd.1.2) :=
+    Summable.mul_left _ (convSummable g h ae.1.2)
+  rw [← (DiscreteConvolution.rightAddAssocEquiv x).tsum_eq _, ←
+    hsigmaR.tsum_sigma' hfiberR]; simp_rw [← mul_assoc]; rfl
+
 theorem conv_assoc (f g h : AddLp M E) :
     DiscreteConvolution.addRingConvolution
       (DiscreteConvolution.addRingConvolution (toRealSeq f) (toRealSeq g)) (toRealSeq h) =
     DiscreteConvolution.addRingConvolution
       (toRealSeq f) (DiscreteConvolution.addRingConvolution (toRealSeq g) (toRealSeq h)) := by
-  sorry
+  ext x
+  simp only [DiscreteConvolution.addRingConvolution_apply_eq]
+  exact (conv_assoc_left f g h x).trans (conv_assoc_right f g h x).symm
 
 -- Mul and One instances
 instance instMul : Mul (AddLp M E) where
@@ -302,10 +432,23 @@ instance AddLp.instNormedSpace : NormedSpace ℝ (AddLp M E) :=
     norm_smul_le := fun r f => by
       show ‖r • f.toLp‖ ≤ _; exact norm_smul_le r f.toLp }
 
+variable [AddLpSmulCompat M E]
+
+theorem AddLp.toRealSeq_smul (r : ℝ) (f : AddLp M E) :
+    AddLp.toRealSeq (r • f) = r • AddLp.toRealSeq f := by
+  ext m; simp only [AddLp.toRealSeq, Pi.smul_apply, smul_eq_mul]
+  exact AddLpSmulCompat.toReal_smul m r (f m)
+
 instance AddLp.instAlgebra : Algebra ℝ (AddLp M E) :=
   Algebra.ofModule
-    (fun _ _ _ => by sorry)  -- smul_mul_assoc: needs toRealSeq_smul + smul_addRingConvolution
-    (fun _ _ _ => by sorry)  -- mul_smul_comm: needs toRealSeq_smul + addRingConvolution_smul
+    (fun r f g => by
+      apply AddLp.ext_toRealSeq
+      simp only [AddLp.toRealSeq_mul_fun, AddLp.toRealSeq_smul]
+      exact DiscreteConvolution.smul_addRingConvolution r _ _ (AddLp.convSummable f g))
+    (fun r f g => by
+      apply AddLp.ext_toRealSeq
+      simp only [AddLp.toRealSeq_mul_fun, AddLp.toRealSeq_smul]
+      exact DiscreteConvolution.addRingConvolution_smul r _ _ (AddLp.convSummable f g))
 
 instance AddLp.instNormedAlgebra : NormedAlgebra ℝ (AddLp M E) where
   norm_smul_le := AddLp.instNormedSpace.norm_smul_le
