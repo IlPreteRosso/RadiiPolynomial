@@ -66,6 +66,10 @@ protected def equiv : AddLp M E ≃ lp E 1 where
 instance instNormedAddCommGroup : NormedAddCommGroup (AddLp M E) :=
   AddLp.equiv.normedAddCommGroup
 
+instance instCompleteSpace [∀ m, CompleteSpace (E m)] : CompleteSpace (AddLp M E) :=
+  (completeSpace_congr (Isometry.isUniformEmbedding
+    (show Isometry AddLp.equiv from fun _ _ => rfl))).mpr inferInstance
+
 instance : CoeFun (AddLp M E) (fun _ => ∀ m, E m) where
   coe f := f.toLp
 
