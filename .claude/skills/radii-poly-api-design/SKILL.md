@@ -11,7 +11,7 @@ Design and extend the RadiiPolynomial Lean library by following the friction-dri
 
 ### 1. Start from the reference book
 
-The reference book (`exterior/reference book/computationalODE_split/`) is the source of truth. Before implementing anything:
+The reference book (`docs/reference_book/`) is the source of truth. Before implementing anything:
 - Read the relevant chapter (use `pdftotext` or the Read tool on PDFs)
 - Identify the theorem statement, the Banach space, the operator, and the bounds (Y0, Z0, Z1, Z2)
 - Understand what's equation-specific vs structurally generic

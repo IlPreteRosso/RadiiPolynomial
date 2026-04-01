@@ -1,6 +1,6 @@
 # RadiiPolynomial — Project Instructions
 
-This is a Lean 4 formalization of radii polynomial methods for rigorous ODE solution verification, based on the reference book at `exterior/reference book/computationalODE_split/`.
+This is a Lean 4 formalization of radii polynomial methods for rigorous ODE solution verification, based on the reference book at `docs/reference_book/`.
 
 ## Project structure
 
@@ -107,7 +107,7 @@ New IVP examples should use `ivp_hDF_block_nat`, not manual Jacobian definitions
 
 ## Reference book
 
-The reference book is at `exterior/reference book/computationalODE_split/`, split into PDFs by page range:
+The reference book is at `docs/reference_book/`, split into PDFs by page range:
 - 1-48.pdf (includes table of contents)
 - 49-72.pdf, 73-120.pdf, 121-138.pdf, 139-182.pdf
 - 183-220.pdf, 221-254.pdf, 255-290.pdf, 291-312.pdf, 313-382.pdf
