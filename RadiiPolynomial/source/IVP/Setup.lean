@@ -73,19 +73,19 @@ This is equation-specific (depends on the tail structure of A). -/
 def ivpMap (A : SystemBlockDiagData L N) (φ : XL1 ν L → Fin L → l1Weighted ν)
     (x₀ : Fin L → ℝ)
     (hmem : ∀ a : XL1 ν L, ∀ l : Fin L,
-      lpWeighted.Mem ν 1 (A.action (ivpCoeffs φ x₀ a) l))
+      l1Weighted.Mem ν (A.action (ivpCoeffs φ x₀ a) l))
     (a : XL1 ν L) : XL1 ν L := fun l =>
-  lpWeighted.mk (A.action (ivpCoeffs φ x₀ a) l) (hmem a l)
+  l1Weighted.mk (A.action (ivpCoeffs φ x₀ a) l) (hmem a l)
 
 /-- G at the coefficient level. -/
 lemma ivpMap_coeff (A : SystemBlockDiagData L N) (φ : XL1 ν L → Fin L → l1Weighted ν)
     (x₀ : Fin L → ℝ)
     (hmem : ∀ a : XL1 ν L, ∀ l : Fin L,
-      lpWeighted.Mem ν 1 (A.action (ivpCoeffs φ x₀ a) l))
+      l1Weighted.Mem ν (A.action (ivpCoeffs φ x₀ a) l))
     (a : XL1 ν L) (l : Fin L) (n : ℕ) :
     l1Weighted.toSeq (ivpMap A φ x₀ hmem a l) n =
       A.action (ivpCoeffs φ x₀ a) l n := by
-  simp [ivpMap, lpWeighted.mk]
+  simp [ivpMap, l1Weighted.mk]
 
 /-! ## 3. Tail Decomposition -/
 
@@ -229,7 +229,7 @@ lemma ivp_Y₀_le
     (A : SystemBlockDiagData L N) (φ : XL1 ν L → Fin L → l1Weighted ν)
     (x₀ : Fin L → ℝ)
     (hmem : ∀ a : XL1 ν L, ∀ l : Fin L,
-      lpWeighted.Mem ν 1 (A.action (ivpCoeffs φ x₀ a) l))
+      l1Weighted.Mem ν (A.action (ivpCoeffs φ x₀ a) l))
     (ā : XL1 ν L) (S : ℕ) (hSN : N ≤ S)
     -- Support bound: ivpCoeffs vanishes beyond S
     (hsupport : ∀ l : Fin L, ∀ n, S < n → ivpCoeffs φ x₀ ā l n = 0)
@@ -239,17 +239,17 @@ lemma ivp_Y₀_le
       ∑ n ∈ Finset.Icc 0 S,
         |A.action (ivpCoeffs φ x₀ ā) l n| * (ν : ℝ) ^ n ≤ C) :
     ‖ivpMap A φ x₀ hmem ā‖ ≤ C := by
-  -- Step 1: ‖G(ā)‖ = sup_l ‖G(ā) l‖ where G(ā) l = lpWeighted.mk(A.action(...))
+  -- Step 1: ‖G(ā)‖ = sup_l ‖G(ā) l‖ where G(ā) l = l1Weighted.mk(A.action(...))
   refine (pi_norm_le_iff_of_nonneg hC).mpr fun l => ?_
   -- Step 2: ‖G(ā) l‖ = finite sum (support bound from A.toCLM_support)
   rw [l1Weighted.norm_eq_Icc_sum_of_support (ivpMap A φ x₀ hmem ā l) S
     (fun n hn => by
-      simp only [ivpMap, lpWeighted.mk_apply]
+      simp only [ivpMap, l1Weighted.mk_apply]
       rw [SystemBlockDiagData.action_tail _ _ _ _ (by omega : N < n)]
       rw [hsupport l n hn, mul_zero])]
   -- Step 3: rewrite toSeq to A.action
-  simp_rw [show ∀ n, lpWeighted.toSeq (ivpMap A φ x₀ hmem ā l) n =
-    A.action (ivpCoeffs φ x₀ ā) l n from fun n => by simp [ivpMap, lpWeighted.mk]]
+  simp_rw [show ∀ n, l1Weighted.toSeq (ivpMap A φ x₀ hmem ā l) n =
+    A.action (ivpCoeffs φ x₀ ā) l n from fun n => by simp [ivpMap, l1Weighted.mk]]
   exact hcomp l
 
 /-! ## 7. Differentiability of IVP Coefficients
@@ -332,7 +332,7 @@ lemma fderiv_ivpCoeffs_diff (φ : XL1 ν L → Fin L → l1Weighted ν)
           ((l1Weighted.toSeq_CLM n).hasFDerivAt.comp a (hφ j a).hasFDerivAt)
       rw [hfd.fderiv]; rfl
     rw [hd_sub c, hd_sub ā]
-    simp only [ContinuousLinearMap.sub_apply, lpWeighted.sub_toSeq]
+    simp only [ContinuousLinearMap.sub_apply, l1Weighted.sub_toSeq]
     ring
 
 /-! ## 8. Generic Z₂ Bound
@@ -383,12 +383,12 @@ lemma ivp_Z₂_le
     rw [show (fderiv ℝ G a h') l =
         (fderiv ℝ (fun x : XL1 ν L => G x l) a) h' from by
       rw [fderiv_pi (fun i => differentiableAt_pi.mp (hG_diff a) i)]; rfl]
-    show l1Weighted.toSeq_CLM n ((fderiv ℝ (fun x => G x l) a) h') = _
-    rw [← ContinuousLinearMap.comp_apply (l1Weighted.toSeq_CLM n),
+    show l1Weighted.toSeq_CLM (ν := ν) n ((fderiv ℝ (fun x => G x l) a) h') = _
+    rw [← ContinuousLinearMap.comp_apply (l1Weighted.toSeq_CLM (ν := ν) n),
       ← ContinuousLinearMap.fderiv (l1Weighted.toSeq_CLM (ν := ν) n),
-      ← fderiv_comp a (l1Weighted.toSeq_CLM n).differentiableAt
+      ← fderiv_comp a (l1Weighted.toSeq_CLM (ν := ν) n).differentiableAt
         ((differentiableAt_pi.mp (hG_diff a)) l)]
-    show (fderiv ℝ (l1Weighted.toSeq_CLM n ∘ fun x => G x l) a) h' = _
+    show (fderiv ℝ (l1Weighted.toSeq_CLM (ν := ν) n ∘ fun x => G x l) a) h' = _
     rw [show (l1Weighted.toSeq_CLM (ν := ν) n ∘ fun x => G x l) =
         fun x => A.action (F x) l n from hcoeff]
   -- opNorm_le_bound
@@ -399,9 +399,9 @@ lemma ivp_Z₂_le
   refine (pi_norm_le_iff_of_nonneg (mul_nonneg (mul_nonneg hZ₂_nn
     (norm_nonneg _)) (norm_nonneg _))).mpr fun l => ?_
   -- Construct w: shifted Dφ difference
-  have hmem : ∀ j : Fin L, lpWeighted.Mem ν 1
+  have hmem : ∀ j : Fin L, l1Weighted.Mem ν
       (fun n => if n = 0 then (0 : ℝ) else
-        -lpWeighted.toSeq (((fderiv ℝ (fun x => φ x j) c -
+        -l1Weighted.toSeq (((fderiv ℝ (fun x => φ x j) c -
           fderiv ℝ (fun x => φ x j) ā) h')) (n - 1)) := by
     intro j; rw [l1Weighted.mem_iff]
     exact (l1Weighted.summable_shifted_weighted
@@ -410,10 +410,10 @@ lemma ivp_Z₂_le
       (fun n => mul_nonneg (abs_nonneg _) (pow_nonneg (PosReal.coe_nonneg _) _))
       (fun n => by split_ifs with h0 <;> simp only [abs_neg, abs_zero, zero_mul, le_refl,
         mul_nonneg (abs_nonneg _) (pow_nonneg (PosReal.coe_nonneg _) _)])
-  set w : XL1 ν L := fun j => lpWeighted.mk _ (hmem j)
+  set w : XL1 ν L := fun j => l1Weighted.mk _ (hmem j)
   -- Factorization: (diff G h') l = A.toCLM(w) l
-  have hseq : ∀ n, lpWeighted.toSeq (fderiv ℝ G c h' l - fderiv ℝ G ā h' l) n =
-      lpWeighted.toSeq (A.toCLM (ν := ν) w l) n := by
+  have hseq : ∀ n, l1Weighted.toSeq (fderiv ℝ G c h' l - fderiv ℝ G ā h' l) n =
+      l1Weighted.toSeq (A.toCLM (ν := ν) w l) n := by
     intro n
     show l1Weighted.toSeq ((fderiv ℝ G c h') l) n -
       l1Weighted.toSeq ((fderiv ℝ G ā h') l) n =
@@ -427,8 +427,8 @@ lemma ivp_Z₂_le
         toCoeff (ν := ν) w j k := by
       intro j k
       rw [fderiv_ivpCoeffs_diff φ x₀ hφ c ā h' j k]
-      show _ = lpWeighted.toSeq (w j) k
-      simp [w, lpWeighted.mk_apply, lpWeighted.sub_toSeq]
+      show _ = l1Weighted.toSeq (w j) k
+      simp [w, l1Weighted.mk_apply, l1Weighted.sub_toSeq]
     have hF_diff_fin : ∀ j : Fin L, ∀ k : Fin (N + 1),
         Differentiable ℝ (fun a : XL1 ν L => F a j k) :=
       fun j k => hF_diff j k
@@ -453,14 +453,14 @@ lemma ivp_Z₂_le
   rw [show ((fderiv ℝ G c h' - fderiv ℝ G ā h') : XL1 ν L) l =
       A.toCLM (ν := ν) w l from by
     show (fderiv ℝ G c h') l - (fderiv ℝ G ā h') l = _
-    exact lpWeighted.ext hseq]
+    exact l1Weighted.ext hseq]
   -- w vanishes outside active set
   have hw_zero : ∀ j, j ∉ active → w j = 0 := by
-    intro j hj; apply lpWeighted.ext; intro k
+    intro j hj; apply l1Weighted.ext; intro k
     show (if k = 0 then (0 : ℝ) else _) = 0
     split_ifs with h0
     · rfl
-    · show -lpWeighted.toSeq ((fderiv ℝ (fun x => φ x j) c -
+    · show -l1Weighted.toSeq ((fderiv ℝ (fun x => φ x j) c -
           fderiv ℝ (fun x => φ x j) ā) h') (k - 1) = 0
       rw [hzero c h' j hj]; simp
   -- ‖w‖ ≤ C * ν * ‖c-ā‖ * ‖h'‖
@@ -473,11 +473,11 @@ lemma ivp_Z₂_le
         rw [l1Weighted.norm_eq_tsum, l1Weighted.norm_eq_tsum]
         have hsw := l1Weighted.summable_weighted (w j)
         rw [hsw.tsum_eq_zero_add]
-        simp only [show lpWeighted.toSeq (w j) 0 = 0 from lpWeighted.mk_apply _ _ 0 ▸ if_pos rfl,
+        simp only [show l1Weighted.toSeq (w j) 0 = 0 from l1Weighted.mk_apply _ _ 0 ▸ if_pos rfl,
           abs_zero, zero_mul, zero_add]
-        rw [show (fun n => |lpWeighted.toSeq (w j) (n + 1)| * (ν : ℝ) ^ (n + 1)) =
-          fun n => (ν : ℝ) * (|lpWeighted.toSeq dj n| * (ν : ℝ) ^ n) from by
-          ext n; show |if n + 1 = 0 then 0 else -(lpWeighted.toSeq dj n)| * _ = _
+        rw [show (fun n => |l1Weighted.toSeq (w j) (n + 1)| * (ν : ℝ) ^ (n + 1)) =
+          fun n => (ν : ℝ) * (|l1Weighted.toSeq dj n| * (ν : ℝ) ^ n) from by
+          ext n; show |if n + 1 = 0 then 0 else -(l1Weighted.toSeq dj n)| * _ = _
           simp [abs_neg, pow_succ]; ring]
         rw [tsum_mul_left]
       calc ‖w j‖ ≤ (ν : ℝ) * ‖dj‖ := hnorm_w
@@ -526,7 +526,7 @@ lemma ivpMap_mem_of_tailDiag_inv
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (htail : ∀ l : Fin L, ∀ n, N < n → A.tailDiag l n = 1 / (↑n : ℝ))
     (a : XL1 ν L) (l : Fin L) :
-    lpWeighted.Mem ν 1 (A.action (ivpCoeffs φ x₀ a) l) :=
+    l1Weighted.Mem ν (A.action (ivpCoeffs φ x₀ a) l) :=
   l1Weighted.mem_of_eventually_le_add_shift _ (a l) (φ a l) N fun n hn => by
     rw [SystemBlockDiagData.action_tail _ _ _ _ hn, htail l n hn]
     obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
@@ -548,7 +548,7 @@ lemma ivpMap_tail_eq_ivpTail
       l1Weighted.toSeq (ivpTail φ a l) n := by
   rw [SystemBlockDiagData.action_tail _ _ _ _ hn, htail l n hn]
   obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
-  simp only [ivpCoeffs, ivpTail, lpWeighted.sub_toSeq,
+  simp only [ivpCoeffs, ivpTail, l1Weighted.sub_toSeq,
     shiftDivN_CLM_apply, shiftDivN_succ_mode]
   have hne : ((m : ℝ) + 1) ≠ 0 := by positivity
   field_simp; push_cast; ring
@@ -575,7 +575,7 @@ def ivpFinCorrection
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (htail : ∀ l : Fin L, ∀ n, N < n → A.tailDiag l n = 1 / (↑n : ℝ))
     (a : XL1 ν L) : XL1 ν L := fun l =>
-  lpWeighted.mk (ivpCorrectionSeq A φ x₀ a l) (by
+  l1Weighted.mk (ivpCorrectionSeq A φ x₀ a l) (by
     rw [l1Weighted.mem_iff]
     exact summable_of_ne_finset_zero (s := Finset.Icc 0 N) fun n hn => by
       simp only [Finset.mem_Icc, not_and_or, not_le] at hn
@@ -587,13 +587,13 @@ lemma ivpMap_eq_tail_plus_correction
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (htail : ∀ l : Fin L, ∀ n, N < n → A.tailDiag l n = 1 / (↑n : ℝ))
     (hmem : ∀ a : XL1 ν L, ∀ l : Fin L,
-      lpWeighted.Mem ν 1 (A.action (ivpCoeffs φ x₀ a) l))
+      l1Weighted.Mem ν (A.action (ivpCoeffs φ x₀ a) l))
     (a : XL1 ν L) (l : Fin L) :
     ivpMap A φ x₀ hmem a l =
       ivpTail φ a l + ivpFinCorrection A φ x₀ htail a l := by
-  apply lpWeighted.ext; intro n
-  simp only [lpWeighted.add_toSeq, ivpFinCorrection, lpWeighted.mk_apply, ivpCorrectionSeq,
-    ivpTail, lpWeighted.sub_toSeq, shiftDivN_CLM_apply]
+  apply l1Weighted.ext; intro n
+  simp only [l1Weighted.add_toSeq, ivpFinCorrection, l1Weighted.mk_apply, ivpCorrectionSeq,
+    ivpTail, l1Weighted.sub_toSeq, shiftDivN_CLM_apply]
   show A.action (ivpCoeffs φ x₀ a) l n = _; ring
 
 /-- Each coefficient of the finite correction is differentiable in `a`. -/
@@ -630,7 +630,7 @@ lemma differentiable_ivpMap
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (htail : ∀ l : Fin L, ∀ n, N < n → A.tailDiag l n = 1 / (↑n : ℝ))
     (hmem : ∀ a : XL1 ν L, ∀ l : Fin L,
-      lpWeighted.Mem ν 1 (A.action (ivpCoeffs φ x₀ a) l))
+      l1Weighted.Mem ν (A.action (ivpCoeffs φ x₀ a) l))
     (hφ : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l)) :
     Differentiable ℝ (ivpMap A φ x₀ hmem) := by
   have hdecomp : ivpMap A φ x₀ hmem = fun a l =>
@@ -646,7 +646,7 @@ lemma fderiv_ivpFinCorrection_zero_tail
     (htail : ∀ l : Fin L, ∀ n, N < n → A.tailDiag l n = 1 / (↑n : ℝ))
     (hφ : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
     (ā h : XL1 ν L) (l : Fin L) (n : ℕ) (hn : N < n) :
-    lpWeighted.toSeq ((fderiv ℝ (ivpFinCorrection A φ x₀ htail) ā h) l) n = 0 := by
+    l1Weighted.toSeq ((fderiv ℝ (ivpFinCorrection A φ x₀ htail) ā h) l) n = 0 := by
   rw [show (fderiv ℝ (ivpFinCorrection A φ x₀ htail) ā h) l =
       (fderiv ℝ (fun a : XL1 ν L => ivpFinCorrection A φ x₀ htail a l) ā) h from by
     rw [fderiv_pi (fun i => differentiableAt_pi.mp
@@ -663,7 +663,7 @@ lemma fderiv_ivpMap_tail
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (htail : ∀ l : Fin L, ∀ n, N < n → A.tailDiag l n = 1 / (↑n : ℝ))
     (hmem : ∀ a : XL1 ν L, ∀ l : Fin L,
-      lpWeighted.Mem ν 1 (A.action (ivpCoeffs φ x₀ a) l))
+      l1Weighted.Mem ν (A.action (ivpCoeffs φ x₀ a) l))
     (hφ : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
     (ā h : XL1 ν L) (l : Fin L) (n : ℕ) (hn : N < n) :
     l1Weighted.toSeq ((fderiv ℝ (ivpMap A φ x₀ hmem) ā h) l) n =
@@ -675,7 +675,7 @@ lemma fderiv_ivpMap_tail
       fderiv ℝ (ivpFinCorrection A φ x₀ htail) ā := by
     rw [hdecomp]; exact fderiv_add (differentiable_ivpTail φ hφ ā)
       (differentiable_ivpFinCorrection A φ x₀ htail hφ ā)
-  rw [hfadd]; simp only [ContinuousLinearMap.add_apply, Pi.add_apply, lpWeighted.add_toSeq,
+  rw [hfadd]; simp only [ContinuousLinearMap.add_apply, Pi.add_apply, l1Weighted.add_toSeq,
     fderiv_ivpFinCorrection_zero_tail A φ x₀ htail hφ ā h l n hn, add_zero]
 
 /-- Chain rule: `toSeq(fderiv(ivpMap A φ x₀) a h l) n = fderiv(a ↦ A.action(F a) l n) a h`.
@@ -684,7 +684,7 @@ lemma fderiv_ivpMap_coeff_at
     (A : SystemBlockDiagData L N)
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (hmem : ∀ a : XL1 ν L, ∀ l : Fin L,
-      lpWeighted.Mem ν 1 (A.action (ivpCoeffs φ x₀ a) l))
+      l1Weighted.Mem ν (A.action (ivpCoeffs φ x₀ a) l))
     (hG_diff : Differentiable ℝ (ivpMap A φ x₀ hmem))
     (a h : XL1 ν L) (l : Fin L) (n : ℕ) :
     l1Weighted.toSeq ((fderiv ℝ (ivpMap A φ x₀ hmem) a h) l) n =
@@ -695,12 +695,12 @@ lemma fderiv_ivpMap_coeff_at
   rw [show (fderiv ℝ (ivpMap A φ x₀ hmem) a h) l =
       (fderiv ℝ (fun x : XL1 ν L => ivpMap A φ x₀ hmem x l) a) h from by
     rw [fderiv_pi (fun i => differentiableAt_pi.mp (hG_diff a) i)]; rfl]
-  show l1Weighted.toSeq_CLM n ((fderiv ℝ (fun x => ivpMap A φ x₀ hmem x l) a) h) = _
-  rw [← ContinuousLinearMap.comp_apply (l1Weighted.toSeq_CLM n),
+  show l1Weighted.toSeq_CLM (ν := ν) n ((fderiv ℝ (fun x => ivpMap A φ x₀ hmem x l) a) h) = _
+  rw [← ContinuousLinearMap.comp_apply (l1Weighted.toSeq_CLM (ν := ν) n),
     ← ContinuousLinearMap.fderiv (l1Weighted.toSeq_CLM (ν := ν) n),
-    ← fderiv_comp a (l1Weighted.toSeq_CLM n).differentiableAt
+    ← fderiv_comp a (l1Weighted.toSeq_CLM (ν := ν) n).differentiableAt
       ((differentiableAt_pi.mp (hG_diff a)) l)]
-  show (fderiv ℝ (l1Weighted.toSeq_CLM n ∘ fun x => ivpMap A φ x₀ hmem x l) a) h = _
+  show (fderiv ℝ (l1Weighted.toSeq_CLM (ν := ν) n ∘ fun x => ivpMap A φ x₀ hmem x l) a) h = _
   rw [show (l1Weighted.toSeq_CLM (ν := ν) n ∘ fun x => ivpMap A φ x₀ hmem x l) =
       fun x => A.action (ivpCoeffs φ x₀ x) l n from hcoeff]
 

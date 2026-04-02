@@ -10,8 +10,8 @@ at the `l1Chebyshev` level, Lean's `isDefEq` unfolds `‖c k‖` through:
 
 ```
 ‖c k‖
-= ‖(c : AddLp ℤ (ScaledRealZ ν)) k‖                  -- abbrev l1Chebyshev
-= ‖c.toLp k‖                                         -- CoeFun (AddLp)
+= ‖(c : lpOneAlg ℤ (ScaledRealZ ν)) k‖                  -- abbrev l1Chebyshev
+= ‖c.toLp k‖                                         -- CoeFun (lpOneAlg)
 = ‖(c.toLp : lp (ScaledRealZ ν) 1) k‖                -- structure field
 = ‖(c.toLp.val k : ScaledRealZ ν k)‖                 -- Subtype coercion
 = |ScaledRealZ.toReal (c.toLp.val k)| * ↑ν ^ k.natAbs -- ScaledRealZ.instNorm
@@ -23,7 +23,7 @@ changes the type). Lean structurally compares these huge terms, consuming 800k+ 
 
 ## The fix
 
-`AddLp.summable_norm_shift` proves at the generic `AddLp M E` level where `‖f m‖` is
+`lpOneAlg.summable_norm_shift` proves at the generic `lpOneAlg M E` level where `‖f m‖` is
 an OPAQUE norm — no `ScaledRealZ` to unfold. The `comp_injective` check becomes
 `‖f (m + s)‖ =?= (fun m => ‖f m‖) (m + s)` which is a single beta reduction. Instant.
 -/
@@ -40,21 +40,21 @@ variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 -- Uncomment to see the timeout:
 -- set_option maxHeartbeats 200000 in
 -- #check fun (c : l1Chebyshev ν) =>
---   (AddLp.summable_norm c).comp_injective (add_left_injective (1 : ℤ))
+--   (lpOneAlg.summable_norm c).comp_injective (add_left_injective (1 : ℤ))
 -- -- ERROR: (deterministic) timeout at `whnf`, maximum number of heartbeats (200000)
 
 -- With 1.6M heartbeats it works — proving the math is correct but elaboration is expensive:
 set_option maxHeartbeats 1600000 in
 theorem slow_shift (c : l1Chebyshev ν) :
     Summable (fun k : ℤ => ‖c (k + 1)‖) :=
-  (AddLp.summable_norm c).comp_injective (add_left_injective 1)
+  (lpOneAlg.summable_norm c).comp_injective (add_left_injective 1)
 
-/-! ## Demo 2: FAST — pre-proved at AddLp level (default 200k, instant) -/
+/-! ## Demo 2: FAST — pre-proved at lpOneAlg level (default 200k, instant) -/
 
 -- Same result, default heartbeats. comp_injective was already resolved generically.
 theorem fast_shift (c : l1Chebyshev ν) :
     Summable (fun k : ℤ => ‖c (k + 1)‖) :=
-  AddLp.summable_norm_shift c 1
+  lpOneAlg.summable_norm_shift c 1
 
 /-! ## Demo 3: Equiv.tsum_eq — type annotation matters for rw
 

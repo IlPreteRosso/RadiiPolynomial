@@ -59,7 +59,7 @@ lemma SystemBlockDiagData.norm_toCLM_component_eq_Icc_sum [NeZero L]
     (l : Fin L) :
     ‖(A.toCLM (ν := ν) v) l‖ =
     ∑ n ∈ Finset.Icc 0 M,
-      |lpWeighted.toSeq ((A.toCLM (ν := ν) v) l) n| * (ν : ℝ) ^ n :=
+      |l1Weighted.toSeq ((A.toCLM (ν := ν) v) l) n| * (ν : ℝ) ^ n :=
   l1Weighted.norm_eq_Icc_sum_of_support _ M (A.toCLM_support v M hMN hsupp l)
 
 /-- **Y₀ pipeline (general L)**: bound `‖A.toCLM(v)‖` via per-component finite sums.
@@ -81,7 +81,7 @@ lemma SystemBlockDiagData.norm_toCLM_apply_le [NeZero L]
     ‖A.toCLM (ν := ν) v‖ ≤ C := by
   refine (pi_norm_le_iff_of_nonneg hC).mpr fun l => ?_
   rw [A.norm_toCLM_component_eq_Icc_sum v M hMN hsupp l]
-  simp_rw [show ∀ n, lpWeighted.toSeq ((A.toCLM (ν := ν) v) l) n =
+  simp_rw [show ∀ n, l1Weighted.toSeq ((A.toCLM (ν := ν) v) l) n =
     A.action (toCoeff (ν := ν) v) l n from fun n =>
       A.toCoeff_toCLM (ν := ν) v l n]
   exact hcomp l
@@ -98,8 +98,8 @@ variable {ν : PosReal} {N : ℕ}
 then `A.toScalarCLM v` vanishes for `n > M`. -/
 lemma ScalarBlockDiagData.toScalarCLM_support
     (A : ScalarBlockDiagData N) (v : l1Weighted ν) (M : ℕ) (hMN : N ≤ M)
-    (hsupp : ∀ n, M < n → lpWeighted.toSeq v n = 0) :
-    ∀ n, M < n → lpWeighted.toSeq (A.toScalarCLM (ν := ν) v) n = 0 := by
+    (hsupp : ∀ n, M < n → l1Weighted.toSeq v n = 0) :
+    ∀ n, M < n → l1Weighted.toSeq (A.toScalarCLM (ν := ν) v) n = 0 := by
   intro n hn
   rw [ScalarBlockDiagData.toScalarCLM_toSeq_tail A v n (by omega)]
   rw [hsupp n hn, mul_zero]
@@ -107,10 +107,10 @@ lemma ScalarBlockDiagData.toScalarCLM_support
 /-- Norm of `A.toScalarCLM v` as a finite sum when `v` has support ≤ M with M ≥ N. -/
 lemma ScalarBlockDiagData.norm_toScalarCLM_action_eq_Icc_sum
     (A : ScalarBlockDiagData N) (v : l1Weighted ν) (M : ℕ) (hMN : N ≤ M)
-    (hsupp : ∀ n, M < n → lpWeighted.toSeq v n = 0) :
+    (hsupp : ∀ n, M < n → l1Weighted.toSeq v n = 0) :
     ‖A.toScalarCLM (ν := ν) v‖ =
     ∑ n ∈ Finset.Icc 0 M,
-      |lpWeighted.toSeq (A.toScalarCLM (ν := ν) v) n| * (ν : ℝ) ^ n :=
+      |l1Weighted.toSeq (A.toScalarCLM (ν := ν) v) n| * (ν : ℝ) ^ n :=
   l1Weighted.norm_eq_Icc_sum_of_support _ M (A.toScalarCLM_support v M hMN hsupp)
 
 end ScalarSpecialization

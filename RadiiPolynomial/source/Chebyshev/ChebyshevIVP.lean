@@ -49,7 +49,7 @@ abbrev XCheb (ν : PosReal) (L : ℕ) [Fact (1 ≤ (ν : ℝ))] :=
 /-- Absolute values of `l1Chebyshev` coefficients are summable (from ℓ¹ membership). -/
 theorem summable_abs_toSeq (a : l1Chebyshev ν) :
     Summable (fun k : ℤ => |l1Chebyshev.toSeq a k|) :=
-  AddLp.summable_abs_toRealSeq a
+  lpOneAlg.summable_abs_toRealSeq a
 
 /-- The alternating sum `∑_{n≥1} (-1)^n a_n` converges for `a ∈ l1Chebyshev ν`.
 This is the Chebyshev series evaluated at `t = -1`: `u(-1) = a_0 + 2∑ (-1)^n a_n`. -/
@@ -127,37 +127,37 @@ Operator norm: `‖chebyshevShiftDiv c‖ ≤ ν * ‖c‖` (since `1/(2ν) + ν
 /-- Shifted subseries of `l1Chebyshev` norms are summable (shift invariance). -/
 private lemma summable_norm_shift (c : l1Chebyshev ν) (s : ℤ) :
     Summable (fun n : ℕ => ‖c (↑n + s)‖) :=
-  (AddLp.summable_norm c).comp_injective (fun n m h => by omega)
+  (lpOneAlg.summable_norm c).comp_injective (fun n m h => by omega)
 
 -- Per-element bound: |(a-b)/(2k)| * ν^k ≤ (ν/2)*(‖c(k+1)‖ + ‖c(k-1)‖).
 private lemma chebyshevShiftDiv_fiber_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 < k) :
-    ‖AddLpRingData.ofReal (E := ScaledRealZ ν) (↑k)
+    ‖lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑k)
       (chebyshevShiftDiv_seq c (↑k))‖ ≤
     (ν : ℝ) / 2 * (‖c ((↑k : ℤ) + 1)‖ + ‖c ((↑k : ℤ) + (-1))‖) := by
   -- Unfold to real arithmetic
   rw [chebyshevShiftDiv_seq_pos c k (by omega)]
-  simp only [ScaledRealZ.norm_addLpRingData_ofReal]
+  simp only [ScaledRealZ.norm_lpOneAlgRingData_ofReal]
   rw [abs_div, abs_of_pos (show (0:ℝ) < 2 * (k:ℝ) by positivity)]
-  rw [AddLp.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + 1),
-      AddLp.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + (-1))]
-  simp only [ScaledRealZ.norm_addLpRingData_ofReal, abs_one, one_mul]
+  rw [lpOneAlg.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + 1),
+      lpOneAlg.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + (-1))]
+  simp only [ScaledRealZ.norm_lpOneAlgRingData_ofReal, abs_one, one_mul]
   have hk1 : ((↑k : ℤ) + 1).natAbs = k + 1 := by omega
   have hk2 : ((↑k : ℤ) + (-1)).natAbs = k - 1 := by omega
   have hk0' : (↑k : ℤ).natAbs = k := by omega
   rw [hk1, hk2, hk0']
   -- Now goal is pure ℝ arithmetic with abs, pow, div
-  set a := |AddLp.toRealSeq c ((↑k : ℤ) + 1)|
-  set b := |AddLp.toRealSeq c ((↑k : ℤ) + (-1))|
+  set a := |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1)|
+  set b := |lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))|
   -- Key facts for nlinarith
   have ha : 0 ≤ a := abs_nonneg _
   have hb : 0 ≤ b := abs_nonneg _
   have hν1 : (1 : ℝ) ≤ ν := Fact.out
   have hν0 : (0 : ℝ) < ν := ν.2
   have hk1' : (1 : ℝ) ≤ k := by exact_mod_cast hk
-  have htri : |AddLp.toRealSeq c ((↑k : ℤ) + 1) -
-      AddLp.toRealSeq c ((↑k : ℤ) + (-1))| ≤ a + b := by
-    have := norm_sub_le (AddLp.toRealSeq c ((↑k : ℤ) + 1))
-      (AddLp.toRealSeq c ((↑k : ℤ) + (-1)))
+  have htri : |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) -
+      lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| ≤ a + b := by
+    have := norm_sub_le (lpOneAlg.toRealSeq c ((↑k : ℤ) + 1))
+      (lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1)))
     simp only [Real.norm_eq_abs] at this; exact this
   have hpk : (0 : ℝ) < (ν : ℝ) ^ k := pow_pos hν0 _
   have hpk_le : (ν : ℝ) ^ k ≤ (ν : ℝ) ^ (k + 1) :=
@@ -169,7 +169,7 @@ private lemma chebyshevShiftDiv_fiber_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 
   rw [div_le_div_iff₀ (by positivity : (0:ℝ) < 2 * k) two_pos]
   -- Goal: |x-y| * ν^k * 2 ≤ ν * (a * ν^{k+1} + b * ν^{k-1}) * (2*k)
   -- Key: (a+b)*ν^k ≤ a*ν^{k+2} + b*ν^k ≤ k*(a*ν^{k+2}+b*ν^k) = k*ν*(a*ν^{k+1}+b*ν^{k-1})
-  have h1 : |AddLp.toRealSeq c ((↑k : ℤ) + 1) - AddLp.toRealSeq c ((↑k : ℤ) + (-1))| *
+  have h1 : |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| *
       (ν : ℝ) ^ k ≤ (a + b) * (ν : ℝ) ^ k :=
     mul_le_mul_of_nonneg_right htri hpk.le
   have h2 : a * (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 1) :=
@@ -188,7 +188,7 @@ private lemma chebyshevShiftDiv_fiber_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 
     add_nonneg (mul_nonneg ha (pow_nonneg hν0.le _)) (mul_nonneg hb (pow_nonneg hν0.le _))
   -- Step-by-step chain avoiding nlinarith on products
   -- (1) |..|*ν^k*2 ≤ (a+b)*ν^k*2
-  have s1 : |AddLp.toRealSeq c ((↑k : ℤ) + 1) - AddLp.toRealSeq c ((↑k : ℤ) + (-1))| *
+  have s1 : |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| *
       (ν : ℝ) ^ k * 2 ≤ (a + b) * (ν : ℝ) ^ k * 2 := by nlinarith [h1]
   -- (2) (a+b)*ν^k ≤ a*ν^{k+2}+b*ν^k
   have s2 : (a + b) * (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k := by linarith [h5]
@@ -197,8 +197,8 @@ private lemma chebyshevShiftDiv_fiber_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 
       (a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k) * (2 * ↑k) :=
     mul_le_mul_of_nonneg_left (by linarith [hk1']) h7
   -- (4) Chain via calc
-  calc |AddLp.toRealSeq c ((↑k : ℤ) + 1) -
-          AddLp.toRealSeq c ((↑k : ℤ) + (-1))| * (ν : ℝ) ^ k * 2
+  calc |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) -
+          lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| * (ν : ℝ) ^ k * 2
       ≤ (a + b) * (ν : ℝ) ^ k * 2 := s1
     _ ≤ (a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k) * 2 := by nlinarith [s2]
     _ ≤ (a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k) * (2 * ↑k) := s3
@@ -207,12 +207,12 @@ private lemma chebyshevShiftDiv_fiber_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 
 
 
 private lemma chebyshevShiftDiv_memℓp (c : l1Chebyshev ν) :
-    Memℓp (fun k : ℤ => AddLpRingData.ofReal (E := ScaledRealZ ν) k
+    Memℓp (fun k : ℤ => lpOneAlgRingData.ofReal (E := ScaledRealZ ν) k
       (chebyshevShiftDiv_seq c k)) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
-  have h1 := AddLp.summable_norm_shift c (1 : ℤ)
-  have h2 := AddLp.summable_norm_shift c (-1 : ℤ)
+  have h1 := lpOneAlg.summable_norm_shift c (1 : ℤ)
+  have h2 := lpOneAlg.summable_norm_shift c (-1 : ℤ)
   have hsum := h1.add h2
   -- Each ‖shifted(k)‖ ≤ (ν/2)*(‖c(k+1)‖+‖c(k-1)‖) ≤ ν*(‖c(k+1)‖+‖c(k-1)‖)
   -- Bound by ν * summable, which is summable
@@ -225,7 +225,7 @@ private lemma chebyshevShiftDiv_memℓp (c : l1Chebyshev ν) :
     cases k with
     | zero =>
       have : chebyshevShiftDiv_seq c (Int.ofNat 0) = 0 := chebyshevShiftDiv_seq_zero c
-      rw [this, AddLpRingData.ofReal_zero, norm_zero]
+      rw [this, lpOneAlgRingData.ofReal_zero, norm_zero]
       exact mul_nonneg ν.2.le (add_nonneg (norm_nonneg _) (norm_nonneg _))
     | succ k =>
       refine (chebyshevShiftDiv_fiber_le c (k+1) (by omega)).trans ?_
@@ -234,39 +234,39 @@ private lemma chebyshevShiftDiv_memℓp (c : l1Chebyshev ν) :
         (add_nonneg (norm_nonneg _) (norm_nonneg _))
   | negSucc n =>
     have : chebyshevShiftDiv_seq c (Int.negSucc n) = 0 := chebyshevShiftDiv_seq_neg c n
-    rw [this, AddLpRingData.ofReal_zero, norm_zero]
+    rw [this, lpOneAlgRingData.ofReal_zero, norm_zero]
     exact mul_nonneg ν.2.le (add_nonneg (norm_nonneg _) (norm_nonneg _))
 
 /-- The Chebyshev shift-divide operator as an `l1Chebyshev ν` element. -/
 def chebyshevShiftDiv (c : l1Chebyshev ν) : l1Chebyshev ν :=
-  ⟨⟨fun k => AddLpRingData.ofReal (E := ScaledRealZ ν) k (chebyshevShiftDiv_seq c k),
+  ⟨⟨fun k => lpOneAlgRingData.ofReal (E := ScaledRealZ ν) k (chebyshevShiftDiv_seq c k),
     chebyshevShiftDiv_memℓp c⟩⟩
 
 @[simp] lemma chebyshevShiftDiv_toSeq (c : l1Chebyshev ν) (k : ℤ) :
-    AddLp.toRealSeq (chebyshevShiftDiv c) k = chebyshevShiftDiv_seq c k := by
-  simp [chebyshevShiftDiv, l1Chebyshev.toSeq, AddLp.toRealSeq, AddLpRingData.toReal_ofReal]
+    lpOneAlg.toRealSeq (chebyshevShiftDiv c) k = chebyshevShiftDiv_seq c k := by
+  simp [chebyshevShiftDiv, l1Chebyshev.toSeq, lpOneAlg.toRealSeq, lpOneAlgRingData.toReal_ofReal]
 
 /-! ### Linearity of chebyshevShiftDiv -/
 
 lemma chebyshevShiftDiv_add (c d : l1Chebyshev ν) :
     chebyshevShiftDiv (c + d) = chebyshevShiftDiv c + chebyshevShiftDiv d := by
-  apply AddLp.ext_toRealSeq; funext k
-  simp only [chebyshevShiftDiv_toSeq, AddLp.toRealSeq_add, Pi.add_apply]
-  unfold chebyshevShiftDiv_seq l1Chebyshev.toSeq AddLp.toRealSeq
+  apply lpOneAlg.ext_toRealSeq; funext k
+  simp only [chebyshevShiftDiv_toSeq, lpOneAlg.toRealSeq_add, Pi.add_apply]
+  unfold chebyshevShiftDiv_seq l1Chebyshev.toSeq lpOneAlg.toRealSeq
   cases k with
   | ofNat k => cases k with
     | zero => simp
-    | succ k => simp [AddLpRingData.toReal_add]; ring
+    | succ k => simp [lpOneAlgRingData.toReal_add]; ring
   | negSucc _ => simp
 
 lemma chebyshevShiftDiv_smul (r : ℝ) (c : l1Chebyshev ν) :
     chebyshevShiftDiv (r • c) = r • chebyshevShiftDiv c := by
-  apply AddLp.ext_toRealSeq
-  rw [AddLp.toRealSeq_smul]; funext k
+  apply lpOneAlg.ext_toRealSeq
+  rw [lpOneAlg.toRealSeq_smul]; funext k
   simp only [Pi.smul_apply, smul_eq_mul, chebyshevShiftDiv_toSeq]
   -- chebyshevShiftDiv_seq (r • c) k = r * chebyshevShiftDiv_seq c k
   have hsmul : ∀ m : ℤ, l1Chebyshev.toSeq (r • c) m = r * l1Chebyshev.toSeq c m :=
-    fun m => congr_fun (AddLp.toRealSeq_smul r c) m
+    fun m => congr_fun (lpOneAlg.toRealSeq_smul r c) m
   cases k with
   | ofNat k => cases k with
     | zero => simp [chebyshevShiftDiv_seq]
@@ -282,23 +282,23 @@ private lemma chebyshevShiftDiv_elem_le (c : l1Chebyshev ν) (k : ℤ) :
   | ofNat k => cases k with
     | zero =>
       have : (chebyshevShiftDiv c) (Int.ofNat 0) = 0 := by
-        show AddLpRingData.ofReal (E := ScaledRealZ ν) 0 (chebyshevShiftDiv_seq c 0) = 0
-        rw [chebyshevShiftDiv_seq_zero, AddLpRingData.ofReal_zero]
+        show lpOneAlgRingData.ofReal (E := ScaledRealZ ν) 0 (chebyshevShiftDiv_seq c 0) = 0
+        rw [chebyshevShiftDiv_seq_zero, lpOneAlgRingData.ofReal_zero]
       rw [this, norm_zero]
       exact mul_nonneg (div_nonneg ν.2.le two_pos.le) (add_nonneg (norm_nonneg _) (norm_nonneg _))
     | succ k => exact chebyshevShiftDiv_fiber_le c (k + 1) (by omega)
   | negSucc n =>
     have : (chebyshevShiftDiv c) (Int.negSucc n) = 0 := by
-      show AddLpRingData.ofReal (E := ScaledRealZ ν) _ (chebyshevShiftDiv_seq c _) = 0
-      rw [chebyshevShiftDiv_seq_neg, AddLpRingData.ofReal_zero]
+      show lpOneAlgRingData.ofReal (E := ScaledRealZ ν) _ (chebyshevShiftDiv_seq c _) = 0
+      rw [chebyshevShiftDiv_seq_neg, lpOneAlgRingData.ofReal_zero]
     rw [this, norm_zero]
     exact mul_nonneg (div_nonneg ν.2.le two_pos.le) (add_nonneg (norm_nonneg _) (norm_nonneg _))
 
 lemma chebyshevShiftDiv_norm_le (c : l1Chebyshev ν) :
     ‖chebyshevShiftDiv c‖ ≤ (ν : ℝ) * ‖c‖ := by
-  rw [AddLp.norm_eq_tsum, AddLp.norm_eq_tsum]
-  have h1 := AddLp.summable_norm_shift c (1 : ℤ)
-  have h2 := AddLp.summable_norm_shift c (-1 : ℤ)
+  rw [lpOneAlg.norm_eq_tsum, lpOneAlg.norm_eq_tsum]
+  have h1 := lpOneAlg.summable_norm_shift c (1 : ℤ)
+  have h2 := lpOneAlg.summable_norm_shift c (-1 : ℤ)
   -- NB: explicit type annotation is critical — Equiv.tsum_eq returns a tsum with
   -- Equiv.addRight internally, which rw can't match against `k + 1`. The annotation
   -- forces the definitional check here so rw works later.
@@ -310,7 +310,7 @@ lemma chebyshevShiftDiv_norm_le (c : l1Chebyshev ν) :
       (ν : ℝ) / 2 * (‖c (k + 1)‖ + ‖c (k + (-1))‖)) := by
     simpa only [smul_eq_mul] using (h1.add h2).const_smul ((ν : ℝ) / 2)
   have hstep := Summable.tsum_le_tsum (chebyshevShiftDiv_elem_le c)
-    (AddLp.summable_norm (chebyshevShiftDiv c)) hsb
+    (lpOneAlg.summable_norm (chebyshevShiftDiv c)) hsb
   refine hstep.trans (le_of_eq ?_)
   -- Pull out constant
   have e1 : ∑' k : ℤ, ((ν : ℝ) / 2 * (‖c (k + 1)‖ + ‖c (k + (-1))‖)) =
@@ -393,16 +393,32 @@ with zeros on negative indices. -/
 
 /-- Embed an ℕ-indexed coefficient sequence into ℤ-indexed `ScaledRealZ ν`.
 Maps `n : ℕ ↦ ofReal (↑n) (seq n)` for non-negative ℤ, and `0` for negative. -/
-private def embedNatToInt (seq : ℕ → ℝ) : ∀ k : ℤ, ScaledRealZ ν k :=
+def embedNatToInt (seq : ℕ → ℝ) : ∀ k : ℤ, ScaledRealZ ν k :=
   fun k => match k with
-  | (n : ℕ) => AddLpRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
+  | (n : ℕ) => lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
   | (Int.negSucc _) => 0
 
 /-! ## Composed Map G = A ∘ F -/
 
+/-- Embed ℕ-indexed IVP result into ℤ, **passing through** negative modes from `base`.
+
+On non-negative modes `k ≥ 0`: applies `ofReal` to the ℕ-indexed `seq`.
+On negative modes `k < 0`: preserves the value from `base`.
+
+Negative modes are structural invariants of the Chebyshev/Fourier symmetry
+(`a_{-k} = a_k`). The IVP operator only acts on ℕ-modes; negative modes are inert. -/
+def embedWithPassThrough (seq : ℕ → ℝ) (base : l1Chebyshev ν) :
+    ∀ k : ℤ, ScaledRealZ ν k :=
+  fun k => match k with
+  | (n : ℕ) => lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
+  | Int.negSucc m => base (Int.negSucc m)
+
 /-- The composed Chebyshev IVP map `G = A ∘ F : XCheb → XCheb`.
 Applies `A.action` to the ℕ-indexed `chebyshevIvpCoeffs`, then embeds
-into ℤ-indexed `l1Chebyshev ν` via `embedNatToInt`.
+into ℤ-indexed `l1Chebyshev ν` with negative modes passed through from input.
+
+Negative modes are inert: `G(a)_k = a_k` for `k < 0`. The IVP equations
+only constrain non-negative modes (see Ref: Eq. 14.11, Ch.14 p.328).
 
 The `hmem` hypothesis proves the result is in ℓ¹. In practice, this follows
 from `A.tailDiag = 1/(2k)` cancelling the `2k` factor in eq. 14.11. -/
@@ -410,9 +426,84 @@ def chebyshevIvpMap (A : SystemBlockDiagData L N)
     (φ : XCheb ν L → Fin L → l1Chebyshev ν)
     (p : Fin L → ℝ)
     (hmem : ∀ a : XCheb ν L, ∀ l : Fin L,
-      Memℓp (embedNatToInt (A.action (chebyshevIvpCoeffs φ p a) l) : ∀ k : ℤ, ScaledRealZ ν k) 1)
+      Memℓp (embedWithPassThrough (A.action (chebyshevIvpCoeffs φ p a) l) (a l)
+        : ∀ k : ℤ, ScaledRealZ ν k) 1)
     (a : XCheb ν L) : XCheb ν L := fun l =>
-  ⟨⟨embedNatToInt (A.action (chebyshevIvpCoeffs φ p a) l), hmem a l⟩⟩
+  ⟨⟨embedWithPassThrough (A.action (chebyshevIvpCoeffs φ p a) l) (a l), hmem a l⟩⟩
+
+/-! ## Membership Proof for chebyshevIvpMap
+
+On tail modes (n > N) with `A.tailDiag = 1/(2k)`, the Chebyshev IVP action simplifies:
+`A.action(F(a))_n = (1/(2n)) · (2n·a_n + c_{n+1} - c_{n-1}) = a_n + chebyshevShiftDiv_seq(c)_n`
+where `c = φ(a)`. Both `a` and `chebyshevShiftDiv(c)` are in ℓ¹, so the result is in ℓ¹. -/
+
+/-- On tail modes, the action with tailDiag = 1/(2k) equals a_k + chebyshevShiftDiv_seq(c)_k. -/
+private lemma action_chebyshev_tail_eq {N : ℕ}
+    (A : SystemBlockDiagData L N)
+    (φ : XCheb ν L → Fin L → l1Chebyshev ν)
+    (p : Fin L → ℝ)
+    (htail : ∀ l : Fin L, ∀ n, N < n → A.tailDiag l n = 1 / (2 * (↑n : ℝ)))
+    (a : XCheb ν L) (l : Fin L) (n : ℕ) (hn : N < n) :
+    A.action (chebyshevIvpCoeffs φ p a) l n =
+      l1Chebyshev.toSeq (a l) (↑n : ℤ) + chebyshevShiftDiv_seq (φ a l) (↑n : ℤ) := by
+  rw [SystemBlockDiagData.action_tail _ _ _ _ hn, htail l n hn]
+  obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
+  simp only [chebyshevIvpCoeffs]
+  rw [chebyshevShiftDiv_seq_pos (φ a l) (m + 1) (by omega)]
+  have h1 : (↑(m + 1) : ℤ) + 1 = (↑(m + 2) : ℤ) := by push_cast; ring
+  have h2 : (↑(m + 1) : ℤ) - 1 = (↑m : ℤ) := by push_cast; ring
+  rw [h1, h2]
+  have hne : (2 * ((m : ℝ) + 1)) ≠ 0 := by positivity
+  have hne' : ((m : ℝ) + 1) ≠ 0 := by positivity
+  field_simp
+  push_cast; ring
+
+/-- Membership proof: `embedWithPassThrough(A.action(F(a)), a l)` is in ℓ¹
+when `A.tailDiag = 1/(2k)`. On tail modes, the ℕ-part equals
+`a_k + chebyshevShiftDiv(φ(a))_k`, both in ℓ¹. Negative modes come from `a l`
+which is already in ℓ¹. Used to auto-derive `hmem` in `StdChebIVPData`. -/
+lemma chebyshevIvpMap_mem_of_tailDiag_half {N : ℕ}
+    (A : SystemBlockDiagData L N)
+    (φ : XCheb ν L → Fin L → l1Chebyshev ν)
+    (p : Fin L → ℝ)
+    (htail : ∀ l : Fin L, ∀ n, N < n → A.tailDiag l n = 1 / (2 * (↑n : ℝ)))
+    (a : XCheb ν L) (l : Fin L) :
+    Memℓp (embedWithPassThrough (ν := ν)
+      (A.action (chebyshevIvpCoeffs φ p a) l) (a l)) 1 := by
+  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
+  simp only [ENNReal.toReal_one, Real.rpow_one]
+  set seq := A.action (chebyshevIvpCoeffs φ p a) l
+  set c := φ a l
+  -- On tail modes, embed(seq)(↑n) = (a l)(↑n) + chebyshevShiftDiv(c)(↑n)
+  have h_elem_eq : ∀ n : ℕ, N < n →
+      (embedWithPassThrough (ν := ν) seq (a l)) (↑n : ℤ) =
+        (a l) (↑n : ℤ) + (chebyshevShiftDiv c) (↑n : ℤ) := by
+    intro n hn
+    show lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n) = _
+    have hseq : seq n = l1Chebyshev.toSeq (a l) (↑n : ℤ) +
+        chebyshevShiftDiv_seq (φ a l) (↑n : ℤ) :=
+      action_chebyshev_tail_eq A φ p htail a l n hn
+    rw [hseq, lpOneAlgRingData.ofReal_add]; congr 1
+  -- Decompose ℤ = ℕ+ ⊔ ℕ- via Summable.of_nat_of_neg_add_one
+  apply Summable.of_nat_of_neg_add_one
+  · -- Positive part: eventually bounded by ‖(a l)(↑n)‖ + ‖shiftDiv(c)(↑n)‖
+    have h_bound : Summable (fun n : ℕ =>
+        ‖(a l) (↑n : ℤ)‖ + ‖chebyshevShiftDiv c (↑n : ℤ)‖) :=
+      ((lpOneAlg.summable_norm (a l)).comp_injective (fun n m h => by omega)).add
+        ((lpOneAlg.summable_norm (chebyshevShiftDiv c)).comp_injective
+          (fun n m h => by omega))
+    exact Summable.of_norm_bounded_eventually_nat h_bound
+      (Filter.eventually_atTop.mpr ⟨N + 1, fun n hn => by
+        simp only [Real.norm_eq_abs, abs_of_nonneg (norm_nonneg _)]
+        rw [h_elem_eq n (by omega)]
+        exact norm_add_le _ _⟩)
+  · -- Negative part: from a l, which is in ℓ¹
+    have : (fun n : ℕ => ‖(embedWithPassThrough (ν := ν) seq (a l)) (-(↑n + 1 : ℤ))‖) =
+        fun n => ‖(a l) (Int.negSucc n)‖ := by
+      ext n; have h : -(↑n + 1 : ℤ) = Int.negSucc n := by omega
+      rw [h]; simp [embedWithPassThrough]
+    rw [this]
+    exact (lpOneAlg.summable_norm (a l)).comp_injective (fun n m h => by omega)
 
 /-! ## Tight Tail Bound for chebyshevShiftDiv
 
@@ -428,20 +519,20 @@ private lemma chebyshevShiftDiv_elem_tight_le (c : l1Chebyshev ν) (k : ℕ) (hk
     1 / (2 * (k : ℝ)) *
       (‖c ((↑k : ℤ) + 1)‖ + (ν : ℝ) * ‖c ((↑k : ℤ) + (-1))‖) := by
   -- Same norm unfolding as chebyshevShiftDiv_fiber_le
-  show ‖AddLpRingData.ofReal (E := ScaledRealZ ν) (↑k) (chebyshevShiftDiv_seq c ↑k)‖ ≤ _
+  show ‖lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑k) (chebyshevShiftDiv_seq c ↑k)‖ ≤ _
   rw [chebyshevShiftDiv_seq_pos c k (by omega)]
-  simp only [ScaledRealZ.norm_addLpRingData_ofReal]
+  simp only [ScaledRealZ.norm_lpOneAlgRingData_ofReal]
   rw [abs_div, abs_of_pos (show (0:ℝ) < 2 * (k:ℝ) by positivity)]
-  rw [AddLp.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + 1),
-      AddLp.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + (-1))]
-  simp only [ScaledRealZ.norm_addLpRingData_ofReal, abs_one, one_mul]
+  rw [lpOneAlg.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + 1),
+      lpOneAlg.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + (-1))]
+  simp only [ScaledRealZ.norm_lpOneAlgRingData_ofReal, abs_one, one_mul]
   have hk1 : ((↑k : ℤ) + 1).natAbs = k + 1 := by omega
   have hk2 : ((↑k : ℤ) + (-1)).natAbs = k - 1 := by omega
   have hk0 : (↑k : ℤ).natAbs = k := by omega
   rw [hk1, hk2, hk0]
   -- Now pure ℝ arithmetic with a = |c_{k+1}|, b = |c_{k-1}|
-  set a := |AddLp.toRealSeq c ((↑k : ℤ) + 1)|
-  set b := |AddLp.toRealSeq c ((↑k : ℤ) + (-1))|
+  set a := |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1)|
+  set b := |lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))|
   have ha : 0 ≤ a := abs_nonneg _
   have hb : 0 ≤ b := abs_nonneg _
   have hν0 : (0 : ℝ) < ν := ν.2
@@ -450,22 +541,22 @@ private lemma chebyshevShiftDiv_elem_tight_le (c : l1Chebyshev ν) (k : ℕ) (hk
   have hvk : (ν : ℝ) ^ k ≤ (ν : ℝ) ^ (k + 1) := pow_le_pow_right₀ hν1 (by omega)
   have heq_pow : (ν : ℝ) * (ν : ℝ) ^ (k - 1) = (ν : ℝ) ^ k := by
     rw [mul_comm, ← pow_succ]; congr 1; omega
-  have htri : |AddLp.toRealSeq c ((↑k : ℤ) + 1) -
-      AddLp.toRealSeq c ((↑k : ℤ) + (-1))| ≤ a + b := by
-    have := norm_sub_le (AddLp.toRealSeq c ((↑k : ℤ) + 1))
-      (AddLp.toRealSeq c ((↑k : ℤ) + (-1)))
+  have htri : |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) -
+      lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| ≤ a + b := by
+    have := norm_sub_le (lpOneAlg.toRealSeq c ((↑k : ℤ) + 1))
+      (lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1)))
     simp only [Real.norm_eq_abs] at this; exact this
   have h2k : (0 : ℝ) < 2 * (k : ℝ) := by positivity
   -- Numerator bound: |x-y| * ν^k ≤ a * ν^{k+1} + b * ν^k = a * ν^{k+1} + ν * (b * ν^{k-1})
-  have h_num : |AddLp.toRealSeq c ((↑k : ℤ) + 1) - AddLp.toRealSeq c ((↑k : ℤ) + (-1))| *
+  have h_num : |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| *
       (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 1) + (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1)) := by
     have h1 : (a + b) * (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 1) + b * (ν : ℝ) ^ k := by
       nlinarith [mul_le_mul_of_nonneg_left hvk ha]
     nlinarith [mul_le_mul_of_nonneg_right htri hpk, heq_pow]
   -- Factor 1/(2k) from both sides via calc
-  calc |AddLp.toRealSeq c ((↑k : ℤ) + 1) - AddLp.toRealSeq c ((↑k : ℤ) + (-1))| /
+  calc |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| /
         (2 * (k : ℝ)) * (ν : ℝ) ^ k
-      = |AddLp.toRealSeq c ((↑k : ℤ) + 1) - AddLp.toRealSeq c ((↑k : ℤ) + (-1))| *
+      = |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| *
           (ν : ℝ) ^ k / (2 * (k : ℝ)) := div_mul_eq_mul_div _ _ _
     _ ≤ (a * (ν : ℝ) ^ (k + 1) + (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1))) / (2 * (k : ℝ)) :=
         div_le_div_of_nonneg_right h_num h2k.le
@@ -495,11 +586,11 @@ lemma chebyshevShiftDiv_tailTsum_le_div (c : l1Chebyshev ν) (N : ℕ) :
   -- Summability
   have hsumm : Summable (fun n : ℕ =>
       ‖(chebyshevShiftDiv c) (↑(n + (N + 1)) : ℤ)‖) :=
-    (AddLp.summable_norm (chebyshevShiftDiv c)).comp_injective (fun n m h => by omega)
+    (lpOneAlg.summable_norm (chebyshevShiftDiv c)).comp_injective (fun n m h => by omega)
   have h1 : Summable (fun n : ℕ => ‖c ((↑(n + (N + 1)) : ℤ) + 1)‖) :=
-    (AddLp.summable_norm c).comp_injective (fun n m h => by omega)
+    (lpOneAlg.summable_norm c).comp_injective (fun n m h => by omega)
   have h2 : Summable (fun n : ℕ => (ν : ℝ) * ‖c ((↑(n + (N + 1)) : ℤ) + (-1))‖) := by
-    exact ((AddLp.summable_norm c).comp_injective
+    exact ((lpOneAlg.summable_norm c).comp_injective
       (fun n m h => by omega)).mul_left _
   calc ∑' n, ‖(chebyshevShiftDiv c) (↑(n + (N + 1)) : ℤ)‖
       ≤ ∑' n, (1 / (2 * ((N : ℝ) + 1)) *
@@ -516,12 +607,12 @@ lemma chebyshevShiftDiv_tailTsum_le_div (c : l1Chebyshev ν) (N : ℕ) :
     _ ≤ 1 / (2 * ((N : ℝ) + 1)) * (‖c‖ + (ν : ℝ) * ‖c‖) := by
         apply mul_le_mul_of_nonneg_left _ (by positivity)
         apply add_le_add
-        · rw [AddLp.norm_eq_tsum c]
-          exact tsum_comp_le_tsum_of_inj (AddLp.summable_norm c)
+        · rw [lpOneAlg.norm_eq_tsum c]
+          exact tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm c)
             (fun _ => norm_nonneg _) (fun n m h => by omega)
         · apply mul_le_mul_of_nonneg_left _ ν.2.le
-          rw [AddLp.norm_eq_tsum c]
-          exact tsum_comp_le_tsum_of_inj (AddLp.summable_norm c)
+          rw [lpOneAlg.norm_eq_tsum c]
+          exact tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm c)
             (fun _ => norm_nonneg _) (fun n m h => by omega)
     _ = (1 + (ν : ℝ)) / (2 * ((N : ℝ) + 1)) * ‖c‖ := by ring
     _ ≤ (ν : ℝ) / ((N : ℝ) + 1) * ‖c‖ := by
@@ -541,16 +632,16 @@ This is the ℤ-indexed analogue of `l1Weighted.norm_eq_tailTsum_of_fin_zero`. -
 private lemma l1Chebyshev_norm_eq_nat_tailTsum (d : l1Chebyshev ν) (N : ℕ)
     (hfin : ∀ k : ℤ, k ≤ ↑N → d k = 0) :
     ‖d‖ = ∑' n : ℕ, ‖d (↑(n + (N + 1)) : ℤ)‖ := by
-  -- Work at generic AddLp level to avoid subtype elaboration blowup
+  -- Work at generic lpOneAlg level to avoid subtype elaboration blowup
   set f : ℤ → ℝ := fun k => ‖d k‖ with hf_def
   -- Summability
-  have hf_summ : Summable f := AddLp.summable_norm d
+  have hf_summ : Summable f := lpOneAlg.summable_norm d
   have h_nat : Summable (fun n : ℕ => f ↑n) :=
     hf_summ.comp_injective (fun n m h => by omega)
   have h_neg : Summable (fun n : ℕ => f (-(↑n + 1))) :=
     hf_summ.comp_injective (fun n m h => by omega)
   -- Step 1: ‖d‖ = ∑' k : ℤ, f k
-  have h_norm : ‖d‖ = ∑' k : ℤ, f k := AddLp.norm_eq_tsum d
+  have h_norm : ‖d‖ = ∑' k : ℤ, f k := lpOneAlg.norm_eq_tsum d
   -- Step 2: Decompose ℤ-tsum = ℕ₊ + ℕ₋ (use have to avoid rw matching blowup)
   have h_decomp : ∑' k : ℤ, f k =
       (∑' n : ℕ, f ↑n) + (∑' n : ℕ, f (-(↑n + 1))) :=
@@ -605,6 +696,45 @@ lemma chebyshev_Z₁_component_norm_le (d w : l1Chebyshev ν) (N : ℕ)
     fun n => htail (n + (N + 1)) (by omega)]
   exact chebyshevShiftDiv_tailTsum_le_div w N
 
+/-! ## Relaxed Chebyshev Z₁ Component Bound
+
+Handles the Chebyshev IVP case where the mode-0 alternating sum couples all modes,
+preventing `d` from vanishing on finite modes. Instead of requiring `d = 0` on `k ≤ N`,
+takes separate bounds for negative, finite, and tail contributions. -/
+
+/-- **Relaxed** Chebyshev Z₁ per-component bound.
+Replaces the `hfin` (zero on all k ≤ N) assumption with separate bounds:
+- `hneg`: d = 0 on negative modes (from pass-through)
+- `hfin_le`: finite-mode contribution bounded by ε
+- `htail`: tail matches chebyshevShiftDiv(w)
+
+Result: `‖d‖ ≤ ε + ν/(N+1) · ‖w‖`. -/
+lemma chebyshev_Z₁_component_le_relaxed (d w : l1Chebyshev ν) (N : ℕ)
+    (hneg : ∀ m : ℕ, d (Int.negSucc m) = 0)
+    {ε : ℝ}
+    (hfin_le : ∑ k : Fin (N + 1), ‖d (↑(k : ℕ) : ℤ)‖ ≤ ε)
+    (htail : ∀ m : ℕ, N < m →
+      ‖d (↑m : ℤ)‖ = ‖(chebyshevShiftDiv w) (↑m : ℤ)‖) :
+    ‖d‖ ≤ ε + (ν : ℝ) / ((N : ℝ) + 1) * ‖w‖ := by
+  -- set f to avoid subtype elaboration blowup on tsum operations
+  set f : ℤ → ℝ := fun k => ‖d k‖ with hf_def
+  have hf_summ : Summable f := lpOneAlg.summable_norm d
+  have h_nat : Summable (fun n : ℕ => f ↑n) :=
+    hf_summ.comp_injective (fun n m h => by omega)
+  have h_neg : Summable (fun n : ℕ => f (-(↑n + 1))) :=
+    hf_summ.comp_injective (fun n m h => by omega)
+  -- Decompose ℤ = ℕ₊ + ℕ₋, neg part = 0, split ℕ into [0,N] + [N+1,∞)
+  rw [lpOneAlg.norm_eq_tsum d, tsum_of_nat_of_neg_add_one h_nat h_neg]
+  rw [show (fun n : ℕ => f (-(↑n + 1))) = fun _ => (0 : ℝ) from
+    funext (fun n => norm_eq_zero.mpr (by
+      show d (-(↑n + 1 : ℤ)) = 0
+      rw [show -(↑n + 1 : ℤ) = Int.negSucc n from by omega, hneg]))]
+  rw [tsum_zero, add_zero, (h_nat.sum_add_tsum_nat_add (N + 1)).symm]
+  refine add_le_add ?_ ?_
+  · rw [← Fin.sum_univ_eq_sum_range (f := fun n => f ↑n)]; exact hfin_le
+  · exact (tsum_congr fun n => htail (n + (N + 1)) (by omega)) ▸
+      chebyshevShiftDiv_tailTsum_le_div w N
+
 /-! ## Chebyshev Z₁ Operator Norm Bound
 
 Assembles per-component Z₁ bounds into `‖composedApprox - fderiv G ā‖ ≤ Z₁`.
@@ -642,6 +772,48 @@ lemma chebyshev_Z₁_le
     _ ≤ (ν : ℝ) / ((N : ℝ) + 1) * (K * ‖h‖) :=
         mul_le_mul_of_nonneg_left (hDφ h l) hν
     _ ≤ Z₁ * ‖h‖ := by nlinarith [norm_nonneg h]
+
+/-- **Relaxed Chebyshev Z₁ bound** for IVPs where mode-0 couples all modes.
+
+Unlike `chebyshev_Z₁_le`, does NOT require `hfin` (composedApprox = fderiv G on k ≤ N).
+Instead, takes separate bounds for the finite-mode contribution (ε per component)
+and the tail contribution (via Dφ norm bound K).
+
+Total: `Z₁ ≤ ε + ν/(N+1) · K`.
+
+Use when the IVP derivative DF is not lower-triangular (Chebyshev mode-0 alternating sum
+couples all modes, creating O(1/ν^{N+1}) leakage into finite modes). -/
+lemma chebyshev_Z₁_le_relaxed
+    (N : ℕ) (composedApprox : XCheb ν L →L[ℝ] XCheb ν L)
+    (G : XCheb ν L → XCheb ν L) (ā : XCheb ν L)
+    (Dφ : XCheb ν L → Fin L → l1Chebyshev ν)
+    -- Negative: difference is zero (from pass-through)
+    (hneg : ∀ h : XCheb ν L, ∀ l : Fin L, ∀ m : ℕ,
+      ((composedApprox - fderiv ℝ G ā) h l) (Int.negSucc m) = 0)
+    -- Finite: per-component bound
+    {ε : ℝ} (hε : 0 ≤ ε)
+    (hfin_le : ∀ h : XCheb ν L, ∀ l : Fin L,
+      ∑ k : Fin (N + 1),
+        ‖((composedApprox - fderiv ℝ G ā) h l) (↑(k : ℕ) : ℤ)‖ ≤ ε * ‖h‖)
+    -- Tail: norm matches chebyshevShiftDiv(Dφ)
+    (htail : ∀ h : XCheb ν L, ∀ l : Fin L, ∀ m : ℕ, N < m →
+      ‖((composedApprox - fderiv ℝ G ā) h l) (↑m : ℤ)‖ =
+        ‖(chebyshevShiftDiv (Dφ h l)) (↑m : ℤ)‖)
+    -- Dφ norm bound
+    {K : ℝ} (hK : 0 ≤ K)
+    (hDφ : ∀ h : XCheb ν L, ∀ l : Fin L, ‖Dφ h l‖ ≤ K * ‖h‖)
+    -- Total bound
+    {Z₁ : ℝ} (hZ₁ : ε + (ν : ℝ) / ((N : ℝ) + 1) * K ≤ Z₁) :
+    ‖composedApprox - fderiv ℝ G ā‖ ≤ Z₁ := by
+  have hν : (0 : ℝ) ≤ (ν : ℝ) / ((N : ℝ) + 1) := div_nonneg ν.2.le (by positivity)
+  apply ContinuousLinearMap.opNorm_le_bound _
+    (le_trans (add_nonneg hε (mul_nonneg hν hK)) hZ₁)
+  intro h
+  refine (pi_norm_le_iff_of_nonneg (mul_nonneg
+    (le_trans (add_nonneg hε (mul_nonneg hν hK)) hZ₁) (norm_nonneg _))).mpr fun l => ?_
+  refine ((chebyshev_Z₁_component_le_relaxed _ _ N (hneg h l) (hfin_le h l)
+    (htail h l)).trans (add_le_add le_rfl (mul_le_mul_of_nonneg_left (hDφ h l) hν))).trans ?_
+  nlinarith [norm_nonneg h]
 
 /-! ## Chebyshev System Theorem
 

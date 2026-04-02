@@ -154,7 +154,7 @@ theorem ivp_hDF_block
       ContinuousLinearMap.proj_apply]
     -- RHS: Kronecker delta sum Σ_m Σ_p δ_{j,m}·δ_{0,p} · h_m_p = h_j_0
     simp only [ivp_DF_of_Dφ]
-    change lpWeighted.toSeq (h j) 0 = _
+    change l1Weighted.toSeq (h j) 0 = _
     rw [Finset.sum_eq_single j
       (fun m _ hm => Finset.sum_eq_zero fun p _ => by
         simp [show ¬(j = m) from Ne.symm hm])

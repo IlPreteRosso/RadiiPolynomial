@@ -1,5 +1,5 @@
 import RadiiPolynomial.source.Core
-import RadiiPolynomial.source.lpSpace.LpOneBanachAlgebra
+import RadiiPolynomial.source.lpSpace.lpWeighted
 
 /-!
 # Z₂ Bounds for Affine-Fderiv Maps on `l1Weighted ν`

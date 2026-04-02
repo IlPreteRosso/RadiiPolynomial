@@ -149,7 +149,7 @@ lemma abar_seq_eq_getD (l : Fin L) (k : ℕ) :
 
 /-- Approximate solution as XL1. -/
 def abar : XL1 ν L := fun l =>
-  lpWeighted.mk (d.abar_seq l) (by
+  l1Weighted.mk (d.abar_seq l) (by
     rw [l1Weighted.mem_iff]
     exact summable_of_ne_finset_zero (s := Finset.Icc 0 N) fun n hn => by
       simp only [Finset.mem_Icc, not_and_or, not_le] at hn
@@ -200,7 +200,7 @@ lemma fderiv_G_tail (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L �
   change l1Weighted.toSeq ((fderiv ℝ (ivpMap d.approxInverse φ x₀ _) d.abar h) l) n = _
   rw [fderiv_ivpMap_tail d.approxInverse φ x₀ d.htail_diag_inv _ hφ_diff d.abar h l n hn]
   rw [fderiv_ivpTail φ hφ_diff d.abar h l]
-  simp only [toCoeff, lpWeighted.sub_toSeq, shiftDivN_CLM_apply]
+  simp only [toCoeff, l1Weighted.sub_toSeq, shiftDivN_CLM_apply]
   congr 1; congr 1
   exact congrArg shiftDivN (hDφ h l).symm
 

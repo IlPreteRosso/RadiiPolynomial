@@ -181,9 +181,8 @@ private lemma toSeq_algebraMap_rat (r : ℚ) (n : ℕ) :
     l1Weighted.toSeq (algebraMap ℚ (l1Weighted ν) r) n =
       if n = 0 then (r : ℝ) else 0 := by
   -- algebraMap ℚ _ r = algebraMap ℝ _ ((r : ℚ) : ℝ) = ((r : ℚ) : ℝ) • 1
-  change lpWeighted.toSeq ((algebraMap ℝ (l1Weighted ν) ((r : ℚ) : ℝ))) n = _
-  rw [l1Weighted.algebraMap_apply, lpWeighted.smul_toSeq,
-    show (1 : l1Weighted ν) = l1Weighted.one ν from rfl, l1Weighted.one_toSeq]
+  change l1Weighted.toSeq ((algebraMap ℝ (l1Weighted ν) ((r : ℚ) : ℝ))) n = _
+  rw [l1Weighted.algebraMap_apply, l1Weighted.smul_toSeq, l1Weighted.one_toSeq_eq]
   cases n with
   | zero => simp [CauchyProduct.one]
   | succ n => simp [CauchyProduct.one]

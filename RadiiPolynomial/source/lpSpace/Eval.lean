@@ -1,4 +1,3 @@
-import RadiiPolynomial.source.lpSpace.LpOneBanachAlgebra
 import RadiiPolynomial.source.lpSpace.CauchyProduct
 import Mathlib.Analysis.Normed.Ring.InfiniteSum
 import Mathlib.RingTheory.PowerSeries.Basic

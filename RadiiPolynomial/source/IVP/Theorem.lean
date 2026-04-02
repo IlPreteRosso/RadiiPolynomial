@@ -107,7 +107,7 @@ lemma ivpComposedApprox_eq_fderiv_fin
       A.tailDiag l n * A_dag.tailDiag l n = 1)
     (htail_diag_inv : ∀ l : Fin L, ∀ n, N < n → A.tailDiag l n = 1 / (↑n : ℝ))
     (hmem : ∀ a : XL1 ν L, ∀ l : Fin L,
-      lpWeighted.Mem ν 1 (A.action (ivpCoeffs φ x₀ a) l))
+      l1Weighted.Mem ν (A.action (ivpCoeffs φ x₀ a) l))
     (hφ : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
     (ā : XL1 ν L)
     -- Equation-specific: fderiv of ivpCoeffs = A_dag.finBlock action

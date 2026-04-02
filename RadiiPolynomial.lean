@@ -1,5 +1,7 @@
 -- Root import for the RadiiPolynomial library
 -- lpSpace
+import RadiiPolynomial.source.lpSpace.LpOneAlg
+import RadiiPolynomial.source.lpSpace.WeightedScalar
 import RadiiPolynomial.source.lpSpace.ScaledReal
 import RadiiPolynomial.source.lpSpace.NormHelpers
 import RadiiPolynomial.source.lpSpace.FiniteWeightedNorm
@@ -7,7 +9,6 @@ import RadiiPolynomial.source.lpSpace.DiscreteConvolution
 import RadiiPolynomial.source.lpSpace.CauchyProduct
 import RadiiPolynomial.source.lpSpace.lpWeighted
 import RadiiPolynomial.source.lpSpace.lpWeightedDeriv
-import RadiiPolynomial.source.lpSpace.LpOneBanachAlgebra
 import RadiiPolynomial.source.lpSpace.MatrixCLM
 import RadiiPolynomial.source.lpSpace.OperatorNorm
 import RadiiPolynomial.source.lpSpace.OmegaWeighted
@@ -16,6 +17,7 @@ import RadiiPolynomial.source.RadiiPolyGeneral
 import RadiiPolynomial.source.Core
 -- BlockDiag
 import RadiiPolynomial.source.BlockDiag.Base
+import RadiiPolynomial.source.BlockDiag.Lift
 import RadiiPolynomial.source.BlockDiag.Concrete
 import RadiiPolynomial.source.BlockDiag.Scalar
 -- Witness and evaluation
@@ -37,6 +39,8 @@ import RadiiPolynomial.source.MvPolyBridge.Basic
 -- Chebyshev infrastructure
 import RadiiPolynomial.source.Chebyshev.ScaledRealZ
 import RadiiPolynomial.source.lpSpace.DiscreteConvolutionRing
-import RadiiPolynomial.source.lpSpace.AddLp
+import RadiiPolynomial.source.lpSpace.LpOneAlg
 import RadiiPolynomial.source.Chebyshev.L1ChebyshevAlgebra
 import RadiiPolynomial.source.Chebyshev.ChebyshevIVP
+import RadiiPolynomial.source.Chebyshev.StandardChebyshevIVP
+import RadiiPolynomial.source.Chebyshev.ChebyshevBlockDiag

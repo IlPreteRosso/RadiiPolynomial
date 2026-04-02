@@ -1,7 +1,7 @@
 import Mathlib.Analysis.Calculus.FDeriv.Pow
 import Mathlib.Analysis.Calculus.FDeriv.Prod
 import Mathlib.Analysis.Calculus.IteratedDeriv.Lemmas
-import RadiiPolynomial.source.lpSpace.LpOneBanachAlgebra
+import RadiiPolynomial.source.lpSpace.lpWeighted
 
 /-!
 # `auto_poly_fderiv` — Automatic differentiation for polynomials

@@ -1,6 +1,5 @@
 import RadiiPolynomial.source.Core
 import RadiiPolynomial.source.lpSpace.lpWeighted
-import RadiiPolynomial.source.lpSpace.LpOneBanachAlgebra
 import RadiiPolynomial.source.lpSpace.NormHelpers
 import RadiiPolynomial.source.lpSpace.OperatorNorm
 

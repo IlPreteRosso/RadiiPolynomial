@@ -9,7 +9,7 @@ RadiiPolynomial/
   RadiiPolynomial.lean           -- root import (library modules only, not examples)
   RadiiPolynomial/
     source/
-      lpSpace/                   -- weighted l1 spaces, norms, Cauchy product, Banach algebra
+      lpSpace/                   -- lpOneAlg (ℓ¹ Banach algebra), WeightedScalar, l1Weighted, CauchyProduct
       BlockDiag/                 -- block-diagonal operators (toMatrix, system Neumann, injectivity)
       IVP/                       -- equation-independent IVP infrastructure
         Setup.lean               -- ivpCoeffs, ivpMap, ivpTail, differentiable_ivpMap, ivp_Z1/Y0/Z2_le
@@ -23,15 +23,23 @@ RadiiPolynomial/
       RadiiPolyGeneral.lean      -- general_radii_polynomial_theorem (Thm 7.6.2)
       WitnessSpec.lean, LeanCertEval.lean, Z2Affine.lean
     examples/
-      Example81/                 -- Scalar IVP x'=x(x-1) (L=1, N=10)
-      Example83/                 -- Lorenz IVP (L=3, N=30)
+      Example81/                 -- Scalar IVP x'=x(x-1), Taylor basis (L=1, N=10)
+      Example83/                 -- Lorenz IVP, Taylor basis (L=3, N=30)
       Example77/                 -- parameterized zero-finding (section 7.7, scalar l1_nu)
       Example245/                -- algebraic fixed point (section 2.4.5, scalar R)
+      Example1421/               -- Chebyshev IVP x'=x(x-1) (scaffolding, needs Julia data)
 ```
 
 **Theorem hierarchy:**
 - `general_radii_polynomial_theorem` (Thm 7.6.2) — abstract, any Banach space zero-finding
-- `ivp_system_theorem` (Thm 8.2.2) — system IVP specialization, calls 7.6.2 internally
+- `ivp_system_theorem` (Thm 8.2.2) — system IVP specialization (Taylor), calls 7.6.2
+- `chebyshev_system_theorem` — system IVP specialization (Chebyshev), calls 7.6.2
+
+**Algebra architecture:**
+- `lpOneAlg M E` (`LpOneAlg.lean`) — generic ℓ¹ Banach algebra with non-uniform fibers
+- `WeightedScalar w m` — parameterized fiber ℝ with norm `|x|·w(m)`
+- `l1Weighted ν := lpOneAlg ℕ (ScaledReal ν)` — Taylor power series
+- `l1Chebyshev ν := lpOneAlg ℤ (ScaledRealZ ν)` — Chebyshev bilateral series
 
 **The library (`source/`) should never import from examples.**
 
@@ -64,11 +72,11 @@ Don't try to prove `totalDegree (phi_spec l) <= 2` by structural decomposition �
 
 ### tsum subtype performance
 
-Lean's elaborator blows up (800k+ heartbeats) checking definitional equality through `Equiv` / `comp_injective` on Z-indexed `AddLp` types.
+Lean's elaborator blows up (800k+ heartbeats) checking definitional equality through `Equiv` / `comp_injective` on Z-indexed `lpOneAlg` types.
 
 - Use `tsum_of_norm_bounded hg.hasSum (fun ab => ...)` instead of `norm_tsum_le_tsum_norm`
 - Use `refine (...).trans ?_` instead of `calc` blocks
-- Prove `summable_norm_shift` at the generic AddLp level where `||f m||` is opaque
+- Prove `summable_norm_shift` at the generic lpOneAlg level where `||f m||` is opaque
 - Provide `Summable` witnesses as separate `have` statements — avoid chaining `.add`, `.const_smul` in one expression
 
 ### Equiv.tsum_eq needs type annotation

@@ -238,14 +238,14 @@ lemma XL1_fin1_eq_const (x : XL1 ν 1) : x = fun _ => x 0 :=
 
 /-- `toCoeff` of a constant `XL1 ν 1` family reduces to the sequence of the single element. -/
 lemma toCoeff_const_fin1 (x : l1Weighted ν) :
-    toCoeff (ν := ν) (fun _ : Fin 1 => x : XL1 ν 1) = fun _ k => lpWeighted.toSeq x k := by
+    toCoeff (ν := ν) (fun _ : Fin 1 => x : XL1 ν 1) = fun _ k => l1Weighted.toSeq x k := by
   ext l k; simp [toCoeff]
 
 @[simp]
 lemma ScalarBlockDiagData.toScalarCLM_toSeq
     (A : ScalarBlockDiagData N) (x : l1Weighted ν) (n : ℕ) :
-    lpWeighted.toSeq (A.toScalarCLM (ν := ν) x) n =
-      A.action (fun _ k => lpWeighted.toSeq x k) 0 n := by
+    l1Weighted.toSeq (A.toScalarCLM (ν := ν) x) n =
+      A.action (fun _ k => l1Weighted.toSeq x k) 0 n := by
   rw [ScalarBlockDiagData.toScalarCLM_apply]
   change toCoeff (ν := ν) (A.toCLM (ν := ν) (fun _ => x)) 0 n = _
   rw [SystemBlockDiagData.toCoeff_toCLM, toCoeff_const_fin1]
@@ -253,8 +253,8 @@ lemma ScalarBlockDiagData.toScalarCLM_toSeq
 /-- Finite-mode specialization: for `n : Fin (N + 1)`, the action is a matrix-vector product. -/
 lemma ScalarBlockDiagData.toScalarCLM_toSeq_fin
     (A : ScalarBlockDiagData N) (x : l1Weighted ν) (n : Fin (N + 1)) :
-    lpWeighted.toSeq (A.toScalarCLM (ν := ν) x) n =
-      ∑ k : Fin (N + 1), A.finBlock0 n k * lpWeighted.toSeq x k := by
+    l1Weighted.toSeq (A.toScalarCLM (ν := ν) x) n =
+      ∑ k : Fin (N + 1), A.finBlock0 n k * l1Weighted.toSeq x k := by
   rw [toScalarCLM_toSeq]
   rw [SystemBlockDiagData.action_fin]
   simp [ScalarBlockDiagData.finBlock0]
@@ -262,8 +262,8 @@ lemma ScalarBlockDiagData.toScalarCLM_toSeq_fin
 /-- Tail-mode specialization: for `N < n`, the action is diagonal. -/
 lemma ScalarBlockDiagData.toScalarCLM_toSeq_tail
     (A : ScalarBlockDiagData N) (x : l1Weighted ν) (n : ℕ) (hn : N < n) :
-    lpWeighted.toSeq (A.toScalarCLM (ν := ν) x) n =
-      A.tailDiag0 n * lpWeighted.toSeq x n := by
+    l1Weighted.toSeq (A.toScalarCLM (ν := ν) x) n =
+      A.tailDiag0 n * l1Weighted.toSeq x n := by
   rw [toScalarCLM_toSeq]
   rw [SystemBlockDiagData.action_tail _ _ _ _ hn]
   simp [ScalarBlockDiagData.tailDiag0]
@@ -277,15 +277,15 @@ lemma ScalarBlockDiagData.toScalarCLM_toSeq_fin_eq_cauchy
     (hfin : ∀ i j : Fin (N + 1), A.finBlock0 i j =
       if (j : ℕ) ≤ i then a_seq ((i : ℕ) - (j : ℕ)) else 0)
     (x : l1Weighted ν) (n : ℕ) (hn : n ≤ N) :
-    lpWeighted.toSeq (A.toScalarCLM (ν := ν) x) n =
-    CauchyProduct a_seq (lpWeighted.toSeq x) n := by
+    l1Weighted.toSeq (A.toScalarCLM (ν := ν) x) n =
+    CauchyProduct a_seq (l1Weighted.toSeq x) n := by
   rw [A.toScalarCLM_toSeq_fin (ν := ν) x ⟨n, Nat.lt_succ_of_le hn⟩]
   rw [CauchyProduct.apply_range]
   -- LHS: ∑ k : Fin(N+1), (if k≤n then a(n-k) else 0) * x(k)
   -- RHS: ∑ j ∈ range(n+1), a(n-j) * x(j)
   simp_rw [hfin]
   rw [Fin.sum_univ_eq_sum_range
-    (fun k => (if k ≤ n then a_seq (n - k) else 0) * lpWeighted.toSeq x k) (N + 1)]
+    (fun k => (if k ≤ n then a_seq (n - k) else 0) * l1Weighted.toSeq x k) (N + 1)]
   symm; apply Finset.sum_subset_zero_on_sdiff
   · intro k hk; simp only [Finset.mem_range] at hk ⊢; omega
   · intro k hk
@@ -354,18 +354,18 @@ lemma ScalarBlockDiagData.norm_toScalarCLM_le
 is bounded by `tailBound` times the weighted tail of `x`. -/
 lemma ScalarBlockDiagData.tailTsum_toScalarCLM_le
     (A : ScalarBlockDiagData N) (x : l1Weighted ν) :
-    ∑' n, |lpWeighted.toSeq (A.toScalarCLM (ν := ν) x) (n + (N + 1))| *
+    ∑' n, |l1Weighted.toSeq (A.toScalarCLM (ν := ν) x) (n + (N + 1))| *
       (ν : ℝ) ^ (n + (N + 1)) ≤
-    A.tailBound * ∑' n, |lpWeighted.toSeq x (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) := by
-  have hAx_shift : Summable (fun n => |lpWeighted.toSeq (A.toScalarCLM (ν := ν) x) (n + (N + 1))| *
+    A.tailBound * ∑' n, |l1Weighted.toSeq x (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) := by
+  have hAx_shift : Summable (fun n => |l1Weighted.toSeq (A.toScalarCLM (ν := ν) x) (n + (N + 1))| *
       (ν : ℝ) ^ (n + (N + 1))) :=
     ((l1Weighted.mem_iff (ν := ν)
-      (a := lpWeighted.toSeq (A.toScalarCLM (ν := ν) x))).mp
-      (A.toScalarCLM (ν := ν) x).2).comp_injective (add_left_injective (N + 1))
-  have hx_shift : Summable (fun n => |lpWeighted.toSeq x (n + (N + 1))| *
+      (a := l1Weighted.toSeq (A.toScalarCLM (ν := ν) x))).mp
+      (A.toScalarCLM (ν := ν) x).toLp.2).comp_injective (add_left_injective (N + 1))
+  have hx_shift : Summable (fun n => |l1Weighted.toSeq x (n + (N + 1))| *
       (ν : ℝ) ^ (n + (N + 1))) :=
     ((l1Weighted.mem_iff (ν := ν)
-      (a := lpWeighted.toSeq x)).mp x.2).comp_injective (add_left_injective (N + 1))
+      (a := l1Weighted.toSeq x)).mp x.toLp.2).comp_injective (add_left_injective (N + 1))
   rw [← tsum_mul_left]
   exact Summable.tsum_le_tsum (fun n => by
     have hn : N < n + (N + 1) := by omega
@@ -379,20 +379,20 @@ is bounded by `finWeightedMatrixNorm` times the weighted finite part of `x`. -/
 lemma ScalarBlockDiagData.finRangeSum_toScalarCLM_le
     (A : ScalarBlockDiagData N) (x : l1Weighted ν) :
     ∑ n ∈ Finset.range (N + 1),
-      |lpWeighted.toSeq (A.toScalarCLM (ν := ν) x) n| * (ν : ℝ) ^ n ≤
+      |l1Weighted.toSeq (A.toScalarCLM (ν := ν) x) n| * (ν : ℝ) ^ n ≤
     FiniteWeightedNorm.finWeightedMatrixNorm ν A.finBlock0 *
-      ∑ n ∈ Finset.range (N + 1), |lpWeighted.toSeq x n| * (ν : ℝ) ^ n := by
+      ∑ n ∈ Finset.range (N + 1), |l1Weighted.toSeq x n| * (ν : ℝ) ^ n := by
   rw [← Fin.sum_univ_eq_sum_range, ← Fin.sum_univ_eq_sum_range]
   have hrewrite : ∀ n : Fin (N + 1),
-      |lpWeighted.toSeq (A.toScalarCLM (ν := ν) x) n| =
-      |∑ k : Fin (N + 1), A.finBlock0 n k * lpWeighted.toSeq x k| := by
+      |l1Weighted.toSeq (A.toScalarCLM (ν := ν) x) n| =
+      |∑ k : Fin (N + 1), A.finBlock0 n k * l1Weighted.toSeq x k| := by
     intro n
-    rw [show lpWeighted.toSeq (A.toScalarCLM (ν := ν) x) n =
-        ∑ k : Fin (N + 1), A.finBlock0 n k * lpWeighted.toSeq x k from
+    rw [show l1Weighted.toSeq (A.toScalarCLM (ν := ν) x) n =
+        ∑ k : Fin (N + 1), A.finBlock0 n k * l1Weighted.toSeq x k from
       A.toScalarCLM_toSeq_fin (ν := ν) x n]
   simp_rw [hrewrite]
   simpa [FiniteWeightedNorm.finl1WeightedNorm, Matrix.mulVec, dotProduct] using
-    FiniteWeightedNorm.finWeightedMatrixNorm_mulVec_le (ν := ν) A.finBlock0 (fun k => lpWeighted.toSeq x k)
+    FiniteWeightedNorm.finWeightedMatrixNorm_mulVec_le (ν := ν) A.finBlock0 (fun k => l1Weighted.toSeq x k)
 
 /-- Tighter scalar operator norm bound using `max` instead of `+`.
 For block-diagonal operators on `ℓ¹_ν`, the operator norm is the max of column norms
@@ -412,9 +412,9 @@ lemma ScalarBlockDiagData.norm_toScalarCLM_le_max
   -- Use the finite and tail action bounds
   have h_fin := A.finRangeSum_toScalarCLM_le (ν := ν) x
   have h_tail := A.tailTsum_toScalarCLM_le (ν := ν) x
-  have hf_fin_nn : 0 ≤ ∑ n ∈ Finset.range (N + 1), |lpWeighted.toSeq x n| * (ν : ℝ) ^ n :=
+  have hf_fin_nn : 0 ≤ ∑ n ∈ Finset.range (N + 1), |l1Weighted.toSeq x n| * (ν : ℝ) ^ n :=
     Finset.sum_nonneg (fun n _ => mul_nonneg (abs_nonneg _) (pow_nonneg ν.coe_nonneg _))
-  have hf_tail_nn : 0 ≤ ∑' n, |lpWeighted.toSeq x (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) :=
+  have hf_tail_nn : 0 ≤ ∑' n, |l1Weighted.toSeq x (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) :=
     tsum_nonneg (fun n => mul_nonneg (abs_nonneg _) (pow_nonneg ν.coe_nonneg _))
   linarith [le_max_left (FiniteWeightedNorm.finWeightedMatrixNorm ν A.finBlock0) A.tailBound,
             le_max_right (FiniteWeightedNorm.finWeightedMatrixNorm ν A.finBlock0) A.tailBound,
@@ -434,7 +434,7 @@ If `T(h)[n] = 0` for all `n ≤ N`, then `A.toScalarCLM` acts on `T(h)` purely
 via its tail diagonal, giving `‖A.comp T‖ ≤ A.tailBound * ‖T‖`. -/
 lemma ScalarBlockDiagData.norm_comp_of_fin_kill
     (A : ScalarBlockDiagData N) (T : l1Weighted ν →L[ℝ] l1Weighted ν)
-    (hfin : ∀ h, ∀ n, n ≤ N → lpWeighted.toSeq (T h) n = 0) :
+    (hfin : ∀ h, ∀ n, n ≤ N → l1Weighted.toSeq (T h) n = 0) :
     ‖(A.toScalarCLM (ν := ν)).comp T‖ ≤ A.tailBound * ‖T‖ := by
   apply ContinuousLinearMap.opNorm_le_bound _
     (mul_nonneg A.tailBound_nonneg (ContinuousLinearMap.opNorm_nonneg T))
@@ -444,21 +444,21 @@ lemma ScalarBlockDiagData.norm_comp_of_fin_kill
   rw [l1Weighted.norm_eq_finRangeSum_add_tailTsum (A.toScalarCLM (ν := ν) (T h)) (N + 1)]
   -- Finite part: T(h)[j] = 0 for j ≤ N, so A's finite action gives 0
   have h_fin_zero : ∑ n ∈ Finset.range (N + 1),
-      |lpWeighted.toSeq (A.toScalarCLM (ν := ν) (T h)) n| * (ν : ℝ) ^ n = 0 := by
+      |l1Weighted.toSeq (A.toScalarCLM (ν := ν) (T h)) n| * (ν : ℝ) ^ n = 0 := by
     apply Finset.sum_eq_zero; intro n hn
     rw [A.toScalarCLM_toSeq_fin (ν := ν) (T h) ⟨n, by
       simp only [Finset.mem_range] at hn; omega⟩]
-    have hT_zero : ∀ k : Fin (N + 1), lpWeighted.toSeq (T h) k = 0 :=
+    have hT_zero : ∀ k : Fin (N + 1), l1Weighted.toSeq (T h) k = 0 :=
       fun k => hfin h k (Nat.lt_succ_iff.mp k.2)
     simp_rw [hT_zero, mul_zero, Finset.sum_const_zero, abs_zero, zero_mul]
   rw [h_fin_zero, zero_add]
   -- Tail part: tailTsum ≤ tailBound * tail_of_T(h) ≤ tailBound * ‖T(h)‖ ≤ tailBound * ‖T‖ * ‖h‖
   have h_tail := A.tailTsum_toScalarCLM_le (ν := ν) (T h)
-  have h_tail_le_norm : ∑' n, |lpWeighted.toSeq (T h) (n + (N + 1))| *
+  have h_tail_le_norm : ∑' n, |l1Weighted.toSeq (T h) (n + (N + 1))| *
       (ν : ℝ) ^ (n + (N + 1)) ≤ ‖T h‖ := by
     rw [l1Weighted.norm_eq_finRangeSum_add_tailTsum (T h) (N + 1)]
     linarith [Finset.sum_nonneg (fun n (_ : n ∈ Finset.range (N + 1)) =>
-      mul_nonneg (abs_nonneg (lpWeighted.toSeq (T h) n)) (pow_nonneg ν.coe_nonneg n))]
+      mul_nonneg (abs_nonneg (l1Weighted.toSeq (T h) n)) (pow_nonneg ν.coe_nonneg n))]
   linarith [mul_le_mul_of_nonneg_left h_tail_le_norm A.tailBound_nonneg,
             mul_le_mul_of_nonneg_left (ContinuousLinearMap.le_opNorm T h) A.tailBound_nonneg]
 
@@ -490,8 +490,8 @@ then `‖D‖ ≤ ‖E‖`. General (not scalar-specific); lives here for import
 (needs CLM operator norm API). Core pattern for Z₁-type bounds. -/
 lemma l1Weighted.opNorm_le_of_fin_kill_tail_eq (N : ℕ)
     (D E : l1Weighted ν →L[ℝ] l1Weighted ν)
-    (hfin : ∀ h, ∀ n, n ≤ N → lpWeighted.toSeq (D h) n = 0)
-    (htail : ∀ h, ∀ n, N < n → lpWeighted.toSeq (D h) n = lpWeighted.toSeq (E h) n) :
+    (hfin : ∀ h, ∀ n, n ≤ N → l1Weighted.toSeq (D h) n = 0)
+    (htail : ∀ h, ∀ n, N < n → l1Weighted.toSeq (D h) n = l1Weighted.toSeq (E h) n) :
     ‖D‖ ≤ ‖E‖ := by
   apply ContinuousLinearMap.opNorm_le_bound _ (ContinuousLinearMap.opNorm_nonneg E)
   intro h
@@ -504,8 +504,8 @@ then `‖A.comp T‖ ≤ A.tailBound * ‖E‖ ≤ C`. Equation-independent. -/
 lemma ScalarBlockDiagData.Z₁_le_of_fin_kill_tail_dom (N : ℕ)
     (A : ScalarBlockDiagData N)
     (T E : l1Weighted ν →L[ℝ] l1Weighted ν)
-    (hfin : ∀ h, ∀ n, n ≤ N → lpWeighted.toSeq (T h) n = 0)
-    (htail : ∀ h, ∀ n, N < n → lpWeighted.toSeq (T h) n = lpWeighted.toSeq (E h) n)
+    (hfin : ∀ h, ∀ n, n ≤ N → l1Weighted.toSeq (T h) n = 0)
+    (htail : ∀ h, ∀ n, N < n → l1Weighted.toSeq (T h) n = l1Weighted.toSeq (E h) n)
     (C : ℝ) (hC : A.tailBound * ‖E‖ ≤ C) :
     ‖(A.toScalarCLM (ν := ν)).comp T‖ ≤ C :=
   (A.norm_comp_of_fin_kill T hfin).trans

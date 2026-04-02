@@ -421,10 +421,10 @@ Certificates `simp_rw` with this + data bridges, then `finsum_bound` closes. -/
 For `n ≤ N`: matrix-vector product. For `n > N`: diagonal multiplication. -/
 lemma ScalarBlockDiagData.toScalarCLM_toSeq_ite {N : ℕ} {ν : PosReal}
     (A : ScalarBlockDiagData N) (v : l1Weighted ν) (n : ℕ) :
-    lpWeighted.toSeq (A.toScalarCLM (ν := ν) v) n =
+    l1Weighted.toSeq (A.toScalarCLM (ν := ν) v) n =
       if hn : n ≤ N
-      then ∑ j : Fin (N + 1), A.finBlock0 ⟨n, Nat.lt_succ_of_le hn⟩ j * lpWeighted.toSeq v j
-      else A.tailDiag0 n * lpWeighted.toSeq v n := by
+      then ∑ j : Fin (N + 1), A.finBlock0 ⟨n, Nat.lt_succ_of_le hn⟩ j * l1Weighted.toSeq v j
+      else A.tailDiag0 n * l1Weighted.toSeq v n := by
   split
   · next hn => exact A.toScalarCLM_toSeq_fin (ν := ν) v ⟨n, Nat.lt_succ_of_le hn⟩
   · next hn => exact A.toScalarCLM_toSeq_tail v n (by omega)
@@ -448,10 +448,10 @@ lemma ScalarBlockDiagData.toScalarCLM_toSeq_eq_action {N : ℕ} {ν : PosReal}
     (A : ScalarBlockDiagData N) (v : l1Weighted ν)
     (matCols : Fin (N + 1) → Array ℝ) (vec : ℕ → ℝ) (tailCoeff : ℝ)
     (hmat : ∀ j i : Fin (N + 1), A.finBlock0 i j = (matCols j).getD (i : ℕ) 0)
-    (hvec : ∀ n, lpWeighted.toSeq v n = vec n)
+    (hvec : ∀ n, l1Weighted.toSeq v n = vec n)
     (htail : ∀ n, N < n → A.tailDiag0 n = tailCoeff)
     (n : ℕ) :
-    lpWeighted.toSeq (A.toScalarCLM (ν := ν) v) n =
+    l1Weighted.toSeq (A.toScalarCLM (ν := ν) v) n =
       scalarBlockDiagAction matCols vec tailCoeff n := by
   simp only [scalarBlockDiagAction]
   by_cases hn : n ≤ N
@@ -606,7 +606,7 @@ lemma SystemBlockDiagData.toCoeff_toCLM_eq_componentAction
     (l : Fin L)
     (hmat : ∀ j (k : Fin (N + 1)) (i : Fin (N + 1)),
       A.finBlock l j i k = (matCols j k).getD (i : ℕ) 0)
-    (hvec : ∀ j n, lpWeighted.toSeq (v j) n = vecs j n)
+    (hvec : ∀ j n, l1Weighted.toSeq (v j) n = vecs j n)
     (htail : ∀ n, N < n → A.tailDiag l n = tailCoeff)
     (n : ℕ) :
     toCoeff (ν := ν) (A.applyX (ν := ν) v) l n =
