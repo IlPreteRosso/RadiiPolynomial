@@ -378,15 +378,11 @@ theorem ringConvolution_assoc_left (f g h : M → R) (x : M)
       (∑' ab : mulFiber cd.1.1, f ab.1.1 * g ab.1.2) * h cd.1.2 =
     ∑' p : tripleMulFiber x, f p.1.1 * g p.1.2.1 * h p.1.2.2 := by
   have hs := htriple.hasSum
-  have hs_sigma : HasSum (fun p : Σ cd : mulFiber x, mulFiber cd.1.1 =>
-      (f p.2.1.1 * g p.2.1.2) * h p.1.1.2) _ :=
-    ((leftMulAssocEquiv x).hasSum_iff.mpr hs).congr_fun
-      fun ⟨⟨⟨_, _⟩, _⟩, ⟨⟨_, _⟩, _⟩⟩ => rfl
-  have hs_iter : HasSum (fun cd : mulFiber x =>
-      ∑' ab : mulFiber cd.1.1, (f ab.1.1 * g ab.1.2) * h cd.1.2) _ :=
-    hs_sigma.sigma fun cd => ((hfg cd.1.1).mul_right _).hasSum
-  exact (hs_iter.congr_fun fun cd =>
-    ((hfg cd.1.1).hasSum.mul_right _).tsum_eq.symm).tsum_eq.trans hs.tsum_eq.symm
+  have hs_sigma := HasSum.leftMulAssocEquiv_sigma hs
+  have hs_iter := hs_sigma.sigma fun cd => (hfg cd.1.1).mul_right (h cd.1.2) |>.hasSum
+  have hs_goal := hs_iter.congr_fun fun cd =>
+    ((hfg cd.1.1).hasSum.mul_right _).tsum_eq.symm
+  exact hs_goal.tsum_eq.trans hs.tsum_eq.symm
 
 /-- Right-associated nested convolution sum equals triple fiber sum (multiplicative). -/
 theorem ringConvolution_assoc_right (f g h : M → R) (x : M)
@@ -396,15 +392,11 @@ theorem ringConvolution_assoc_right (f g h : M → R) (x : M)
       f ae.1.1 * (∑' bd : mulFiber ae.1.2, g bd.1.1 * h bd.1.2) =
     ∑' p : tripleMulFiber x, f p.1.1 * g p.1.2.1 * h p.1.2.2 := by
   have hs := htriple.hasSum
-  have hs_sigma' : HasSum (fun p : Σ ae : mulFiber x, mulFiber ae.1.2 =>
-      f p.1.1.1 * (g p.2.1.1 * h p.2.1.2)) _ :=
-    ((rightMulAssocEquiv x).hasSum_iff.mpr hs).congr_fun
-      fun ⟨⟨⟨a, _⟩, _⟩, ⟨⟨b, d⟩, _⟩⟩ => (mul_assoc (f a) (g b) (h d)).symm
-  have hs_iter : HasSum (fun ae : mulFiber x =>
-      ∑' bd : mulFiber ae.1.2, f ae.1.1 * (g bd.1.1 * h bd.1.2)) _ :=
-    hs_sigma'.sigma fun ae => ((hgh ae.1.2).mul_left _).hasSum
-  exact (hs_iter.congr_fun fun ae =>
-    ((hgh ae.1.2).hasSum.mul_left _).tsum_eq.symm).tsum_eq.trans hs.tsum_eq.symm
+  have hs_sigma' := HasSum.rightMulAssocEquiv_sigma hs
+  have hs_iter := hs_sigma'.sigma fun ae => (hgh ae.1.2).mul_left (f ae.1.1) |>.hasSum
+  have hs_goal := hs_iter.congr_fun fun ae =>
+    ((hgh ae.1.2).hasSum.mul_left _).tsum_eq.symm
+  exact hs_goal.tsum_eq.trans hs.tsum_eq.symm
 
 /-- Full associativity of `ringConvolution` (multiplicative). -/
 theorem ringConvolution_assoc (f g h : M → R)
@@ -432,15 +424,11 @@ theorem addRingConvolution_assoc_left (f g h : M → R) (x : M)
       (∑' ab : addFiber cd.1.1, f ab.1.1 * g ab.1.2) * h cd.1.2 =
     ∑' p : tripleAddFiber x, f p.1.1 * g p.1.2.1 * h p.1.2.2 := by
   have hs := htriple.hasSum
-  have hs_sigma : HasSum (fun p : Σ cd : addFiber x, addFiber cd.1.1 =>
-      (f p.2.1.1 * g p.2.1.2) * h p.1.1.2) _ :=
-    ((leftAddAssocEquiv x).hasSum_iff.mpr hs).congr_fun
-      fun ⟨⟨⟨_, _⟩, _⟩, ⟨⟨_, _⟩, _⟩⟩ => rfl
-  have hs_iter : HasSum (fun cd : addFiber x =>
-      ∑' ab : addFiber cd.1.1, (f ab.1.1 * g ab.1.2) * h cd.1.2) _ :=
-    hs_sigma.sigma fun cd => ((hfg cd.1.1).mul_right _).hasSum
-  exact (hs_iter.congr_fun fun cd =>
-    ((hfg cd.1.1).hasSum.mul_right _).tsum_eq.symm).tsum_eq.trans hs.tsum_eq.symm
+  have hs_sigma := HasSum.leftAddAssocEquiv_sigma hs
+  have hs_iter := hs_sigma.sigma fun cd => (hfg cd.1.1).mul_right (h cd.1.2) |>.hasSum
+  have hs_goal := hs_iter.congr_fun fun cd =>
+    ((hfg cd.1.1).hasSum.mul_right _).tsum_eq.symm
+  exact hs_goal.tsum_eq.trans hs.tsum_eq.symm
 
 /-- Right-associated nested convolution sum equals triple fiber sum (additive). -/
 theorem addRingConvolution_assoc_right (f g h : M → R) (x : M)
@@ -450,15 +438,11 @@ theorem addRingConvolution_assoc_right (f g h : M → R) (x : M)
       f ae.1.1 * (∑' bd : addFiber ae.1.2, g bd.1.1 * h bd.1.2) =
     ∑' p : tripleAddFiber x, f p.1.1 * g p.1.2.1 * h p.1.2.2 := by
   have hs := htriple.hasSum
-  have hs_sigma' : HasSum (fun p : Σ ae : addFiber x, addFiber ae.1.2 =>
-      f p.1.1.1 * (g p.2.1.1 * h p.2.1.2)) _ :=
-    ((rightAddAssocEquiv x).hasSum_iff.mpr hs).congr_fun
-      fun ⟨⟨⟨a, _⟩, _⟩, ⟨⟨b, d⟩, _⟩⟩ => (mul_assoc (f a) (g b) (h d)).symm
-  have hs_iter : HasSum (fun ae : addFiber x =>
-      ∑' bd : addFiber ae.1.2, f ae.1.1 * (g bd.1.1 * h bd.1.2)) _ :=
-    hs_sigma'.sigma fun ae => ((hgh ae.1.2).mul_left _).hasSum
-  exact (hs_iter.congr_fun fun ae =>
-    ((hgh ae.1.2).hasSum.mul_left _).tsum_eq.symm).tsum_eq.trans hs.tsum_eq.symm
+  have hs_sigma' := HasSum.rightAddAssocEquiv_sigma hs
+  have hs_iter := hs_sigma'.sigma fun ae => (hgh ae.1.2).mul_left (f ae.1.1) |>.hasSum
+  have hs_goal := hs_iter.congr_fun fun ae =>
+    ((hgh ae.1.2).hasSum.mul_left _).tsum_eq.symm
+  exact hs_goal.tsum_eq.trans hs.tsum_eq.symm
 
 /-- Full associativity of `addRingConvolution` (additive). -/
 theorem addRingConvolution_assoc (f g h : M → R)
