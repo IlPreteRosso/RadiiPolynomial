@@ -6,10 +6,12 @@ This is a Lean 4 formalization of radii polynomial methods for rigorous ODE solu
 
 ```
 RadiiPolynomial/
-  RadiiPolynomial.lean           -- root import (library modules only, not examples)
+  RadiiPolynomial.lean           -- root import (all source + examples, builds all oleans)
   RadiiPolynomial/
     source/
-      lpSpace/                   -- lpOneAlg (ℓ¹ Banach algebra), WeightedScalar, l1Weighted, CauchyProduct
+      lpSpace/                   -- lpOneAlg (ℓ¹ Banach algebra), WeightedScalar, l1Weighted
+        CauchyProduct.lean       -- antidiagonal-sum Cauchy product formula
+        Eval.lean                -- l1Weighted.toPowerSeries, eval, eval_mul (Mertens)
       BlockDiag/                 -- block-diagonal operators (toMatrix, system Neumann, injectivity)
       IVP/                       -- equation-independent IVP infrastructure
         Setup.lean               -- ivpCoeffs, ivpMap, ivpTail, differentiable_ivpMap, ivp_Z1/Y0/Z2_le
@@ -18,22 +20,37 @@ RadiiPolynomial/
         StandardIVP.lean         -- StdIVPData bundle
       Chebyshev/                 -- Chebyshev polynomial algebra + ChebyshevIVP
       MvPolyBridge/              -- multivariate polynomial bridge + system Z2 norm bounds
+        POC.lean                 -- proof-of-concept tests (evalInBanach, pderiv↔fderiv)
       Tactic/                    -- auto_poly_fderiv, pderiv_simp, FinMatrixBound
       Core.lean                  -- canonical bounds (Y0_norm, Z0_norm, Z1_norm, Z2_norm)
       RadiiPolyGeneral.lean      -- general_radii_polynomial_theorem (Thm 7.6.2)
-      WitnessSpec.lean, LeanCertEval.lean, Z2Affine.lean
+      LeanCertEval.lean          -- ℚ evaluators + ℝ→ℚ norm bridges for certificates
+      WitnessSpec.lean, Z2Affine.lean
     examples/
       Example81/                 -- Scalar IVP x'=x(x-1), Taylor basis (L=1, N=10)
       Example83/                 -- Lorenz IVP, Taylor basis (L=3, N=30)
       Example77/                 -- parameterized zero-finding (section 7.7, scalar l1_nu)
       Example245/                -- algebraic fixed point (section 2.4.5, scalar R)
       Example1421/               -- Chebyshev IVP x'=x(x-1) (scaffolding, needs Julia data)
+      TestQuadratic/             -- f-F bridge test: x² - λ = 0 (pipeline skeleton)
+      TestCubic/                 -- f-F bridge test: x³ - λ = 0
+      TestCrossProduct/          -- f-F bridge test: xy - λ = 0, x + y - 2 = 0
 ```
 
 **Theorem hierarchy:**
 - `general_radii_polynomial_theorem` (Thm 7.6.2) — abstract, any Banach space zero-finding
 - `ivp_system_theorem` (Thm 8.2.2) — system IVP specialization (Taylor), calls 7.6.2
 - `chebyshev_system_theorem` — system IVP specialization (Chebyshev), calls 7.6.2
+- Example77 uses 7.6.2 directly (parameterized zero-finding, NOT an IVP)
+- Example81/83 use `StdIVPData.existsUnique` which calls 8.2.2 internally
+
+**f-F bridge (Test examples):**
+The pipeline from original equation to coefficient recurrence:
+1. Substitute Taylor expansion into ODE/equation
+2. Match coefficients of like powers (formal PowerSeries equality)
+3. Define F(a) = 0 on ℓ¹_ν (Banach algebra operations)
+4. Semantic bridge: F(a)=0 ⟹ eval(a,z) satisfies the original equation
+Test files (TestQuadratic/TestCubic/TestCrossProduct) exercise this pipeline with sorried proofs.
 
 **Algebra architecture:**
 - `lpOneAlg M E` (`LpOneAlg.lean`) — generic ℓ¹ Banach algebra with non-uniform fibers
@@ -104,6 +121,32 @@ For `Fin 1`, use `Subsingleton.elim l 0; subst` instead of `fin_cases l` to avoi
 2. Proving `F(a) in l1_omega` for every `a` would be significant extra work with zero downstream benefit
 3. All bounds (Y0, Z0, Z1, Z2) work at the raw coefficient level
 4. Matches the reference book: computations never use `||F(a)||_omega`
+
+### Matrix norm verification via `finmatrix_bound`
+
+Certificate matrix norm bounds use `finmatrix_bound` (single `native_decide`) rather than per-column `finsum_bound`. The bridge lemmas compute the full norm in exact ℚ arithmetic:
+
+```lean
+-- Scalar matrix norm: finWeightedMatrixNorm ν M ≤ C
+finmatrix_bound
+  (finWeightedMatrixNorm_le_of_Q_le _ cols ν_q hcols hν)
+
+-- Block matrix norm: finiteBlockMatrixNorm ν A ≤ C
+finmatrix_bound
+  (finiteBlockMatrixNorm_le_of_Q_le _ blockCols ν_q hcols hν)
+
+-- Scalar CLM norm: ‖A.toScalarCLM‖ ≤ C
+finmatrix_bound
+  (norm_toScalarCLM_le_of_Q A cols ν_q |tailCoeff| hcols hν htail)
+
+-- System CLM norm: ‖A.toCLM‖ ≤ C
+finmatrix_bound
+  (norm_toCLM_le_of_Q A blockCols ν_q tailBound_q hcols hν htail)
+```
+
+The certificate provides: ℚ column arrays, `hcols` (ℝ entries = ℚ cast), `hν` (ℝ weight = ℚ cast).
+When the goal bound involves ℝ division (e.g., `≤ (C : ℝ) / 2`), rewrite first:
+`rw [show (C : ℝ) / 2 = ((C / 2 : ℚ) : ℝ) from by push_cast; ring]`
 
 ### Generic DF verification API
 
