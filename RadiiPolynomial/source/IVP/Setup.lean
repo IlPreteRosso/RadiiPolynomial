@@ -25,11 +25,11 @@ the Newton-like map for the radii polynomial theorem.
 
 1. `ivpCoeffs` — the F coefficient formula
 2. `ivpMap` — the composed map G = A.action(F)
-3. `ivpTail` — the "tail" part: `a - shiftDivN(φ(a))`
-4. `ivpFinCorrection` — the finite correction: G - G_tail
-5. Decomposition: `ivpMap = ivpTail + ivpFinCorrection`
-6. Differentiability (from `φ` differentiability)
-7. Fderiv on tail modes
+3. `fderiv_ivpMap_coeff_at` — chain rule for G coefficients
+4. `ivp_Y₀_le`, `ivp_Z₁_le`, `ivp_Z₂_le` — generic bounds for the radii polynomial
+5. `ivpTail` + `ivpFinCorrection` — decomposition for differentiability
+6. `differentiable_ivpMap` — G is differentiable (from φ differentiability)
+7. `fderiv_ivpMap_tail` — fderiv of G on tail modes
 
 ## What Stays Equation-Specific
 
@@ -348,12 +348,12 @@ lemma fderiv_ivpMap_coeff_at
 
 /-! ## 8. Generic Z₂ Bound
 
-The Z₂ bound `‖fderiv G c - fderiv G ā‖ ≤ Z₂ * r` for c ∈ B(ā, r) follows from:
-1. **Factorization** (IVP-generic): `fderiv_diff(G)(h) = A.toCLM(w)` where w is the
-   shifted Dφ difference
-2. **Block norm bound** (universal, Layer 0): `‖A.toCLM(w) l‖ ≤ restricted_norm(l) * ‖w‖`
-3. **w norm bound** (IVP-generic): `‖w‖ ≤ C·ν·‖c-ā‖·‖h‖`
-4. **Evaluation** (caller): `C·ν·restricted_norm(l) ≤ Z₂_val` via `native_decide` -/
+The Z₂ bound `‖fderiv(ivpMap) c - fderiv(ivpMap) ā‖ ≤ Z₂ * r` for c ∈ B(ā, r) follows from:
+1. **Chain rule** via `fderiv_ivpMap_coeff_at`: reduces to `A.action(fderiv_diff(F))`
+2. **Factorization**: `fderiv_diff(G)(h) = A.toCLM(w)` where w is shifted Dφ difference
+3. **w norm bound** via `norm_mk_shift_neg_le`: `‖w‖ ≤ C·ν·‖c-ā‖·‖h‖`
+4. **Block norm bound**: `‖A.toCLM(w) l‖ ≤ restricted_norm(l) * ‖w‖`
+5. **Evaluation** (caller): `C·ν·restricted_norm(l) ≤ Z₂_val` via `native_decide` -/
 
 lemma ivp_Z₂_le
     (A : SystemBlockDiagData L N)

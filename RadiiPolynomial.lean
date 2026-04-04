@@ -57,6 +57,11 @@ import RadiiPolynomial.examples.Example245.Algebra
 import RadiiPolynomial.examples.Example245.Certificate
 import RadiiPolynomial.examples.Example1421.Algebra
 import RadiiPolynomial.examples.Example1421.Numbers
-import RadiiPolynomial.examples.TestCrossProduct.Algebra
-import RadiiPolynomial.examples.TestCubic.Algebra
-import RadiiPolynomial.examples.TestQuadratic.Algebra
+-- Easy tests (full pipeline skeleton with expected results stated, all sorried)
+import RadiiPolynomial.examples.tests.easy.CrossProduct
+import RadiiPolynomial.examples.tests.easy.Cubic
+import RadiiPolynomial.examples.tests.easy.Quadratic
+-- Hard tests (only f given; autoformalizer must synthesize F, A, A†, pipeline)
+import RadiiPolynomial.examples.tests.hard.Quartic
+import RadiiPolynomial.examples.tests.hard.SimpleIVP
+import RadiiPolynomial.examples.tests.hard.CrossProductIVP

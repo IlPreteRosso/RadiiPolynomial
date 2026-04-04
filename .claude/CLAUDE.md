@@ -14,10 +14,10 @@ RadiiPolynomial/
         Eval.lean                -- l1Weighted.toPowerSeries, eval, eval_mul (Mertens)
       BlockDiag/                 -- block-diagonal operators (toMatrix, system Neumann, injectivity)
       IVP/                       -- equation-independent IVP infrastructure
-        Setup.lean               -- ivpCoeffs, ivpMap, ivpTail, differentiable_ivpMap, ivp_Z1/Y0/Z2_le
-        Theorem.lean             -- Thm 8.2.2: ivp_system_theorem
+        Setup.lean               -- ivpCoeffs, ivpMap, fderiv_ivpMap_coeff_at, ivp_Z1/Y0/Z2_le
+        Theorem.lean             -- Thm 8.2.2: ivp_system_theorem (unused, kept for reference)
         DFBlock.lean             -- ivp_hDF_block_nat: generic DF verification
-        StandardIVP.lean         -- StdIVPData bundle
+        StandardIVP.lean         -- StdIVPData bundle + existsUnique (calls 7.6.2 directly)
       Chebyshev/                 -- Chebyshev polynomial algebra + ChebyshevIVP
       MvPolyBridge/              -- multivariate polynomial bridge + system Z2 norm bounds
         POC.lean                 -- proof-of-concept tests (evalInBanach, pderiv↔fderiv)
@@ -164,6 +164,15 @@ The reference book is at `docs/reference_book/`, split into PDFs by page range:
 - 183-220.pdf, 221-254.pdf, 255-290.pdf, 291-312.pdf, 313-382.pdf
 
 Use `pdftotext` for more efficient text output. Check the TOC in 1-48.pdf first to find the right page range.
+
+**Key sections for formalization:**
+- Section 7.4 (p.158): Banach algebra — `lpOneAlg`, Cauchy product
+- Section 7.6 (p.165): Radii polynomial theorem (Thm 7.6.2) — abstract zero-finding
+- Section 7.7 (p.168): Parameterized zero-finding — Example77 (x² - λ = 0), f-F bridge
+- Section 8.1 (p.185): Scalar IVP — Example81 (x' = x(x-1)), Taylor coefficient setup
+- Section 8.2 (p.194): System IVP — ivpCoeffs formula (Eq. 8.15), fixed point formulation (p.202)
+- Section 8.3 (p.211): Lorenz system — Example83
+- Section 8.4 (p.211): Taylor transform — how ODE → coefficient recurrence (f → F bridge)
 
 ## Relationship to GitHub
 
