@@ -79,26 +79,17 @@ lemma finWeightedMatrixNorm_mulVec_le
     ← Finset.mul_sum, ← matrixColNorm_mul_pow]
   -- Bound matrixColNorm ≤ finWeightedMatrixNorm
   rw [Finset.mul_sum]
-  apply Finset.sum_le_sum
-  intro k _
-  have hsup : matrixColNorm ν A k ≤ finWeightedMatrixNorm ν A :=
-    Finset.le_sup' _ (Finset.mem_univ k)
-  have h1 : matrixColNorm ν A k * (ν : ℝ) ^ (k : ℕ) ≤
-      finWeightedMatrixNorm ν A * (ν : ℝ) ^ (k : ℕ) :=
-    mul_le_mul_of_nonneg_right hsup (pow_nonneg ν.coe_nonneg _)
-  have h2 : |v k| * (matrixColNorm ν A k * (ν : ℝ) ^ (k : ℕ)) ≤
-      |v k| * (finWeightedMatrixNorm ν A * (ν : ℝ) ^ (k : ℕ)) :=
-    mul_le_mul_of_nonneg_left h1 (abs_nonneg (v k))
-  exact h2.trans_eq (mul_left_comm _ _ _)
+  exact Finset.sum_le_sum fun k _ =>
+    (mul_le_mul_of_nonneg_left
+      (mul_le_mul_of_nonneg_right (Finset.le_sup' _ (Finset.mem_univ k))
+        (pow_nonneg ν.coe_nonneg _))
+      (abs_nonneg _)).trans_eq (mul_left_comm _ _ _)
 
 lemma finWeightedMatrixNorm_le_of_matrixColNorm_le
     (A : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) (C : ℝ)
     (hcol : ∀ j : Fin (N + 1), matrixColNorm ν A j ≤ C) :
     finWeightedMatrixNorm ν A ≤ C := by
-  unfold finWeightedMatrixNorm
-  exact Finset.sup'_le Finset.univ_nonempty (fun j => matrixColNorm ν A j) (by
-    intro j _
-    exact hcol j)
+  exact Finset.sup'_le _ _ fun j _ => hcol j
 
 lemma matrixColNorm_eq (A : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
     (j : Fin (N + 1)) :

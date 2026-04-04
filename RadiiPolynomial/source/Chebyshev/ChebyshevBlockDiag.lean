@@ -77,6 +77,9 @@ private def defectCheb_seq (D : SystemBlockDiagData L N)
   | (n : ℕ) => lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (D.actionFinite c l n)
   | Int.negSucc _ => 0
 
+section defectMemlp
+omit [NeZero L] [Fact (1 ≤ (ν : ℝ))]
+
 /-- The defect sequence is in ℓ¹ (finitely supported on modes 0..N). -/
 private lemma defectCheb_memℓp (D : SystemBlockDiagData L N)
     (c : SystemCoeff L) (l : Fin L) :
@@ -96,6 +99,8 @@ private lemma defectCheb_memℓp (D : SystemBlockDiagData L N)
       ext n; have h : -(↑n + 1 : ℤ) = Int.negSucc n := by omega
       rw [h]; simp [defectCheb_seq]
     rw [this]; exact summable_zero
+
+end defectMemlp
 
 /-- The defect applied to XCheb, returning a well-typed XCheb element. -/
 def defectCheb_apply (D : SystemBlockDiagData L N) (h : XCheb ν L) : XCheb ν L := fun l =>

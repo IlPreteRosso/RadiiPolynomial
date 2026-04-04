@@ -78,12 +78,6 @@ lemma norm_def (x : ScaledReal ν n) : ‖x‖ = |toReal x| * (ν : ℝ) ^ n := 
 @[simp] lemma toReal_apply (x : ScaledReal ν n) : toReal x = x := rfl
 @[simp] lemma ofReal_apply (x : ℝ) : (ofReal x : ScaledReal ν n) = x := rfl
 
-/-- Coercion to nonnegative reals via the scaled norm. -/
-@[coe] def toNNReal (x : ScaledReal ν n) : ℝ≥0 :=
-  ⟨‖x‖, WeightedScalar.norm_nonneg' x⟩
-
-instance : CoeOut (ScaledReal ν n) ℝ≥0 := ⟨ScaledReal.toNNReal⟩
-
 end ScaledReal
 
 end RadiiPolynomial

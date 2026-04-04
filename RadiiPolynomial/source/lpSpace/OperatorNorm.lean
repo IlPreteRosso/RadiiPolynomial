@@ -49,19 +49,12 @@ theorem finWeightedMatrixNorm_eq_opNorm
     (A : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
     finWeightedMatrixNorm ν A = ‖toWeightedCLM (ν := ν) A‖ := by
   apply le_antisymm
-  · rw [finWeightedMatrixNorm]
-    apply Finset.sup'_le
-    intro j _
-    rw [matrixColNorm]
-    have h_pos : (0 : ℝ) < (ν : ℝ) ^ (j : ℕ) := pow_pos (PosReal.coe_pos ν) _
-    refine (le_trans
-      (b := ‖toWeightedCLM (ν := ν) A (FinWeighted.stdBasis j)‖ / (ν : ℝ) ^ (j : ℕ)) ?_ ?_)
-    · exact le_of_eq (by
-        rw [opNorm_achieved_on_basis, matrixColNorm]
-        field_simp [h_pos])
-    · rw [div_le_iff₀ h_pos]
-      simpa [FinWeighted.norm_stdBasis] using
-        (ContinuousLinearMap.le_opNorm (toWeightedCLM (ν := ν) A) (FinWeighted.stdBasis j))
+  · exact Finset.sup'_le _ _ fun j _ => by
+      have h := le_opNorm (toWeightedCLM (ν := ν) A) (stdBasis j)
+      rw [opNorm_achieved_on_basis, norm_stdBasis] at h
+      have h_pos := pow_pos (PosReal.coe_pos ν) (j : ℕ)
+      exact ((le_div_iff₀ h_pos).mpr h).trans_eq
+        (mul_div_cancel_right₀ _ (ne_of_gt h_pos))
   · exact opNorm_toWeightedCLM_le A
 
 lemma matrix_isUnit_of_toWeightedCLM_isUnit

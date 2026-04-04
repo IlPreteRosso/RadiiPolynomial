@@ -41,7 +41,7 @@ def toSeq (f : l1Chebyshev ν) : ℤ → ℝ := lpOneAlg.toRealSeq f
 -- NormedAddCommGroup, Ring, NormedRing (always)
 -- CommRing, NormedCommRing (ℤ is AddCommGroup ✓)
 -- NormedSpace ℝ, Algebra ℝ, NormedAlgebra ℝ (ScaledRealZ has NormedSpace ℝ ✓)
--- All require [Fact (1 ≤ (ν : ℝ))] for the NormedRing instances (via SubMulWeight)
+-- All require [Fact (1 ≤ (ν : ℝ))] for Ring (via SubMulWeightBase: submul on ℤ needs ν ≥ 1)
 
 -- Verify the key instances synthesize:
 example [Fact (1 ≤ (ν : ℝ))] : NormedRing (l1Chebyshev ν) := inferInstance

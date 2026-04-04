@@ -54,7 +54,7 @@ def mulFiber [Monoid M] (x : M) : Set (M × M) :=
   Set.mulAntidiagonal Set.univ Set.univ x
 
 /-- Membership characterization for `mulFiber`. -/
-@[to_additive /-- Membership characterization for `addFiber`. -/]
+@[to_additive (attr := simp) /-- Membership characterization for `addFiber`. -/]
 lemma mem_mulFiber [Monoid M] {x : M} {ab : M × M} :
     ab ∈ mulFiber x ↔ ab.1 * ab.2 = x := by
   unfold mulFiber; simp only [Set.mem_mulAntidiagonal, Set.mem_univ, true_and]

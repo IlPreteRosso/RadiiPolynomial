@@ -31,14 +31,20 @@ lemma ScaledRealZ.pow_natAbs_add_le (ν : PosReal) (hν : 1 ≤ (ν : ℝ)) (j l
   rw [← pow_add]
   exact pow_le_pow_right₀ hν (Int.natAbs_add_le j l)
 
+/-- Submultiplicative weight base. Requires ν ≥ 1 (unlike ScaledReal where ν^(m+n) = ν^m·ν^n
+is exact). For ℤ, `ν^|j+l| ≤ ν^|j|·ν^|l|` needs `|j+l| ≤ |j|+|l|` plus `ν ≥ 1`. -/
+instance ScaledRealZ.instSubMulWeightBase (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] :
+    SubMulWeightBase (fun k : ℤ => (ν : ℝ) ^ k.natAbs) where
+  weight_pos k := pow_pos ν.coe_pos k.natAbs
+  submul j l := pow_natAbs_add_le ν Fact.out j l
+  weight_zero := pow_zero _
+
+/-- Full SubMulWeight (adds weight ≥ 1). Requires ν ≥ 1. -/
 instance ScaledRealZ.instSubMulWeight (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] :
     SubMulWeight (fun k : ℤ => (ν : ℝ) ^ k.natAbs) where
-  weight_pos k := pow_pos ν.coe_pos k.natAbs
   one_le k := by
     have hν : (1 : ℝ) ≤ (ν : ℝ) := Fact.out
     exact ((one_pow k.natAbs).symm.le).trans (pow_le_pow_left₀ zero_le_one hν k.natAbs)
-  submul j l := pow_natAbs_add_le ν Fact.out j l
-  weight_zero := pow_zero _
 
 /-! ### Compatibility aliases -/
 

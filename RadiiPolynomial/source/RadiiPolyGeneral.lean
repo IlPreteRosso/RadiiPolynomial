@@ -104,6 +104,12 @@ Key differences from E to E case:
 /-- The Newton-like operator T(x) = x - Af(x) for maps from E to F -/
 def NewtonLikeMap (A : F →L[ℝ] E) (f : E → F) (x : E) : E := x - A (f x)
 
+omit [CompleteSpace E] [CompleteSpace F] in
+/-- Newton-like map is differentiable when f is. -/
+lemma NewtonLikeMap.differentiable {A : F →L[ℝ] E} {f : E → F}
+    (hf : Differentiable ℝ f) : Differentiable ℝ (NewtonLikeMap A f) :=
+  differentiable_id.sub (A.differentiable.comp hf)
+
 end NewtonLikeOperator
 
 
@@ -236,12 +242,7 @@ lemma general_radii_poly_neg_implies_Z_lt_one
   (hr₀ : 0 < r₀)
   (h_poly : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0) :
   Z_bound_general Z₀ Z₁ Z₂ r₀ < 1 := by
-  rw [generalRadiiPolynomial_alt_form] at h_poly
-  have h_prod_neg : (Z_bound_general Z₀ Z₁ Z₂ r₀ - 1) * r₀ < 0 := by
-    linarith [h_poly, hY₀]
-  have h_Z_minus_one : Z_bound_general Z₀ Z₁ Z₂ r₀ - 1 < 0 := by
-    nlinarith [h_prod_neg, hr₀]
-  linarith
+  rw [generalRadiiPolynomial_alt_form] at h_poly; nlinarith
 
 /-- Simple version: if p(r₀) < 0 then Z(r₀) < 1 -/
 lemma radii_poly_neg_implies_Z_bound_lt_one
@@ -250,16 +251,7 @@ lemma radii_poly_neg_implies_Z_bound_lt_one
   (hr₀ : 0 < r₀)
   (h_poly : radiiPolynomial Y₀ Z₀ Z₂ r₀ < 0) :
   Z_bound Z₀ Z₂ r₀ < 1 := by
-  rw [radiiPolynomial_alt_form] at h_poly
-  have h_prod_neg : (Z_bound Z₀ Z₂ r₀ - 1) * r₀ < 0 := by
-    linarith [h_poly, hY₀]
-  have h_Z_minus_one : Z_bound Z₀ Z₂ r₀ - 1 < 0 := by
-    by_contra h_not
-    have h_nonneg : 0 ≤ Z_bound Z₀ Z₂ r₀ - 1 := by linarith
-    have h_prod_nonneg : 0 ≤ (Z_bound Z₀ Z₂ r₀ - 1) * r₀ :=
-      mul_nonneg h_nonneg (le_of_lt hr₀)
-    linarith [h_prod_neg]
-  linarith
+  rw [radiiPolynomial_alt_form] at h_poly; nlinarith
 
 /-- Simple polynomial version -/
 lemma simple_radii_poly_neg_implies_Z_lt_one
@@ -268,13 +260,7 @@ lemma simple_radii_poly_neg_implies_Z_lt_one
   (hr₀ : 0 < r₀)
   (h_poly : simpleRadiiPolynomial Y₀ Z r₀ < 0) :
   Z r₀ < 1 := by
-  unfold simpleRadiiPolynomial at h_poly
-  have h1 : Z r₀ * r₀ - r₀ + Y₀ < 0 := by linarith [h_poly]
-  have h2 : Z r₀ * r₀ + Y₀ < r₀ := by linarith [h1]
-  have h3 : Z r₀ * r₀ < r₀ := by linarith [h2, hY₀]
-  rw [← div_lt_one hr₀] at h3
-  field_simp [ne_of_gt hr₀] at h3
-  exact h3
+  unfold simpleRadiiPolynomial at h_poly; nlinarith
 
 end RadiiPolynomialImplications
 
@@ -703,46 +689,16 @@ theorem general_radii_polynomial_theorem
   (hA_inj : Function.Injective A) :
   ∃! xTilde ∈ Metric.closedBall xBar r₀, f xTilde = 0 := by
 
-  -- Define the Newton-like operator T(x) = x - A(f(x))
-  let T := NewtonLikeMap A f
-
-  -- T is differentiable since f is differentiable and A is continuous linear
-  have hT_diff : Differentiable ℝ T := by
-    unfold T NewtonLikeMap
-    exact (differentiable_id).sub (A.differentiable.comp hf_diff)
-
-  -- Apply Theorem 7.6.1 (general_fixed_point_theorem)
-  -- We need to verify the conditions of Theorem 7.6.1:
-  --   (a) ‖T(x̄) - x̄‖ ≤ Y₀
-  --   (b) ‖DT(c)‖ ≤ Z(r₀) for all c ∈ B̄ᵣ₀(x̄)
-  --   (c) p(r₀) < 0 where p(r) = (Z(r) - 1)r + Y₀
-
   have ⟨xTilde, ⟨hxTilde_mem, hxTilde_fixed⟩, hxTilde_unique⟩ :=
     general_fixed_point_theorem
-      hT_diff
+      (NewtonLikeMap.differentiable hf_diff)
       hr₀
-      (newton_operator_Y_bound h_Y₀)                             -- (a) ‖T(x̄) - x̄‖ ≤ Y₀
-      (fun c hc => newton_operator_derivative_bound_general      -- (b) ‖DT(c)‖ ≤ Z(r₀)
-        hf_diff h_Z₀ h_Z₁ h_Z₂ c hc)
-      (by unfold simpleRadiiPolynomial                           -- (c) p(r₀) < 0
-          rw [← generalRadiiPolynomial_alt_form]
-          exact h_radii)
-
-  -- Convert fixed point to zero via Proposition 2.3.1
-  refine ⟨xTilde, ⟨hxTilde_mem, ?_⟩, ?_⟩
-
-  -- Show f(x̃) = 0 using Proposition 2.3.1
-  · rw [← fixedPoint_injective_iff_zero hA_inj xTilde]
-    exact hxTilde_fixed
-
-  -- Uniqueness: if z is also a zero, then z = x̃
-  · intro z ⟨hz_mem, hz_zero⟩
-    -- z is a zero, so by Proposition 2.3.1, z is a fixed point of T
-    have hz_fixed : T z = z := by
-      rw [fixedPoint_injective_iff_zero hA_inj z]
-      exact hz_zero
-    -- By uniqueness from Theorem 7.6.1, z = x̃
-    exact hxTilde_unique z ⟨hz_mem, hz_fixed⟩
+      (newton_operator_Y_bound h_Y₀)
+      (fun c hc => newton_operator_derivative_bound_general hf_diff h_Z₀ h_Z₁ h_Z₂ c hc)
+      (by unfold simpleRadiiPolynomial; rw [← generalRadiiPolynomial_alt_form]; exact h_radii)
+  refine ⟨xTilde, ⟨hxTilde_mem, (fixedPoint_injective_iff_zero hA_inj _).mp hxTilde_fixed⟩, ?_⟩
+  intro z ⟨hz_mem, hz_zero⟩
+  exact hxTilde_unique z ⟨hz_mem, (fixedPoint_injective_iff_zero hA_inj _).mpr hz_zero⟩
 
 end GeneralRadiiPolynomialTheorem
 
@@ -790,44 +746,12 @@ theorem simple_radii_polynomial_theorem_EtoF
   (hf_diff : Differentiable ℝ f)
   (h_radii : radiiPolynomial Y₀ Z₀ Z₂ r₀ < 0)                     -- eq. 2.17
   (hA_inj : Function.Injective A) :
-  ∃! xTilde ∈ Metric.closedBall xBar r₀, f xTilde = 0 := by
-
-  -- Define the Newton-like operator T(x) = x - A(f(x))
-  let T := NewtonLikeMap A f
-
-  -- T is differentiable
-  have hT_diff : Differentiable ℝ T := by
-    unfold T NewtonLikeMap
-    exact (differentiable_id).sub (A.differentiable.comp hf_diff)
-
-  -- Apply Theorem 7.6.1 (general_fixed_point_theorem)
-  have ⟨xTilde, ⟨hxTilde_mem, hxTilde_fixed⟩, hxTilde_unique⟩ :=
-    general_fixed_point_theorem
-      hT_diff
-      hr₀
-      (newton_operator_Y_bound h_Y₀)
-      (fun c hc => newton_operator_derivative_bound_simple hf_diff h_Z₀ h_Z₂ c hc)
-      (by unfold simpleRadiiPolynomial
-          rw [← radiiPolynomial_alt_form]
-          exact h_radii)
-
-  -- Convert fixed point to zero via Proposition 2.3.1
-  -- ⊢ ∃! xTilde ∈ Metric.closedBall xBar r₀, f xTilde = 0
-  -- which converts to
-  -- ∃ xTilde, (xTilde ∈ closedBall xBar r₀ ∧ f xTilde = 0) ∧
-  -- (∀ z, (z ∈ closedBall xBar r₀ ∧ f z = 0) → z = xTilde)
-  refine ⟨xTilde, ⟨hxTilde_mem, ?_⟩, ?_⟩
-
-  -- Show f(x̃) = 0
-  · rw [← fixedPoint_injective_iff_zero hA_inj xTilde]
-    exact hxTilde_fixed
-
-  -- Uniqueness
-  · intro z ⟨hz_mem, hz_zero⟩
-    have hz_fixed : T z = z := by
-      rw [fixedPoint_injective_iff_zero hA_inj z]
-      exact hz_zero
-    exact hxTilde_unique z ⟨hz_mem, hz_fixed⟩
+  ∃! xTilde ∈ Metric.closedBall xBar r₀, f xTilde = 0 :=
+  general_radii_polynomial_theorem (Z₁ := 0) hr₀ h_Y₀ h_Z₀
+    (by rw [sub_self, ContinuousLinearMap.comp_zero, norm_zero])
+    h_Z₂ hf_diff
+    (by rwa [← radiiPolynomial_is_special_case])
+    hA_inj
 
 /-- Version for same space (E = F) with invertibility claim
 

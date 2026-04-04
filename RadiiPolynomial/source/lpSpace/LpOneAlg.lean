@@ -175,6 +175,12 @@ theorem summable_norm_shift [AddRightCancelMonoid M] (f : lpOneAlg M E) (s : M) 
     Summable (fun m => ‖f (m + s)‖) :=
   (summable_norm f).comp_injective (add_left_injective s)
 
+/-- Product norm summability: `∑ ‖f a‖ * ‖g b‖ < ∞` over `M × M`. -/
+theorem summable_norm_prod (f g : lpOneAlg M E) :
+    Summable (fun ab : M × M => ‖f ab.1‖ * ‖g ab.2‖) :=
+  (summable_norm f).mul_of_nonneg (summable_norm g)
+    (fun _ => norm_nonneg _) (fun _ => norm_nonneg _)
+
 /-! ### Underlying ℝ Sequence and Summability (multiplicative, with @[to_additive]) -/
 
 section MulHelpers
@@ -293,9 +299,7 @@ private theorem lpOneAlg.norm_mulConv_le_fiber_generic
     ∑' ab : DiscreteConvolution.mulFiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖ := by
   rw [lpOneMulAlgRingData.norm_ofReal_eq, DiscreteConvolution.ringConvolution_apply_eq]
   have hnorm_fiber : Summable (fun ab : DiscreteConvolution.mulFiber k =>
-      ‖f ab.1.1‖ * ‖g ab.1.2‖) :=
-    ((lpOneAlg.summable_norm f).mul_of_nonneg (lpOneAlg.summable_norm g)
-      (fun _ => norm_nonneg _) (fun _ => norm_nonneg _)).subtype _
+      ‖f ab.1.1‖ * ‖g ab.1.2‖) := (lpOneAlg.summable_norm_prod f g).subtype _
   have h_elem (ab : DiscreteConvolution.mulFiber k) :
       |lpOneAlg.mulToRealSeq f ab.1.1| * |lpOneAlg.mulToRealSeq g ab.1.2| *
         ‖lpOneMulAlgRingData.ofReal (E := E) k 1‖ ≤
@@ -332,8 +336,7 @@ private theorem lpOneAlg.abs_mulConvSummable_of_weightMul
     Summable fun ab : DiscreteConvolution.mulFiber k =>
       |lpOneAlg.mulToRealSeq f ab.1.1| * |lpOneAlg.mulToRealSeq g ab.1.2| := by
   have hnorm : Summable (fun ab : DiscreteConvolution.mulFiber k => ‖f ab.1.1‖ * ‖g ab.1.2‖) :=
-    ((lpOneAlg.summable_norm f).mul_of_nonneg (lpOneAlg.summable_norm g)
-      (fun _ => norm_nonneg _) (fun _ => norm_nonneg _)).subtype _
+    (lpOneAlg.summable_norm_prod f g).subtype _
   have hw := lpOneAlg.norm_mulOfReal_one_pos (E := E) k
   refine (hnorm.const_smul (‖lpOneMulAlgRingData.ofReal (E := E) k 1‖⁻¹)).of_norm_bounded
     fun ab => ?_
@@ -372,9 +375,7 @@ private theorem lpOneAlg.tripleMulConvSummable_of_weightMul
     have h3 : Summable (fun abc : M × M × M =>
         ‖f abc.1‖ * ‖g abc.2.1‖ * ‖h abc.2.2‖) :=
       (Equiv.prodAssoc M M M).symm.summable_iff.mpr
-        (((lpOneAlg.summable_norm f).mul_of_nonneg (lpOneAlg.summable_norm g)
-          (fun _ => norm_nonneg _) (fun _ => norm_nonneg _)).mul_of_nonneg
-          (lpOneAlg.summable_norm h)
+        ((lpOneAlg.summable_norm_prod f g).mul_of_nonneg (lpOneAlg.summable_norm h)
           (fun _ => mul_nonneg (norm_nonneg _) (norm_nonneg _)) (fun _ => norm_nonneg _))
     exact h3.subtype _
   have hw := lpOneAlg.norm_mulOfReal_one_pos (E := E) x
@@ -411,6 +412,14 @@ instance lpOneAlg.instMulConvCompatOfWeightMul
     lpOneAlg.norm_mulConv_le_fiber_generic f g k
       (lpOneAlg.abs_mulConvSummable_of_weightMul f g k)
 
+/-- Finiteness of `mulFiber k` from `HasMulAntidiagonal`. -/
+@[to_additive]
+private theorem lpOneAlg.mulFiber_finite
+    {M : Type*} [Monoid M] [Finset.HasMulAntidiagonal M] (k : M) :
+    Set.Finite (DiscreteConvolution.mulFiber k) :=
+  (Finset.mulAntidiagonal k).finite_toSet.subset fun ⟨_, _⟩ h =>
+    Finset.mem_coe.mpr (Finset.mem_mulAntidiagonal.mpr (DiscreteConvolution.mem_mulFiber.mp h))
+
 /-- Instance from `[HasMulAntidiagonal M] + [lpOneMulAlgWeightMul M E]`:
 finite sum path (antidiagonal gives finite fibers, no weight ≥ 1 needed). -/
 @[to_additive (dont_translate := E) lpOneAlg.instConvCompatOfAntidiag]
@@ -420,19 +429,11 @@ instance (priority := 1100) lpOneAlg.instMulConvCompatOfAntidiag
     [Finset.HasMulAntidiagonal M] [lpOneMulAlgRingData M E]
     [lpOneMulAlgWeightMul M E] : lpOneMulAlgConvCompat M E where
   mulConvSummable f g k := by
-    have hfin : Set.Finite (DiscreteConvolution.mulFiber k) :=
-      (Finset.mulAntidiagonal k).finite_toSet.subset (fun ⟨a, b⟩ h => by
-        rw [Finset.mem_coe, Finset.mem_mulAntidiagonal]
-        exact DiscreteConvolution.mem_mulFiber.mp h)
-    exact (hfin.summable (fun p : M × M =>
-      lpOneAlg.mulToRealSeq f p.1 * lpOneAlg.mulToRealSeq g p.2))
+    exact (lpOneAlg.mulFiber_finite k).summable (fun p : M × M =>
+      lpOneAlg.mulToRealSeq f p.1 * lpOneAlg.mulToRealSeq g p.2)
   tripleMulConvSummable f g h x := by
-    have hfin_fiber : ∀ k : M, Set.Finite (DiscreteConvolution.mulFiber k) :=
-      fun k => (Finset.mulAntidiagonal k).finite_toSet.subset (fun ⟨a, b⟩ hm => by
-        rw [Finset.mem_coe, Finset.mem_mulAntidiagonal]
-        exact DiscreteConvolution.mem_mulFiber.mp hm)
     haveI : ∀ k : M, Finite ↑(DiscreteConvolution.mulFiber k) :=
-      fun k => (hfin_fiber k).to_subtype
+      fun k => (lpOneAlg.mulFiber_finite k).to_subtype
     haveI : Finite ↑(DiscreteConvolution.tripleMulFiber x) :=
       (DiscreteConvolution.leftMulAssocEquiv x).finite_iff.mp inferInstance
     exact (Set.toFinite _).summable
@@ -440,12 +441,10 @@ instance (priority := 1100) lpOneAlg.instMulConvCompatOfAntidiag
         lpOneAlg.mulToRealSeq f p.1 * lpOneAlg.mulToRealSeq g p.2.1 *
           lpOneAlg.mulToRealSeq h p.2.2)
   norm_mulConv_le_fiber f g k := by
-    have hfin := (Finset.mulAntidiagonal k).finite_toSet.subset (fun ⟨a, b⟩ h =>
-      Finset.mem_coe.mpr (Finset.mem_mulAntidiagonal.mpr
-        (DiscreteConvolution.mem_mulFiber.mp h)))
-    haveI : Finite ↑(DiscreteConvolution.mulFiber k) := hfin.to_subtype
+    haveI : Finite ↑(DiscreteConvolution.mulFiber k) :=
+      (lpOneAlg.mulFiber_finite k).to_subtype
     exact lpOneAlg.norm_mulConv_le_fiber_generic f g k
-      (hfin.summable (fun p : M × M =>
+      ((lpOneAlg.mulFiber_finite k).summable (fun p : M × M =>
         |lpOneAlg.mulToRealSeq f p.1| * |lpOneAlg.mulToRealSeq g p.2|))
 
 namespace lpOneAlg
@@ -467,12 +466,9 @@ theorem mul_memℓp_mul (f g : lpOneAlg M E) :
       (DiscreteConvolution.ringConvolution (mulToRealSeq f) (mulToRealSeq g) k)) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
-  have hprod : Summable (fun ab : M × M => ‖f ab.1‖ * ‖g ab.2‖) :=
-    (summable_norm f).mul_of_nonneg (summable_norm g)
-      (fun _ => norm_nonneg _) (fun _ => norm_nonneg _)
   exact Summable.of_nonneg_of_le (fun _ => norm_nonneg _)
     (lpOneMulAlgConvCompat.norm_mulConv_le_fiber f g)
-    (DiscreteConvolution.sigmaMulFiberEquiv.summable_iff.mpr hprod).sigma
+    (DiscreteConvolution.sigmaMulFiberEquiv.summable_iff.mpr (summable_norm_prod f g)).sigma
 
 omit [lpOneMulAlgConvCompat M E] in
 @[to_additive (dont_translate := E) one_memℓp]
@@ -492,17 +488,14 @@ theorem norm_mul_le_mul' (f g : lpOneAlg M E) :
         (DiscreteConvolution.ringConvolution (mulToRealSeq f) (mulToRealSeq g) k),
       mul_memℓp_mul f g⟩⟩ : lpOneAlg M E)‖ ≤ ‖f‖ * ‖g‖ := by
   rw [norm_eq_tsum, norm_eq_tsum, norm_eq_tsum]
-  have hprod : Summable (fun ab : M × M => ‖f ab.1‖ * ‖g ab.2‖) :=
-    (summable_norm f).mul_of_nonneg (summable_norm g)
-      (fun _ => norm_nonneg _) (fun _ => norm_nonneg _)
-  have hsigma := DiscreteConvolution.sigmaMulFiberEquiv.summable_iff.mpr hprod
+  have hsigma := DiscreteConvolution.sigmaMulFiberEquiv.summable_iff.mpr (summable_norm_prod f g)
   have hmem : Summable (fun k => ‖lpOneMulAlgRingData.ofReal (E := E) k
       (DiscreteConvolution.ringConvolution (mulToRealSeq f) (mulToRealSeq g) k)‖) := by
     simpa using (memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)).mp (mul_memℓp_mul f g)
   refine (Summable.tsum_le_tsum (lpOneMulAlgConvCompat.norm_mulConv_le_fiber f g)
     hmem hsigma.sigma).trans (le_of_eq ?_)
   exact (hsigma.tsum_sigma' hsigma.sigma_factor) ▸
-    (summable_norm f).tsum_mul_tsum (summable_norm g) hprod ▸
+    (summable_norm f).tsum_mul_tsum (summable_norm g) (summable_norm_prod f g) ▸
     DiscreteConvolution.sigmaMulFiberEquiv.tsum_eq (fun p => ‖f p.1‖ * ‖g p.2‖)
 
 omit [DecidableEq M] in

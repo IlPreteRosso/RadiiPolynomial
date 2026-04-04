@@ -228,11 +228,8 @@ lemma norm_mk_le_of_pointwise (f : ℕ → ℝ) (hf : Mem ν f)
     (a : l1Weighted ν) (C : ℝ) (hle : ∀ n, |f n| ≤ C * |toSeq a n|) :
     ‖mk f hf‖ ≤ C * ‖a‖ := by
   rw [norm_eq_tsum, norm_eq_tsum, ← tsum_mul_left]
-  exact Summable.tsum_le_tsum (fun n =>
-    calc |f n| * (ν : ℝ) ^ n
-        ≤ C * |toSeq a n| * (ν : ℝ) ^ n :=
-          mul_le_mul_of_nonneg_right (hle n) (pow_nonneg ν.coe_nonneg n)
-      _ = C * (|toSeq a n| * (ν : ℝ) ^ n) := by ring)
+  exact Summable.tsum_le_tsum
+    (fun n => by rw [mk_apply]; nlinarith [hle n, pow_nonneg ν.coe_nonneg n])
     ((mem_iff f).mp hf) ((summable_weighted a).mul_left C)
 
 end NormSplitting
