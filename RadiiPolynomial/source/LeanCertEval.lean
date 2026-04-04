@@ -4,46 +4,34 @@ import RadiiPolynomial.source.BlockDiag.Scalar
 /-!
 # LeanCert Evaluators for Block-Diagonal Witness Verification
 
-Equation-independent evaluators and correctness proofs that bridge the structural
-norm reductions (column norms, action norms) to `finsum_bound using`.
+Equation-independent evaluators and correctness proofs that bridge structural
+norm reductions to `finsum_bound`, `finmatrix_bound`, and `native_decide`.
 
 ## Contents
 
-1. `colNormTermEval` — per-term evaluator for column norm sums (`arrayColNormIccSum`)
-2. `colNormTermEval_correct` — correctness: real term ∈ interval
+1. `weightedTermEval` — per-term evaluator for weighted ℓ¹ norms
+2. `defectMatQ` / `blockDefectMatQ` — exact ℚ I-AB defect computation
+3. `finWeightedMatrixNorm_le_of_Q_le` — single `native_decide` matrix norm bridge
+4. `finiteBlockMatrixNorm_le_of_Q_le` — system-level block matrix norm bridge
+5. `norm_toCLM_le_of_Q` / `norm_toScalarCLM_le_of_Q` — CLM norm bridges
+6. `scalarBlockDiagActionEval` — scalar block-diagonal action evaluator (Y₀)
+7. `systemBlockDiagActionEval` — system block-diagonal action evaluator (Y₀)
+8. `Z₂_blockNormQ` — per-component Z₂ block norm evaluator
 
 ## Usage Pattern
 
-```
--- In certificate file:
-unfold FiniteWeightedNorm.arrayColNormIccSum
-finsum_bound using (colNormTermEval col ν j) (fun k _ _ => colNormTermEval_correct col ν j k _)
+```lean
+-- Matrix norm via single native_decide:
+finmatrix_bound (finWeightedMatrixNorm_le_of_Q_le _ cols ν_q hcols hν)
+
+-- Weighted norm via finsum_bound:
+finsum_bound using (weightedTermEval arr ν) (fun k _ _ => weightedTermEval_correct ...)
 ```
 -/
 
 open LeanCert.Core LeanCert.Engine
 
 namespace RadiiPolynomial
-
-/-- Per-term evaluator for `arrayColNormIccSum`: computes `|col[k]| * ν^k / ν^j`
-as a singleton `IntervalDyadic`. -/
-def colNormTermEval (col : Array ℚ) (ν : ℚ) (j : Nat) (k : Nat)
-    (cfg : DyadicConfig) : IntervalDyadic :=
-  IntervalDyadic.ofIntervalRat
-    (IntervalRat.singleton (|col.getD k 0| * ν ^ k / ν ^ j)) cfg.precision
-
-/-- Correctness: the real column-norm term lies in the dyadic interval. -/
-theorem colNormTermEval_correct (col : Array ℚ) (ν : ℚ) (j : Nat)
-    (k : Nat) (cfg : DyadicConfig) (hprec : cfg.precision ≤ 0 := by norm_num) :
-    (|(col.getD k 0 : ℝ)| * (ν : ℝ) ^ k / (ν : ℝ) ^ j : ℝ) ∈
-      colNormTermEval col ν j k cfg := by
-  simp only [colNormTermEval]
-  exact_mod_cast IntervalDyadic.mem_ofIntervalRat (IntervalRat.mem_singleton _) cfg.precision hprec
-
-/-- Helper: rational singleton interval contains its real cast. -/
-lemma rat_mem_singleton (q : ℚ) (prec : Int) (hprec : prec ≤ 0 := by norm_num) :
-    (q : ℝ) ∈ IntervalDyadic.ofIntervalRat (IntervalRat.singleton q) prec :=
-  IntervalDyadic.mem_ofIntervalRat (IntervalRat.mem_singleton q) prec hprec
 
 /-- Per-term evaluator for weighted l1 norm: computes `|arr[k]| * ν^k`. -/
 def weightedTermEval (arr : Array ℚ) (ν : ℚ) (k : Nat)
@@ -112,22 +100,6 @@ theorem blockDefectMatQ_correct {L N : ℕ} [DecidableEq (Fin L)]
     blockDefectMatQ, matOfCols]
   simp_rw [hA, hB]; push_cast
   by_cases hlj : l = j <;> simp [hlj, Matrix.one_apply, apply_ite (Rat.cast (K := ℝ))]
-
-/-! ## Core pipeline: finWeightedMatrixNorm from ℚ column arrays -/
-
-/-- Bound `finWeightedMatrixNorm` given ℚ column arrays + per-column `arrayColNormIccSum` bounds.
-Chains `matrixColNorm_le_of_arrayColNormIccSum` per column. The certificate closes
-each `arrayColNormIccSum` goal via `finsum_bound using colNormTermEval`. -/
-lemma FiniteWeightedNorm.finWeightedMatrixNorm_le_via_cols {N : ℕ} {ν : PosReal}
-    (M : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
-    (cols : Fin (N + 1) → Array ℚ) (C : ℝ)
-    (hcols : ∀ j i : Fin (N + 1), M i j = ((cols j).getD (i : ℕ) 0 : ℝ))
-    (hbound : ∀ j : Fin (N + 1),
-      FiniteWeightedNorm.arrayColNormIccSum ν N (cols j) j ≤ C) :
-    FiniteWeightedNorm.finWeightedMatrixNorm ν M ≤ C :=
-  FiniteWeightedNorm.finWeightedMatrixNorm_le_of_matrixColNorm_le (ν := ν) (A := M) (C := C)
-    (fun j => FiniteWeightedNorm.matrixColNorm_le_of_arrayColNormIccSum ν N M (cols j) j C
-      (hcols j) (hbound j))
 
 /-! ## ℚ norm evaluator (single native_decide for full matrix norm)
 
@@ -311,91 +283,21 @@ lemma norm_toCLM_le_of_Q {L N : ℕ} [NeZero L] {ν : PosReal}
       (finiteBlockMatrixNorm_le_of_Q_le A.finBlock blockCols ν_q hcols hν (le_refl _))
       (le_of_eq htail)).trans (by exact_mod_cast hle)
 
-/-! ## Pi-vector norm in ℚ (for Y₀-type bounds)
-
-Bounds `‖x‖` for `x : XL1 ν L` (finitely-supported Pi-vector) via ℚ arrays + `native_decide`. -/
-
-/-- Per-component weighted ℓ¹ norm in ℚ: `Σ_{n=0}^S |v[n]| * ν^n`. -/
-def vecComponentNormQ (v : Array ℚ) (ν : ℚ) (S : ℕ) : ℚ :=
-  ∑ n ∈ Finset.Icc 0 S, |v.getD n 0| * ν ^ n
-
-/-- Pi-vector norm in ℚ: `max_l vecComponentNormQ(vec l)`. -/
-def vecNormQ (L S : ℕ) [NeZero L] (vec : Fin L → Array ℚ) (ν : ℚ) : ℚ :=
-  Finset.univ.sup' Finset.univ_nonempty fun l => vecComponentNormQ (vec l) ν S
-
-/-- Bridge: if each component of `x : XL1 ν L` has finite support and matches ℚ arrays,
-then `‖x‖ ≤ (C : ℝ)`. Single `native_decide` via `finmatrix_bound`. -/
-lemma pi_norm_le_of_vecNormQ {L : ℕ} [NeZero L] {ν : PosReal} (S : ℕ)
-    (x : Fin L → l1Weighted ν)
-    (vec : Fin L → Array ℚ) (ν_q : ℚ) {C : ℚ}
-    (hsupport : ∀ l, ∀ n, S < n → l1Weighted.toSeq (x l) n = 0)
-    (hbridge : ∀ l, ∀ n, l1Weighted.toSeq (x l) n = ((vec l).getD n 0 : ℝ))
+/-- Combined scalar CLM norm bound from ℚ columns + ℚ tail bound.
+`‖A.toScalarCLM‖ ≤ max(finWeightedMatrixNormQ, tailBound_q) ≤ C` — single `native_decide`.
+Scalar analogue of `norm_toCLM_le_of_Q`. Uses the tight `max` bound (Exercise 2.7.2). -/
+lemma norm_toScalarCLM_le_of_Q {N : ℕ} {ν : PosReal}
+    (A : ScalarBlockDiagData N)
+    (cols : Fin (N + 1) → Array ℚ) (ν_q tailBound_q : ℚ) {C : ℚ}
+    (hcols : ∀ j i : Fin (N + 1), A.finBlock0 i j = ((cols j).getD (i : ℕ) 0 : ℝ))
     (hν : (ν : ℝ) = (ν_q : ℝ))
-    (hle : vecNormQ L S vec ν_q ≤ C) :
-    ‖x‖ ≤ (C : ℝ) := by
-  have hνq : (0 : ℚ) ≤ ν_q := by exact_mod_cast (hν ▸ le_of_lt ν.2 : (0 : ℝ) ≤ (ν_q : ℝ))
-  have hC : (0 : ℝ) ≤ (C : ℝ) := by
-    have := Finset.sum_nonneg (s := Finset.Icc 0 S) (f := fun n =>
-      |((vec (0 : Fin L)).getD n 0 : ℚ)| * ν_q ^ n)
-      (fun n _ => mul_nonneg (abs_nonneg _) (pow_nonneg hνq _))
-    exact_mod_cast le_trans (le_trans this
-      (Finset.le_sup'_of_le (fun l => vecComponentNormQ (vec l) ν_q S)
-        (Finset.mem_univ (0 : Fin L)) le_rfl)) hle
-  refine (pi_norm_le_iff_of_nonneg hC).mpr fun l => ?_
-  rw [l1Weighted.norm_eq_Icc_sum_of_support (x l) S (hsupport l)]
-  simp_rw [hbridge l, hν]
-  have hsum : ∑ n ∈ Finset.Icc 0 S, |((vec l).getD n 0 : ℝ)| * (ν_q : ℝ) ^ n =
-      ((vecComponentNormQ (vec l) ν_q S : ℚ) : ℝ) := by
-    simp only [vecComponentNormQ]; push_cast; rfl
-  rw [hsum]
-  exact_mod_cast (Finset.le_sup'
-    (fun l => vecComponentNormQ (vec l) ν_q S) (Finset.mem_univ l)).trans hle
-
-/-! ## Pipeline lemmas (matrixColNorm-based)
-
-These bypass `arrayColNormIccSum` and work directly with `matrixColNorm_eq_sum_div`,
-producing `∑ i : Fin (N+1), |M i j| * ν^i / ν^j` goals that `finsum_bound` handles
-natively (with the Rat.cast reifier fix). -/
-
-/-- **Z₀ pipeline**: Given tail cancellation and per-column `matrixColNorm` bounds,
-verify `‖I - A.toScalarCLM.comp B.toScalarCLM‖ ≤ C`.
-
-Usage: certificate rewrites each column with `matrixColNorm_eq_sum_div`, substitutes
-entries via `defectMatQ_correct`, then closes with `finsum_bound`. -/
-lemma Z₀_le_via_colNorm {N : ℕ} {ν : PosReal}
-    (A B : ScalarBlockDiagData N)
-    (htail : ∀ n, N < n → A.tailDiag0 n * B.tailDiag0 n = 1)
-    (C : ℝ)
-    (hbound : ∀ j : Fin (N + 1),
-      FiniteWeightedNorm.matrixColNorm ν (1 - A.finBlock0 * B.finBlock0) j ≤ C) :
-    ‖ContinuousLinearMap.id ℝ (l1Weighted ν) -
-      (A.toScalarCLM (ν := ν)).comp (B.toScalarCLM (ν := ν))‖ ≤ C :=
-  (ScalarBlockDiagData.Z₀_le_finWeightedMatrixNorm_of_tailCancel (ν := ν) A B htail).trans
-    (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_matrixColNorm_le (ν := ν) _ _ hbound)
-
-/-- **‖A‖ pipeline**: Given per-column `matrixColNorm` bounds for `A.finBlock0`,
-verify `‖A.toScalarCLM‖ ≤ fin_bnd + A.tailBound`. -/
-lemma norm_toScalarCLM_le_via_colNorm {N : ℕ} {ν : PosReal}
-    (A : ScalarBlockDiagData N)
-    (fin_bnd : ℝ)
-    (hbound : ∀ j : Fin (N + 1),
-      FiniteWeightedNorm.matrixColNorm ν A.finBlock0 j ≤ fin_bnd) :
-    ‖A.toScalarCLM (ν := ν)‖ ≤ fin_bnd + A.tailBound :=
-  (ScalarBlockDiagData.norm_toScalarCLM_le (ν := ν) A).trans <| by
-    gcongr
-    exact FiniteWeightedNorm.finWeightedMatrixNorm_le_of_matrixColNorm_le (ν := ν) _ _ hbound
-
-/-- **‖A‖ pipeline (max)**: Given per-column `matrixColNorm` bounds and tail bound ≤ C,
-verify `‖A.toScalarCLM‖ ≤ C`. Uses the tight `max` bound (Exercise 2.7.2). -/
-lemma norm_toScalarCLM_le_max_via_colNorm {N : ℕ} {ν : PosReal}
-    (A : ScalarBlockDiagData N)
-    (C : ℝ)
-    (hcol : ∀ j : Fin (N + 1),
-      FiniteWeightedNorm.matrixColNorm ν A.finBlock0 j ≤ C)
-    (htail : A.tailBound ≤ C) :
-    ‖A.toScalarCLM (ν := ν)‖ ≤ C :=
+    (htail : A.tailBound = (tailBound_q : ℝ))
+    (hle : max (finWeightedMatrixNormQ cols ν_q N) tailBound_q ≤ C) :
+    ‖A.toScalarCLM (ν := ν)‖ ≤ (C : ℝ) :=
   (ScalarBlockDiagData.norm_toScalarCLM_le_max (ν := ν) A).trans <|
-    max_le (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_matrixColNorm_le (ν := ν) _ _ hcol) htail
+    (max_le_max
+      (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le A.finBlock0 cols ν_q hcols hν (le_refl _))
+      (le_of_eq htail)).trans (by exact_mod_cast hle)
 
 /-- Convert a pointwise interval bound (`∀ x ∈ Icc 0 0, e ≤ c`) to a scalar inequality.
 Lets `fast_bound` close scalar inequalities directly in ℝ. -/
@@ -407,27 +309,6 @@ lemma of_point_interval {e c : ℝ}
 lemma of_point_interval_lt {e c : ℝ}
     (h : ∀ x ∈ Set.Icc (0 : ℝ) 0, e < c) : e < c :=
   h 0 ⟨le_refl _, le_refl _⟩
-
-/-- Wrap `e ≤ c` as a singleton sum for `finsum_bound`. -/
-lemma of_singleton_sum {e c : ℝ}
-    (h : ∑ _k ∈ Finset.Icc (0:ℕ) 0, e ≤ c) : e ≤ c := by simpa using h
-
-/-! ## Block-diagonal action bridge (ℝ-general)
-
-Uniform formula for `toSeq(A.toScalarCLM v)[n]` combining finite and tail modes.
-Certificates `simp_rw` with this + data bridges, then `finsum_bound` closes. -/
-
-/-- Uniform per-coefficient formula for `A.toScalarCLM v` combining finite and tail modes.
-For `n ≤ N`: matrix-vector product. For `n > N`: diagonal multiplication. -/
-lemma ScalarBlockDiagData.toScalarCLM_toSeq_ite {N : ℕ} {ν : PosReal}
-    (A : ScalarBlockDiagData N) (v : l1Weighted ν) (n : ℕ) :
-    l1Weighted.toSeq (A.toScalarCLM (ν := ν) v) n =
-      if hn : n ≤ N
-      then ∑ j : Fin (N + 1), A.finBlock0 ⟨n, Nat.lt_succ_of_le hn⟩ j * l1Weighted.toSeq v j
-      else A.tailDiag0 n * l1Weighted.toSeq v n := by
-  split
-  · next hn => exact A.toScalarCLM_toSeq_fin (ν := ν) v ⟨n, Nat.lt_succ_of_le hn⟩
-  · next hn => exact A.toScalarCLM_toSeq_tail v n (by omega)
 
 /-! ## Norm-to-witness bridge for block-diagonal action
 
@@ -542,131 +423,6 @@ theorem systemBlockDiagActionEval_correct {L N : ℕ}
     push_neg at hn
     rw [if_neg (not_le.mpr hn)]
     rw [A.action_tail c l n hn, htail l n hn, hvec]
-    exact_mod_cast IntervalDyadic.mem_ofIntervalRat
-      (IntervalRat.mem_singleton _) cfg.precision hprec
-
-/-! ## System-level Z₀ pipeline (general L)
-
-Generalizes `Z₀_le_via_colNorm` from L=1 to arbitrary L.
-Chains: `Z₀_le_of_tailCancel` → `finiteBlockMatrixNorm` → per-block column norms. -/
-
-/-- **System Z₀ pipeline**: Given tail cancellation and per-row defect norm bounds,
-verify `‖I - A.toCLM ∘ B.toCLM‖ ≤ C`.
-
-Chains: `Z₀_le_of_tailCancel` → `finiteBlockMatrixNorm_le_of_blockRowNorm_le`.
-The certificate provides per-row bounds via `finWeightedMatrixNorm_le_via_cols` + `colNormTermEval`. -/
-lemma Z₀_le_via_block_colNorm {L N : ℕ} [NeZero L] {ν : PosReal}
-    (A B : SystemBlockDiagData L N)
-    (htail : ∀ l, ∀ n, N < n → A.tailDiag l n * B.tailDiag l n = 1)
-    (C : ℝ)
-    (hrow : ∀ l : Fin L,
-      blockRowNorm ν (A.defectOfTailCancel B htail).finBlock l ≤ C) :
-    Z₀_norm (A.toCLM (ν := ν)) (B.toCLM (ν := ν)) ≤ C :=
-  (SystemBlockDiagData.Z₀_le_of_tailCancel (ν := ν) A B htail).trans
-    (finiteBlockMatrixNorm_le_of_blockRowNorm_le _ C hrow)
-
-/-- **System ‖A‖ pipeline**: Given per-row block norm bounds and tail bound,
-verify `‖A.toCLM‖ ≤ fin_bnd + tail_bnd`.
-
-Chains: `norm_toCLM_le` → `finiteBlockMatrixNorm_le_of_blockRowNorm_le`. -/
-lemma norm_toCLM_le_via_block_colNorm {L N : ℕ} [NeZero L] {ν : PosReal}
-    (A : SystemBlockDiagData L N)
-    (fin_bnd tail_bnd : ℝ)
-    (hrow : ∀ l : Fin L, blockRowNorm ν A.finBlock l ≤ fin_bnd)
-    (htail : A.tailBound ≤ tail_bnd) :
-    ‖A.toCLM (ν := ν)‖ ≤ fin_bnd + tail_bnd :=
-  (A.norm_toCLM_le (ν := ν)).trans
-    (add_le_add (finiteBlockMatrixNorm_le_of_blockRowNorm_le _ _ hrow) htail)
-
-/-! ## System-level block-diagonal action (general L)
-
-Per-component action formula for `SystemBlockDiagData L N` operating on `XL1 ν L`.
-Generalizes `scalarBlockDiagAction` from L=1 to arbitrary L. For component `l`,
-the action sums over all L blocks in the finite part. -/
-
-/-- Per-component block-diagonal action in ℝ.
-For `n ≤ N`: sums over all L blocks' matrix-vector products.
-For `n > N`: diagonal multiplication on component `l` only. -/
-noncomputable def systemComponentAction {L N : ℕ}
-    (matCols : Fin L → Fin (N + 1) → Array ℝ)
-    (vecs : Fin L → ℕ → ℝ) (tailCoeff : ℝ)
-    (l : Fin L) (n : ℕ) : ℝ :=
-  if n ≤ N then
-    ∑ j : Fin L, ∑ k : Fin (N + 1), (matCols j k).getD n 0 * vecs j k
-  else tailCoeff * vecs l n
-
-/-- Bridge: `toCoeff(A.toCLM v)(l)(n) = systemComponentAction ...`.
-The finite action sums over all L blocks, the tail action uses the per-component diagonal.
-Pure ℝ signature — no ℚ in parameters. -/
-lemma SystemBlockDiagData.toCoeff_toCLM_eq_componentAction
-    {L N : ℕ} [NeZero L] {ν : PosReal}
-    (A : SystemBlockDiagData L N) (v : XL1 ν L)
-    (matCols : Fin L → Fin (N + 1) → Array ℝ)
-    (vecs : Fin L → ℕ → ℝ) (tailCoeff : ℝ)
-    (l : Fin L)
-    (hmat : ∀ j (k : Fin (N + 1)) (i : Fin (N + 1)),
-      A.finBlock l j i k = (matCols j k).getD (i : ℕ) 0)
-    (hvec : ∀ j n, l1Weighted.toSeq (v j) n = vecs j n)
-    (htail : ∀ n, N < n → A.tailDiag l n = tailCoeff)
-    (n : ℕ) :
-    toCoeff (ν := ν) (A.applyX (ν := ν) v) l n =
-      systemComponentAction matCols vecs tailCoeff l n := by
-  simp only [systemComponentAction]
-  rw [show toCoeff (ν := ν) (A.applyX (ν := ν) v) l n =
-    A.action (toCoeff (ν := ν) v) l n from
-    congr_fun (congr_fun (toCoeff_applyX A v) l) n]
-  simp only [SystemBlockDiagData.action, SystemBlockDiagData.actionFinite,
-    finBlockAction, SystemBlockDiagData.actionTail]
-  simp only [toCoeff] at *
-  by_cases hn : n ≤ N
-  · simp only [hn, dite_true, ite_true, add_zero]
-    congr 1
-    ext j
-    congr 1
-    ext k
-    rw [hmat, hvec]
-  · push_neg at hn
-    simp only [show ¬(n ≤ N) from not_le.mpr hn, dite_false, ite_false, zero_add,
-      htail n hn, hvec]
-
-/-- Per-term evaluator for system-level `‖A · v‖` norm sums (component `l`).
-ℚ parameters for computable interval arithmetic via `native_decide`. -/
-def systemComponentActionEval {L N : ℕ}
-    (matCols : Fin L → Fin (N + 1) → Array ℚ)
-    (vecs : Fin L → ℕ → ℚ) (tailCoeff : ℚ) (ν : ℚ)
-    (l : Fin L) (n : Nat) (cfg : DyadicConfig) : IntervalDyadic :=
-  let action : ℚ :=
-    if n ≤ N then
-      ∑ j : Fin L, ∑ k : Fin (N + 1), (matCols j k).getD n 0 * vecs j k
-    else tailCoeff * vecs l n
-  IntervalDyadic.ofIntervalRat (IntervalRat.singleton (|action| * ν ^ n)) cfg.precision
-
-/-- Correctness: the ℝ action-norm term lies in the evaluator's interval.
-Certificate-facing: pure ℝ signature. ℚ bridge is internal. -/
-theorem systemComponentActionEval_correct {L N : ℕ}
-    (matCols : Fin L → Fin (N + 1) → Array ℝ)
-    (vecs : Fin L → ℕ → ℝ) (tailCoeff : ℝ) (ν : ℝ)
-    (matCols_q : Fin L → Fin (N + 1) → Array ℚ)
-    (vecs_q : Fin L → ℕ → ℚ) (tailCoeff_q : ℚ) (ν_q : ℚ)
-    (hmat : ∀ j (k : Fin (N + 1)),
-      ∀ i : Fin (N + 1), (matCols j k).getD (i : ℕ) 0 =
-        ((matCols_q j k).getD (i : ℕ) 0 : ℝ))
-    (hvec : ∀ j n, vecs j n = (vecs_q j n : ℝ))
-    (htail : tailCoeff = (tailCoeff_q : ℝ))
-    (hν : ν = (ν_q : ℝ))
-    (l : Fin L) (n : Nat) (cfg : DyadicConfig)
-    (hprec : cfg.precision ≤ 0 := by norm_num) :
-    (|systemComponentAction matCols vecs tailCoeff l n| * ν ^ n : ℝ) ∈
-      systemComponentActionEval matCols_q vecs_q tailCoeff_q ν_q l n cfg := by
-  simp only [systemComponentAction, systemComponentActionEval, hν]
-  split
-  · next hn =>
-    simp_rw [show ∀ j : Fin L, ∀ k : Fin (N + 1),
-        (matCols j k).getD n 0 = ((matCols_q j k).getD n 0 : ℝ) from
-      fun j k => hmat j k ⟨n, Nat.lt_succ_of_le hn⟩, hvec]
-    exact_mod_cast IntervalDyadic.mem_ofIntervalRat
-      (IntervalRat.mem_singleton _) cfg.precision hprec
-  · rw [htail, hvec]
     exact_mod_cast IntervalDyadic.mem_ofIntervalRat
       (IntervalRat.mem_singleton _) cfg.precision hprec
 

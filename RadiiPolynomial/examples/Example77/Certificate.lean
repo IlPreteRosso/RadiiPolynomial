@@ -1,6 +1,7 @@
 import RadiiPolynomial.examples.Example77.Algebra
 import RadiiPolynomial.source.WitnessSpec
 import RadiiPolynomial.source.LeanCertEval
+import RadiiPolynomial.source.Tactic.FinMatrixBound
 
 /-!
 # Example 7.7 — Certificate
@@ -211,14 +212,9 @@ private lemma defect_matrixNorm_le :
     FiniteWeightedNorm.finWeightedMatrixNorm ν_val
       (1 - (approxInverse sol A_mat).finBlock0 * (approxDeriv sol).finBlock0) ≤
     (Z₀_bnd : ℝ) := by
-  unfold Z₀_bnd
-  exact FiniteWeightedNorm.finWeightedMatrixNorm_le_via_cols _ defect_cols _
-    defect_cols_bridge (fun j => by
-      unfold FiniteWeightedNorm.arrayColNormIccSum; rw [ν_val_eq_q]
-      fin_cases j <;>
-        finsum_bound using
-          (colNormTermEval _ ν _)
-          (fun k _ _ => colNormTermEval_correct _ ν _ k _))
+  finmatrix_bound
+    (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le _ defect_cols ν
+      defect_cols_bridge ν_val_eq_q)
 
 lemma Z₀_le : Z₀_norm (A_inv.toScalarCLM (ν := ν_val))
     (A_dag.toScalarCLM (ν := ν_val)) ≤ (Z₀_bnd : ℝ) :=
@@ -248,28 +244,16 @@ lemma Z₁_le : Z₁_norm (F lam0) sol.toL1
 
 /-! ### Z₂ -/
 
-private lemma A_finWeightedMatrixNorm_le :
-    FiniteWeightedNorm.finWeightedMatrixNorm ν_val A_inv.finBlock0 ≤ (Z₂_bnd : ℝ) / 2 := by
-  unfold Z₂_bnd
-  exact FiniteWeightedNorm.finWeightedMatrixNorm_le_via_cols _ A_colOf _
-    A_col_bridge_q (fun j => by
-      unfold FiniteWeightedNorm.arrayColNormIccSum; rw [ν_val_eq_q]
-      fin_cases j <;>
-        finsum_bound using
-          (colNormTermEval _ ν _)
-          (fun k _ _ => colNormTermEval_correct _ ν _ k _))
+private lemma A_inv_tailBound_eq :
+    A_inv.tailBound = ((|A_tail_coeff| : ℚ) : ℝ) := by
+  unfold A_inv approxInverse ScalarBlockDiagData.ofParts A_tail_coeff sol ā₀; push_cast; ring
 
-private lemma A_tailBound_le :
-    (approxInverse sol A_mat).tailBound ≤ (Z₂_bnd : ℝ) / 2 := by
-  unfold approxInverse ScalarBlockDiagData.ofParts Z₂_bnd
-  exact of_point_interval (by unfold sol ā₀; fast_bound)
-
-lemma A_norm_le : 2 * ‖A_inv.toScalarCLM (ν := ν_val)‖ ≤ (Z₂_bnd : ℝ) :=
-  (mul_le_mul_of_nonneg_left
-    ((ScalarBlockDiagData.norm_toScalarCLM_le_max (ν := ν_val) A_inv).trans
-      (max_le A_finWeightedMatrixNorm_le A_tailBound_le))
-    (by positivity)).trans
-  (of_point_interval (by unfold Z₂_bnd; push_cast; fast_bound))
+lemma A_norm_le : 2 * ‖A_inv.toScalarCLM (ν := ν_val)‖ ≤ (Z₂_bnd : ℝ) := by
+  have h : ‖A_inv.toScalarCLM (ν := ν_val)‖ ≤ ((Z₂_bnd / 2 : ℚ) : ℝ) := by
+    finmatrix_bound
+      (norm_toScalarCLM_le_of_Q A_inv A_colOf ν |A_tail_coeff|
+        A_col_bridge_q ν_val_eq_q A_inv_tailBound_eq)
+  push_cast at h; linarith
 
 lemma Z₂_le (c_val : l1Weighted ν_val)
     (hc : c_val ∈ Metric.closedBall (sol.toL1 : l1Weighted ν_val) r₀) :
