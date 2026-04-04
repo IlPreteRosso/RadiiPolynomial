@@ -39,10 +39,10 @@ RadiiPolynomial/
 
 **Theorem hierarchy:**
 - `general_radii_polynomial_theorem` (Thm 7.6.2) — abstract, any Banach space zero-finding
-- `ivp_system_theorem` (Thm 8.2.2) — system IVP specialization (Taylor), calls 7.6.2
+- `ivp_system_theorem` (Thm 8.2.2) — book-faithful monolithic IVP theorem (unused, kept for reference)
 - `chebyshev_system_theorem` — system IVP specialization (Chebyshev), calls 7.6.2
 - Example77 uses 7.6.2 directly (parameterized zero-finding, NOT an IVP)
-- Example81/83 use `StdIVPData.existsUnique` which calls 8.2.2 internally
+- Example81/83 use `StdIVPData.existsUnique` which calls 7.6.2 directly (not 8.2.2)
 
 **f-F bridge (Test examples):**
 The pipeline from original equation to coefficient recurrence:

@@ -240,8 +240,7 @@ theorem ivp_system_theorem
       ‖(ContinuousLinearMap.id ℝ (XL1 ν L)).comp
         (fderiv ℝ G c - fderiv ℝ G ā)‖ ≤ (fun _ => Z₂_val) r₀ * r₀ := by
     intro c hc; simp only [ContinuousLinearMap.id_comp]
-    exact ivp_Z₂_le A G φ x₀ ā hG_diff hφ_diff
-      (fun a l n => ivpMap_coeff A φ x₀ hmem a l n)
+    exact ivp_Z₂_le A φ x₀ hmem ā hG_diff hφ_diff
       active hzero hC hDφ_diff hZ₂_nn hZ₂ c hc
   -- Apply the abstract theorem
   exact general_radii_polynomial_theorem (A := ContinuousLinearMap.id ℝ _)

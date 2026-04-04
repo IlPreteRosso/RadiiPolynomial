@@ -194,10 +194,11 @@ lemma Z₂_le_cert (c : XL1 ν_val L)
     (fderiv ℝ (data.G φ_scalar x₀) c -
       fderiv ℝ (data.G φ_scalar x₀) data.abar)‖ ≤ _
   rw [ContinuousLinearMap.id_comp]
-  exact IVP.ivp_Z₂_le data.approxInverse (data.G φ_scalar x₀) φ_scalar x₀ data.abar
+  exact IVP.ivp_Z₂_le data.approxInverse φ_scalar x₀
+    (IVP.ivpMap_mem_of_tailDiag_inv _ _ _ data.htail_diag_inv) data.abar
     (data.differentiable_G φ_scalar x₀ differentiable_φ_scalar_component)
     (fun l => differentiable_φ_scalar_component l)
-    (data.G_coeff φ_scalar x₀) ({0} : Finset (Fin L))
+    ({0} : Finset (Fin L))
     (fun c h j hj => by
       have : j = 0 := Subsingleton.elim j 0
       subst this; simp at hj)

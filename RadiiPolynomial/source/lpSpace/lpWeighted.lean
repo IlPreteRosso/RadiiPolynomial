@@ -232,6 +232,21 @@ lemma norm_mk_le_of_pointwise (f : ℕ → ℝ) (hf : Mem ν f)
     (fun n => by rw [mk_apply]; nlinarith [hle n, pow_nonneg ν.coe_nonneg n])
     ((mem_iff f).mp hf) ((summable_weighted a).mul_left C)
 
+/-- Norm of a shifted-and-negated sequence: `‖shift_neg(f)‖ ≤ ν * ‖f‖` where
+`shift_neg(f)(0) = 0` and `shift_neg(f)(n+1) = -f(n)`. Shifting indices by 1
+multiplies the `ℓ¹_ν` norm by at most `ν`. -/
+lemma norm_mk_shift_neg_le (f : l1Weighted ν) (hmem : Mem ν
+    (fun n => if n = 0 then (0 : ℝ) else -(toSeq f (n - 1)))) :
+    ‖mk (fun n => if n = 0 then (0 : ℝ) else -(toSeq f (n - 1))) hmem‖ ≤
+      (ν : ℝ) * ‖f‖ := by
+  rw [norm_eq_tsum, norm_eq_tsum]; simp_rw [mk_apply]
+  rw [((mem_iff _).mp hmem).tsum_eq_zero_add]
+  simp only [if_true, abs_zero, zero_mul, zero_add, Nat.succ_ne_zero, ite_false,
+    Nat.add_sub_cancel, abs_neg]
+  rw [show (fun n => |toSeq f n| * (ν : ℝ) ^ (n + 1)) =
+    fun n => (ν : ℝ) * (|toSeq f n| * (ν : ℝ) ^ n) from by ext n; rw [pow_succ]; ring]
+  exact le_of_eq tsum_mul_left
+
 end NormSplitting
 
 section Membership

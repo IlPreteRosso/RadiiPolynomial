@@ -212,10 +212,11 @@ lemma Z₂_le_cert (c : XL1 ν_val L)
     (fderiv ℝ (data.G φ_lorenz x₀) c -
       fderiv ℝ (data.G φ_lorenz x₀) data.abar)‖ ≤ _
   rw [ContinuousLinearMap.id_comp]
-  exact IVP.ivp_Z₂_le data.approxInverse (data.G φ_lorenz x₀) φ_lorenz x₀ data.abar
+  exact IVP.ivp_Z₂_le data.approxInverse φ_lorenz x₀
+    (IVP.ivpMap_mem_of_tailDiag_inv _ _ _ data.htail_diag_inv) data.abar
     (data.differentiable_G φ_lorenz x₀ differentiable_φ_lorenz_component)
     (fun l => differentiable_φ_lorenz_component l)
-    (data.G_coeff φ_lorenz x₀) ({1, 2} : Finset (Fin L))
+    ({1, 2} : Finset (Fin L))
     -- hzero: inactive component (l=0) has zero fderiv diff — derived from D₂
     (fun c h j hj => by
       have : j = 0 := by fin_cases j <;> simp_all (config := { decide := true })
