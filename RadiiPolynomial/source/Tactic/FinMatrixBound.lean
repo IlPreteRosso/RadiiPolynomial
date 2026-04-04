@@ -6,6 +6,7 @@ Authors: LeanCert Contributors
 import Lean
 import LeanCert.Tactic.BridgeNative
 import LeanCert.Tactic.IntervalAuto
+import RadiiPolynomial.source.LeanCertEval
 
 /-!
 # `finmatrix_bound`: Matrix Norm Tactic via native_decide
@@ -84,5 +85,37 @@ elab_rules : tactic
         do evalTactic (← `(tactic| intro h; exact h)),
         do evalTactic (← `(tactic| intro h; push_cast at h ⊢; linarith))
       ]
+
+/-- Prove a matrix norm bound by decomposing into per-column sums and closing
+    each with `finsum_bound using colNormTermEval`.
+
+    Usage: `finmatrix_bound using cols hcols ν_q hν`
+    where:
+    - `cols : Fin (N+1) → Array ℚ` — ℚ column arrays for the matrix
+    - `hcols : ∀ j i, M i j = ((cols j).getD i 0 : ℝ)` — bridge proof
+    - `ν_q : ℚ` — weight as ℚ
+    - `hν : (ν : ℝ) = (ν_q : ℝ)` — weight bridge
+
+    Unlike `finmatrix_bound (bridge)` which uses exact ℚ arithmetic + `native_decide`,
+    this variant uses dyadic interval arithmetic via `finsum_bound`, avoiding potential
+    rational blowup for large N. The tactic automates the `max_j (∑_i ...)` aggregation:
+    1. Decomposes `finWeightedMatrixNorm` into per-column `matrixColNorm` bounds
+    2. Bridges each column to `arrayColNormIccSum`
+    3. Calls `finsum_bound using colNormTermEval` for each column -/
+syntax (name := finMatrixDyadic)
+  "finmatrix_dyadic" term "," term "," term "," term : tactic
+
+elab_rules : tactic
+  | `(tactic| finmatrix_dyadic $cols, $hcols, $nuQ, $hnu) => do
+    -- Use the decomposition bridge (takes M explicitly) + per-column finsum_bound
+    evalTactic (← `(tactic|
+      exact RadiiPolynomial.FiniteWeightedNorm.finWeightedMatrixNorm_le_via_cols
+        _ $cols _ $hcols (fun j => by
+          unfold RadiiPolynomial.FiniteWeightedNorm.arrayColNormIccSum
+          have hν_rw := $hnu; rw [hν_rw]
+          fin_cases j <;>
+            finsum_bound using
+              (RadiiPolynomial.colNormTermEval _ $nuQ _)
+              (fun k _ _ => RadiiPolynomial.colNormTermEval_correct _ $nuQ _ k _))))
 
 end LeanCert.Tactic

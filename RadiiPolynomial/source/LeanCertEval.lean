@@ -33,6 +33,23 @@ open LeanCert.Core LeanCert.Engine
 
 namespace RadiiPolynomial
 
+/-! ## Per-term evaluators -/
+
+/-- Per-term evaluator for column norm sums: computes `|col[k]| * ν^k / ν^j`
+as a dyadic interval. Used by `finmatrix_bound using` for per-column aggregation. -/
+def colNormTermEval (col : Array ℚ) (ν : ℚ) (j : Nat) (k : Nat)
+    (cfg : DyadicConfig) : IntervalDyadic :=
+  IntervalDyadic.ofIntervalRat
+    (IntervalRat.singleton (|col.getD k 0| * ν ^ k / ν ^ j)) cfg.precision
+
+/-- Correctness: the real column-norm term lies in the dyadic interval. -/
+theorem colNormTermEval_correct (col : Array ℚ) (ν : ℚ) (j : Nat)
+    (k : Nat) (cfg : DyadicConfig) (hprec : cfg.precision ≤ 0 := by norm_num) :
+    (|(col.getD k 0 : ℝ)| * (ν : ℝ) ^ k / (ν : ℝ) ^ j : ℝ) ∈
+      colNormTermEval col ν j k cfg := by
+  simp only [colNormTermEval]
+  exact_mod_cast IntervalDyadic.mem_ofIntervalRat (IntervalRat.mem_singleton _) cfg.precision hprec
+
 /-- Per-term evaluator for weighted l1 norm: computes `|arr[k]| * ν^k`. -/
 def weightedTermEval (arr : Array ℚ) (ν : ℚ) (k : Nat)
     (cfg : DyadicConfig) : IntervalDyadic :=
@@ -100,6 +117,106 @@ theorem blockDefectMatQ_correct {L N : ℕ} [DecidableEq (Fin L)]
     blockDefectMatQ, matOfCols]
   simp_rw [hA, hB]; push_cast
   by_cases hlj : l = j <;> simp [hlj, Matrix.one_apply, apply_ite (Rat.cast (K := ℝ))]
+
+/-! ## Dyadic matrix norm checker (single native_decide, O(1) proof term)
+
+Computes `max_j (∑_i |col_j[i]| * ν^i / ν^j)` in dyadic interval arithmetic
+and checks `≤ target`. Unlike `finWeightedMatrixNormQ` (exact ℚ), this uses bounded-precision
+dyadic intervals, avoiding potential rational blowup for large N.
+
+Architecture: computable Bool checker + bridge theorem + `native_decide`. -/
+
+/-- Dyadic zero interval containing 0. -/
+private def zeroDyadic : IntervalDyadic :=
+  IntervalDyadic.singleton LeanCert.Core.Dyadic.zero
+
+private theorem mem_zeroDyadic : (0 : ℝ) ∈ zeroDyadic := by
+  have h : LeanCert.Core.Dyadic.zero = (0 : LeanCert.Core.Dyadic) := rfl
+  simp only [zeroDyadic, h, IntervalDyadic.mem_def, IntervalDyadic.singleton,
+    LeanCert.Core.Dyadic.toRat_zero, Rat.cast_zero, le_refl, and_self]
+
+/-- Accumulate column norm sum in dyadic arithmetic: `∑_{k=0}^{limit} |col[k]| * ν^k / ν^j`. -/
+def colNormSumDyadic (col : Array ℚ) (ν : ℚ) (j : ℕ) (cfg : DyadicConfig)
+    (limit : ℕ) : IntervalDyadic :=
+  (List.range (limit + 1)).foldl (init := zeroDyadic) fun acc k =>
+    (acc.add (colNormTermEval col ν j k cfg)).roundOut cfg.precision
+
+/-- Helper: foldl accumulator contains partial sums. -/
+private theorem mem_foldl_colNorm (col : Array ℚ) (ν : ℚ) (j : ℕ)
+    (cfg : DyadicConfig) (hprec : cfg.precision ≤ 0)
+    (acc : IntervalDyadic) (val : ℝ) (hval : val ∈ acc)
+    (m : ℕ) :
+    (val + ∑ k ∈ Finset.Icc 0 m,
+      |(col.getD k 0 : ℝ)| * (ν : ℝ) ^ k / (ν : ℝ) ^ j) ∈
+    (List.range (m + 1)).foldl (init := acc) fun acc k =>
+      (acc.add (colNormTermEval col ν j k cfg)).roundOut cfg.precision := by
+  induction m generalizing acc val with
+  | zero =>
+    simp only [show Finset.Icc 0 0 = {0} from by decide, Finset.sum_singleton]
+    exact IntervalDyadic.roundOut_contains
+      (IntervalDyadic.mem_add hval (colNormTermEval_correct col ν j 0 cfg hprec)) _
+  | succ n ih =>
+    rw [show List.range (n + 1 + 1) = List.range (n + 1) ++ [n + 1] from List.range_succ,
+      List.foldl_append, List.foldl_cons, List.foldl_nil]
+    have hIcc : Finset.Icc 0 (n + 1) = Finset.Icc 0 n ∪ {n + 1} := by
+      ext x; simp [Finset.mem_Icc]; omega
+    have hdisj : Disjoint (Finset.Icc 0 n) {n + 1} := by
+      simp [Finset.disjoint_singleton_right]
+    simp only [hIcc, Finset.sum_union hdisj, Finset.sum_singleton]
+    rw [← add_assoc]
+    exact IntervalDyadic.roundOut_contains
+      (IntervalDyadic.mem_add (ih acc val hval)
+        (colNormTermEval_correct col ν j (n + 1) cfg hprec)) _
+
+/-- Correctness: the real `arrayColNormIccSum` is contained in the dyadic interval.
+Absorbs the `unfold arrayColNormIccSum; rw [hν]` step so the bridge theorem is clean. -/
+theorem mem_colNormSumDyadic (col : Array ℚ) (ν_q : ℚ) (N j : ℕ) {ν : PosReal}
+    (hν : (ν : ℝ) = (ν_q : ℝ))
+    (cfg : DyadicConfig) (hprec : cfg.precision ≤ 0 := by norm_num) :
+    FiniteWeightedNorm.arrayColNormIccSum ν N col j ∈
+      colNormSumDyadic col ν_q j cfg N := by
+  unfold FiniteWeightedNorm.arrayColNormIccSum; rw [hν]
+  have h := mem_foldl_colNorm col ν_q j cfg hprec zeroDyadic 0 mem_zeroDyadic N
+  simp only [zero_add] at h
+  exact h
+
+/-- Check all column norms ≤ target, in dyadic arithmetic. Fully computable. -/
+def checkMatrixNormDyadic {N : ℕ} (cols : Fin (N + 1) → Array ℚ) (ν : ℚ)
+    (target : ℚ) (cfg : DyadicConfig := {}) : Bool :=
+  (List.finRange (N + 1)).all fun j =>
+    (colNormSumDyadic (cols j) ν j cfg N).upperBoundedBy target
+
+/-- Bridge: if the dyadic checker says `true`, then the real matrix norm ≤ target.
+Single `native_decide` produces an O(1) proof term. -/
+theorem FiniteWeightedNorm.finWeightedMatrixNorm_le_of_dyadic {N : ℕ} {ν : PosReal}
+    (M : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
+    (cols : Fin (N + 1) → Array ℚ) (ν_q : ℚ) {target : ℚ}
+    (cfg : DyadicConfig := {})
+    (hcols : ∀ j i : Fin (N + 1), M i j = ((cols j).getD (i : ℕ) 0 : ℝ))
+    (hν : (ν : ℝ) = (ν_q : ℝ))
+    (hprec : cfg.precision ≤ 0 := by norm_num)
+    (hcheck : checkMatrixNormDyadic cols ν_q target cfg = true) :
+    FiniteWeightedNorm.finWeightedMatrixNorm ν M ≤ (target : ℝ) := by
+  apply FiniteWeightedNorm.finWeightedMatrixNorm_le_of_matrixColNorm_le
+  intro j
+  apply FiniteWeightedNorm.matrixColNorm_le_of_arrayColNormIccSum ν N M (cols j) j _ (hcols j)
+  have hmem := mem_colNormSumDyadic (cols j) ν_q N j hν cfg hprec
+  have hcol : (colNormSumDyadic (cols j) ν_q j cfg N).upperBoundedBy target = true := by
+    simpa using (List.all_eq_true (l := List.finRange (N + 1))).mp hcheck j (List.mem_finRange j)
+  exact le_trans hmem.2 (by exact_mod_cast IntervalDyadic.upperBoundedBy_spec hcol)
+
+/-- Bound `finWeightedMatrixNorm` given ℚ column arrays + per-column `arrayColNormIccSum` bounds.
+Used by `finmatrix_dyadic` to decompose into per-column `finsum_bound` calls. -/
+lemma FiniteWeightedNorm.finWeightedMatrixNorm_le_via_cols {N : ℕ} {ν : PosReal}
+    (M : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
+    (cols : Fin (N + 1) → Array ℚ) (C : ℝ)
+    (hcols : ∀ j i : Fin (N + 1), M i j = ((cols j).getD (i : ℕ) 0 : ℝ))
+    (hbound : ∀ j : Fin (N + 1),
+      FiniteWeightedNorm.arrayColNormIccSum ν N (cols j) j ≤ C) :
+    FiniteWeightedNorm.finWeightedMatrixNorm ν M ≤ C :=
+  FiniteWeightedNorm.finWeightedMatrixNorm_le_of_matrixColNorm_le (ν := ν) (A := M) (C := C)
+    (fun j => FiniteWeightedNorm.matrixColNorm_le_of_arrayColNormIccSum ν N M (cols j) j C
+      (hcols j) (hbound j))
 
 /-! ## ℚ norm evaluator (single native_decide for full matrix norm)
 
@@ -178,41 +295,25 @@ lemma Z₂_blockNorm_component_le_gen {L N : ℕ} [NeZero L] {ν : PosReal}
         ((finWeightedMatrixNormQ (blockCols l j) ν_q N : ℚ) : ℝ) :=
     fun j => FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le
       (A.finBlock l j) (blockCols l j) ν_q (hcols l j) hν (le_refl _)
-  suffices h : (C_q : ℝ) * (ν : ℝ) * ((∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
-      if l ∈ active then A.tailBound else 0) ≤
-      ((Z₂_blockNormQ_gen L N blockCols ν_q tailBound_q C_q active : ℚ) : ℝ) from
-    h.trans (by exact_mod_cast hle)
-  show (C_q : ℝ) * (ν : ℝ) * ((∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
-      if l ∈ active then A.tailBound else 0) ≤
-      ↑(C_q * ν_q * Finset.sup' Finset.univ Finset.univ_nonempty fun l =>
-        (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
-        if l ∈ active then tailBound_q else 0)
   have hrow : (∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
       (if l ∈ active then A.tailBound else (0 : ℝ)) ≤
       ((((∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
         if l ∈ active then tailBound_q else 0 : ℚ) : ℝ)) := by
-    push_cast
-    exact add_le_add
-      (Finset.sum_le_sum fun j _ => hentry j)
-      (by split <;> simp [htail])
-  have hCν_nn : (0 : ℝ) ≤ (C_q : ℝ) * (ν : ℝ) :=
-    mul_nonneg (by exact_mod_cast hC_nn) ν.coe_nonneg
-  calc (C_q : ℝ) * (ν : ℝ) * _ ≤ (C_q : ℝ) * (ν : ℝ) * ↑((∑ j ∈ active,
-        finWeightedMatrixNormQ (blockCols l j) ν_q N) +
-        if l ∈ active then tailBound_q else 0) :=
-      mul_le_mul_of_nonneg_left hrow hCν_nn
+    push_cast; exact add_le_add (Finset.sum_le_sum fun j _ => hentry j) (by split <;> simp [htail])
+  have hCν_nn := mul_nonneg (by exact_mod_cast hC_nn : (0 : ℝ) ≤ C_q) ν.coe_nonneg
+  have hsup := Finset.le_sup' (f := fun l =>
+    (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
+    if l ∈ active then tailBound_q else 0) (Finset.mem_univ l)
+  calc (C_q : ℝ) * (ν : ℝ) * _
+      ≤ (C_q : ℝ) * (ν : ℝ) * ↑((∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
+          if l ∈ active then tailBound_q else 0) := mul_le_mul_of_nonneg_left hrow hCν_nn
     _ ≤ (C_q : ℝ) * (ν : ℝ) * ↑(Finset.sup' Finset.univ Finset.univ_nonempty fun l =>
-        (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
-        if l ∈ active then tailBound_q else 0) := by
-      apply mul_le_mul_of_nonneg_left _ hCν_nn
-      have := Finset.le_sup' (f := fun l =>
-        (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
-        if l ∈ active then tailBound_q else 0) (Finset.mem_univ l)
-      exact_mod_cast this
-    _ = ↑(C_q * ν_q * Finset.sup' Finset.univ Finset.univ_nonempty fun l =>
-        (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
-        if l ∈ active then tailBound_q else 0) := by
-      rw [hν]; push_cast; ring
+          (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
+          if l ∈ active then tailBound_q else 0) :=
+        mul_le_mul_of_nonneg_left (by exact_mod_cast hsup) hCν_nn
+    _ = ((Z₂_blockNormQ_gen L N blockCols ν_q tailBound_q C_q active : ℚ) : ℝ) := by
+        rw [hν]; norm_cast
+    _ ≤ (bound : ℝ) := by exact_mod_cast hle
 
 /-- Per-block Z₂ evaluator with hardcoded factor `2`.
 Special case of `Z₂_blockNormQ_gen`. -/

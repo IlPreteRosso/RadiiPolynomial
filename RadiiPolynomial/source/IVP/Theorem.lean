@@ -154,7 +154,14 @@ Given a polynomial IVP system with:
 - Approximate solution `ā ∈ XL1`
 
 If the radii polynomial `p(r₀) = Z₂·r₀² - (1 - Z₀ - Z₁)·r₀ + Y₀ < 0`, then
-there exists a unique zero of the composed IVP map in `closedBall ā r₀`. -/
+there exists a unique zero of the composed IVP map in `closedBall ā r₀`.
+
+**Note:** This is the book-faithful monolithic formalization of Theorem 8.2.2, which
+internalizes bound assembly (Y₀, Z₀, Z₁, Z₂) from raw IVP ingredients. In practice,
+`StdIVPData.existsUnique` is preferred: it takes pre-computed abstract bounds and passes
+them directly to `general_radii_polynomial_theorem`, giving examples more flexibility in
+how they compute each bound. The individual bound lemmas (`ivp_Y₀_le`, `ivp_Z₀_le`,
+`ivp_Z₁_le`, `ivp_Z₂_le`) used internally here are the same ones examples call directly. -/
 theorem ivp_system_theorem
     -- Operator data
     (A : SystemBlockDiagData L N) (A_dag : BlockDiagOp L N)

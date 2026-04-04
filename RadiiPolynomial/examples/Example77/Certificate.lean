@@ -37,7 +37,7 @@ def Z₀_bnd : ℚ := 2/1000
 def Z₁_bnd : ℚ := 46/100
 def Z₂_bnd : ℚ := 28/10
 
--- Parameter set 2: λ₀ = 1/2
+-- -- Parameter set 2: λ₀ = 1/2
 -- def ā₀ : ℚ := 7071/10000
 -- def ā₁ : ℚ := 7071/10000
 -- def ā₂ : ℚ := -3536/10000
@@ -212,8 +212,9 @@ private lemma defect_matrixNorm_le :
     FiniteWeightedNorm.finWeightedMatrixNorm ν_val
       (1 - (approxInverse sol A_mat).finBlock0 * (approxDeriv sol).finBlock0) ≤
     (Z₀_bnd : ℝ) := by
+  -- Dyadic path (O(1) proof term, bounded precision):
   finmatrix_bound
-    (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le _ defect_cols ν
+    (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_dyadic _ defect_cols ν (cfg := {})
       defect_cols_bridge ν_val_eq_q)
 
 lemma Z₀_le : Z₀_norm (A_inv.toScalarCLM (ν := ν_val))
