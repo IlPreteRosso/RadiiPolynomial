@@ -616,7 +616,7 @@ lemma SystemBlockDiagData.toCoeff_toCLM_eq_componentAction
     A.action (toCoeff (ν := ν) v) l n from
     congr_fun (congr_fun (toCoeff_applyX A v) l) n]
   simp only [SystemBlockDiagData.action, SystemBlockDiagData.actionFinite,
-    SystemBlockDiagData.actionTail]
+    finBlockAction, SystemBlockDiagData.actionTail]
   simp only [toCoeff] at *
   by_cases hn : n ≤ N
   · simp only [hn, dite_true, ite_true, add_zero]

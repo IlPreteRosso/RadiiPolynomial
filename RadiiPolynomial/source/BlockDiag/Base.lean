@@ -53,8 +53,8 @@ def finiteBlockMatrixNorm [NeZero L] (ν : PosReal) (A : FiniteBlockMatrix L N) 
   Finset.sup' Finset.univ Finset.univ_nonempty (fun l => blockRowNorm ν A l)
 
 lemma blockEntryNorm_nonneg (A : FiniteBlockMatrix L N) (l j : Fin L) :
-    0 ≤ blockEntryNorm ν A l j := by
-  exact FiniteWeightedNorm.finWeightedMatrixNorm_nonneg (ν := ν) (A l j)
+    0 ≤ blockEntryNorm ν A l j :=
+  FiniteWeightedNorm.finWeightedMatrixNorm_nonneg (ν := ν) (A l j)
 
 lemma blockRowNorm_nonneg (A : FiniteBlockMatrix L N) (l : Fin L) :
     0 ≤ blockRowNorm ν A l := by
@@ -70,11 +70,8 @@ lemma finiteBlockMatrixNorm_nonneg [NeZero L] (A : FiniteBlockMatrix L N) :
 lemma finiteBlockMatrixNorm_le_of_blockRowNorm_le
     [NeZero L] (A : FiniteBlockMatrix L N) (C : ℝ)
     (hrow : ∀ l : Fin L, blockRowNorm ν A l ≤ C) :
-    finiteBlockMatrixNorm ν A ≤ C := by
-  unfold finiteBlockMatrixNorm
-  exact Finset.sup'_le Finset.univ_nonempty (fun l : Fin L => blockRowNorm ν A l) (by
-    intro l _
-    exact hrow l)
+    finiteBlockMatrixNorm ν A ≤ C :=
+  Finset.sup'_le _ _ fun l _ => hrow l
 
 end FiniteBlockNorm
 
@@ -131,6 +128,13 @@ variable {L N : ℕ}
 /-- Coefficient representation of an `L`-component sequence object. -/
 abbrev SystemCoeff (L : ℕ) := Fin L → ℕ → ℝ
 
+/-- Extensionality for `SystemCoeff` by finite/tail mode split at cutoff `N`. -/
+lemma SystemCoeff.ext_by_modes {f g : SystemCoeff L} {N : ℕ}
+    (hfin : ∀ l n, n ≤ N → f l n = g l n)
+    (htail : ∀ l n, N < n → f l n = g l n) : f = g :=
+  funext fun l => funext fun n =>
+    if hn : n ≤ N then hfin l n hn else htail l n (Nat.lt_of_not_ge hn)
+
 /-- Lightweight block-diagonal operator data (no tail bound requirement).
 Used for operators like A† in the IVP case where the tail diagonal `k·δ_{j,j'}`
 is unbounded. Carries only the algebraic data needed for composition and
@@ -167,14 +171,19 @@ instance : Coe (SystemBlockDiagData L N) (BlockDiagOp L N) :=
 @[simp] lemma SystemBlockDiagData.toBlockDiagOp_tailDiag (A : SystemBlockDiagData L N) :
     (A : BlockDiagOp L N).tailDiag = A.tailDiag := rfl
 
+/-- Core finite block-matrix action at a single `Fin (N+1)` mode — no conditional.
+The double sum `∑_j ∑_k A_{l,j,n,k} · b_{j,k}` that `actionFinite` wraps with
+an `if n ≤ N` guard. -/
+def finBlockAction (finBlock : FiniteBlockMatrix L N) (b : SystemCoeff L)
+    (l : Fin L) (n : Fin (N + 1)) : ℝ :=
+  ∑ j : Fin L, ∑ k : Fin (N + 1), finBlock l j n k * b j k
+
 /-- Finite-mode part (`A_N π_N b`) at coefficient level. -/
 def SystemBlockDiagData.actionFinite
     (A : SystemBlockDiagData L N) (b : SystemCoeff L) : SystemCoeff L :=
   fun l n =>
-    if hn : n ≤ N then
-      ∑ j : Fin L, ∑ k : Fin (N + 1), A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k * b j k
-    else
-      0
+    if hn : n ≤ N then finBlockAction A.finBlock b l ⟨n, Nat.lt_succ_of_le hn⟩
+    else 0
 
 /-- Tail part (`A_∞ π_{N,∞} b`) at coefficient level. -/
 def SystemBlockDiagData.actionTail
@@ -184,6 +193,25 @@ def SystemBlockDiagData.actionTail
       0
     else
       A.tailDiag l n * b l n
+
+lemma finBlockAction_add (finBlock : FiniteBlockMatrix L N)
+    (c d : SystemCoeff L) (l : Fin L) (n : Fin (N + 1)) :
+    finBlockAction finBlock (fun i k => c i k + d i k) l n =
+      finBlockAction finBlock c l n + finBlockAction finBlock d l n := by
+  simp only [finBlockAction]; simp_rw [mul_add, Finset.sum_add_distrib]
+
+lemma finBlockAction_smul (finBlock : FiniteBlockMatrix L N)
+    (r : ℝ) (c : SystemCoeff L) (l : Fin L) (n : Fin (N + 1)) :
+    finBlockAction finBlock (fun i k => r * c i k) l n =
+      r * finBlockAction finBlock c l n := by
+  simp only [finBlockAction]
+  rw [Finset.mul_sum]; congr 1; ext j; rw [Finset.mul_sum]; congr 1; ext k; ring
+
+lemma finBlockAction_eq_zero_of_coeff_zero (finBlock : FiniteBlockMatrix L N)
+    (c : SystemCoeff L) (hc : ∀ j : Fin L, ∀ k : Fin (N + 1), c j k = 0)
+    (l : Fin L) (n : Fin (N + 1)) :
+    finBlockAction finBlock c l n = 0 :=
+  Finset.sum_eq_zero fun j _ => Finset.sum_eq_zero fun k _ => by rw [hc j k, mul_zero]
 
 /-- Full 8.2-style action `Ab = A_N π_N b + A_∞ π_{N,∞} b`. -/
 def SystemBlockDiagData.action
@@ -196,7 +224,12 @@ lemma SystemBlockDiagData.actionFinite_finite
     (l : Fin L) (n : ℕ) (hn : n ≤ N) :
     A.actionFinite b l n =
       ∑ j : Fin L, ∑ k : Fin (N + 1), A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k * b j k := by
-  simp [SystemBlockDiagData.actionFinite, hn]
+  simp [SystemBlockDiagData.actionFinite, finBlockAction, hn]
+
+@[simp] lemma finBlockAction_unfold (finBlock : FiniteBlockMatrix L N) (b : SystemCoeff L)
+    (l : Fin L) (n : Fin (N + 1)) :
+    finBlockAction finBlock b l n = ∑ j : Fin L, ∑ k : Fin (N + 1), finBlock l j n k * b j k :=
+  rfl
 
 @[simp]
 lemma SystemBlockDiagData.actionFinite_tail
@@ -209,11 +242,9 @@ lemma SystemBlockDiagData.actionFinite_eq_zero_of_coeff_fin_zero
     (A : SystemBlockDiagData L N) (c : SystemCoeff L)
     (hc : ∀ j : Fin L, ∀ k : Fin (N + 1), c j k = 0) :
     ∀ l n, A.actionFinite c l n = 0 := by
-  intro l n
-  by_cases hn : n ≤ N
-  · rw [A.actionFinite_finite c l n hn]
-    exact Finset.sum_eq_zero fun j _ => Finset.sum_eq_zero fun k _ => by rw [hc j k, mul_zero]
-  · exact A.actionFinite_tail c l n (Nat.lt_of_not_ge hn)
+  intro l n; simp only [SystemBlockDiagData.actionFinite]; split
+  · exact finBlockAction_eq_zero_of_coeff_zero _ _ hc _ _
+  · rfl
 
 @[simp]
 lemma SystemBlockDiagData.actionTail_finite
@@ -464,13 +495,10 @@ lemma SystemBlockDiagData.comp_action_eq_action_comp_tail
 `(A.comp B).action = A.action ∘ B.action`. -/
 lemma SystemBlockDiagData.comp_action_eq_action_comp
     (A B : SystemBlockDiagData L N) (b : SystemCoeff L) :
-    (A.comp B).action b = A.action (B.action b) := by
-  funext l n
-  by_cases hn : n ≤ N
-  · exact SystemBlockDiagData.comp_action_eq_action_comp_finite
-      (A := A) (B := B) (b := b) (l := l) (n := n) hn
-  · exact SystemBlockDiagData.comp_action_eq_action_comp_tail
-      (A := A) (B := B) (b := b) (l := l) (n := n) (Nat.lt_of_not_ge hn)
+    (A.comp B).action b = A.action (B.action b) :=
+  SystemCoeff.ext_by_modes
+    (fun l n hn => A.comp_action_eq_action_comp_finite B b l n hn)
+    (fun l n hn => A.comp_action_eq_action_comp_tail B b l n hn)
 
 end SystemBlockDiagData
 

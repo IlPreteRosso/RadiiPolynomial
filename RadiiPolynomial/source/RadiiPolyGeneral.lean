@@ -753,43 +753,4 @@ theorem simple_radii_polynomial_theorem_EtoF
     (by rwa [← radiiPolynomial_is_special_case])
     hA_inj
 
-/-- Version for same space (E = F) with invertibility claim
-
-    When E = F and Df(x̃) : E →L[ℝ] E, we can additionally prove that Df(x̃)
-    is invertible using the Neumann series. Delegates existence/uniqueness of
-    the zero to `simple_radii_polynomial_theorem_EtoF`, then adds the
-    invertibility claim via Neumann series. -/
-theorem simple_radii_polynomial_theorem_same_space
-  {f : E → E} {xBar : E} {A : E →L[ℝ] E}
-  {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
-  (hr₀ : 0 < r₀)
-  (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀)
-  (h_Z₀ : ‖I_E - A.comp (fderiv ℝ f xBar)‖ ≤ Z₀)
-  (h_Z₂ : ∀ c ∈ Metric.closedBall xBar r₀,
-    ‖A.comp (fderiv ℝ f c - fderiv ℝ f xBar)‖ ≤ Z₂ r₀ * r₀)
-  (hf_diff : Differentiable ℝ f)
-  (h_radii : radiiPolynomial Y₀ Z₀ Z₂ r₀ < 0)
-  (hA_inj : Function.Injective A) :
-  ∃! xTilde ∈ Metric.closedBall xBar r₀,
-    f xTilde = 0 ∧ (fderiv ℝ f xTilde).IsInvertible := by
-
-  -- Delegate to EtoF version for existence/uniqueness of zero
-  obtain ⟨xTilde, ⟨hxTilde_mem, hxTilde_zero⟩, hxTilde_unique⟩ :=
-    simple_radii_polynomial_theorem_EtoF hr₀ h_Y₀ h_Z₀ h_Z₂ hf_diff h_radii hA_inj
-
-  -- Show ‖I_E - A∘Df(x̃)‖ < 1 → Df(x̃) invertible
-  have hY₀_nonneg : 0 ≤ Y₀ := le_trans (norm_nonneg _) h_Y₀
-  have h_norm_lt_one : ‖I_E - A.comp (fderiv ℝ f xTilde)‖ < 1 :=
-    calc ‖I_E - A.comp (fderiv ℝ f xTilde)‖
-        = ‖fderiv ℝ (NewtonLikeMap A f) xTilde‖ := by
-          rw [← newton_operator_fderiv hf_diff]
-      _ ≤ Z_bound Z₀ Z₂ r₀ :=
-          newton_operator_derivative_bound_simple hf_diff h_Z₀ h_Z₂ xTilde hxTilde_mem
-      _ < 1 := radii_poly_neg_implies_Z_bound_lt_one hY₀_nonneg hr₀ h_radii
-
-  refine ⟨xTilde, ⟨hxTilde_mem, hxTilde_zero,
-    construct_derivative_inverse hA_inj h_norm_lt_one⟩, ?_⟩
-  intro z ⟨hz_mem, hz_zero, _⟩
-  exact hxTilde_unique z ⟨hz_mem, hz_zero⟩
-
 end SimpleRadiiPolynomialTheorem

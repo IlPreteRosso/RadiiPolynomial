@@ -42,8 +42,7 @@ abbrev XL1 (ν : PosReal) (L : ℕ) := X SeqL1 ν L
 instance instXL1Ring : Ring (XL1 ν L) := inferInstance
 instance instXL1CommRing : CommRing (XL1 ν L) := inferInstance
 instance instXL1NormedRing : NormedRing (XL1 ν L) := inferInstance
-instance instXL1NormOneClass [NeZero L] : NormOneClass (XL1 ν L) :=
-  ⟨by simp [Pi.norm_def, l1Weighted.norm_one_eq, Finset.sup_const (Finset.univ_nonempty)]⟩
+instance instXL1NormOneClass [NeZero L] : NormOneClass (XL1 ν L) := inferInstance
 instance instXL1Algebra : Algebra ℝ (XL1 ν L) := inferInstance
 instance instXL1NormedAlgebra : NormedAlgebra ℝ (XL1 ν L) := inferInstance
 
@@ -107,13 +106,9 @@ lemma SystemBlockDiagData.actionFinite_mem
     (A : SystemBlockDiagData L N) (c : SystemCoeff L) (l : Fin L) :
     l1Weighted.Mem ν (A.actionFinite c l) := by
   rw [l1Weighted.mem_iff]
-  refine summable_of_ne_finset_zero (s := Finset.Icc 0 N) ?_
-  intro n hn
-  have hnot : ¬ n ≤ N := by
-    intro hle
-    exact hn (by simp [Finset.mem_Icc, hle])
-  have hn' : N < n := Nat.lt_of_not_ge hnot
-  simp [SystemBlockDiagData.actionFinite, Nat.not_le.mpr hn']
+  exact summable_of_ne_finset_zero (s := Finset.Icc 0 N) fun n hn => by
+    have : N < n := by simp [Finset.mem_Icc] at hn; omega
+    simp [SystemBlockDiagData.actionFinite, Nat.not_le.mpr this]
 
 /-- Pointwise weighted tail estimate used in summability/norm bounds. -/
 lemma SystemBlockDiagData.tail_weighted_term_le
@@ -153,61 +148,32 @@ lemma SystemBlockDiagData.actionFinite_add
     (A : SystemBlockDiagData L N) (c d : SystemCoeff L) :
     A.actionFinite (fun l n => c l n + d l n) =
       fun l n => A.actionFinite c l n + A.actionFinite d l n := by
-  funext l n
-  by_cases hn : n ≤ N
-  · simp [SystemBlockDiagData.actionFinite, hn]
-    trans ∑ j : Fin L, ∑ k : Fin (N + 1),
-        (A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k * c j k +
-          A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k * d j k)
-    · apply Finset.sum_congr rfl
-      intro j _
-      apply Finset.sum_congr rfl
-      intro k _
-      ring
-    rw [← Finset.sum_add_distrib]
-    apply Finset.sum_congr rfl
-    intro j _
-    rw [Finset.sum_add_distrib]
-  · simp [SystemBlockDiagData.actionFinite, hn]
+  funext l n; simp only [SystemBlockDiagData.actionFinite]; split
+  · exact finBlockAction_add _ _ _ _ _
+  · simp
 
 /-- Additivity of the tail action. -/
 lemma SystemBlockDiagData.actionTail_add
     (A : SystemBlockDiagData L N) (c d : SystemCoeff L) :
     A.actionTail (fun l n => c l n + d l n) =
       fun l n => A.actionTail c l n + A.actionTail d l n := by
-  funext l n
-  by_cases hn : n ≤ N
-  · simp [SystemBlockDiagData.actionTail, hn]
-  · simp [SystemBlockDiagData.actionTail, hn]
-    ring
+  funext l n; simp only [SystemBlockDiagData.actionTail]; split <;> simp [mul_add]
 
 /-- Homogeneity of the finite-mode action. -/
 lemma SystemBlockDiagData.actionFinite_smul
     (A : SystemBlockDiagData L N) (r : ℝ) (c : SystemCoeff L) :
     A.actionFinite (fun l n => r * c l n) =
       fun l n => r * A.actionFinite c l n := by
-  funext l n
-  by_cases hn : n ≤ N
-  · simp [SystemBlockDiagData.actionFinite, hn]
-    rw [Finset.mul_sum]
-    apply Finset.sum_congr rfl
-    intro j _
-    rw [Finset.mul_sum]
-    apply Finset.sum_congr rfl
-    intro k _
-    ring
-  · simp [SystemBlockDiagData.actionFinite, hn]
+  funext l n; simp only [SystemBlockDiagData.actionFinite]; split
+  · exact finBlockAction_smul _ _ _ _ _
+  · simp
 
 /-- Homogeneity of the tail action. -/
 lemma SystemBlockDiagData.actionTail_smul
     (A : SystemBlockDiagData L N) (r : ℝ) (c : SystemCoeff L) :
     A.actionTail (fun l n => r * c l n) =
       fun l n => r * A.actionTail c l n := by
-  funext l n
-  by_cases hn : n ≤ N
-  · simp [SystemBlockDiagData.actionTail, hn]
-  · simp [SystemBlockDiagData.actionTail, hn]
-    ring
+  funext l n; simp only [SystemBlockDiagData.actionTail]; split <;> simp [mul_left_comm]
 
 lemma SystemBlockDiagData.action_mem_of_mem
     (A : SystemBlockDiagData L N) (c : SystemCoeff L)
@@ -215,27 +181,14 @@ lemma SystemBlockDiagData.action_mem_of_mem
     ∀ l : Fin L, l1Weighted.Mem ν (A.action c l) := by
   intro l
   rw [l1Weighted.mem_iff]
-  have hfin := (l1Weighted.mem_iff (A.actionFinite c l)).mp (A.actionFinite_mem (ν := ν) c l)
-  have htail := (l1Weighted.mem_iff (A.actionTail c l)).mp
-    (A.actionTail_mem_of_mem (ν := ν) c l (hc l))
-  let g := fun n => |A.action c l n| * (ν : ℝ) ^ n
-  let f := fun n => |A.actionFinite c l n| * (ν : ℝ) ^ n
-  let t := fun n => |A.actionTail c l n| * (ν : ℝ) ^ n
-  have hs : Summable (fun n => f n + t n) := hfin.add htail
-  refine hs.of_nonneg_of_le ?_ ?_
-  · intro n
-    exact FiniteWeightedNorm.weighted_term_nonneg (A.action c l n) n
-  · intro n
-    have hpow : 0 ≤ (ν : ℝ) ^ n := pow_nonneg ν.coe_nonneg n
-    have h_abs : |A.action c l n| ≤ |A.actionFinite c l n| + |A.actionTail c l n| := by
-      simpa [SystemBlockDiagData.action_eq_actionFinite_add_actionTail] using
-        (abs_add_le (A.actionFinite c l n) (A.actionTail c l n))
-    have hmul := mul_le_mul_of_nonneg_right h_abs hpow
-    have hsum :
-        (|A.actionFinite c l n| + |A.actionTail c l n|) * (ν : ℝ) ^ n =
-          f n + t n := by
-      simp [f, t, right_distrib]
-    exact hmul.trans_eq hsum
+  have hfin := (l1Weighted.mem_iff _).mp (A.actionFinite_mem (ν := ν) c l)
+  have htail := (l1Weighted.mem_iff _).mp (A.actionTail_mem_of_mem (ν := ν) c l (hc l))
+  exact (hfin.add htail).of_nonneg_of_le
+    (fun n => FiniteWeightedNorm.weighted_term_nonneg _ n) fun n =>
+    (mul_le_mul_of_nonneg_right
+      (by simpa [SystemBlockDiagData.action_eq_actionFinite_add_actionTail] using
+        abs_add_le (A.actionFinite c l n) (A.actionTail c l n))
+      (pow_nonneg ν.coe_nonneg n)).trans_eq (add_mul _ _ _)
 
 /-- Concrete action of `SystemBlockDiagData` on `(ℓ¹_ν)^L`. -/
 def SystemBlockDiagData.applyX
@@ -305,20 +258,16 @@ lemma SystemBlockDiagData.norm_mk_actionFinite_eq
     ‖l1Weighted.mk (A.actionFinite c l)
       (A.actionFinite_mem (ν := ν) c l)‖ =
       ∑ n : Fin (N + 1),
-        |∑ j : Fin L, ∑ k : Fin (N + 1),
-          A.finBlock l j n k * c j k| * (ν : ℝ) ^ (n : ℕ) := by
+        |finBlockAction A.finBlock c l n| * (ν : ℝ) ^ (n : ℕ) := by
   have hsupp := l1Weighted.norm_eq_Icc_sum_of_support
     (a := l1Weighted.mk (A.actionFinite c l) (A.actionFinite_mem (ν := ν) c l))
-    (M := N) (fun n hn => by
-      change A.actionFinite c l n = 0
-      simp [SystemBlockDiagData.actionFinite, Nat.not_le.mpr hn])
+    (M := N) (fun n hn => A.actionFinite_tail c l n hn)
   rw [hsupp, ← (by simpa [Nat.add_sub_cancel] using
     Nat.range_eq_Icc_zero_sub_one (n := N + 1) (Nat.succ_ne_zero N) :
     Finset.range (N + 1) = Finset.Icc (0 : ℕ) N)]
   rw [← Fin.sum_univ_eq_sum_range]
   exact Finset.sum_congr rfl fun n _ => by
-    change |A.actionFinite c l n| * _ = _
-    simp [SystemBlockDiagData.actionFinite, Fin.is_le]
+    simp [SystemBlockDiagData.actionFinite, finBlockAction, Fin.is_le]
 
 /-- General finite block action norm bound. For ANY coefficient function `c` satisfying
 `∀ j, ∑ k, |c j k| * ν^k ≤ C`, the weighted double-sum norm at row `l` is
@@ -328,9 +277,9 @@ lemma SystemBlockDiagData.actionFinite_weighted_norm_le
     (hcoeff : ∀ j : Fin L,
       ∑ k : Fin (N + 1), |c j k| * (ν : ℝ) ^ (k : ℕ) ≤ C) :
     ∑ n : Fin (N + 1),
-      |∑ j : Fin L, ∑ k : Fin (N + 1),
-        A.finBlock l j n k * c j k| * (ν : ℝ) ^ (n : ℕ) ≤
+      |finBlockAction A.finBlock c l n| * (ν : ℝ) ^ (n : ℕ) ≤
       blockRowNorm ν A.finBlock l * C := by
+  simp only [finBlockAction]
   refine (NormHelpers.weighted_sum_abs_sum_le (fun n => (ν : ℝ) ^ (n : ℕ))
     (fun _ => pow_nonneg ν.coe_nonneg _)
     (fun j n => ∑ k, A.finBlock l j n k * c j k)).trans ?_
@@ -372,30 +321,18 @@ lemma SystemBlockDiagData.actionFinite_component_norm_le_restricted
     simpa [blockEntryNorm, FiniteWeightedNorm.finl1WeightedNorm, Matrix.mulVec, dotProduct] using
       FiniteWeightedNorm.finWeightedMatrixNorm_mulVec_le (ν := ν) (A := A.finBlock l j)
         (v := fun k => toCoeff (ν := ν) x j k)).trans ?_
-  -- Bound each term: inactive j have x j = 0, so their contribution is 0
-  have hterm : ∀ j : Fin L,
-      blockEntryNorm ν A.finBlock l j *
-        (∑ k : Fin (N + 1), |toCoeff (ν := ν) x j k| * (ν : ℝ) ^ (k : ℕ)) ≤
-      if j ∈ active then blockEntryNorm ν A.finBlock l j * ‖x‖ else 0 := by
-    intro j; split
-    · exact mul_le_mul_of_nonneg_left
+  refine (Finset.sum_le_sum (g := fun j =>
+      if j ∈ active then blockEntryNorm ν A.finBlock l j * ‖x‖ else 0) fun j _ => ?_).trans_eq ?_
+  · dsimp only; by_cases hj : j ∈ active
+    · rw [if_pos hj]; exact mul_le_mul_of_nonneg_left
         ((by simpa [toCoeff, l1Weighted.toSeq] using
           l1Weighted.finSum_weighted_toSeq_le_norm (ν := ν) (a := x j) (N := N) :
           ∑ k : Fin (N + 1), |toCoeff (ν := ν) x j k| * (ν : ℝ) ^ (k : ℕ) ≤ ‖x j‖).trans
           (norm_le_pi_norm x j))
         (blockEntryNorm_nonneg (ν := ν) A.finBlock l j)
-    · have := hzero j ‹_›
-      simp only [toCoeff, this, l1Weighted.zero_toSeq, abs_zero, zero_mul,
-        Finset.sum_const_zero, mul_zero, le_refl]
-  calc ∑ j, blockEntryNorm ν A.finBlock l j *
-        (∑ k : Fin (N + 1), |toCoeff (ν := ν) x j k| * (ν : ℝ) ^ (k : ℕ))
-      ≤ ∑ j, if j ∈ active then blockEntryNorm ν A.finBlock l j * ‖x‖ else 0 :=
-        Finset.sum_le_sum fun j _ => hterm j
-    _ = ∑ j ∈ active, blockEntryNorm ν A.finBlock l j * ‖x‖ := by
-        rw [← Finset.sum_filter]
-        exact Finset.sum_congr (by ext; simp) fun _ _ => rfl
-    _ = (∑ j ∈ active, blockEntryNorm ν A.finBlock l j) * ‖x‖ :=
-        (Finset.sum_mul ..).symm
+    · rw [if_neg hj]; simp [toCoeff, hzero j hj]
+  · rw [← Finset.sum_filter (p := (· ∈ active))]
+    exact (Finset.sum_congr (by ext; simp) fun _ _ => rfl).trans (Finset.sum_mul ..).symm
 
 lemma SystemBlockDiagData.actionTail_component_norm_le
     (A : SystemBlockDiagData L N) (x : XL1 ν L) (l : Fin L) :
@@ -424,32 +361,11 @@ lemma SystemBlockDiagData.applyX_component_eq_finite_add_tail
 lemma SystemBlockDiagData.applyX_component_norm_le
     (A : SystemBlockDiagData L N) (x : XL1 ν L) (l : Fin L) :
     ‖A.applyX (ν := ν) x l‖ ≤ (blockRowNorm ν A.finBlock l + A.tailBound) * ‖x‖ := by
-  let finPart : l1Weighted ν :=
-    l1Weighted.mk (A.actionFinite (toCoeff (ν := ν) x) l)
-      (A.actionFinite_mem (ν := ν) (toCoeff (ν := ν) x) l)
-  let tailPart : l1Weighted ν :=
-    l1Weighted.mk (A.actionTail (toCoeff (ν := ν) x) l)
-      (A.actionTail_mem_of_mem (ν := ν) (toCoeff (ν := ν) x) l (toCoeff_mem (ν := ν) x l))
-  have hdecomp : A.applyX (ν := ν) x l = finPart + tailPart :=
-    A.applyX_component_eq_finite_add_tail (ν := ν) x l
-  have hfin : ‖finPart‖ ≤ blockRowNorm ν A.finBlock l * ‖x‖ :=
-    A.actionFinite_component_norm_le_row (ν := ν) x l
-  have hC_nonneg : 0 ≤ A.tailBound := A.tailBound_nonneg_at l
-  have htail_component : ‖tailPart‖ ≤ A.tailBound * ‖x l‖ :=
-    A.actionTail_component_norm_le (ν := ν) x l
-  have htail : ‖tailPart‖ ≤ A.tailBound * ‖x‖ := by
-    exact htail_component.trans (mul_le_mul_of_nonneg_left (norm_le_pi_norm x l) hC_nonneg)
-  have h₁ : ‖A.applyX (ν := ν) x l‖ ≤ ‖finPart‖ + ‖tailPart‖ := by
-    rw [hdecomp]
-    exact norm_add_le _ _
-  have h₂ :
-      ‖finPart‖ + ‖tailPart‖ ≤ blockRowNorm ν A.finBlock l * ‖x‖ + A.tailBound * ‖x‖ := by
-    exact add_le_add hfin htail
-  have h₃ :
-      blockRowNorm ν A.finBlock l * ‖x‖ + A.tailBound * ‖x‖ =
-        (blockRowNorm ν A.finBlock l + A.tailBound) * ‖x‖ := by
-    ring
-  exact h₁.trans (h₂.trans_eq h₃)
+  rw [A.applyX_component_eq_finite_add_tail (ν := ν) x l]
+  have hfin := A.actionFinite_component_norm_le_row (ν := ν) x l
+  have htail := (A.actionTail_component_norm_le (ν := ν) x l).trans
+    (mul_le_mul_of_nonneg_left (norm_le_pi_norm x l) (A.tailBound_nonneg_at l))
+  exact ((norm_add_le _ _).trans (add_le_add hfin htail)).trans_eq (by ring)
 
 lemma SystemBlockDiagData.tailBound_nonneg [NeZero L] (A : SystemBlockDiagData L N) :
     0 ≤ A.tailBound := by
@@ -462,23 +378,12 @@ lemma SystemBlockDiagData.toLinearMap_bound [NeZero L]
       ‖A.toLinearMap (ν := ν) x‖ ≤
         (finiteBlockMatrixNorm ν A.finBlock + A.tailBound) * ‖x‖ := by
   intro x
-  have hC_nonneg :
-      0 ≤ (finiteBlockMatrixNorm ν A.finBlock + A.tailBound) * ‖x‖ := by
-    exact mul_nonneg
-      (add_nonneg (finiteBlockMatrixNorm_nonneg (ν := ν) A.finBlock) (A.tailBound_nonneg))
-      (norm_nonneg x)
-  refine (pi_norm_le_iff_of_nonneg hC_nonneg).2 ?_
-  intro l
-  have hcomp :
-      ‖A.applyX (ν := ν) x l‖ ≤ (blockRowNorm ν A.finBlock l + A.tailBound) * ‖x‖ := by
-    exact A.applyX_component_norm_le (ν := ν) x l
-  have hrow :
-      blockRowNorm ν A.finBlock l + A.tailBound ≤
-        finiteBlockMatrixNorm ν A.finBlock + A.tailBound := by
-    exact add_le_add
-      (Finset.le_sup' (f := fun i : Fin L => blockRowNorm ν A.finBlock i) (Finset.mem_univ l))
-      le_rfl
-  exact hcomp.trans (mul_le_mul_of_nonneg_right hrow (norm_nonneg x))
+  refine (pi_norm_le_iff_of_nonneg (mul_nonneg
+    (add_nonneg (finiteBlockMatrixNorm_nonneg (ν := ν) A.finBlock) A.tailBound_nonneg)
+    (norm_nonneg x))).2 fun l => ?_
+  exact (A.applyX_component_norm_le (ν := ν) x l).trans
+    (mul_le_mul_of_nonneg_right
+      (add_le_add (Finset.le_sup' _ (Finset.mem_univ l)) le_rfl) (norm_nonneg x))
 
 /-- Continuous-linear lift of the 8.2 block operator data on `(ℓ¹_ν)^L`,
 with explicit operator bound `max_l Σ_j ‖A_{l,j}‖ + tailBound`. -/
@@ -514,13 +419,8 @@ lemma SystemBlockDiagData.norm_toCLM_component_le_restricted [NeZero L]
       exact mul_le_mul_of_nonneg_left (norm_le_pi_norm w l) (A.tailBound_nonneg_at l)
     · rw [if_neg hl, zero_mul]
       exact le_of_eq (by rw [hzero l hl, norm_zero, mul_zero])
-  calc ‖_ + _‖ ≤ ‖_‖ + ‖_‖ := norm_add_le _ _
-    _ ≤ (∑ j ∈ active, blockEntryNorm ν A.finBlock l j) * ‖w‖ +
-        A.tailBound * ‖w l‖ := add_le_add hfin htail
-    _ ≤ (∑ j ∈ active, blockEntryNorm ν A.finBlock l j) * ‖w‖ +
-        (if l ∈ active then A.tailBound else 0) * ‖w‖ :=
-      add_le_add le_rfl htail_restricted
-    _ = _ := by ring
+  exact ((norm_add_le _ _).trans (add_le_add hfin htail)).trans
+    ((add_le_add le_rfl htail_restricted).trans_eq (by ring))
 
 @[simp]
 lemma SystemBlockDiagData.toCoeff_toCLM [NeZero L]
@@ -648,44 +548,17 @@ lemma SystemBlockDiagData.injective_toCLM_of_finite_part_injective [NeZero L]
     (h_tail : ∀ l n, N < n → A.tailDiag l n ≠ 0) :
     Function.Injective (A.toCLM (ν := ν)) := by
   intro x y hxy
-  have hdiff : A.toCLM (ν := ν) (x - y) = 0 := by
-    have hsub : A.toCLM (ν := ν) x - A.toCLM (ν := ν) y = 0 := by
-      simpa [sub_eq_zero] using hxy
-    simpa [map_sub] using hsub
-  have h_tail_zero : ∀ l : Fin L, ∀ n : ℕ, N < n → toCoeff (ν := ν) (x - y) l n = 0 := by
-    intro l n hn
-    have hcoeff :
-        toCoeff (ν := ν) (A.toCLM (ν := ν) (x - y)) l n = 0 := by
-      rw [hdiff]
-      simp [toCoeff]
-    rw [SystemBlockDiagData.toCoeff_toCLM (ν := ν) (A := A) (x := x - y) (l := l) (n := n)] at hcoeff
-    rw [SystemBlockDiagData.action_tail
-      (A := A) (b := toCoeff (ν := ν) (x - y)) (l := l) (n := n) hn] at hcoeff
-    exact (mul_eq_zero.mp hcoeff).resolve_left (h_tail l n hn)
-  have h_fin_eq :
-      ∀ l : Fin L, ∀ n : Fin (N + 1),
-        (∑ j : Fin L, ∑ k : Fin (N + 1),
-          A.finBlock l j n k * toCoeff (ν := ν) (x - y) j k) = 0 := by
-    intro l n
-    have hcoeff :
-        toCoeff (ν := ν) (A.toCLM (ν := ν) (x - y)) l n = 0 := by
-      rw [hdiff]
-      simp [toCoeff]
-    rw [SystemBlockDiagData.toCoeff_toCLM (ν := ν) (A := A) (x := x - y) (l := l) (n := n)] at hcoeff
-    rw [SystemBlockDiagData.action_fin
-      (A := A) (b := toCoeff (ν := ν) (x - y)) (l := l) (n := n)] at hcoeff
-    exact hcoeff
-  have h_fin_zero :
-      ∀ l : Fin L, ∀ n : Fin (N + 1), toCoeff (ν := ν) (x - y) l n = 0 :=
-    h_fin (toCoeff (ν := ν) (x - y)) h_fin_eq
-  have hxy_zero : x - y = 0 := by
-    funext l
-    apply l1Weighted.ext
-    intro n
-    by_cases hn : n ≤ N
-    · exact h_fin_zero l ⟨n, Nat.lt_succ_of_le hn⟩
-    · exact h_tail_zero l n (Nat.lt_of_not_ge hn)
-  exact sub_eq_zero.mp hxy_zero
+  have hdiff : A.toCLM (ν := ν) (x - y) = 0 := by rwa [map_sub, sub_eq_zero]
+  have haction : ∀ l n, A.action (toCoeff (ν := ν) (x - y)) l n = 0 := fun l n => by
+    rw [← A.toCoeff_toCLM (ν := ν), hdiff, toCoeff_zero]
+  have h_tail_zero : ∀ l n, N < n → toCoeff (ν := ν) (x - y) l n = 0 := fun l n hn =>
+    (mul_eq_zero.mp ((A.action_tail _ l n hn).symm.trans (haction l n))).resolve_left
+      (h_tail l n hn)
+  have h_fin_zero := h_fin _ fun l n => (A.action_fin _ l n).symm.trans (haction l ↑n)
+  exact sub_eq_zero.mp (by
+    funext l; apply l1Weighted.ext; intro n
+    exact if hn : n ≤ N then h_fin_zero l ⟨n, Nat.lt_succ_of_le hn⟩
+      else h_tail_zero l n (Nat.lt_of_not_ge hn))
 
 /-! ## 7. Block Identity Action
 

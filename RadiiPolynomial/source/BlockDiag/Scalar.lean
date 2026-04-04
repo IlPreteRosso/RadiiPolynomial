@@ -86,14 +86,8 @@ lemma ScalarBlockDiagData.Z₀_norm_le_of_eq_defect
         (A.toCLM (ν := ν)).comp (B.toCLM (ν := ν)) = D.toCLM (ν := ν)) :
     Z₀_norm (A.toCLM (ν := ν)) (B.toCLM (ν := ν)) ≤
       FiniteWeightedNorm.finWeightedMatrixNorm ν D.finBlock0 + D.tailBound := by
-  have hsys :
-      Z₀_norm (A.toCLM (ν := ν)) (B.toCLM (ν := ν)) ≤
-        finiteBlockMatrixNorm ν D.finBlock + D.tailBound := by
-    exact SystemBlockDiagData.Z₀_norm_le_of_eq_defect
-      (ν := ν) (L := 1) (N := N) (A := A) (B := B) (D := D) hD
-  have hfb : finiteBlockMatrixNorm ν D.finBlock = FiniteWeightedNorm.finWeightedMatrixNorm ν D.finBlock0 :=
-    ScalarBlockDiagData.finiteBlockMatrixNorm_eq (ν := ν) (A := D)
-  simpa [hfb] using hsys
+  have := SystemBlockDiagData.Z₀_norm_le_of_eq_defect (ν := ν) A B D hD
+  rwa [D.finiteBlockMatrixNorm_eq (ν := ν)] at this
 
 /-- Identify `(ℓ¹_ν)^1` with `ℓ¹_ν` via `ContinuousLinearEquiv.funUnique`. -/
 abbrev scalarSpaceEquiv (ν : PosReal) : XL1 ν 1 ≃L[ℝ] l1Weighted ν :=
@@ -337,18 +331,13 @@ lemma ScalarBlockDiagData.norm_toScalarCLM_le
     FiniteWeightedNorm.finWeightedMatrixNorm ν A.finBlock0 + A.tailBound := by
   apply ContinuousLinearMap.opNorm_le_bound _
     (add_nonneg (FiniteWeightedNorm.finWeightedMatrixNorm_nonneg (ν := ν) A.finBlock0)
-      (A.tailBound_nonneg))
+      A.tailBound_nonneg)
   intro x
   rw [ScalarBlockDiagData.toScalarCLM_apply]
-  have h1 : ‖(A.toCLM (ν := ν) (fun _ => x)) 0‖ ≤ ‖A.toCLM (ν := ν) (fun _ => x)‖ :=
-    norm_le_pi_norm _ 0
-  have h2 : ‖A.toCLM (ν := ν) (fun _ => x)‖ ≤
-      (FiniteWeightedNorm.finWeightedMatrixNorm ν A.finBlock0 + A.tailBound) *
-        ‖(fun _ : Fin 1 => x : XL1 ν 1)‖ := by
-    have := A.norm_toCLM_le (ν := ν)
-    exact (ContinuousLinearMap.le_opNorm _ _).trans (by gcongr)
-  rw [pi_norm_const] at h2
-  exact h1.trans h2
+  refine (norm_le_pi_norm _ 0).trans ?_
+  have := (ContinuousLinearMap.le_opNorm (A.toCLM (ν := ν)) (fun _ => x)).trans
+    (mul_le_mul_of_nonneg_right (A.norm_toCLM_le (ν := ν)) (norm_nonneg _))
+  rwa [pi_norm_const] at this
 
 /-- Tail action weighted bound: the weighted tail contribution of `A.toScalarCLM x`
 is bounded by `tailBound` times the weighted tail of `x`. -/
