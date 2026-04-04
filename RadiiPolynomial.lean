@@ -59,3 +59,4 @@ import RadiiPolynomial.examples.Example1421.Algebra
 import RadiiPolynomial.examples.Example1421.Numbers
 import RadiiPolynomial.examples.TestCrossProduct.Algebra
 import RadiiPolynomial.examples.TestCubic.Algebra
+import RadiiPolynomial.examples.TestQuadratic.Algebra

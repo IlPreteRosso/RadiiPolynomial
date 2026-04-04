@@ -136,6 +136,70 @@ lemma F₂_toSeq (a b : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq a n + l1Weighted.toSeq b n - constSeq n := by
   sorry
 
+/-! ## Part PS — Formal Power Series (Coefficient Matching)
+
+This is the "matching coefficients of like degrees" step from the book (§9.2, p.226).
+
+Substituting x(λ) = Σ aₙ tⁿ, y(λ) = Σ bₙ tⁿ into the original system and
+matching coefficients of like powers of t gives:
+
+  Equation 1 (xy = λ):  coeff_n(x·y) = coeff_n(λ₀ + t)
+    ⟹ (a ⋆ b)ₙ = cₙ  for all n
+    ⟹ toPowerSeries(a) · toPowerSeries(b) = paramPowerSeries(λ₀)
+
+  Equation 2 (x+y = 2): coeff_n(x+y) = coeff_n(2)
+    ⟹ aₙ + bₙ = dₙ  for all n
+    ⟹ toPowerSeries(a) + toPowerSeries(b) = constPowerSeries
+
+The key principle: two formal power series are equal iff their coefficients agree
+at every degree. This justifies that F(a,b) = 0 is the CORRECT equation to solve. -/
+
+/-- The parameter sequence λ₀ + t as a formal power series. -/
+def paramPowerSeries (lam0 : ℝ) : PowerSeries ℝ :=
+  PowerSeries.mk (paramSeq lam0)
+
+@[simp]
+theorem coeff_paramPowerSeries (lam0 : ℝ) (n : ℕ) :
+    (PowerSeries.coeff n) (paramPowerSeries lam0) = paramSeq lam0 n :=
+  PowerSeries.coeff_mk n _
+
+/-- paramPowerSeries(λ₀) = C(λ₀) + X in the power series ring. -/
+theorem paramPowerSeries_eq (lam0 : ℝ) :
+    paramPowerSeries lam0 = PowerSeries.C lam0 + PowerSeries.X := by
+  sorry
+
+/-- The constant 2 as a formal power series. -/
+def constPowerSeries : PowerSeries ℝ :=
+  PowerSeries.mk constSeq
+
+@[simp]
+theorem coeff_constPowerSeries (n : ℕ) :
+    (PowerSeries.coeff n) (constPowerSeries : PowerSeries ℝ) = constSeq n :=
+  PowerSeries.coeff_mk n _
+
+/-- constPowerSeries = C(2) in the power series ring. -/
+theorem constPowerSeries_eq :
+    (constPowerSeries : PowerSeries ℝ) = PowerSeries.C 2 := by
+  sorry
+
+/-- **Coefficient matching for equation 1**: F₁(a,b) = 0 implies the formal
+power series for x·y equals the formal power series for λ. -/
+-- TASK: Prove by ext + coeff_mul + F₁_toSeq.
+theorem toPowerSeries_mul_eq_param (a b : l1Weighted ν) (lam0 : ℝ)
+    (hF : F₁ lam0 a b = 0) :
+    l1Weighted.toPowerSeries a * l1Weighted.toPowerSeries b =
+      paramPowerSeries lam0 := by
+  sorry
+
+/-- **Coefficient matching for equation 2**: F₂(a,b) = 0 implies the formal
+power series for x+y equals the formal power series for 2. -/
+-- TASK: Prove by ext + map_add + F₂_toSeq.
+theorem toPowerSeries_add_eq_const (a b : l1Weighted ν)
+    (hF : F₂ a b = 0) :
+    l1Weighted.toPowerSeries a + l1Weighted.toPowerSeries b =
+      constPowerSeries := by
+  sorry
+
 /-! ## Part B — Semantic Bridge
 
 Using `l1Weighted.eval` from `Eval.lean`:

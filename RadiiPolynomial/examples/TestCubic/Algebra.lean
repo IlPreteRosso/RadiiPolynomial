@@ -134,6 +134,42 @@ lemma F_toSeq (lam0 : ℝ) (a : l1Weighted ν) (n : ℕ) :
       (l1Weighted.toSeq a) n - paramSeq lam0 n := by
   sorry
 
+/-! ## Part PS — Formal Power Series (Coefficient Matching)
+
+This is the "matching coefficients of like degrees" step from the book (§9.2, p.226).
+
+Substituting x(λ) = Σ aₙ tⁿ into f(x(λ), λ) = x³ - λ = 0 and matching
+coefficients of like powers of t:
+
+  coeff_n(x³) = coeff_n(λ₀ + t)
+  ⟹ (a ⋆ a ⋆ a)ₙ = cₙ  for all n
+  ⟹ toPowerSeries(a)³ = paramPowerSeries(λ₀)  as formal power series
+
+The key principle: two formal power series are equal iff their coefficients agree
+at every degree. This justifies that F(a) = 0 is the CORRECT equation to solve. -/
+
+/-- The parameter sequence λ₀ + t as a formal power series. -/
+def paramPowerSeries (lam0 : ℝ) : PowerSeries ℝ :=
+  PowerSeries.mk (paramSeq lam0)
+
+@[simp]
+theorem coeff_paramPowerSeries (lam0 : ℝ) (n : ℕ) :
+    (PowerSeries.coeff n) (paramPowerSeries lam0) = paramSeq lam0 n :=
+  PowerSeries.coeff_mk n _
+
+/-- paramPowerSeries(λ₀) = C(λ₀) + X in the power series ring. -/
+theorem paramPowerSeries_eq (lam0 : ℝ) :
+    paramPowerSeries lam0 = PowerSeries.C lam0 + PowerSeries.X := by
+  sorry
+
+/-- **Coefficient matching**: F(a) = 0 implies the formal power series for x³
+equals the formal power series for λ. -/
+-- TASK: Prove by ext + coeff_mul + F_toSeq.
+theorem toPowerSeries_cube_eq_param (a : l1Weighted ν) (lam0 : ℝ)
+    (hF : F lam0 a = 0) :
+    l1Weighted.toPowerSeries a ^ 3 = paramPowerSeries lam0 := by
+  sorry
+
 /-! ## Part B — Semantic Bridge
 
 This is the f-to-F connection. Using `l1Weighted.eval` from `Eval.lean`:
