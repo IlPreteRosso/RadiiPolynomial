@@ -201,8 +201,8 @@ lemma φ_scalar_abar_support (n : ℕ) (hn : 2 * N < n) :
   have ha : ∀ k, N < k → l1Weighted.toSeq (data.abar 0) k = 0 :=
     fun k hk => abar_toSeq_zero k hk
   simp only [toSeq_φ_scalar]
-  have h00 : l1Weighted.toSeq (data.abar 0 * data.abar 0) n = 0 :=
-    CauchyProduct.zero_of_support ha ha n hn
+  have h00 : l1Weighted.toSeq (data.abar 0 * data.abar 0) n = 0 := by
+    rw [l1Weighted.toSeq_mul]; exact CauchyProduct.zero_of_support ha ha n hn
   rw [h00, ha n (by omega)]; ring
 
 lemma F_coeffs_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
@@ -220,7 +220,7 @@ lemma F_coeffs_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
     rw [ha, hphi]; ring
 
 lemma F_coeffs_abar_mem (l : Fin L) :
-    lpWeighted.Mem ν_val 1 (F_coeffs data.abar l) := by
+    l1Weighted.Mem ν_val (F_coeffs data.abar l) := by
   rw [l1Weighted.mem_iff]
   exact summable_of_ne_finset_zero (s := Finset.Icc 0 (2 * N + 1)) fun n hn => by
     simp only [Finset.mem_Icc, not_and_or, not_le] at hn
@@ -236,7 +236,6 @@ def two_abar_sub_one_Q : Array ℚ :=
 lemma two_abar_sub_one_toSeq (k : ℕ) :
     l1Weighted.toSeq (2 • data.abar 0 - (1 : l1Weighted ν_val)) k =
       (two_abar_sub_one_Q.getD k 0 : ℝ) := by
-  rw [show (1 : l1Weighted ν_val) = l1Weighted.one ν_val from rfl]
   rw [l1Weighted.toSeq_nsmul_sub_one 2 (data.abar 0) k, data.abar_toSeq_eq 0 k]
   -- data.abar_Q 0 = abar_0 by definition
   change (2 : ℝ) * ((abar_0.getD k 0 : ℚ) : ℝ) - _ = _

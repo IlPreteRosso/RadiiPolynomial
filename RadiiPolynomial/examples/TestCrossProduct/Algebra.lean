@@ -80,22 +80,22 @@ def paramSeq (lam0 : ℝ) : ℕ → ℝ := fun n =>
 def constSeq : ℕ → ℝ := fun n =>
   match n with | 0 => 2 | _ => 0
 
-lemma paramSeq_mem (lam0 : ℝ) : lpWeighted.Mem ν 1 (paramSeq lam0) := by
+lemma paramSeq_mem (lam0 : ℝ) : l1Weighted.Mem ν (paramSeq lam0) := by
   rw [l1Weighted.mem_iff]
   apply summable_of_ne_finset_zero (s := {0, 1})
   intro n hn
   simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hn
   simp [paramSeq, hn.1, hn.2]
 
-lemma constSeq_mem : lpWeighted.Mem ν 1 (constSeq : ℕ → ℝ) := by
+lemma constSeq_mem : l1Weighted.Mem ν (constSeq : ℕ → ℝ) := by
   rw [l1Weighted.mem_iff]
   apply summable_of_ne_finset_zero (s := {0})
   intro n hn
   simp only [Finset.mem_singleton] at hn
-  simp [constSeq, hn]
+  simp [constSeq]
 
-def c (lam0 : ℝ) : l1Weighted ν := lpWeighted.mk (paramSeq lam0) (paramSeq_mem lam0)
-def d : l1Weighted ν := lpWeighted.mk constSeq constSeq_mem
+def c (lam0 : ℝ) : l1Weighted ν := l1Weighted.mk (paramSeq lam0) (paramSeq_mem lam0)
+def d : l1Weighted ν := l1Weighted.mk constSeq constSeq_mem
 
 /-! ### 2. Component Maps
 
@@ -125,15 +125,15 @@ correct, these should be provable. -/
 
 -- Equation 1: the cross Cauchy product formula
 lemma F₁_toSeq (lam0 : ℝ) (a b : l1Weighted ν) (n : ℕ) :
-    lpWeighted.toSeq (F₁ lam0 a b) n =
-    CauchyProduct (lpWeighted.toSeq a) (lpWeighted.toSeq b) n -
+    l1Weighted.toSeq (F₁ lam0 a b) n =
+    CauchyProduct (l1Weighted.toSeq a) (l1Weighted.toSeq b) n -
       paramSeq lam0 n := by
   sorry
 
 -- Equation 2: pointwise addition formula
 lemma F₂_toSeq (a b : l1Weighted ν) (n : ℕ) :
-    lpWeighted.toSeq (F₂ a b) n =
-    lpWeighted.toSeq a n + lpWeighted.toSeq b n - constSeq n := by
+    l1Weighted.toSeq (F₂ a b) n =
+    l1Weighted.toSeq a n + l1Weighted.toSeq b n - constSeq n := by
   sorry
 
 /-! ## Part B — Semantic Bridge

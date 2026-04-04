@@ -92,7 +92,7 @@ private def A_tail_coeff : ℚ := 1 / (2 * ā₀)
 /-! ## Bridge Lemmas -/
 
 private lemma ν_val_eq_q : (ν_val : ℝ) = ((ν : ℚ) : ℝ) := by
-  simp [ν_val]
+  show ν_val.1 = _; simp [ν_val, ν]
 
 private def A_colR : Fin 3 → Array ℝ :=
   fun j => (A_colOf j).map (fun (x : ℚ) => (x : ℝ))
@@ -117,20 +117,21 @@ private lemma A_col_bridge (j i : Fin 3) :
   (A_col_bridge_q j i).trans (A_colR_eq j i).symm
 
 private lemma F_ā_support : ∀ n, 4 < n →
-    lpWeighted.toSeq (F lam0 (sol.toL1 : l1Weighted ν_val)) n = 0 := by
+    l1Weighted.toSeq (F lam0 (sol.toL1 : l1Weighted ν_val)) n = 0 := by
   intro n hn
-  show lpWeighted.toSeq (sq (sol.toL1 : l1Weighted ν_val) - c lam0) n = 0
-  rw [lpWeighted.sub_toSeq]
-  have hā : ∀ k, 2 < k → lpWeighted.toSeq (sol.toL1 : l1Weighted ν_val) k = 0 :=
+  show l1Weighted.toSeq (sq (sol.toL1 : l1Weighted ν_val) - c lam0) n = 0
+  rw [l1Weighted.sub_toSeq]
+  have hā : ∀ k, 2 < k → l1Weighted.toSeq (sol.toL1 : l1Weighted ν_val) k = 0 :=
     fun k hk => by rw [ApproxSolution.toL1_toSeq]; exact sol.toSeq_zero_of_gt k hk
-  have h_sq : lpWeighted.toSeq (sq (sol.toL1 : l1Weighted ν_val)) n = 0 :=
-    CauchyProduct.zero_of_support hā hā n (by omega)
-  have h_c : lpWeighted.toSeq (c lam0 : l1Weighted ν_val) n = 0 := by
-    simp only [c, lpWeighted.mk, paramSeq]; match n, hn with | n + 5, _ => rfl
+  have h_sq : l1Weighted.toSeq (sq (sol.toL1 : l1Weighted ν_val)) n = 0 := by
+    rw [sq, l1Weighted.toSeq_mul]
+    exact CauchyProduct.zero_of_support hā hā n (by omega)
+  have h_c : l1Weighted.toSeq (c lam0 : l1Weighted ν_val) n = 0 := by
+    simp only [c, l1Weighted.mk_apply, paramSeq]; match n, hn with | n + 5, _ => rfl
   rw [h_sq, h_c, sub_self]
 
 private lemma AF_ā_support : ∀ n, 4 < n →
-    lpWeighted.toSeq (A_inv.toScalarCLM (ν := ν_val)
+    l1Weighted.toSeq (A_inv.toScalarCLM (ν := ν_val)
       (F lam0 (sol.toL1 : l1Weighted ν_val))) n = 0 :=
   ScalarBlockDiagData.toScalarCLM_support A_inv _ 4 (by omega) F_ā_support
 
@@ -144,7 +145,7 @@ private lemma sol_toSeq_eq (k : ℕ) :
   | k + 3 => simp [Array.getD, show ¬(k + 3 ≤ 2) from by omega]
 
 private lemma F_ā_toSeq_eq (n : ℕ) :
-    lpWeighted.toSeq (F lam0 (sol.toL1 : l1Weighted ν_val)) n = F_ā_R n := by
+    l1Weighted.toSeq (F lam0 (sol.toL1 : l1Weighted ν_val)) n = F_ā_R n := by
   unfold F_ā_R
   rw [F_toSeq, ApproxSolution.toL1_toSeq]
   simp only [F_ā_vec, CauchyProduct.apply, lam0]
@@ -207,13 +208,13 @@ private lemma defect_cols_bridge (j i : Fin 3) :
   fin_cases i <;> fin_cases j <;> simp [defect_cols]
 
 private lemma defect_matrixNorm_le :
-    l1Weighted.finWeightedMatrixNorm ν_val
+    FiniteWeightedNorm.finWeightedMatrixNorm ν_val
       (1 - (approxInverse sol A_mat).finBlock0 * (approxDeriv sol).finBlock0) ≤
     (Z₀_bnd : ℝ) := by
   unfold Z₀_bnd
-  exact l1Weighted.finWeightedMatrixNorm_le_via_cols _ defect_cols _
+  exact FiniteWeightedNorm.finWeightedMatrixNorm_le_via_cols _ defect_cols _
     defect_cols_bridge (fun j => by
-      unfold l1Weighted.arrayColNormIccSum; rw [ν_val_eq_q]
+      unfold FiniteWeightedNorm.arrayColNormIccSum; rw [ν_val_eq_q]
       fin_cases j <;>
         finsum_bound using
           (colNormTermEval _ ν _)
@@ -238,7 +239,7 @@ lemma Z₁_le : Z₁_norm (F lam0) sol.toL1
     simp only [show Finset.Icc 1 2 = {1, 2} from by decide,
       Finset.sum_pair (by decide : (1 : ℕ) ≠ 2)]
     simp only [ApproxSolution.toSeq, sol, ā₀, ā₁, ā₂]
-    simp only [ν_val, ν]; push_cast; norm_num
+    simp only [ν_val, PosReal.toReal, ν]; push_cast; norm_num
   exact Z₁_le_via_eval sol A_mat lam0 (Z₁_bnd : ℝ)
     (of_point_interval (by
       rw [h_shifted_sum]
@@ -248,11 +249,11 @@ lemma Z₁_le : Z₁_norm (F lam0) sol.toL1
 /-! ### Z₂ -/
 
 private lemma A_finWeightedMatrixNorm_le :
-    l1Weighted.finWeightedMatrixNorm ν_val A_inv.finBlock0 ≤ (Z₂_bnd : ℝ) / 2 := by
+    FiniteWeightedNorm.finWeightedMatrixNorm ν_val A_inv.finBlock0 ≤ (Z₂_bnd : ℝ) / 2 := by
   unfold Z₂_bnd
-  exact l1Weighted.finWeightedMatrixNorm_le_via_cols _ A_colOf _
+  exact FiniteWeightedNorm.finWeightedMatrixNorm_le_via_cols _ A_colOf _
     A_col_bridge_q (fun j => by
-      unfold l1Weighted.arrayColNormIccSum; rw [ν_val_eq_q]
+      unfold FiniteWeightedNorm.arrayColNormIccSum; rw [ν_val_eq_q]
       fin_cases j <;>
         finsum_bound using
           (colNormTermEval _ ν _)

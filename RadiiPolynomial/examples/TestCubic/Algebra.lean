@@ -75,14 +75,14 @@ equation (linearly), not on the nonlinearity f. -/
 def paramSeq (lam0 : ℝ) : ℕ → ℝ := fun n =>
   match n with | 0 => lam0 | 1 => 1 | _ => 0
 
-lemma paramSeq_mem (lam0 : ℝ) : lpWeighted.Mem ν 1 (paramSeq lam0) := by
+lemma paramSeq_mem (lam0 : ℝ) : l1Weighted.Mem ν (paramSeq lam0) := by
   rw [l1Weighted.mem_iff]
   apply summable_of_ne_finset_zero (s := {0, 1})
   intro n hn
   simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hn
   simp [paramSeq, hn.1, hn.2]
 
-def c (lam0 : ℝ) : l1Weighted ν := lpWeighted.mk (paramSeq lam0) (paramSeq_mem lam0)
+def c (lam0 : ℝ) : l1Weighted ν := l1Weighted.mk (paramSeq lam0) (paramSeq_mem lam0)
 
 -- TASK: Define F(a). Compare: Example77 defines `F lam0 a = sq a - c lam0`.
 def F (lam0 : ℝ) (a : l1Weighted ν) : l1Weighted ν := sorry
@@ -129,9 +129,9 @@ The triple product (a*a*a)ₙ is a double convolution:
 -/
 
 lemma F_toSeq (lam0 : ℝ) (a : l1Weighted ν) (n : ℕ) :
-    lpWeighted.toSeq (F lam0 a) n =
-    CauchyProduct (CauchyProduct (lpWeighted.toSeq a) (lpWeighted.toSeq a))
-      (lpWeighted.toSeq a) n - paramSeq lam0 n := by
+    l1Weighted.toSeq (F lam0 a) n =
+    CauchyProduct (CauchyProduct (l1Weighted.toSeq a) (l1Weighted.toSeq a))
+      (l1Weighted.toSeq a) n - paramSeq lam0 n := by
   sorry
 
 /-! ## Part B — Semantic Bridge

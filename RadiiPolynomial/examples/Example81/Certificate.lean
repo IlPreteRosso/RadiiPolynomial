@@ -75,14 +75,14 @@ private noncomputable def F_abar : XL1 ν_val L :=
 
 private lemma G_eq_toCLM_F_abar :
     data.G φ_scalar x₀ data.abar = data.approxInverse.toCLM (ν := ν_val) F_abar := by
-  funext l; apply lpWeighted.ext; intro n
+  funext l; apply l1Weighted.ext; intro n
   exact (data.G_coeff φ_scalar x₀ data.abar l n).trans (by
     have := SystemBlockDiagData.toCoeff_toCLM (ν := ν_val) data.approxInverse F_abar l n
     simp only [toCoeff] at this; exact this.symm)
 
 private lemma F_abar_toCoeff_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
     toCoeff (ν := ν_val) F_abar l n = 0 := by
-  simp [F_abar, toCoeff, ofCoeff, lpWeighted.mk, F_coeffs,
+  simp [F_abar, toCoeff, ofCoeff, F_coeffs,
     F_coeffs_abar_support l n hn]
 
 private def Y₀_eval (l : Fin L) :=
@@ -155,7 +155,7 @@ lemma Z₁_le_cert :
       l1Weighted.toSeq (((data.composedApprox.toCLM (ν := ν_val) -
         fderiv ℝ (data.G φ_scalar x₀) data.abar) h) l) n = 0 :=
     fun h l n hn => by
-      simp only [ContinuousLinearMap.sub_apply, Pi.sub_apply, lpWeighted.sub_toSeq, sub_eq_zero]
+      simp only [ContinuousLinearMap.sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq, sub_eq_zero]
       exact composedApprox_eq_fderiv_G_fin h l n hn
   have htail : ∀ h : XL1 ν_val L, ∀ l : Fin L, ∀ n : ℕ, N < n →
       l1Weighted.toSeq (((data.composedApprox.toCLM (ν := ν_val) -
@@ -164,7 +164,7 @@ lemma Z₁_le_cert :
     fun h l n hn => by
       have hc := data.composedApprox_toCLM_tail h l n hn
       have hf := fderiv_G_scalar_tail h l n hn
-      simp only [ContinuousLinearMap.sub_apply, Pi.sub_apply, lpWeighted.sub_toSeq]
+      simp only [ContinuousLinearMap.sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq]
       show toCoeff (ν := ν_val) (data.composedApprox.toCLM (ν := ν_val) h) l n -
           toCoeff (ν := ν_val) ((fderiv ℝ (data.G φ_scalar x₀) data.abar) h) l n = _
       rw [hc, hf]; simp [toCoeff]

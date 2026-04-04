@@ -94,14 +94,14 @@ lemma fderiv_F_sub_const_affine (c : l1Weighted ν) :
 def paramSeq (lam0 : ℝ) : ℕ → ℝ := fun n =>
   match n with | 0 => lam0 | 1 => 1 | _ => 0
 
-lemma paramSeq_mem (lam0 : ℝ) : lpWeighted.Mem ν 1 (paramSeq lam0) := by
+lemma paramSeq_mem (lam0 : ℝ) : l1Weighted.Mem ν (paramSeq lam0) := by
   rw [l1Weighted.mem_iff]
   apply summable_of_ne_finset_zero (s := {0, 1})
   intro n hn
   simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hn
   simp [paramSeq, hn.1, hn.2]
 
-def c (lam0 : ℝ) : l1Weighted ν := lpWeighted.mk (paramSeq lam0) (paramSeq_mem lam0)
+def c (lam0 : ℝ) : l1Weighted ν := l1Weighted.mk (paramSeq lam0) (paramSeq_mem lam0)
 
 /-- The zero-finding map F(a) = a*a - c(lam0). -/
 def F (lam0 : ℝ) (a : l1Weighted ν) : l1Weighted ν := F_sub_const (c lam0) a
@@ -111,10 +111,10 @@ lemma F_eq (lam0 : ℝ) (a : l1Weighted ν) : F lam0 a = sq a - c lam0 := rfl
 /-- Sequence-level formula for F(a): CauchyProduct(a,a) - paramSeq(λ₀).
 Bridges the abstract `F` to computable form for certificates. -/
 lemma F_toSeq (lam0 : ℝ) (a : l1Weighted ν) (n : ℕ) :
-    lpWeighted.toSeq (F lam0 a) n =
-    CauchyProduct (lpWeighted.toSeq a) (lpWeighted.toSeq a) n - paramSeq lam0 n := by
-  show lpWeighted.toSeq (a * a) n - paramSeq lam0 n = _
-  rfl
+    l1Weighted.toSeq (F lam0 a) n =
+    CauchyProduct (l1Weighted.toSeq a) (l1Weighted.toSeq a) n - paramSeq lam0 n := by
+  simp only [F, F_sub_const, sq, l1Weighted.sub_toSeq, l1Weighted.toSeq_mul, c,
+    l1Weighted.mk_apply]
 
 theorem differentiable_F (lam0 : ℝ) : Differentiable ℝ (F lam0 : l1Weighted ν → l1Weighted ν) :=
   differentiable_F_sub_const _
@@ -140,7 +140,7 @@ lemma ApproxSolution.toSeq_eq_fin {N : ℕ} (sol : ApproxSolution N) (n : Fin (N
     sol.toSeq n = sol.aBar_fin n := by
   simp only [ApproxSolution.toSeq, Fin.is_le, ↓reduceDIte]
 
-lemma ApproxSolution.mem {N : ℕ} (sol : ApproxSolution N) : lpWeighted.Mem ν 1 sol.toSeq := by
+lemma ApproxSolution.mem {N : ℕ} (sol : ApproxSolution N) : l1Weighted.Mem ν sol.toSeq := by
   rw [l1Weighted.mem_iff]
   apply summable_of_ne_finset_zero (s := Finset.range (N + 1))
   intro n hn
@@ -149,11 +149,11 @@ lemma ApproxSolution.mem {N : ℕ} (sol : ApproxSolution N) : lpWeighted.Mem ν 
     PosReal.coe_ne_zero, ne_eq, false_and, or_false]; intros; omega
 
 def ApproxSolution.toL1 {N : ℕ} (sol : ApproxSolution N) : l1Weighted ν :=
-  lpWeighted.mk sol.toSeq sol.mem
+  l1Weighted.mk sol.toSeq sol.mem
 
 @[simp]
 lemma ApproxSolution.toL1_toSeq {N : ℕ} (sol : ApproxSolution N) :
-    lpWeighted.toSeq (sol.toL1 : l1Weighted ν) = sol.toSeq := rfl
+    l1Weighted.toSeq (sol.toL1 : l1Weighted ν) = sol.toSeq := rfl
 
 /-! ## 3. Operators A and A† as ScalarBlockDiagData -/
 
@@ -231,20 +231,19 @@ equals the Cauchy product, which is exactly 2·leftMul(ā). -/
 lemma approxDeriv_sub_fderiv_fin_kill {N : ℕ}
     (sol : ApproxSolution N) (lam0 : ℝ) (h : l1Weighted ν)
     (n : ℕ) (hn : n ≤ N) :
-    lpWeighted.toSeq (((approxDeriv sol).toScalarCLM (ν := ν) -
+    l1Weighted.toSeq (((approxDeriv sol).toScalarCLM (ν := ν) -
       fderiv ℝ (F lam0) (sol.toL1 : l1Weighted ν)) h) n = 0 := by
-  simp only [ContinuousLinearMap.sub_apply, lpWeighted.sub_toSeq, fderiv_F,
-    ContinuousLinearMap.smul_apply, leftMul_apply, lpWeighted.smul_toSeq]
+  simp only [ContinuousLinearMap.sub_apply, l1Weighted.sub_toSeq, fderiv_F,
+    ContinuousLinearMap.smul_apply, leftMul_apply, l1Weighted.smul_toSeq]
   -- Goal: A†(h)[n] - 2*(ā·h)[n] = 0
   -- A†(h)[n] = CauchyProduct(2*toSeq, h)[n] via the Cauchy bridge
   rw [ScalarBlockDiagData.toScalarCLM_toSeq_fin_eq_cauchy (approxDeriv sol)
     (fun k => 2 * sol.toSeq k) (approxDeriv_finBlock_eq_cauchy sol) h n hn]
   -- 2*(ā·h)[n] = CauchyProduct(2*toSeq, h)[n]
-  have hmul : 2 * lpWeighted.toSeq ((sol.toL1 : l1Weighted ν) * h) n =
-      CauchyProduct (fun k => 2 * sol.toSeq k) (lpWeighted.toSeq h) n := by
-    have : lpWeighted.toSeq ((sol.toL1 : l1Weighted ν) * h) n =
-      CauchyProduct sol.toSeq (lpWeighted.toSeq h) n := rfl
-    rw [this, CauchyProduct.apply, CauchyProduct.apply, Finset.mul_sum]
+  have hmul : 2 * l1Weighted.toSeq ((sol.toL1 : l1Weighted ν) * h) n =
+      CauchyProduct (fun k => 2 * sol.toSeq k) (l1Weighted.toSeq h) n := by
+    rw [l1Weighted.toSeq_mul]
+    simp only [sol.toL1_toSeq, CauchyProduct.apply, Finset.mul_sum]
     exact Finset.sum_congr rfl (fun i _ => by ring)
   rw [hmul, sub_self]
 
@@ -255,21 +254,21 @@ def shiftedSeq {N : ℕ} (sol : ApproxSolution N) : ℕ → ℝ :=
   fun k => if k ∈ Finset.Icc 1 N then sol.toSeq k else 0
 
 lemma shiftedSeq_mem {N : ℕ} (sol : ApproxSolution N) :
-    lpWeighted.Mem ν 1 (shiftedSeq sol) := by
+    l1Weighted.Mem ν (shiftedSeq sol) := by
   rw [l1Weighted.mem_iff]
   apply summable_of_ne_finset_zero (s := Finset.Icc 1 N)
   intro n hn; simp [shiftedSeq, hn]
 
 /-- Shifted sequence as element of ℓ¹_ν. -/
 def shiftedL1 {N : ℕ} (sol : ApproxSolution N) : l1Weighted ν :=
-  lpWeighted.mk (shiftedSeq sol) (shiftedSeq_mem sol)
+  l1Weighted.mk (shiftedSeq sol) (shiftedSeq_mem sol)
 
 lemma shiftedL1_norm {N : ℕ} (sol : ApproxSolution N) :
     ‖@shiftedL1 ν N sol‖ = ∑ n ∈ Finset.Icc 1 N, |sol.toSeq n| * (ν : ℝ) ^ n := by
   rw [l1Weighted.norm_eq_tsum]
-  have h_eq : ∀ n, |lpWeighted.toSeq (@shiftedL1 ν N sol) n| * (ν : ℝ) ^ n =
+  have h_eq : ∀ n, |l1Weighted.toSeq (@shiftedL1 ν N sol) n| * (ν : ℝ) ^ n =
       if n ∈ Finset.Icc 1 N then |sol.toSeq n| * (ν : ℝ) ^ n else 0 := by
-    intro n; simp only [shiftedL1, lpWeighted.mk_apply, shiftedSeq]
+    intro n; simp only [shiftedL1, l1Weighted.mk_apply, shiftedSeq]
     split_ifs <;> simp [abs_zero]
   simp_rw [h_eq]; rw [tsum_eq_sum]
   · apply Finset.sum_congr rfl; intro n hn; simp [hn]
@@ -281,19 +280,21 @@ Since ā has support [0,N] and n > N, the Cauchy product splits as
 ā₀·h_n + ∑_{k∈[1,N]} ā_k·h_{n-k}, so the difference is -2·∑_{k∈[1,N]} ā_k·h_{n-k}. -/
 lemma approxDeriv_sub_fderiv_tail_eq {N : ℕ}
     (sol : ApproxSolution N) (lam0 : ℝ) (h : l1Weighted ν) (n : ℕ) (hn : N < n) :
-    lpWeighted.toSeq (((approxDeriv sol).toScalarCLM (ν := ν) -
+    l1Weighted.toSeq (((approxDeriv sol).toScalarCLM (ν := ν) -
       fderiv ℝ (F lam0) (sol.toL1 : l1Weighted ν)) h) n =
-    -(2 : ℝ) * lpWeighted.toSeq ((shiftedL1 sol : l1Weighted ν) * h) n := by
-  simp only [ContinuousLinearMap.sub_apply, lpWeighted.sub_toSeq, fderiv_F,
-    ContinuousLinearMap.smul_apply, leftMul_apply, lpWeighted.smul_toSeq]
+    -(2 : ℝ) * l1Weighted.toSeq ((shiftedL1 sol : l1Weighted ν) * h) n := by
+  simp only [ContinuousLinearMap.sub_apply, l1Weighted.sub_toSeq, fderiv_F,
+    ContinuousLinearMap.smul_apply, leftMul_apply, l1Weighted.smul_toSeq]
   -- LHS: tail diagonal gives 2ā₀·h_n
   rw [ScalarBlockDiagData.toScalarCLM_toSeq_tail (approxDeriv sol) h n hn]
   simp only [approxDeriv, ScalarBlockDiagData.ofParts, ScalarBlockDiagData.tailDiag0]
   -- RHS: expand both Cauchy products
-  have hmul_full : lpWeighted.toSeq ((sol.toL1 : l1Weighted ν) * h) n =
-      CauchyProduct sol.toSeq (lpWeighted.toSeq h) n := rfl
-  have hmul_shifted : lpWeighted.toSeq ((shiftedL1 sol : l1Weighted ν) * h) n =
-      CauchyProduct (shiftedSeq sol) (lpWeighted.toSeq h) n := rfl
+  have hmul_full : l1Weighted.toSeq ((sol.toL1 : l1Weighted ν) * h) n =
+      CauchyProduct sol.toSeq (l1Weighted.toSeq h) n := by
+    rw [l1Weighted.toSeq_mul]; simp [sol.toL1_toSeq]
+  have hmul_shifted : l1Weighted.toSeq ((shiftedL1 sol : l1Weighted ν) * h) n =
+      CauchyProduct (shiftedSeq sol) (l1Weighted.toSeq h) n := by
+    rw [l1Weighted.toSeq_mul, show l1Weighted.toSeq (shiftedL1 sol : l1Weighted ν) = shiftedSeq sol from rfl]
   rw [hmul_full, hmul_shifted]
   -- Split full Cauchy product: a₀·h_n + ∑_{k∈[1,N]} a_k·h_{n-k}
   rw [CauchyProduct.apply_of_support_le_split
@@ -303,9 +304,9 @@ lemma approxDeriv_sub_fderiv_tail_eq {N : ℕ}
     (fun k (hk : N < k) => by simp [shiftedSeq, Finset.mem_Icc]; omega) hn]
   -- Simplify shiftedSeq: 0 ∉ [1,N] gives 0, k ∈ [1,N] gives sol.toSeq k
   have h_shifted_sum :
-      shiftedSeq sol 0 * lpWeighted.toSeq h n +
-      ∑ k ∈ Finset.Icc 1 N, shiftedSeq sol k * lpWeighted.toSeq h (n - k) =
-      ∑ k ∈ Finset.Icc 1 N, sol.toSeq k * lpWeighted.toSeq h (n - k) := by
+      shiftedSeq sol 0 * l1Weighted.toSeq h n +
+      ∑ k ∈ Finset.Icc 1 N, shiftedSeq sol k * l1Weighted.toSeq h (n - k) =
+      ∑ k ∈ Finset.Icc 1 N, sol.toSeq k * l1Weighted.toSeq h (n - k) := by
     rw [show shiftedSeq sol 0 = 0 from if_neg (by simp [Finset.mem_Icc]),
       zero_mul, zero_add]
     exact Finset.sum_congr rfl fun k hk =>

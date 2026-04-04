@@ -1,4 +1,5 @@
 import RadiiPolynomial.source.lpSpace.CauchyProduct
+import RadiiPolynomial.source.lpSpace.lpWeighted
 import Mathlib.Analysis.Normed.Ring.InfiniteSum
 import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Real
@@ -24,7 +25,7 @@ variable {ν : PosReal}
 
 namespace l1Weighted
 
-private abbrev seq (a : l1Weighted ν) := lpWeighted.toSeq a
+private abbrev seq (a : l1Weighted ν) := l1Weighted.toSeq a
 
 /-! ## Formal Power Series Embedding -/
 
@@ -71,8 +72,7 @@ theorem eval_mul (a b : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
   rw [tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm
     (summable_norm_eval a hz) (summable_norm_eval b hz)]
   congr 1; ext n
-  rw [show seq (a * b) n = CauchyProduct (seq a) (seq b) n from rfl,
-    CauchyProduct.apply, Finset.sum_mul]
+  simp only [seq, l1Weighted.toSeq_mul, CauchyProduct.apply, Finset.sum_mul]
   apply Finset.sum_congr rfl
   intro ⟨k, l⟩ hkl
   simp only [Finset.mem_antidiagonal] at hkl
@@ -88,21 +88,21 @@ theorem eval_at_zero (a : l1Weighted ν) : eval a 0 = seq a 0 := by
 theorem eval_add (a b : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
     eval (a + b) z = eval a z + eval b z := by
   show ∑' n, seq (a + b) n * z ^ n = (∑' n, seq a n * z ^ n) + ∑' n, seq b n * z ^ n
-  simp_rw [show ∀ n, seq (a + b) n = seq a n + seq b n from lpWeighted.add_toSeq a b, add_mul]
+  simp_rw [show ∀ n, seq (a + b) n = seq a n + seq b n from l1Weighted.add_toSeq a b, add_mul]
   exact (summable_eval a hz).tsum_add (summable_eval b hz)
 
 /-- eval respects subtraction. -/
 theorem eval_sub (a b : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
     eval (a - b) z = eval a z - eval b z := by
   show ∑' n, seq (a - b) n * z ^ n = (∑' n, seq a n * z ^ n) - ∑' n, seq b n * z ^ n
-  simp_rw [show ∀ n, seq (a - b) n = seq a n - seq b n from lpWeighted.sub_toSeq a b, sub_mul]
+  simp_rw [show ∀ n, seq (a - b) n = seq a n - seq b n from l1Weighted.sub_toSeq a b, sub_mul]
   exact (summable_eval a hz).tsum_sub (summable_eval b hz)
 
 /-- eval respects scalar multiplication. -/
 theorem eval_smul (r : ℝ) (a : l1Weighted ν) (z : ℝ) :
     eval (r • a) z = r * eval a z := by
   show ∑' n, seq (r • a) n * z ^ n = r * ∑' n, seq a n * z ^ n
-  simp_rw [show ∀ n, seq (r • a) n = r * seq a n from lpWeighted.smul_toSeq r a, mul_assoc]
+  simp_rw [show ∀ n, seq (r • a) n = r * seq a n from l1Weighted.smul_toSeq r a, mul_assoc]
   rw [tsum_mul_left]
 
 end l1Weighted

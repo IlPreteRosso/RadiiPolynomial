@@ -278,10 +278,10 @@ lemma φ_lorenz_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N < n) :
     l1Weighted.toSeq (φ_lorenz data.abar l) n = 0 := by
   have ha' : ∀ i : Fin L, ∀ k, N < k → l1Weighted.toSeq (data.abar i) k = 0 :=
     fun i k hk => abar_toSeq_zero i k hk
-  have h02 : l1Weighted.toSeq (data.abar 0 * data.abar 2) n = 0 :=
-    CauchyProduct.zero_of_support (ha' 0) (ha' 2) n hn
-  have h01 : l1Weighted.toSeq (data.abar 0 * data.abar 1) n = 0 :=
-    CauchyProduct.zero_of_support (ha' 0) (ha' 1) n hn
+  have h02 : l1Weighted.toSeq (data.abar 0 * data.abar 2) n = 0 := by
+    rw [l1Weighted.toSeq_mul]; exact CauchyProduct.zero_of_support (ha' 0) (ha' 2) n hn
+  have h01 : l1Weighted.toSeq (data.abar 0 * data.abar 1) n = 0 := by
+    rw [l1Weighted.toSeq_mul]; exact CauchyProduct.zero_of_support (ha' 0) (ha' 1) n hn
   fin_cases l
   · show σ_val * (l1Weighted.toSeq (data.abar 1) n - l1Weighted.toSeq (data.abar 0) n) = 0
     rw [ha' 0 n (by omega), ha' 1 n (by omega)]; ring
@@ -300,7 +300,7 @@ lemma F_coeffs_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
   rw [abar_toSeq_zero l (m + 1) (by omega), φ_lorenz_abar_support l m (by omega)]; ring
 
 lemma F_coeffs_abar_mem (l : Fin L) :
-    lpWeighted.Mem ν_val 1 (F_coeffs data.abar l) := by
+    l1Weighted.Mem ν_val (F_coeffs data.abar l) := by
   rw [l1Weighted.mem_iff]
   exact summable_of_ne_finset_zero (s := Finset.Icc 0 (2 * N + 1)) fun n hn => by
     simp only [Finset.mem_Icc, not_and_or, not_le] at hn

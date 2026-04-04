@@ -93,7 +93,7 @@ example (a : Fin 3 → l1Weighted ν) (arrs : Fin 3 → Array ℚ)
   -- RHS: mvPolyCoeffQ(X 0 * X 1) arrs n = coeff n (eval₂ C arrs (X 0 * X 1))
   --     = coeff n (arrs 0 * arrs 1) = CauchyProduct(arrs 0.getD)(arrs 1.getD) n
   -- Bridge: CauchyProduct.ratCast + ha
-  show CauchyProduct (l1Weighted.toSeq (a 0)) (l1Weighted.toSeq (a 1)) n = _
+  rw [l1Weighted.toSeq_mul]
   rw [show l1Weighted.toSeq (a 0) = fun k => ((arrs 0).getD k 0 : ℝ) from funext (ha 0),
       show l1Weighted.toSeq (a 1) = fun k => ((arrs 1).getD k 0 : ℝ) from funext (ha 1),
       CauchyProduct.ratCast]
