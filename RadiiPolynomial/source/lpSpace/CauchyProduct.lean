@@ -42,6 +42,10 @@ lemma apply_range (a b : ℕ → R) (n : ℕ) :
 
 section TopologicalBridge
 
+-- TODO: Move this bridge section to DiscreteConvolution or a separate file,
+-- so that CauchyProduct.lean has no dependency on DiscreteConvolution
+-- and is truly standalone.
+
 variable [TopologicalSpace R]
 
 /-- On `ℕ`, `CauchyProduct` agrees with additive ring convolution from
