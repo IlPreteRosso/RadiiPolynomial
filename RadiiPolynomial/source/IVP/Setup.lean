@@ -110,11 +110,12 @@ lemma differentiable_ivpTail (φ : XL1 ν L → Fin L → l1Weighted ν)
 /-! ## 4. Fderiv on Tail Modes -/
 
 omit [NeZero L] in
-/-- Extract component `l` from `fderiv ℝ F a h` when `F : XL1 → XL1`. -/
+/-- Extract component `l` from `fderiv ℝ F a h` when `F : XL1 → XL1`.
+Built on Mathlib's `fderiv_apply`. -/
 private lemma fderiv_apply_component {F : XL1 ν L → XL1 ν L} {a : XL1 ν L}
     (hF : DifferentiableAt ℝ F a) (h : XL1 ν L) (l : Fin L) :
     (fderiv ℝ F a h) l = (fderiv ℝ (fun x => F x l) a) h := by
-  rw [fderiv_pi (fun i => differentiableAt_pi.mp hF i)]; rfl
+  rw [fderiv_apply hF l]; rfl
 
 omit [NeZero L] in
 /-- Fderiv of ivpTail at `ā` applied to `h`:
@@ -379,7 +380,7 @@ lemma ivp_Z₂_le
     ‖fderiv ℝ (ivpMap A φ x₀ hmem) c - fderiv ℝ (ivpMap A φ x₀ hmem) ā‖ ≤ Z₂_val * r := by
   set G := ivpMap A φ x₀ hmem
   suffices h : ‖fderiv ℝ G c - fderiv ℝ G ā‖ ≤ Z₂_val * ‖c - ā‖ from
-    h.trans (mul_le_mul_of_nonneg_left (hc : ‖c - ā‖ ≤ r) hZ₂_nn)
+    h.trans (mul_le_mul_of_nonneg_left (mem_closedBall_iff_norm.mp hc) hZ₂_nn)
   set F := ivpCoeffs φ x₀
   have hF_diff : ∀ j k, Differentiable ℝ (fun a : XL1 ν L => F a j k) :=
     fun j k => differentiable_ivpCoeffs φ x₀ hφ j k
@@ -433,8 +434,7 @@ lemma ivp_Z₂_le
     show (fderiv ℝ G c h') l - (fderiv ℝ G ā h') l = _; exact l1Weighted.ext hseq]
   have hw_zero : ∀ j, j ∉ active → w j = 0 := fun j hj => l1Weighted.ext fun k => by
     show (if k = 0 then (0 : ℝ) else _) = 0
-    split_ifs <;> simp [show (fderiv ℝ (fun x => φ x j) c -
-      fderiv ℝ (fun x => φ x j) ā) h' = 0 from hzero c h' j hj]
+    simp only [hzero c h' j hj, l1Weighted.zero_toSeq, neg_zero, ite_self]
   -- ‖w‖ ≤ C * ν * ‖c-ā‖ * ‖h'‖
   have hw_norm : ‖w‖ ≤ C * (ν : ℝ) * ‖c - ā‖ * ‖h'‖ :=
     (pi_norm_le_iff_of_nonneg (mul_nonneg (mul_nonneg

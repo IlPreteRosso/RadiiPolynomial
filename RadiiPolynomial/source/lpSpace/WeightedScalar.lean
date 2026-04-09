@@ -138,12 +138,13 @@ lemma norm_ofReal_mul_le [AddCommMonoid M] [SubMulWeightBase w] (j l : M) (a b :
 Bridge for lpOneAlgWeightSubMul.norm_ofReal_one_ge. -/
 lemma norm_ofReal_one_ge [AddCommMonoid M] [SubMulWeight w] (m : M) :
     1 ≤ ‖(ofReal 1 : WeightedScalar w m)‖ := by
-  simp [norm_one_eq_weight, SuperUnitWeight.one_le]
+  simp only [norm_ofReal, abs_one, one_mul]; exact SuperUnitWeight.one_le m
 
-@[simp] lemma norm_zero' : ‖(0 : WeightedScalar w m)‖ = 0 := by simp [norm_def, toReal]
+@[simp] lemma norm_zero' : ‖(0 : WeightedScalar w m)‖ = 0 := by
+  show |(0 : ℝ)| * w m = 0; rw [abs_zero, zero_mul]
 
 @[simp] lemma norm_neg' (x : WeightedScalar w m) : ‖-x‖ = ‖x‖ := by
-  simp [norm_def, toReal, abs_neg]
+  show |(-toReal x : ℝ)| * w m = |toReal x| * w m; rw [abs_neg]
 
 lemma norm_smul' (c : ℝ) (x : WeightedScalar w m) : ‖c • x‖ = |c| * ‖x‖ := by
   simp only [norm_def, show toReal (c • x) = c * toReal x from rfl, abs_mul, mul_assoc]
@@ -166,24 +167,35 @@ lemma norm_eq_zero' (x : WeightedScalar w m) : ‖x‖ = 0 ↔ x = 0 := by
     cases h with
     | inl h => exact abs_eq_zero.mp h
     | inr h => exact absurd h (PosWeight.weight_ne_zero m)
-  · intro h; left; simp [h, toReal]
+  · intro h; left; rw [h]; exact abs_zero
 
 instance instNormedAddCommGroup : NormedAddCommGroup (WeightedScalar w m) where
-  dist x y := ‖x - y‖
-  dist_self x := by simp
+  dist x y := ‖-x + y‖
+  dist_self x := by
+    show |toReal (-x + x)| * w m = 0
+    rw [show toReal (-x + x) = 0 from neg_add_cancel x, abs_zero, zero_mul]
   dist_comm x y := by
-    simp only [norm_def, show toReal (x - y) = toReal x - toReal y from rfl,
-      show toReal (y - x) = toReal y - toReal x from rfl, abs_sub_comm]
+    simp only [norm_def]
+    congr 1
+    show |(-toReal x + toReal y)| = |(-toReal y + toReal x)|
+    rw [show -toReal x + toReal y = toReal y - toReal x from by ring,
+        show -toReal y + toReal x = toReal x - toReal y from by ring, abs_sub_comm]
   dist_triangle x y z := by
-    rw [show x - z = (x - y) + (y - z) from by abel_nf]
+    rw [show -x + z = (-x + y) + (-y + z) from by abel_nf]
     exact norm_add_le' _ _
   edist_dist x y := by simp only [ENNReal.ofReal_eq_coe_nnreal (norm_nonneg' _)]
-  eq_of_dist_eq_zero h := by rwa [norm_eq_zero', sub_eq_zero] at h
+  eq_of_dist_eq_zero {a b} h := by
+    have h1 := (norm_eq_zero' (-a + b)).mp h
+    have h2 : a + (-a + b) = a + 0 := congr_arg (a + ·) h1
+    rwa [add_neg_cancel_left, add_zero, eq_comm] at h2
   norm := (‖·‖)
   dist_eq _ _ := rfl
 
 instance instNormedSpace : NormedSpace ℝ (WeightedScalar w m) where
-  norm_smul_le c x := by rw [norm_smul']; rfl
+  toModule := inferInstance
+  norm_smul_le c x := by
+    show |c * toReal x| * w m ≤ |c| * (|toReal x| * w m)
+    rw [abs_mul, mul_assoc]
 
 instance instFiniteDimensional : FiniteDimensional ℝ (WeightedScalar w m) :=
   inferInstanceAs (FiniteDimensional ℝ ℝ)

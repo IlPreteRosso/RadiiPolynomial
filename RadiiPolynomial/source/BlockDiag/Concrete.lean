@@ -59,6 +59,10 @@ lemma toCoeff_mem (x : XL1 ν L) (l : Fin L) :
   change Memℓp (fun n => ScaledReal.ofReal (l1Weighted.toSeq (x l) n)) 1
   simpa [toCoeff, l1Weighted.toSeq, ScaledReal.ofReal_apply] using (lp.memℓp (x l).toLp)
 
+lemma toCoeff_eq_zero {x : XL1 ν L} {j : Fin L} (h : x j = 0) (n : ℕ) :
+    toCoeff (ν := ν) x j n = 0 := by
+  simp only [toCoeff, h, l1Weighted.zero_toSeq]
+
 @[simp] lemma toCoeff_ofCoeff
     (c : SystemCoeff L) (hc : ∀ l : Fin L, l1Weighted.Mem ν (c l))
     (l : Fin L) (n : ℕ) :
@@ -83,24 +87,19 @@ lemma XL1.ext {x y : XL1 ν L} (h : ∀ l n, toCoeff x l n = toCoeff y l n) : x 
   toCoeff_injective (funext fun l => funext fun n => h l n)
 
 @[simp] lemma toCoeff_zero (l : Fin L) (n : ℕ) :
-    toCoeff (ν := ν) (0 : XL1 ν L) l n = 0 := by
-  simp [toCoeff]
+    toCoeff (ν := ν) (0 : XL1 ν L) l n = 0 := rfl
 
 @[simp] lemma toCoeff_add (x y : XL1 ν L) (l : Fin L) (n : ℕ) :
-    toCoeff (ν := ν) (x + y) l n = toCoeff x l n + toCoeff y l n := by
-  simp [toCoeff]
+    toCoeff (ν := ν) (x + y) l n = toCoeff x l n + toCoeff y l n := rfl
 
 @[simp] lemma toCoeff_neg (x : XL1 ν L) (l : Fin L) (n : ℕ) :
-    toCoeff (ν := ν) (-x) l n = -toCoeff x l n := by
-  simp [toCoeff]
+    toCoeff (ν := ν) (-x) l n = -toCoeff x l n := rfl
 
 @[simp] lemma toCoeff_sub (x y : XL1 ν L) (l : Fin L) (n : ℕ) :
-    toCoeff (ν := ν) (x - y) l n = toCoeff x l n - toCoeff y l n := by
-  simp [toCoeff]
+    toCoeff (ν := ν) (x - y) l n = toCoeff x l n - toCoeff y l n := rfl
 
 @[simp] lemma toCoeff_smul (r : ℝ) (x : XL1 ν L) (l : Fin L) (n : ℕ) :
-    toCoeff (ν := ν) (r • x) l n = r * toCoeff x l n := by
-  simp [toCoeff]
+    toCoeff (ν := ν) (r • x) l n = r * toCoeff x l n := rfl
 
 lemma SystemBlockDiagData.actionFinite_mem
     (A : SystemBlockDiagData L N) (c : SystemCoeff L) (l : Fin L) :
@@ -227,10 +226,10 @@ lemma SystemBlockDiagData.applyX_add
       toCoeff (ν := ν) (A.applyX (ν := ν) y) l n := by
     simp only [toCoeff_applyX]
     simp only [show toCoeff (ν := ν) (x + y) = fun l n => toCoeff (ν := ν) x l n +
-      toCoeff (ν := ν) y l n from funext fun i => funext fun k => by simp [toCoeff]]
+      toCoeff (ν := ν) y l n from funext fun i => funext fun k => rfl]
     exact congrArg (fun f => f l n)
       (SystemBlockDiagData.action_add (A := A) (c := toCoeff (ν := ν) x) (d := toCoeff (ν := ν) y))
-  simpa [toCoeff] using this
+  convert this using 1 <;> rfl
 
 lemma SystemBlockDiagData.applyX_smul
     (A : SystemBlockDiagData L N) (r : ℝ) (x : XL1 ν L) :
@@ -240,10 +239,10 @@ lemma SystemBlockDiagData.applyX_smul
       r * toCoeff (ν := ν) (A.applyX (ν := ν) x) l n := by
     simp only [toCoeff_applyX]
     simp only [show toCoeff (ν := ν) (r • x) = fun l n => r * toCoeff (ν := ν) x l n
-      from funext fun i => funext fun k => by simp [toCoeff]]
+      from funext fun i => funext fun k => rfl]
     exact congrArg (fun f => f l n)
       (SystemBlockDiagData.action_smul (A := A) (r := r) (c := toCoeff (ν := ν) x))
-  simpa [toCoeff] using this
+  convert this using 1 <;> rfl
 
 /-- Linear-map lift of the 8.2 block operator data on `(ℓ¹_ν)^L`. -/
 def SystemBlockDiagData.toLinearMap
@@ -267,7 +266,8 @@ lemma SystemBlockDiagData.norm_mk_actionFinite_eq
     Finset.range (N + 1) = Finset.Icc (0 : ℕ) N)]
   rw [← Fin.sum_univ_eq_sum_range]
   exact Finset.sum_congr rfl fun n _ => by
-    simp [SystemBlockDiagData.actionFinite, finBlockAction, Fin.is_le]
+    simp only [l1Weighted.mk_apply, SystemBlockDiagData.actionFinite, Fin.is_le,
+      dite_true, finBlockAction]
 
 /-- General finite block action norm bound. For ANY coefficient function `c` satisfying
 `∀ j, ∑ k, |c j k| * ν^k ≤ C`, the weighted double-sum norm at row `l` is
@@ -330,7 +330,7 @@ lemma SystemBlockDiagData.actionFinite_component_norm_le_restricted
           ∑ k : Fin (N + 1), |toCoeff (ν := ν) x j k| * (ν : ℝ) ^ (k : ℕ) ≤ ‖x j‖).trans
           (norm_le_pi_norm x j))
         (blockEntryNorm_nonneg (ν := ν) A.finBlock l j)
-    · rw [if_neg hj]; simp [toCoeff, hzero j hj]
+    · rw [if_neg hj]; simp [toCoeff_eq_zero (hzero j hj)]
   · rw [← Finset.sum_filter (p := (· ∈ active))]
     exact (Finset.sum_congr (by ext; simp) fun _ _ => rfl).trans (Finset.sum_mul ..).symm
 
@@ -1016,8 +1016,7 @@ lemma FiniteBlockMatrix.isUnit_toMatrix_of_blockNorm_lt_one [NeZero L]
     show v (l, n') = 0
     have h1 : c l ↑n' = 0 := by
       have := congr_fun (congr_fun hxc l) ↑n'
-      rw [show toCoeff (ν := ν) x l ↑n' = 0 from by
-        simp [toCoeff, hx_zero]] at this
+      rw [show toCoeff (ν := ν) x l ↑n' = 0 from by rw [hx_zero]; rfl] at this
       exact this.symm
     simp only [c, show (↑n' : ℕ) < N + 1 from n'.prop, dite_true] at h1
     exact h1

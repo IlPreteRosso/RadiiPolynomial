@@ -217,7 +217,7 @@ theorem ivp_system_theorem
   have sub_seq : ∀ (f g : XL1 ν L →L[ℝ] XL1 ν L) (x : XL1 ν L) (l : Fin L) (n : ℕ),
       l1Weighted.toSeq (((f - g) x) l) n =
         l1Weighted.toSeq ((f x) l) n - l1Weighted.toSeq ((g x) l) n := by
-    intros; simp [ContinuousLinearMap.sub_apply]
+    intros; simp [ContinuousLinearMap.sub_apply]; rfl
   have h_Y₀ := ivp_Y₀_le A φ x₀ hmem ā S hSN hsupport hY₀_nn hY₀
   have h_Z₀ := ivp_Z₀_le A A_dag htail_cancel hZ₀
   have h_Z₁ := ivp_Z₁_le CA G ā (fun h l => (fderiv ℝ (fun a => φ a l) ā) h)
@@ -234,7 +234,7 @@ theorem ivp_system_theorem
         exact ivpComposedApprox_toCLM_tail A A_dag htail_cancel h l n hn
       rw [h1, fderiv_ivpMap_tail A φ x₀ htail_diag_inv hmem hφ_diff ā h l n hn,
         fderiv_ivpTail φ hφ_diff ā h l]
-      simp)
+      simp only [l1Weighted.sub_toSeq]; ring)
     hK hDφ_le hZ₁
   have h_Z₂ : ∀ c ∈ Metric.closedBall ā r₀,
       ‖(ContinuousLinearMap.id ℝ (XL1 ν L)).comp

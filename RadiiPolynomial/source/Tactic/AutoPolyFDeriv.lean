@@ -210,7 +210,7 @@ example (a : Fin 3 → ℝ) : DifferentiableAt ℝ (fun a : Fin 3 → ℝ => a 0
   fun_prop
 
 -- fderiv: Pi subtraction — auto_poly_fderiv handles compound Pi via @[fun_prop] bridge
-private abbrev proj₃ (i : Fin 3) : (Fin 3 → ℝ) →L[ℝ] ℝ := ContinuousLinearMap.proj i
+private noncomputable abbrev proj₃ (i : Fin 3) : (Fin 3 → ℝ) →L[ℝ] ℝ := ContinuousLinearMap.proj i
 
 example (a : Fin 3 → ℝ) :
     fderiv ℝ (fun a : Fin 3 → ℝ => a 0 - a 1) a = proj₃ 0 - proj₃ 1 := by

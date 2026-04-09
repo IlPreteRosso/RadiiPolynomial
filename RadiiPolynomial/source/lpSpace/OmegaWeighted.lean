@@ -72,11 +72,7 @@ variable {ν : PosReal}
 
 instance : Fact (1 ≤ (1 : ℝ≥0∞)) := ⟨le_rfl⟩
 
-instance instUniformSpace : UniformSpace (l1Omega ν) := by
-  change UniformSpace (lp (OmegaScaledReal ν) 1); infer_instance
-
-instance instCompleteSpace : CompleteSpace (l1Omega ν) := by
-  change CompleteSpace (lp (OmegaScaledReal ν) 1); infer_instance
+-- UniformSpace and CompleteSpace are inherited from lp's NormedAddCommGroup.
 
 /-- Underlying real sequence. -/
 def toSeq (a : l1Omega ν) : ℕ → ℝ := fun n => OmegaScaledReal.toReal (a n)
@@ -294,7 +290,7 @@ lemma shift_linear_add (a b : l1Weighted ν) :
   simp only [shift_toSeq, l1Weighted.add_toSeq]
   cases n with
   | zero => simp [shift_seq]
-  | succ n => simp [shift_seq]
+  | succ n => rfl
 
 lemma shift_linear_smul (r : ℝ) (a : l1Weighted ν) :
     shift (r • a) = r • shift a := by
@@ -302,7 +298,7 @@ lemma shift_linear_smul (r : ℝ) (a : l1Weighted ν) :
   simp only [shift_toSeq, l1Weighted.smul_toSeq]
   cases n with
   | zero => simp [shift_seq]
-  | succ n => simp [shift_seq]
+  | succ n => rfl
 
 lemma shift_norm_le (a : l1Weighted ν) :
     ‖shift a‖ ≤ (ν : ℝ) * ‖a‖ := by
@@ -392,7 +388,7 @@ lemma shiftDivN_linear_add (b c : l1Weighted ν) :
   simp only [shiftDivN_toSeq, l1Weighted.add_toSeq]
   cases n with
   | zero => simp [shiftDivN_seq]
-  | succ n => simp [shiftDivN_seq, add_div]
+  | succ n => simp only [shiftDivN_seq]; exact add_div _ _ _
 
 lemma shiftDivN_linear_smul (r : ℝ) (b : l1Weighted ν) :
     shiftDivN (r • b) = r • shiftDivN b := by
@@ -400,7 +396,7 @@ lemma shiftDivN_linear_smul (r : ℝ) (b : l1Weighted ν) :
   simp only [shiftDivN_toSeq, l1Weighted.smul_toSeq]
   cases n with
   | zero => simp [shiftDivN_seq]
-  | succ n => simp [shiftDivN_seq, mul_div_assoc]
+  | succ n => simp only [shiftDivN_seq]; exact mul_div_assoc _ _ _
 
 lemma shiftDivN_norm_le (b : l1Weighted ν) :
     ‖shiftDivN b‖ ≤ (ν : ℝ) * ‖b‖ := by

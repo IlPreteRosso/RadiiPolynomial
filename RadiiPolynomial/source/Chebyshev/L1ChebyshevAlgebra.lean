@@ -37,6 +37,10 @@ variable {ν : PosReal}
 /-- Extract underlying ℝ-valued sequence. -/
 def toSeq (f : l1Chebyshev ν) : ℤ → ℝ := lpOneAlg.toRealSeq f
 
+@[simp] lemma toSeq_add (f g : l1Chebyshev ν) (m : ℤ) :
+    toSeq (f + g) m = toSeq f m + toSeq g m :=
+  congr_fun (lpOneAlg.toRealSeq_add f g) m
+
 -- Instances automatically available from lpOneAlg + SubMulWeight:
 -- NormedAddCommGroup, Ring, NormedRing (always)
 -- CommRing, NormedCommRing (ℤ is AddCommGroup ✓)

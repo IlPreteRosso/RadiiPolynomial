@@ -227,7 +227,7 @@ lemma composedApproxCheb_tail_toReal (D : SystemBlockDiagData L N)
   have hsub : lpOneAlg.toRealSeq (h l - defectCheb_apply D h l : l1Chebyshev ν) (↑n : ℤ) =
       lpOneAlg.toRealSeq (h l) (↑n : ℤ) - lpOneAlg.toRealSeq (defectCheb_apply D h l) (↑n : ℤ) :=
     congr_fun (lpOneAlg.toRealSeq_add (h l) (-defectCheb_apply D h l)) (↑n : ℤ) ▸ by
-      simp [sub_eq_add_neg, lpOneAlgRingData.toReal_neg, lpOneAlg.toRealSeq]
+      simp [sub_eq_add_neg, lpOneAlgRingData.toReal_neg, lpOneAlg.toRealSeq]; rfl
   rw [hsub]
   -- defect on tail = 0
   have h_zero : lpOneAlg.toRealSeq (defectCheb_apply D h l) (↑n : ℤ) = 0 := by

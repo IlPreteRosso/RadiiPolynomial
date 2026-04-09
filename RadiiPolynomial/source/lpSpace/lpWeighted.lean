@@ -33,13 +33,7 @@ namespace lpWeighted
 
 variable {ν : PosReal} {p : ℝ≥0∞}
 
-instance instUniformSpace [Fact (1 ≤ p)] : UniformSpace (lpWeighted ν p) := by
-  change UniformSpace (lp (ScaledReal ν) p)
-  infer_instance
-
-instance instCompleteSpace [Fact (1 ≤ p)] : CompleteSpace (lpWeighted ν p) := by
-  change CompleteSpace (lp (ScaledReal ν) p)
-  infer_instance
+-- UniformSpace and CompleteSpace are inherited from lp's NormedAddCommGroup.
 
 /-- Underlying real sequence. -/
 def toSeq (a : lpWeighted ν p) : ℕ → ℝ := fun n => ScaledReal.toReal (a n)
@@ -157,8 +151,8 @@ section CoordinateCLM
 noncomputable def toSeq_CLM (n : ℕ) : l1Weighted ν →L[ℝ] ℝ :=
   LinearMap.mkContinuous
     { toFun := fun a => toSeq a n
-      map_add' := fun a b => by simp
-      map_smul' := fun r a => by simp [smul_eq_mul] }
+      map_add' := fun a b => rfl
+      map_smul' := fun r a => rfl }
     ((ν : ℝ) ^ n)⁻¹
     (fun a => by
       have hle : |toSeq a n| * (ν : ℝ) ^ n ≤ ‖a‖ := by
@@ -322,7 +316,7 @@ noncomputable def single_CLM (n : ℕ) : ℝ →L[ℝ] l1Weighted ν :=
 @[simp] lemma toSeq_finset_sum {ι : Type*} (s : Finset ι) (g : ι → l1Weighted ν) (n : ℕ) :
     toSeq (∑ i ∈ s, g i) n = ∑ i ∈ s, toSeq (g i) n := by
   induction s using Finset.cons_induction with
-  | empty => simp
+  | empty => rfl
   | cons a s ha ih => simp only [Finset.sum_cons, add_toSeq, ih]
 
 @[simp] lemma single_CLM_apply (n : ℕ) (x : ℝ) :

@@ -252,11 +252,11 @@ lemma chebyshevShiftDiv_add (c d : l1Chebyshev ν) :
     chebyshevShiftDiv (c + d) = chebyshevShiftDiv c + chebyshevShiftDiv d := by
   apply lpOneAlg.ext_toRealSeq; funext k
   simp only [chebyshevShiftDiv_toSeq, lpOneAlg.toRealSeq_add, Pi.add_apply]
-  unfold chebyshevShiftDiv_seq l1Chebyshev.toSeq lpOneAlg.toRealSeq
+  unfold chebyshevShiftDiv_seq
   cases k with
   | ofNat k => cases k with
-    | zero => simp
-    | succ k => simp [lpOneAlgRingData.toReal_add]; ring
+    | zero => simp [l1Chebyshev.toSeq_add]
+    | succ k => simp [l1Chebyshev.toSeq_add]; ring
   | negSucc _ => simp
 
 lemma chebyshevShiftDiv_smul (r : ℝ) (c : l1Chebyshev ν) :
@@ -358,7 +358,7 @@ lemma differentiable_chebyshevIvpTail (φ : XCheb ν L → Fin L → l1Chebyshev
   have h1 : DifferentiableAt ℝ (fun a : XCheb ν L => a l) a :=
     (ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin L => l1Chebyshev ν) l).differentiableAt
   have h2 : DifferentiableAt ℝ (fun a : XCheb ν L => chebyshevShiftDiv_CLM (φ a l)) a :=
-    chebyshevShiftDiv_CLM.differentiableAt.comp a (hφ l a)
+    (chebyshevShiftDiv_CLM (ν := ν)).differentiableAt.comp a (hφ l a)
   exact DifferentiableAt.add h1 h2
 
 /-! ## Fréchet Derivative of Tail -/
@@ -374,11 +374,11 @@ lemma fderiv_chebyshevIvpTail (φ : XCheb ν L → Fin L → l1Chebyshev ν)
   have hd : HasFDerivAt (fun a : XCheb ν L => (chebyshevIvpTail φ a) l)
       (ContinuousLinearMap.proj (R := ℝ)
         (φ := fun _ : Fin L => l1Chebyshev ν) l +
-       chebyshevShiftDiv_CLM.comp (fderiv ℝ (fun a => φ a l) ā)) ā := by
+       (chebyshevShiftDiv_CLM (ν := ν)).comp (fderiv ℝ (fun a => φ a l) ā)) ā := by
     show HasFDerivAt ((fun a : XCheb ν L => a l) + fun a => chebyshevShiftDiv_CLM (φ a l)) _ ā
     exact ((ContinuousLinearMap.proj (R := ℝ)
       (φ := fun _ : Fin L => l1Chebyshev ν) l).hasFDerivAt).add
-      (chebyshevShiftDiv_CLM.hasFDerivAt.comp ā (hφ l ā).hasFDerivAt)
+      ((chebyshevShiftDiv_CLM (ν := ν)).hasFDerivAt.comp ā (hφ l ā).hasFDerivAt)
   rw [show (fderiv ℝ (chebyshevIvpTail φ) ā h) l =
       (fderiv ℝ (fun a => (chebyshevIvpTail φ a) l) ā) h from by
     rw [fderiv_pi (fun i => differentiableAt_pi.mp

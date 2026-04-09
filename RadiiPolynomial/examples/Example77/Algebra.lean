@@ -330,7 +330,7 @@ lemma Z₁_le_via_eval {N : ℕ} {ν : PosReal}
     _ ((-2 : ℝ) • leftMul (shiftedL1 sol))
     (fun h n hn => approxDeriv_sub_fderiv_fin_kill sol lam0 h n hn)
     (fun h n hn => by
-      rw [approxDeriv_sub_fderiv_tail_eq sol lam0 h n hn]; simp)
+      rw [approxDeriv_sub_fderiv_tail_eq sol lam0 h n hn]; simp; rfl)
     C (hbound.trans' (mul_le_mul_of_nonneg_left
       ((norm_smul (-2 : ℝ) (leftMul (shiftedL1 sol : l1Weighted ν)) ▸ by
         rw [norm_neg, Real.norm_ofNat]

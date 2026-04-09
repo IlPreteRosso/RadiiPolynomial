@@ -152,6 +152,7 @@ instance instNormedSpaceBase [∀ m, NormedSpace ℝ (E m)] : NormedSpace ℝ (l
 @[simp] theorem toLp_add (f g : lpOneAlg M E) : (f + g).toLp = f.toLp + g.toLp := rfl
 @[simp] theorem toLp_neg (f : lpOneAlg M E) : (-f).toLp = -f.toLp := rfl
 @[simp] theorem toLp_sub (f g : lpOneAlg M E) : (f - g).toLp = f.toLp - g.toLp := rfl
+
 @[simp] theorem toLp_smul [∀ m, NormedSpace ℝ (E m)] (r : ℝ) (f : lpOneAlg M E) :
     (r • f).toLp = r • f.toLp := rfl
 
