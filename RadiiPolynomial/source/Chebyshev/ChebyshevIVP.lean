@@ -131,16 +131,16 @@ private lemma summable_norm_shift (c : l1Chebyshev ν) (s : ℤ) :
 
 -- Per-element bound: |(a-b)/(2k)| * ν^k ≤ (ν/2)*(‖c(k+1)‖ + ‖c(k-1)‖).
 private lemma chebyshevShiftDiv_fiber_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 < k) :
-    ‖lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑k)
+    ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑k)
       (chebyshevShiftDiv_seq c (↑k))‖ ≤
     (ν : ℝ) / 2 * (‖c ((↑k : ℤ) + 1)‖ + ‖c ((↑k : ℤ) + (-1))‖) := by
   -- Unfold to real arithmetic
   rw [chebyshevShiftDiv_seq_pos c k (by omega)]
-  simp only [ScaledRealZ.norm_lpOneAlgRingData_ofReal]
+  simp only [ScaledRealZ.norm_lpAlgRingData_ofReal]
   rw [abs_div, abs_of_pos (show (0:ℝ) < 2 * (k:ℝ) by positivity)]
   rw [lpOneAlg.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + 1),
       lpOneAlg.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + (-1))]
-  simp only [ScaledRealZ.norm_lpOneAlgRingData_ofReal, abs_one, one_mul]
+  simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
   have hk1 : ((↑k : ℤ) + 1).natAbs = k + 1 := by omega
   have hk2 : ((↑k : ℤ) + (-1)).natAbs = k - 1 := by omega
   have hk0' : (↑k : ℤ).natAbs = k := by omega
@@ -207,7 +207,7 @@ private lemma chebyshevShiftDiv_fiber_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 
 
 
 private lemma chebyshevShiftDiv_memℓp (c : l1Chebyshev ν) :
-    Memℓp (fun k : ℤ => lpOneAlgRingData.ofReal (E := ScaledRealZ ν) k
+    Memℓp (fun k : ℤ => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
       (chebyshevShiftDiv_seq c k)) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
@@ -225,7 +225,7 @@ private lemma chebyshevShiftDiv_memℓp (c : l1Chebyshev ν) :
     cases k with
     | zero =>
       have : chebyshevShiftDiv_seq c (Int.ofNat 0) = 0 := chebyshevShiftDiv_seq_zero c
-      rw [this, lpOneAlgRingData.ofReal_zero, norm_zero]
+      rw [this, lpAlgRingData.ofReal_zero, norm_zero]
       exact mul_nonneg ν.2.le (add_nonneg (norm_nonneg _) (norm_nonneg _))
     | succ k =>
       refine (chebyshevShiftDiv_fiber_le c (k+1) (by omega)).trans ?_
@@ -234,17 +234,17 @@ private lemma chebyshevShiftDiv_memℓp (c : l1Chebyshev ν) :
         (add_nonneg (norm_nonneg _) (norm_nonneg _))
   | negSucc n =>
     have : chebyshevShiftDiv_seq c (Int.negSucc n) = 0 := chebyshevShiftDiv_seq_neg c n
-    rw [this, lpOneAlgRingData.ofReal_zero, norm_zero]
+    rw [this, lpAlgRingData.ofReal_zero, norm_zero]
     exact mul_nonneg ν.2.le (add_nonneg (norm_nonneg _) (norm_nonneg _))
 
 /-- The Chebyshev shift-divide operator as an `l1Chebyshev ν` element. -/
 def chebyshevShiftDiv (c : l1Chebyshev ν) : l1Chebyshev ν :=
-  ⟨⟨fun k => lpOneAlgRingData.ofReal (E := ScaledRealZ ν) k (chebyshevShiftDiv_seq c k),
+  ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k (chebyshevShiftDiv_seq c k),
     chebyshevShiftDiv_memℓp c⟩⟩
 
 @[simp] lemma chebyshevShiftDiv_toSeq (c : l1Chebyshev ν) (k : ℤ) :
     lpOneAlg.toRealSeq (chebyshevShiftDiv c) k = chebyshevShiftDiv_seq c k := by
-  simp [chebyshevShiftDiv, l1Chebyshev.toSeq, lpOneAlg.toRealSeq, lpOneAlgRingData.toReal_ofReal]
+  simp [chebyshevShiftDiv, l1Chebyshev.toSeq, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
 
 /-! ### Linearity of chebyshevShiftDiv -/
 
@@ -282,15 +282,15 @@ private lemma chebyshevShiftDiv_elem_le (c : l1Chebyshev ν) (k : ℤ) :
   | ofNat k => cases k with
     | zero =>
       have : (chebyshevShiftDiv c) (Int.ofNat 0) = 0 := by
-        show lpOneAlgRingData.ofReal (E := ScaledRealZ ν) 0 (chebyshevShiftDiv_seq c 0) = 0
-        rw [chebyshevShiftDiv_seq_zero, lpOneAlgRingData.ofReal_zero]
+        show lpAlgRingData.ofReal (E := ScaledRealZ ν) 0 (chebyshevShiftDiv_seq c 0) = 0
+        rw [chebyshevShiftDiv_seq_zero, lpAlgRingData.ofReal_zero]
       rw [this, norm_zero]
       exact mul_nonneg (div_nonneg ν.2.le two_pos.le) (add_nonneg (norm_nonneg _) (norm_nonneg _))
     | succ k => exact chebyshevShiftDiv_fiber_le c (k + 1) (by omega)
   | negSucc n =>
     have : (chebyshevShiftDiv c) (Int.negSucc n) = 0 := by
-      show lpOneAlgRingData.ofReal (E := ScaledRealZ ν) _ (chebyshevShiftDiv_seq c _) = 0
-      rw [chebyshevShiftDiv_seq_neg, lpOneAlgRingData.ofReal_zero]
+      show lpAlgRingData.ofReal (E := ScaledRealZ ν) _ (chebyshevShiftDiv_seq c _) = 0
+      rw [chebyshevShiftDiv_seq_neg, lpAlgRingData.ofReal_zero]
     rw [this, norm_zero]
     exact mul_nonneg (div_nonneg ν.2.le two_pos.le) (add_nonneg (norm_nonneg _) (norm_nonneg _))
 
@@ -395,7 +395,7 @@ with zeros on negative indices. -/
 Maps `n : ℕ ↦ ofReal (↑n) (seq n)` for non-negative ℤ, and `0` for negative. -/
 def embedNatToInt (seq : ℕ → ℝ) : ∀ k : ℤ, ScaledRealZ ν k :=
   fun k => match k with
-  | (n : ℕ) => lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
+  | (n : ℕ) => lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
   | (Int.negSucc _) => 0
 
 /-! ## Composed Map G = A ∘ F -/
@@ -410,7 +410,7 @@ Negative modes are structural invariants of the Chebyshev/Fourier symmetry
 def embedWithPassThrough (seq : ℕ → ℝ) (base : l1Chebyshev ν) :
     ∀ k : ℤ, ScaledRealZ ν k :=
   fun k => match k with
-  | (n : ℕ) => lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
+  | (n : ℕ) => lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
   | Int.negSucc m => base (Int.negSucc m)
 
 /-- The composed Chebyshev IVP map `G = A ∘ F : XCheb → XCheb`.
@@ -479,11 +479,11 @@ lemma chebyshevIvpMap_mem_of_tailDiag_half {N : ℕ}
       (embedWithPassThrough (ν := ν) seq (a l)) (↑n : ℤ) =
         (a l) (↑n : ℤ) + (chebyshevShiftDiv c) (↑n : ℤ) := by
     intro n hn
-    show lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n) = _
+    show lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n) = _
     have hseq : seq n = l1Chebyshev.toSeq (a l) (↑n : ℤ) +
         chebyshevShiftDiv_seq (φ a l) (↑n : ℤ) :=
       action_chebyshev_tail_eq A φ p htail a l n hn
-    rw [hseq, lpOneAlgRingData.ofReal_add]; congr 1
+    rw [hseq, lpAlgRingData.ofReal_add]; congr 1
   -- Decompose ℤ = ℕ+ ⊔ ℕ- via Summable.of_nat_of_neg_add_one
   apply Summable.of_nat_of_neg_add_one
   · -- Positive part: eventually bounded by ‖(a l)(↑n)‖ + ‖shiftDiv(c)(↑n)‖
@@ -519,13 +519,13 @@ private lemma chebyshevShiftDiv_elem_tight_le (c : l1Chebyshev ν) (k : ℕ) (hk
     1 / (2 * (k : ℝ)) *
       (‖c ((↑k : ℤ) + 1)‖ + (ν : ℝ) * ‖c ((↑k : ℤ) + (-1))‖) := by
   -- Same norm unfolding as chebyshevShiftDiv_fiber_le
-  show ‖lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑k) (chebyshevShiftDiv_seq c ↑k)‖ ≤ _
+  show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑k) (chebyshevShiftDiv_seq c ↑k)‖ ≤ _
   rw [chebyshevShiftDiv_seq_pos c k (by omega)]
-  simp only [ScaledRealZ.norm_lpOneAlgRingData_ofReal]
+  simp only [ScaledRealZ.norm_lpAlgRingData_ofReal]
   rw [abs_div, abs_of_pos (show (0:ℝ) < 2 * (k:ℝ) by positivity)]
   rw [lpOneAlg.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + 1),
       lpOneAlg.norm_eq_abs_toReal_mul_weight c ((↑k : ℤ) + (-1))]
-  simp only [ScaledRealZ.norm_lpOneAlgRingData_ofReal, abs_one, one_mul]
+  simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
   have hk1 : ((↑k : ℤ) + 1).natAbs = k + 1 := by omega
   have hk2 : ((↑k : ℤ) + (-1)).natAbs = k - 1 := by omega
   have hk0 : (↑k : ℤ).natAbs = k := by omega

@@ -59,7 +59,7 @@ lemma l1Chebyshev_finSum_le_norm (f : l1Chebyshev ν) :
   have heq : ∀ k : Fin (N + 1),
       |l1Chebyshev.toSeq f (↑(k : ℕ) : ℤ)| * (ν : ℝ) ^ (k : ℕ) = ‖f (↑(k : ℕ) : ℤ)‖ := fun k => by
     rw [lpOneAlg.norm_eq_abs_toReal_mul_weight f (↑(k:ℕ) : ℤ)]
-    congr 1; simp [ScaledRealZ.norm_lpOneAlgRingData_ofReal, Int.natAbs_natCast]
+    congr 1; simp [ScaledRealZ.norm_lpAlgRingData_ofReal, Int.natAbs_natCast]
   simp_rw [heq]
   calc ∑ k : Fin (N + 1), ‖f (↑(k : ℕ) : ℤ)‖
       = ∑' k : Fin (N + 1), ‖f (↑(k : ℕ) : ℤ)‖ := (tsum_fintype _).symm
@@ -74,7 +74,7 @@ lemma l1Chebyshev_finSum_le_norm (f : l1Chebyshev ν) :
 private def defectCheb_seq (D : SystemBlockDiagData L N)
     (c : SystemCoeff L) (l : Fin L) : ∀ k : ℤ, ScaledRealZ ν k :=
   fun k => match k with
-  | (n : ℕ) => lpOneAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (D.actionFinite c l n)
+  | (n : ℕ) => lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (D.actionFinite c l n)
   | Int.negSucc _ => 0
 
 section defectMemlp
@@ -92,7 +92,7 @@ private lemma defectCheb_memℓp (D : SystemBlockDiagData L N)
     have hlt : N < n := by simp [Finset.mem_range] at hn; omega
     show ‖defectCheb_seq D c l (↑n : ℤ)‖ = 0
     simp only [defectCheb_seq, SystemBlockDiagData.actionFinite_tail _ _ _ _ hlt,
-      lpOneAlgRingData.ofReal_zero, norm_zero]
+      lpAlgRingData.ofReal_zero, norm_zero]
   · -- Negative: all zeros
     have : (fun n : ℕ => ‖defectCheb_seq (ν := ν) D c l (-(↑n + 1 : ℤ))‖) =
         fun _ => (0 : ℝ) := by
@@ -111,29 +111,29 @@ def defectCheb_apply (D : SystemBlockDiagData L N) (h : XCheb ν L) : XCheb ν L
 lemma defectCheb_apply_add (D : SystemBlockDiagData L N) (h₁ h₂ : XCheb ν L) :
     defectCheb_apply D (h₁ + h₂) = defectCheb_apply D h₁ + defectCheb_apply D h₂ := by
   funext l; apply lpOneAlg.ext_toRealSeq; funext k
-  show lpOneAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb (h₁ + h₂)) l k) =
-    lpOneAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb h₁) l k) +
-    lpOneAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb h₂) l k)
+  show lpAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb (h₁ + h₂)) l k) =
+    lpAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb h₁) l k) +
+    lpAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb h₂) l k)
   cases k with
   | ofNat n =>
     simp only [defectCheb_seq]
     rw [show toCoeffCheb (h₁ + h₂) = fun l n => toCoeffCheb h₁ l n + toCoeffCheb h₂ l n from by
       ext l n; simp [toCoeffCheb, l1Chebyshev.toSeq, lpOneAlg.toRealSeq_add]]
     exact (SystemBlockDiagData.actionFinite_add D _ _).symm ▸ rfl
-  | negSucc _ => simp [defectCheb_seq, lpOneAlgRingData.toReal_zero]
+  | negSucc _ => simp [defectCheb_seq, lpAlgRingData.toReal_zero]
 
 lemma defectCheb_apply_smul (D : SystemBlockDiagData L N) (r : ℝ) (h : XCheb ν L) :
     defectCheb_apply D (r • h) = r • defectCheb_apply D h := by
   funext l; apply lpOneAlg.ext_toRealSeq; funext k
-  show lpOneAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb (r • h)) l k) =
-    r * lpOneAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb h) l k)
+  show lpAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb (r • h)) l k) =
+    r * lpAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb h) l k)
   cases k with
   | ofNat n =>
     simp only [defectCheb_seq]
     rw [show toCoeffCheb (r • h) = fun l n => r * toCoeffCheb h l n from by
       ext l n; simp [toCoeffCheb, l1Chebyshev.toSeq, lpOneAlg.toRealSeq_smul]]
     exact (SystemBlockDiagData.actionFinite_smul D r _).symm ▸ rfl
-  | negSucc _ => simp [defectCheb_seq, lpOneAlgRingData.toReal_zero]
+  | negSucc _ => simp [defectCheb_seq, lpAlgRingData.toReal_zero]
 
 /-! ### Norm bound -/
 
@@ -156,7 +156,7 @@ lemma defectCheb_norm_le (D : SystemBlockDiagData L N) (h : XCheb ν L) :
       (fun n hn => by
         show ‖(defectCheb_seq D c l (↑n : ℤ) : ScaledRealZ ν _)‖ = 0
         simp [defectCheb_seq, SystemBlockDiagData.actionFinite_tail _ _ _ _ hn,
-          lpOneAlgRingData.ofReal_zero])]
+          lpAlgRingData.ofReal_zero])]
     exact Finset.sum_congr rfl fun ⟨n, _⟩ _ => rfl
   -- Unfold actionFinite + apply general weighted norm bound + aggregate
   rw [h_norm]
@@ -227,13 +227,13 @@ lemma composedApproxCheb_tail_toReal (D : SystemBlockDiagData L N)
   have hsub : lpOneAlg.toRealSeq (h l - defectCheb_apply D h l : l1Chebyshev ν) (↑n : ℤ) =
       lpOneAlg.toRealSeq (h l) (↑n : ℤ) - lpOneAlg.toRealSeq (defectCheb_apply D h l) (↑n : ℤ) :=
     congr_fun (lpOneAlg.toRealSeq_add (h l) (-defectCheb_apply D h l)) (↑n : ℤ) ▸ by
-      simp [sub_eq_add_neg, lpOneAlgRingData.toReal_neg, lpOneAlg.toRealSeq]; rfl
+      simp [sub_eq_add_neg, lpAlgRingData.toReal_neg, lpOneAlg.toRealSeq]; rfl
   rw [hsub]
   -- defect on tail = 0
   have h_zero : lpOneAlg.toRealSeq (defectCheb_apply D h l) (↑n : ℤ) = 0 := by
-    show lpOneAlgRingData.toReal (↑n : ℤ) (defectCheb_seq D (toCoeffCheb h) l (↑n : ℤ)) = 0
+    show lpAlgRingData.toReal (↑n : ℤ) (defectCheb_seq D (toCoeffCheb h) l (↑n : ℤ)) = 0
     simp [defectCheb_seq, SystemBlockDiagData.actionFinite_tail _ _ _ _ hn,
-      lpOneAlgRingData.toReal_ofReal]
+      lpAlgRingData.toReal_ofReal]
   rw [h_zero, sub_zero]
 
 /-! ## BlockDiagLift Instance for XCheb -/

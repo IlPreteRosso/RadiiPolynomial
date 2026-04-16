@@ -19,9 +19,9 @@ namespace RadiiPolynomial
 
 /-! ### Bridge lemma for downstream use -/
 
-/-- The fiber norm of `lpOneAlgRingData.ofReal k r` for ScaledRealZ equals `|r| * ν^{|k|}`. -/
-@[simp] theorem ScaledRealZ.norm_lpOneAlgRingData_ofReal (ν : PosReal) (k : ℤ) (r : ℝ) :
-    ‖lpOneAlgRingData.ofReal (E := ScaledRealZ ν) k r‖ = |r| * (ν : ℝ) ^ k.natAbs :=
+/-- The fiber norm of `lpAlgRingData.ofReal k r` for ScaledRealZ equals `|r| * ν^{|k|}`. -/
+@[simp] theorem ScaledRealZ.norm_lpAlgRingData_ofReal (ν : PosReal) (k : ℤ) (r : ℝ) :
+    ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) k r‖ = |r| * (ν : ℝ) ^ k.natAbs :=
   WeightedScalar.norm_ofReal r
 
 /-! ### l1Chebyshev: the Chebyshev Banach algebra -/

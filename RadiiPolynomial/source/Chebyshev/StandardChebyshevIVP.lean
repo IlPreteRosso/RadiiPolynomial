@@ -146,7 +146,7 @@ lemma abar_memℓp (l : Fin L) :
     show ‖(show ∀ k : ℤ, ScaledRealZ ν k from
       ChebyshevIVP.embedNatToInt (d.abar_seq l)) (↑n : ℤ)‖ = 0
     simp [ChebyshevIVP.embedNatToInt, d.abar_seq_support l n hlt,
-      lpOneAlgRingData.ofReal_zero, norm_zero]
+      lpAlgRingData.ofReal_zero, norm_zero]
   · have : (fun n : ℕ => ‖(show ∀ k : ℤ, ScaledRealZ ν k from
         ChebyshevIVP.embedNatToInt (d.abar_seq l)) (-(↑n + 1 : ℤ))‖) =
         fun _ => (0 : ℝ) := by
@@ -161,9 +161,9 @@ def abar : XCheb ν L := fun l =>
 /-- Bridge: toSeq(abar l)(↑k) = (abar_Q l).getD k 0. -/
 lemma abar_toSeq_eq (l : Fin L) (k : ℕ) :
     l1Chebyshev.toSeq (abar d l) (↑k : ℤ) = ((d.abar_Q l).getD k 0 : ℝ) := by
-  show lpOneAlgRingData.toReal (↑k : ℤ)
+  show lpAlgRingData.toReal (↑k : ℤ)
     (ChebyshevIVP.embedNatToInt (d.abar_seq l) (↑k : ℤ)) = _
-  simp [ChebyshevIVP.embedNatToInt, lpOneAlgRingData.toReal_ofReal, d.abar_seq_eq_getD]
+  simp [ChebyshevIVP.embedNatToInt, lpAlgRingData.toReal_ofReal, d.abar_seq_eq_getD]
 
 /-! ## 5. Composed Map G (needs φ, p) -/
 

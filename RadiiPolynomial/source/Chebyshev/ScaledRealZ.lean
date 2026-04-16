@@ -16,7 +16,7 @@ namespace RadiiPolynomial
 /-! ### ScaledRealZ as WeightedScalar specialization -/
 
 /-- `ScaledRealZ ν k` is `ℝ` with norm `|x| * ν^|k|` — bilateral weight for Chebyshev. -/
-abbrev ScaledRealZ (ν : PosReal) := WeightedScalar (fun k : ℤ => (ν : ℝ) ^ k.natAbs)
+abbrev ScaledRealZ (ν : PosReal) := WeightedScalar ℝ (fun k : ℤ => (ν : ℝ) ^ k.natAbs)
 
 /-! ### Weight instances -/
 

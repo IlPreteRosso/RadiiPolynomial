@@ -39,7 +39,7 @@ end PosReal
 /-! ### ScaledReal as WeightedScalar specialization -/
 
 /-- `ScaledReal ν n` is `ℝ` with norm `|x| * ν^n` — geometric weight for Taylor series. -/
-abbrev ScaledReal (ν : PosReal) := WeightedScalar (fun n : ℕ => (ν : ℝ) ^ n)
+abbrev ScaledReal (ν : PosReal) := WeightedScalar ℝ (fun n : ℕ => (ν : ℝ) ^ n)
 
 /-! ### Weight instances -/
 

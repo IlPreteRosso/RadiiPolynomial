@@ -40,7 +40,7 @@ end OmegaScaledReal
 
 /-- `OmegaScaledReal ν n` is `ℝ` with norm `|x| * ν^(n+1)/(n+1)` — IVP range weight.
 Ref: §8.1, Proposition 8.1.5. PosWeight only (not submultiplicative). -/
-abbrev OmegaScaledReal (ν : PosReal) := WeightedScalar (OmegaScaledReal.omegaWeight ν)
+abbrev OmegaScaledReal (ν : PosReal) := WeightedScalar ℝ (OmegaScaledReal.omegaWeight ν)
 
 instance OmegaScaledReal.instPosWeight (ν : PosReal) :
     PosWeight (OmegaScaledReal.omegaWeight ν) where
