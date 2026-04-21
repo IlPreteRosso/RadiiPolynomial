@@ -58,7 +58,7 @@ theorem summable_alternating_toSeq (a : l1Chebyshev ν) :
   have habs : Summable (fun n : ℕ => |l1Chebyshev.toSeq a (↑(n + 1) : ℤ)|) :=
     (summable_abs_toSeq a).comp_injective (fun n m h => by omega)
   exact habs.of_norm_bounded fun n => by
-    simp [Real.norm_eq_abs, abs_mul, abs_pow, abs_neg, abs_one]
+    simp [Real.norm_eq_abs]
 
 /-! ## IVP Coefficient Formula (Eq. 14.11) -/
 
@@ -175,21 +175,21 @@ private lemma chebyshevShiftDiv_fiber_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 
   have h2 : a * (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 1) :=
     mul_le_mul_of_nonneg_left hpk_le ha
   have h3 : (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1)) = b * (ν : ℝ) ^ k := by
-    nlinarith [heq]
+    linear_combination b * heq
   have h4 : (ν : ℝ) * (ν : ℝ) ^ (k + 1) = (ν : ℝ) ^ (k + 2) :=
     (mul_comm _ _).trans (pow_succ (ν : ℝ) (k + 1)).symm
   have h5 : a * (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 2) :=
     mul_le_mul_of_nonneg_left (pow_le_pow_right₀ hν1 (by omega)) ha
   -- Expand RHS: ν*(a*ν^{k+1}+b*ν^{k-1}) = a*ν^{k+2}+b*ν^k
   have h6 : (ν : ℝ) * (a * (ν : ℝ) ^ (k + 1) + b * (ν : ℝ) ^ (k - 1)) =
-      a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k := by nlinarith [h3, h4]
+      a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k := by linear_combination a * h4 + h3
   -- Chain: LHS ≤ (a+b)*ν^k * 2 ≤ (a*ν^{k+2}+b*ν^k) * 2 ≤ ... * (2k)
   have h7 : a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k ≥ 0 :=
     add_nonneg (mul_nonneg ha (pow_nonneg hν0.le _)) (mul_nonneg hb (pow_nonneg hν0.le _))
   -- Step-by-step chain avoiding nlinarith on products
   -- (1) |..|*ν^k*2 ≤ (a+b)*ν^k*2
   have s1 : |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| *
-      (ν : ℝ) ^ k * 2 ≤ (a + b) * (ν : ℝ) ^ k * 2 := by nlinarith [h1]
+      (ν : ℝ) ^ k * 2 ≤ (a + b) * (ν : ℝ) ^ k * 2 := by linarith [h1]
   -- (2) (a+b)*ν^k ≤ a*ν^{k+2}+b*ν^k
   have s2 : (a + b) * (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k := by linarith [h5]
   -- (3) ...*(2) ≤ ...*2k
@@ -200,10 +200,10 @@ private lemma chebyshevShiftDiv_fiber_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 
   calc |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) -
           lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| * (ν : ℝ) ^ k * 2
       ≤ (a + b) * (ν : ℝ) ^ k * 2 := s1
-    _ ≤ (a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k) * 2 := by nlinarith [s2]
+    _ ≤ (a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k) * 2 := by linarith [s2]
     _ ≤ (a * (ν : ℝ) ^ (k + 2) + b * (ν : ℝ) ^ k) * (2 * ↑k) := s3
     _ = (ν : ℝ) * (a * (ν : ℝ) ^ (k + 1) + b * (ν : ℝ) ^ (k - 1)) * (2 * ↑k) := by
-        nlinarith [h6]
+        linear_combination -(2 * (↑k : ℝ)) * h6
 
 
 private lemma chebyshevShiftDiv_memℓp (c : l1Chebyshev ν) :
@@ -551,8 +551,11 @@ private lemma chebyshevShiftDiv_elem_tight_le (c : l1Chebyshev ν) (k : ℕ) (hk
   have h_num : |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| *
       (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 1) + (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1)) := by
     have h1 : (a + b) * (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 1) + b * (ν : ℝ) ^ k := by
-      nlinarith [mul_le_mul_of_nonneg_left hvk ha]
-    nlinarith [mul_le_mul_of_nonneg_right htri hpk, heq_pow]
+      have := mul_le_mul_of_nonneg_left hvk ha
+      linarith [this, mul_add a b ((ν:ℝ)^k)]
+    have hbν : (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1)) = b * (ν : ℝ) ^ k := by
+      linear_combination b * heq_pow
+    linarith [mul_le_mul_of_nonneg_right htri hpk, hbν]
   -- Factor 1/(2k) from both sides via calc
   calc |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| /
         (2 * (k : ℝ)) * (ν : ℝ) ^ k
@@ -619,7 +622,9 @@ lemma chebyshevShiftDiv_tailTsum_le_div (c : l1Chebyshev ν) (N : ℕ) :
         apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
         rw [div_le_div_iff₀ (by positivity : (0:ℝ) < 2 * ((N:ℝ) + 1))
           (by positivity : (0:ℝ) < (N:ℝ) + 1)]
-        nlinarith [(Fact.out : (1:ℝ) ≤ ν)]
+        have hν : (1:ℝ) ≤ ν := Fact.out
+        have hN : (0:ℝ) ≤ (N:ℝ) + 1 := by positivity
+        nlinarith [mul_le_mul_of_nonneg_right hν hN]
 
 /-! ## Norm Splitting for l1Chebyshev
 
@@ -771,7 +776,8 @@ lemma chebyshev_Z₁_le
         chebyshev_Z₁_component_norm_le _ _ N (hfin h l) (htail h l)
     _ ≤ (ν : ℝ) / ((N : ℝ) + 1) * (K * ‖h‖) :=
         mul_le_mul_of_nonneg_left (hDφ h l) hν
-    _ ≤ Z₁ * ‖h‖ := by nlinarith [norm_nonneg h]
+    _ ≤ Z₁ * ‖h‖ := by
+        rw [← mul_assoc]; exact mul_le_mul_of_nonneg_right hZ₁ (norm_nonneg _)
 
 /-- **Relaxed Chebyshev Z₁ bound** for IVPs where mode-0 couples all modes.
 
@@ -813,7 +819,8 @@ lemma chebyshev_Z₁_le_relaxed
     (le_trans (add_nonneg hε (mul_nonneg hν hK)) hZ₁) (norm_nonneg _))).mpr fun l => ?_
   refine ((chebyshev_Z₁_component_le_relaxed _ _ N (hneg h l) (hfin_le h l)
     (htail h l)).trans (add_le_add le_rfl (mul_le_mul_of_nonneg_left (hDφ h l) hν))).trans ?_
-  nlinarith [norm_nonneg h]
+  have h1 := mul_le_mul_of_nonneg_right hZ₁ (norm_nonneg h)
+  nlinarith [h1]
 
 /-! ## Chebyshev System Theorem
 

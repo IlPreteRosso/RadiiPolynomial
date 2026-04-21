@@ -384,7 +384,6 @@ lemma ivp_Z₂_le
   set F := ivpCoeffs φ x₀
   have hF_diff : ∀ j k, Differentiable ℝ (fun a : XL1 ν L => F a j k) :=
     fun j k => differentiable_ivpCoeffs φ x₀ hφ j k
-  -- opNorm_le_bound
   apply ContinuousLinearMap.opNorm_le_bound _
     (mul_nonneg hZ₂_nn (norm_nonneg _))
   intro h'
@@ -404,25 +403,23 @@ lemma ivp_Z₂_le
       (fun n => by split_ifs with h0 <;> simp only [abs_neg, abs_zero, zero_mul, le_refl,
         mul_nonneg (abs_nonneg _) (pow_nonneg (PosReal.coe_nonneg _) _)])
   set w : XL1 ν L := fun j => l1Weighted.mk _ (hmem_w j)
+  have hcd : ∀ j k, (fderiv ℝ (fun a => F a j k) c) h' -
+      (fderiv ℝ (fun a => F a j k) ā) h' = toCoeff (ν := ν) w j k := fun j k => by
+    rw [fderiv_ivpCoeffs_diff φ x₀ hφ c ā h' j k]
+    show _ = l1Weighted.toSeq (w j) k; simp [w]
   -- Factorization: (diff G h') l = A.toCLM(w) l
   have hseq : ∀ n, l1Weighted.toSeq (fderiv ℝ G c h' l - fderiv ℝ G ā h' l) n =
-      l1Weighted.toSeq (A.toCLM (ν := ν) w l) n := by
-    intro n
+      l1Weighted.toSeq (A.toCLM (ν := ν) w l) n := fun n => by
     rw [l1Weighted.sub_toSeq, fderiv_ivpMap_coeff_at A φ x₀ hmem hG_diff c h' l n,
       fderiv_ivpMap_coeff_at A φ x₀ hmem hG_diff ā h' l n]
     change _ = toCoeff (ν := ν) (A.toCLM (ν := ν) w) l n
     rw [SystemBlockDiagData.toCoeff_toCLM]
-    have hcd : ∀ j k, (fderiv ℝ (fun a => F a j k) c) h' -
-        (fderiv ℝ (fun a => F a j k) ā) h' = toCoeff (ν := ν) w j k := fun j k => by
-      rw [fderiv_ivpCoeffs_diff φ x₀ hφ c ā h' j k]
-      show _ = l1Weighted.toSeq (w j) k; simp [w]
     by_cases hn : n ≤ N
     · rw [A.fderiv_action_fin F (fun j k => hF_diff j k) l n hn c h',
         A.fderiv_action_fin F (fun j k => hF_diff j k) l n hn ā h']
       simp only [SystemBlockDiagData.action_finite _ _ _ _ hn,
-        ← Finset.sum_sub_distrib, ← mul_sub]
-      simp_rw [hcd]
-    · push_neg at hn
+        ← Finset.sum_sub_distrib, ← mul_sub]; simp_rw [hcd]
+    · push Not at hn
       simp_rw [show (fun a => A.action (ivpCoeffs φ x₀ a) l n) =
           fun a => A.tailDiag l n * ivpCoeffs φ x₀ a l n from
         funext fun a => SystemBlockDiagData.action_tail _ _ _ _ hn]
@@ -435,7 +432,6 @@ lemma ivp_Z₂_le
   have hw_zero : ∀ j, j ∉ active → w j = 0 := fun j hj => l1Weighted.ext fun k => by
     show (if k = 0 then (0 : ℝ) else _) = 0
     simp only [hzero c h' j hj, l1Weighted.zero_toSeq, neg_zero, ite_self]
-  -- ‖w‖ ≤ C * ν * ‖c-ā‖ * ‖h'‖
   have hw_norm : ‖w‖ ≤ C * (ν : ℝ) * ‖c - ā‖ * ‖h'‖ :=
     (pi_norm_le_iff_of_nonneg (mul_nonneg (mul_nonneg
       (mul_nonneg hC (PosReal.coe_nonneg _)) (norm_nonneg _)) (norm_nonneg _))).mpr fun j =>
@@ -444,10 +440,10 @@ lemma ivp_Z₂_le
   -- Assembly
   set R := (∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
     if l ∈ active then A.tailBound else 0
-  have hR : 0 ≤ R := add_nonneg (Finset.sum_nonneg fun j _ => blockEntryNorm_nonneg A.finBlock l j)
-    (by split <;> [exact A.tailBound_nonneg_at l; exact le_refl _])
   refine (A.norm_toCLM_component_le_restricted w l active hw_zero).trans
-    ((mul_le_mul_of_nonneg_left hw_norm hR).trans ?_)
+    ((mul_le_mul_of_nonneg_left hw_norm (add_nonneg
+      (Finset.sum_nonneg fun j _ => blockEntryNorm_nonneg A.finBlock l j)
+      (by split <;> [exact A.tailBound_nonneg_at l; exact le_refl _]))).trans ?_)
   rw [show R * (C * ↑ν * ‖c - ā‖ * ‖h'‖) = C * ↑ν * R * ‖c - ā‖ * ‖h'‖ from by ring]
   exact mul_le_mul_of_nonneg_right
     (mul_le_mul_of_nonneg_right (hcomp_le l) (norm_nonneg _)) (norm_nonneg _)

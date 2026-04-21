@@ -2,6 +2,7 @@
 -- lpSpace
 import RadiiPolynomial.source.lpSpace.LpOneAlg
 import RadiiPolynomial.source.lpSpace.WeightedScalar
+import RadiiPolynomial.source.lpSpace.WeightedScalarInstances
 import RadiiPolynomial.source.lpSpace.ScaledReal
 import RadiiPolynomial.source.lpSpace.NormHelpers
 import RadiiPolynomial.source.lpSpace.FiniteWeightedNorm

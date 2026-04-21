@@ -1,4 +1,5 @@
 import RadiiPolynomial.source.lpSpace.WeightedScalar
+import RadiiPolynomial.source.lpSpace.WeightedScalarInstances
 
 /-!
 # ScaledReal: Geometric Weight Specialization

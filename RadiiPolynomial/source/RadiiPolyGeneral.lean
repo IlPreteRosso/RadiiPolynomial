@@ -535,93 +535,44 @@ theorem general_fixed_point_theorem
   (h_radii : simpleRadiiPolynomial Y₀ Z r₀ < 0) :           -- p(r₀) < 0, assumption
   ∃! xTilde ∈ Metric.closedBall xBar r₀, T xTilde = xTilde := by
 
-  -- Y₀ ≥ 0 from norm bound
-  have hY₀ : 0 ≤ Y₀ := by
-    calc 0 ≤ ‖T xBar - xBar‖ := norm_nonneg _
-         _ ≤ Y₀ := h_bound_Y
+  have hY₀ : 0 ≤ Y₀ := le_trans (norm_nonneg _) h_bound_Y
+  have h_Z_lt_one : Z r₀ < 1 := simple_radii_poly_neg_implies_Z_lt_one hY₀ hr₀ h_radii
+  have h_Z_nonneg : 0 ≤ Z r₀ := le_trans (norm_nonneg _)
+    (h_bound_Z xBar (mem_closedBall_self (le_of_lt hr₀)))
 
-  -- p(r₀) < 0 ⇒ Z(r₀) < 1
-  have h_Z_lt_one : Z r₀ < 1 :=
-    simple_radii_poly_neg_implies_Z_lt_one hY₀ hr₀ h_radii
-
-  -- Z(r₀) ≥ 0 from norm bounds
-  have h_Z_nonneg : 0 ≤ Z r₀ := by
-    have := h_bound_Z xBar (mem_closedBall_self (le_of_lt hr₀))
-    exact le_trans (norm_nonneg _) this
-
-  -- T is a contraction on the closed ball
+  -- T is a contraction on the closed ball (via MVT)
   have h_contracting_on_ball : ∀ x y,
     x ∈ closedBall xBar r₀ → y ∈ closedBall xBar r₀ →
     dist (T x) (T y) ≤ Z r₀ * dist x y := by
     intro x y hx hy
     rw [dist_eq_norm, dist_eq_norm]
-    -- Segment [x, y] is in the closed ball
-    have h_segment : segment ℝ x y ⊆ closedBall xBar r₀ := by
-      apply (convex_closedBall xBar r₀).segment_subset hx hy
-    -- Apply MVT
-    apply Convex.norm_image_sub_le_of_norm_fderiv_le (𝕜 := ℝ)
-    · intros c hc; exact hT_diff c
-    · intros c hc; exact h_bound_Z c (h_segment hc)
-    · apply convex_segment
-    · apply right_mem_segment
-    · apply left_mem_segment
+    have h_seg := (convex_closedBall xBar r₀).segment_subset hx hy
+    exact Convex.norm_image_sub_le_of_norm_fderiv_le (𝕜 := ℝ)
+      (fun c _ => hT_diff c) (fun c hc => h_bound_Z c (h_seg hc))
+      (convex_segment x y) (right_mem_segment ℝ x y) (left_mem_segment ℝ x y)
 
-  -- T maps the closed ball into itself
   have h_maps : MapsTo T (closedBall xBar r₀) (closedBall xBar r₀) :=
     simple_maps_closedBall_to_itself hT_diff hr₀ h_bound_Y h_bound_Z h_Z_nonneg h_radii
 
-  -- The closed ball is complete
-  have h_complete : IsComplete (closedBall xBar r₀ : Set E) :=
-    isClosed_closedBall.isComplete
-
-  -- Construct the restriction of T to the closed ball
-  let T_restr : closedBall xBar r₀ → closedBall xBar r₀ :=
-    h_maps.restrict T (closedBall xBar r₀) (closedBall xBar r₀)
-
-  -- Show the restriction is ContractingWith Z(r₀)
-  let K : NNReal := ⟨Z r₀, h_Z_nonneg⟩
-  have h_contracting_restr : ContractingWith K T_restr := by
-    constructor
-    · show (K : ℝ) < 1
-      exact h_Z_lt_one
-    · intro ⟨x, hx⟩ ⟨y, hy⟩
-      simp only [T_restr, MapsTo.restrict, edist_dist, K]
-      have h_coe : (↑K : ENNReal) = ENNReal.ofReal (Z r₀) := by
-        rw [ENNReal.ofReal]
-        congr 1
-        exact (Real.toNNReal_of_nonneg h_Z_nonneg).symm
-      rw [h_coe, ← ENNReal.ofReal_mul h_Z_nonneg]
-      rw [ENNReal.ofReal_le_ofReal_iff (mul_nonneg h_Z_nonneg dist_nonneg)]
-      exact h_contracting_on_ball x y hx hy
+  -- Show the restriction is ContractingWith via LipschitzWith.of_dist_le'
+  have h_contracting_restr : ContractingWith (Real.toNNReal (Z r₀))
+      (h_maps.restrict T _ _) :=
+    ⟨Real.toNNReal_lt_one.mpr h_Z_lt_one,
+     LipschitzWith.of_dist_le' fun ⟨x, hx⟩ ⟨y, hy⟩ => h_contracting_on_ball x y hx hy⟩
 
   -- Apply Banach Fixed Point Theorem
   have ⟨xTilde_sub, hxTilde_mem, hxTilde_fixed, _⟩ :=
-    ContractingWith.exists_fixedPoint' h_complete h_maps h_contracting_restr
-      (mem_closedBall_self (le_of_lt hr₀))
-      (edist_ne_top _ _)
+    h_contracting_restr.exists_fixedPoint' isClosed_closedBall.isComplete h_maps
+      (mem_closedBall_self (le_of_lt hr₀)) (edist_ne_top _ _)
 
-  -- Lift the fixed point from the closed ball to E
-  -- `xTilde_sub`: a witness of the fixed point
-  -- `hxTilde_mem`: proof that xTilde_sub ∈ closedBall xBar r₀
-  -- `hxTilde_fixed`: proof that T_restr xTilde_sub = xTilde_sub
-  -- `?_`: placeholder for the uniqueness proof
   refine ⟨xTilde_sub, ⟨hxTilde_mem, hxTilde_fixed⟩, ?_⟩
 
-  -- Uniqueness: if T z = z for z ∈ closedBall, then z = xTilde_sub
+  -- Uniqueness: lift Subtype fixed-point equality back to E
   intro z ⟨hz_mem, hz_fixed⟩
-
-  -- Convert both fixed points to T_restr
-  have hz_fixed_restr : T_restr ⟨z, hz_mem⟩ = ⟨z, hz_mem⟩ :=
-    Subtype.ext hz_fixed
-  have hxTilde_fixed_restr : T_restr ⟨xTilde_sub, hxTilde_mem⟩ =
-    ⟨xTilde_sub, hxTilde_mem⟩ :=
+  have hz_restr : h_maps.restrict T _ _ ⟨z, hz_mem⟩ = ⟨z, hz_mem⟩ := Subtype.ext hz_fixed
+  have hx_restr : h_maps.restrict T _ _ ⟨xTilde_sub, hxTilde_mem⟩ = ⟨xTilde_sub, hxTilde_mem⟩ :=
     Subtype.ext hxTilde_fixed
-
-  -- Apply Mathlib's uniqueness theorem
-  have : (⟨z, hz_mem⟩ : closedBall xBar r₀) = ⟨xTilde_sub, hxTilde_mem⟩ :=
-    h_contracting_restr.fixedPoint_unique' hz_fixed_restr hxTilde_fixed_restr
-  -- Extract the underlying equality
-  exact congrArg Subtype.val this
+  exact congrArg Subtype.val (h_contracting_restr.fixedPoint_unique' hz_restr hx_restr)
 
 end FixedPointTheorem
 

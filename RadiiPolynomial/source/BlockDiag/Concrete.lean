@@ -229,7 +229,7 @@ lemma SystemBlockDiagData.applyX_add
       toCoeff (ν := ν) y l n from funext fun i => funext fun k => rfl]
     exact congrArg (fun f => f l n)
       (SystemBlockDiagData.action_add (A := A) (c := toCoeff (ν := ν) x) (d := toCoeff (ν := ν) y))
-  convert this using 1 <;> rfl
+  convert this using 1
 
 lemma SystemBlockDiagData.applyX_smul
     (A : SystemBlockDiagData L N) (r : ℝ) (x : XL1 ν L) :
@@ -242,7 +242,7 @@ lemma SystemBlockDiagData.applyX_smul
       from funext fun i => funext fun k => rfl]
     exact congrArg (fun f => f l n)
       (SystemBlockDiagData.action_smul (A := A) (r := r) (c := toCoeff (ν := ν) x))
-  convert this using 1 <;> rfl
+  convert this using 1
 
 /-- Linear-map lift of the 8.2 block operator data on `(ℓ¹_ν)^L`. -/
 def SystemBlockDiagData.toLinearMap

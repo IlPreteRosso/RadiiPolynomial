@@ -190,7 +190,7 @@ private lemma hD₂_lorenz : ∀ (l i j : Fin L),
     MvPolynomial.pderiv j (MvPolynomial.pderiv i (φ_lorenz_spec l)) =
       MvPolynomial.C (D₂_lorenz l i j) := by
   intro l i j; fin_cases l <;> fin_cases i <;> fin_cases j <;>
-    pderiv_simp [φ_lorenz_spec, D₂_lorenz]
+    pderiv_simp [φ_lorenz_spec, φ_lorenz_cpoly, MvPolyBridge.CompPoly.toMvPoly, D₂_lorenz]
 
 private lemma Dφ_diff_norm_le (c : XL1 ν_val L) (h : XL1 ν_val L) (l : Fin L) :
     ‖((fderiv ℝ (fun x => φ_lorenz x l) c -

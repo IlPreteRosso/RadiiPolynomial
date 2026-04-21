@@ -7,6 +7,7 @@ import RadiiPolynomial.source.IVP.DFBlock
 import RadiiPolynomial.source.IVP.StandardIVP
 import RadiiPolynomial.source.Tactic.AutoPolyFDeriv
 import RadiiPolynomial.source.MvPolyBridge.Basic
+import RadiiPolynomial.source.MvPolyBridge.CompPoly
 import RadiiPolynomial.examples.Example81.Numbers
 
 /-!
@@ -59,16 +60,18 @@ def x₀_q : Fin L → ℚ | _ => 1 / 2
 def φ_scalar (a : Fin L → l1Weighted ν_val) : Fin L → l1Weighted ν_val
   | _ => a 0 * a 0 - a 0
 
-open MvPolynomial (C X pderiv) in
-/-- φ as MvPolynomial for automatic differentiation. -/
-def φ_scalar_spec : Fin L → MvPolynomial (Fin L) ℚ
-  | _ => X 0 * X 0 - X 0
+open MvPolyBridge (CompPoly) in
+def φ_scalar_cpoly : Fin L → CompPoly L
+  | _ => .X 0 * .X 0 - .X 0
+
+def φ_scalar_spec (j : Fin L) : MvPolynomial (Fin L) ℚ :=
+  (φ_scalar_cpoly j).toMvPoly
 
 lemma φ_scalar_eq_spec (a : XL1 ν_val L) (l : Fin L) :
     φ_scalar a l = MvPolyBridge.evalInBanach (φ_scalar_spec l) a := by
   fin_cases l
-  simp only [φ_scalar, φ_scalar_spec, MvPolyBridge.evalInBanach,
-    map_mul, map_sub, MvPolynomial.aeval_X]
+  simp only [φ_scalar, φ_scalar_spec, φ_scalar_cpoly, MvPolyBridge.CompPoly.toMvPoly,
+    MvPolyBridge.evalInBanach, map_mul, map_sub, MvPolynomial.aeval_X]
 
 @[simp] lemma toSeq_φ_scalar (a : XL1 ν_val L) (n : ℕ) :
     l1Weighted.toSeq (φ_scalar a 0) n =
@@ -109,47 +112,38 @@ lemma Dφ_scalar_eq_fderiv (h : XL1 ν_val L) (l : Fin L) :
 
 /-! ## 5. DF Correctness (Jacobian matches numerical data) -/
 
-/-- ℚ mirror of pderiv coefficient at ābar:
-    ∂φ₀/∂a₀ = 2·X₀ - 1, evaluated at ā gives (2a_k - δ_{k,0}). -/
-private def Dφ_pderiv_Q (k : ℕ) : ℚ :=
-  2 * abar_0.getD k 0 - (if k = 0 then 1 else 0)
+private def Dφ_pderiv_Q (j m : Fin L) (k : ℕ) : ℚ :=
+  ((φ_scalar_cpoly j).pderiv m).evalCoeff (fun _ => abar_0) k
 
-/-- Bridge: Dφ_pderiv_Q matches analytical pderiv evaluation at ā. -/
 private lemma Dφ_pderiv_bridge (j m : Fin L) (k : ℕ) :
     l1Weighted.toSeq (MvPolyBridge.evalInBanach
       (MvPolynomial.pderiv (↑m) (φ_scalar_spec j)) data.abar) k =
-      (Dφ_pderiv_Q k : ℝ) := by
-  fin_cases j; fin_cases m
-  rw [MvPolyBridge.toSeq_evalInBanach _ _ (fun _ => abar_0)
-    (fun l n => data.abar_toSeq_eq l n)]
-  norm_cast
-  simp [φ_scalar_spec, Dφ_pderiv_Q, MvPolynomial.pderiv_X]
-  ring
+      (Dφ_pderiv_Q j m k : ℝ) :=
+  MvPolyBridge.compPoly_Dφ_bridge φ_scalar_cpoly φ_scalar_spec
+    (fun _ => rfl)
+    (fun _ => abar_0) data.abar data.abar_toSeq_eq j m k
 
-/-- DF verification: single `native_decide` using bounded `Fin`-argument form. -/
 private lemma hDF_nat :
     ∀ (j m : Fin L) (row col : Fin (N + 1)),
       (DF_col j m (col : ℕ)).getD (row : ℕ) 0 =
-        IVP.ivp_DF_of_Dφ_nat (fun (_ _ : Fin L) => Dφ_pderiv_Q) j m (row : ℕ) (col : ℕ) := by
+        IVP.ivp_DF_of_Dφ_nat Dφ_pderiv_Q j m (row : ℕ) (col : ℕ) := by
   native_decide
 
-/-- **DF correctness via generic `ivp_hDF_block_nat`.** -/
 lemma fderiv_F_coeffs_eq (h : XL1 ν_val L) (j : Fin L) (k : Fin (N + 1)) :
     (fderiv ℝ (fun a => IVP.ivpCoeffs φ_scalar x₀ a j ↑k) data.abar) h =
       ∑ m : Fin L, (data.approxDeriv.finBlock j m).mulVec
         (fun p => toCoeff (ν := ν_val) h m ↑p) k :=
   IVP.ivp_hDF_block_nat data.approxDeriv φ_scalar φ_scalar_spec x₀ data.abar (fun _ => abar_0)
     φ_scalar_eq_spec differentiable_φ_scalar_component data.abar_toSeq_eq
-    (fun _ _ => Dφ_pderiv_Q) Dφ_pderiv_bridge
+    Dφ_pderiv_Q Dφ_pderiv_bridge
     DF_col (fun _ _ _ _ => rfl) hDF_nat h j k
 
-/-- composedApprox = fderiv(G) on finite modes. -/
 lemma composedApprox_eq_fderiv_G_fin (h : XL1 ν_val L) (l : Fin L) (n : ℕ) (hn : n ≤ N) :
     toCoeff (ν := ν_val) (data.composedApprox.toCLM (ν := ν_val) h) l n =
       toCoeff (ν := ν_val) ((fderiv ℝ (data.G φ_scalar x₀) data.abar) h) l n :=
   data.composedApprox_eq_fderiv_G_fin φ_scalar φ_scalar_spec x₀
     φ_scalar_eq_spec differentiable_φ_scalar_component
-    (fun _ _ => Dφ_pderiv_Q) Dφ_pderiv_bridge hDF_nat h l n hn
+    Dφ_pderiv_Q Dφ_pderiv_bridge hDF_nat h l n hn
 
 /-! ## 6. ℚ Bridges -/
 
@@ -164,7 +158,7 @@ lemma φ_scalar_bridge (n : ℕ) :
   rw [MvPolyBridge.toSeq_evalInBanach _ _ (fun _ => abar_0)
     (fun l n => data.abar_toSeq_eq l n)]
   norm_cast
-  simp [φ_scalar_spec, φ_scalar_Q]
+  simp [φ_scalar_spec, φ_scalar_cpoly, MvPolyBridge.CompPoly.toMvPoly, φ_scalar_Q]
 
 /-- ℚ mirror of F_coeffs(ābar). -/
 def F_coeffs_Q (n : ℕ) : ℚ :=

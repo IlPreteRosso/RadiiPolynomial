@@ -1,8 +1,6 @@
 import Mathlib.Algebra.BigOperators.NatAntidiagonal
-import Mathlib.Algebra.Order.Antidiag.Prod
 import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.Data.Real.Basic
-import RadiiPolynomial.source.lpSpace.DiscreteConvolution
 
 open scoped BigOperators
 
@@ -39,26 +37,6 @@ lemma apply_range (a b : ℕ → R) (n : ℕ) :
   intro j hj
   simp only [Nat.succ_sub_succ_eq_sub, tsub_zero]
   rw [Nat.sub_sub_self (Nat.lt_succ_iff.mp (Finset.mem_range.mp hj))]
-
-section TopologicalBridge
-
--- TODO: Move this bridge section to DiscreteConvolution or a separate file,
--- so that CauchyProduct.lean has no dependency on DiscreteConvolution
--- and is truly standalone.
-
-variable [TopologicalSpace R]
-
-/-- On `ℕ`, `CauchyProduct` agrees with additive ring convolution from
-`DiscreteConvolution` once `tsum` is reduced to the antidiagonal finite sum. -/
-theorem eq_addRingConvolution (a b : ℕ → R) :
-    CauchyProduct a b = DiscreteConvolution.addRingConvolution (M := ℕ) a b := by
-  funext n
-  simpa [CauchyProduct, DiscreteConvolution.addRingConvolution] using
-    (DiscreteConvolution.addConvolution_eq_sum_antidiagonal
-      (M := ℕ) (S := ℕ) (E := R) (E' := R) (F := R)
-      (L := LinearMap.mul ℕ R) a b n).symm
-
-end TopologicalBridge
 
 /-- Associativity of Cauchy product.
 

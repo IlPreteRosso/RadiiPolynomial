@@ -1,4 +1,5 @@
 import RadiiPolynomial.source.lpSpace.DiscreteConvolution
+import RadiiPolynomial.source.lpSpace.CauchyProduct
 import Mathlib.Topology.Algebra.InfiniteSum.Module
 import Mathlib.Topology.Algebra.InfiniteSum.Ring
 import Mathlib.Analysis.Normed.Ring.Lemmas
@@ -371,6 +372,7 @@ section Associativity
 variable [Monoid M] [NormedCommRing R]
 
 /-- Left-associated nested convolution sum equals triple fiber sum (multiplicative). -/
+@[to_additive (dont_translate := R) addRingConvolution_assoc_left]
 theorem ringConvolution_assoc_left (f g h : M → R) (x : M)
     (hfg : ∀ k, Summable fun ab : mulFiber k => f ab.1.1 * g ab.1.2)
     (htriple : TripleConvolutionSummable f g h x) :
@@ -385,6 +387,7 @@ theorem ringConvolution_assoc_left (f g h : M → R) (x : M)
   exact hs_goal.tsum_eq.trans hs.tsum_eq.symm
 
 /-- Right-associated nested convolution sum equals triple fiber sum (multiplicative). -/
+@[to_additive (dont_translate := R) addRingConvolution_assoc_right]
 theorem ringConvolution_assoc_right (f g h : M → R) (x : M)
     (hgh : ∀ k, Summable fun ab : mulFiber k => g ab.1.1 * h ab.1.2)
     (htriple : TripleConvolutionSummable f g h x) :
@@ -399,6 +402,7 @@ theorem ringConvolution_assoc_right (f g h : M → R) (x : M)
   exact hs_goal.tsum_eq.trans hs.tsum_eq.symm
 
 /-- Full associativity of `ringConvolution` (multiplicative). -/
+@[to_additive (dont_translate := R) addRingConvolution_assoc]
 theorem ringConvolution_assoc (f g h : M → R)
     (hfg : ∀ k, Summable fun ab : mulFiber k => f ab.1.1 * g ab.1.2)
     (hgh : ∀ k, Summable fun ab : mulFiber k => g ab.1.1 * h ab.1.2)
@@ -412,52 +416,26 @@ theorem ringConvolution_assoc (f g h : M → R)
 
 end Associativity
 
-section AddAssociativity
-
-variable [AddMonoid M] [NormedCommRing R]
-
-/-- Left-associated nested convolution sum equals triple fiber sum (additive). -/
-theorem addRingConvolution_assoc_left (f g h : M → R) (x : M)
-    (hfg : ∀ k, Summable fun ab : addFiber k => f ab.1.1 * g ab.1.2)
-    (htriple : AddTripleConvolutionSummable f g h x) :
-    ∑' cd : addFiber x,
-      (∑' ab : addFiber cd.1.1, f ab.1.1 * g ab.1.2) * h cd.1.2 =
-    ∑' p : tripleAddFiber x, f p.1.1 * g p.1.2.1 * h p.1.2.2 := by
-  have hs := htriple.hasSum
-  have hs_sigma := HasSum.leftAddAssocEquiv_sigma hs
-  have hs_iter := hs_sigma.sigma fun cd => (hfg cd.1.1).mul_right (h cd.1.2) |>.hasSum
-  have hs_goal := hs_iter.congr_fun fun cd =>
-    ((hfg cd.1.1).hasSum.mul_right _).tsum_eq.symm
-  exact hs_goal.tsum_eq.trans hs.tsum_eq.symm
-
-/-- Right-associated nested convolution sum equals triple fiber sum (additive). -/
-theorem addRingConvolution_assoc_right (f g h : M → R) (x : M)
-    (hgh : ∀ k, Summable fun ab : addFiber k => g ab.1.1 * h ab.1.2)
-    (htriple : AddTripleConvolutionSummable f g h x) :
-    ∑' ae : addFiber x,
-      f ae.1.1 * (∑' bd : addFiber ae.1.2, g bd.1.1 * h bd.1.2) =
-    ∑' p : tripleAddFiber x, f p.1.1 * g p.1.2.1 * h p.1.2.2 := by
-  have hs := htriple.hasSum
-  have hs_sigma' := HasSum.rightAddAssocEquiv_sigma hs
-  have hs_iter := hs_sigma'.sigma fun ae => (hgh ae.1.2).mul_left (f ae.1.1) |>.hasSum
-  have hs_goal := hs_iter.congr_fun fun ae =>
-    ((hgh ae.1.2).hasSum.mul_left _).tsum_eq.symm
-  exact hs_goal.tsum_eq.trans hs.tsum_eq.symm
-
-/-- Full associativity of `addRingConvolution` (additive). -/
-theorem addRingConvolution_assoc (f g h : M → R)
-    (hfg : ∀ k, Summable fun ab : addFiber k => f ab.1.1 * g ab.1.2)
-    (hgh : ∀ k, Summable fun ab : addFiber k => g ab.1.1 * h ab.1.2)
-    (htriple : ∀ x, AddTripleConvolutionSummable f g h x) :
-    addRingConvolution (addRingConvolution f g) h =
-      addRingConvolution f (addRingConvolution g h) := by
-  ext x
-  simp only [addRingConvolution_apply_eq]
-  exact (addRingConvolution_assoc_left f g h x hfg (htriple x)).trans
-    (addRingConvolution_assoc_right f g h x hgh (htriple x)).symm
-
-end AddAssociativity
-
 end DiscreteConvolution
+
+namespace RadiiPolynomial
+
+namespace CauchyProduct
+
+variable {R : Type*} [Semiring R] [TopologicalSpace R]
+
+/-- On `ℕ`, `CauchyProduct` agrees with the additive ring convolution from
+`DiscreteConvolution` once `tsum` is reduced to the antidiagonal finite sum. -/
+theorem eq_addRingConvolution (a b : ℕ → R) :
+    CauchyProduct a b = DiscreteConvolution.addRingConvolution (M := ℕ) a b := by
+  funext n
+  simpa [CauchyProduct, DiscreteConvolution.addRingConvolution] using
+    (DiscreteConvolution.addConvolution_eq_sum_antidiagonal
+      (M := ℕ) (S := ℕ) (E := R) (E' := R) (F := R)
+      (L := LinearMap.mul ℕ R) a b n).symm
+
+end CauchyProduct
+
+end RadiiPolynomial
 
 end

@@ -7,6 +7,7 @@ import RadiiPolynomial.source.IVP.DFBlock
 import RadiiPolynomial.source.IVP.StandardIVP
 import RadiiPolynomial.source.Tactic.AutoPolyFDeriv
 import RadiiPolynomial.source.MvPolyBridge.Basic
+import RadiiPolynomial.source.MvPolyBridge.CompPoly
 import RadiiPolynomial.examples.Example83.Numbers
 
 /-!
@@ -77,33 +78,37 @@ def φ_lorenz (a : Fin L → l1Weighted ν_val) : Fin L → l1Weighted ν_val
   | 1 => ρ_val • a 0 - a 1 - a 0 * a 2
   | 2 => -(β_val • a 2) + a 0 * a 1
 
-open MvPolynomial (C X pderiv) in
-def φ_lorenz_spec : Fin L → MvPolynomial (Fin L) ℚ
-  | 0 => C 10 * (X 1 - X 0)
-  | 1 => C 28 * X 0 - X 1 - X 0 * X 2
-  | 2 => -(C (8 / 3)) * X 2 + X 0 * X 1
+open MvPolyBridge (CompPoly) in
+def φ_lorenz_cpoly : Fin L → CompPoly L
+  | 0 => .C 10 * (.X 1 - .X 0)
+  | 1 => .C 28 * .X 0 - .X 1 - .X 0 * .X 2
+  | 2 => -(.C (8 / 3)) * .X 2 + .X 0 * .X 1
+
+def φ_lorenz_spec (j : Fin L) : MvPolynomial (Fin L) ℚ :=
+  (φ_lorenz_cpoly j).toMvPoly
 
 lemma φ_lorenz_eq_spec (a : XL1 ν_val L) (l : Fin L) :
     φ_lorenz a l = MvPolyBridge.evalInBanach (φ_lorenz_spec l) a := by
   fin_cases l <;>
-    simp only [φ_lorenz, φ_lorenz_spec, MvPolyBridge.evalInBanach, σ_val, ρ_val, β_val,
+    simp only [φ_lorenz, φ_lorenz_spec, φ_lorenz_cpoly, MvPolyBridge.CompPoly.toMvPoly,
+      MvPolyBridge.evalInBanach, σ_val, ρ_val, β_val,
       map_mul, map_sub, map_add, map_neg, MvPolynomial.aeval_C, MvPolynomial.aeval_X,
       Algebra.algebraMap_eq_smul_one, neg_mul, smul_mul_assoc, one_mul, smul_sub,
       l1Weighted.ratSmul_eq] <;>
     push_cast <;> ring
 
-@[simp] lemma toSeq_φ_lorenz_0 (a : XL1 ν_val L) (n : ℕ) :
-    l1Weighted.toSeq (φ_lorenz a 0) n =
-      σ_val * (l1Weighted.toSeq (a 1) n - l1Weighted.toSeq (a 0) n) := rfl
+-- @[simp] lemma toSeq_φ_lorenz_0 (a : XL1 ν_val L) (n : ℕ) :
+--     l1Weighted.toSeq (φ_lorenz a 0) n =
+--       σ_val * (l1Weighted.toSeq (a 1) n - l1Weighted.toSeq (a 0) n) := rfl
 
-@[simp] lemma toSeq_φ_lorenz_1 (a : XL1 ν_val L) (n : ℕ) :
-    l1Weighted.toSeq (φ_lorenz a 1) n =
-      ρ_val * l1Weighted.toSeq (a 0) n - l1Weighted.toSeq (a 1) n -
-        l1Weighted.toSeq (a 0 * a 2) n := rfl
+-- @[simp] lemma toSeq_φ_lorenz_1 (a : XL1 ν_val L) (n : ℕ) :
+--     l1Weighted.toSeq (φ_lorenz a 1) n =
+--       ρ_val * l1Weighted.toSeq (a 0) n - l1Weighted.toSeq (a 1) n -
+--         l1Weighted.toSeq (a 0 * a 2) n := rfl
 
-@[simp] lemma toSeq_φ_lorenz_2 (a : XL1 ν_val L) (n : ℕ) :
-    l1Weighted.toSeq (φ_lorenz a 2) n =
-      -(β_val * l1Weighted.toSeq (a 2) n) + l1Weighted.toSeq (a 0 * a 1) n := rfl
+-- @[simp] lemma toSeq_φ_lorenz_2 (a : XL1 ν_val L) (n : ℕ) :
+--     l1Weighted.toSeq (φ_lorenz a 2) n =
+--       -(β_val * l1Weighted.toSeq (a 2) n) + l1Weighted.toSeq (a 0 * a 1) n := rfl
 
 noncomputable def F_lorenz (a : XL1 ν_val L) : Fin L → l1Omega ν_val := fun l =>
   l1Omega.mk (fun n =>
@@ -166,30 +171,16 @@ lemma Dφ_lorenz_eq_fderiv (h : XL1 ν_val L) (l : Fin L) :
 
 /-! ## 5. DF Correctness (Jacobian via `ivp_hDF_block_nat`) -/
 
-/-- ℚ mirror of pderiv coefficients at ābar. -/
 private def Dφ_pderiv_Q (j m : Fin L) (k : ℕ) : ℚ :=
-  match j, m with
-  | 0, 0 => if k = 0 then -10 else 0
-  | 0, 1 => if k = 0 then 10 else 0
-  | 0, 2 => 0
-  | 1, 0 => (if k = 0 then 28 else 0) - (abar_Q 2).getD k 0
-  | 1, 1 => if k = 0 then -1 else 0
-  | 1, 2 => -((abar_Q 0).getD k 0)
-  | 2, 0 => (abar_Q 1).getD k 0
-  | 2, 1 => (abar_Q 0).getD k 0
-  | 2, 2 => if k = 0 then -(8 / 3 : ℚ) else 0
+  ((φ_lorenz_cpoly j).pderiv m).evalCoeff abar_Q k
 
-/-- Bridge: Dφ_pderiv_Q matches analytical pderiv evaluation at ā. -/
 private lemma Dφ_pderiv_bridge (j m : Fin L) (k : ℕ) :
     l1Weighted.toSeq (MvPolyBridge.evalInBanach
       (MvPolynomial.pderiv (↑m) (φ_lorenz_spec j)) data.abar) k =
-      (Dφ_pderiv_Q j m k : ℝ) := by
-  rw [MvPolyBridge.toSeq_evalInBanach _ _ abar_Q (fun i n => data.abar_toSeq_eq i n)]
-  norm_cast
-  fin_cases j <;> fin_cases m <;>
-    simp (config := { decide := true }) [φ_lorenz_spec, Dφ_pderiv_Q,
-      MvPolynomial.pderiv_X, Pi.single_apply, neg_mul] <;>
-    split_ifs <;> simp_all
+      (Dφ_pderiv_Q j m k : ℝ) :=
+  MvPolyBridge.compPoly_Dφ_bridge φ_lorenz_cpoly φ_lorenz_spec
+    (fun _ => rfl)
+    abar_Q data.abar data.abar_toSeq_eq j m k
 
 /-- DF verification: single `native_decide` using `ivp_DF_of_Dφ_nat`. -/
 private lemma hDF_nat :
@@ -250,7 +241,9 @@ lemma φ_lorenz_bridge (l : Fin L) (n : ℕ) :
   rw [φ_lorenz_eq_spec]
   rw [MvPolyBridge.toSeq_evalInBanach _ _ abar_Q (fun i n => data.abar_toSeq_eq i n)]
   norm_cast
-  fin_cases l <;> simp [φ_lorenz_spec, φ_lorenz_Q, σ_q, ρ_q_val, β_q, neg_mul]
+  fin_cases l <;>
+    simp [φ_lorenz_spec, φ_lorenz_cpoly, MvPolyBridge.CompPoly.toMvPoly,
+      φ_lorenz_Q, σ_q, ρ_q_val, β_q]
 
 lemma F_coeffs_bridge (l : Fin L) (n : ℕ) :
     F_coeffs data.abar l n = (F_coeffs_Q l n : ℝ) := by
