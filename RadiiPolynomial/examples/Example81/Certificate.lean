@@ -182,7 +182,8 @@ private lemma Dφ_diff_norm_le (c : XL1 ν_val L) (h : XL1 ν_val L) (l : Fin L)
     from fun x => φ_scalar_eq_spec x 0]
   exact MvPolyBridge.norm_fderiv_diff_evalInBanach_of_const_second_pderiv _ c data.abar h
     (D₂ := fun _ _ => 2)
-    (by intro i j; fin_cases i <;> fin_cases j <;> (simp [φ_scalar_spec]; try norm_cast))
+    (by intro i j; fin_cases i <;> fin_cases j <;>
+      (simp [φ_scalar_spec, φ_scalar_cpoly, MvPolyBridge.CompPoly.toMvPoly]; try norm_cast))
     (by norm_num)
 
 lemma Z₂_le_cert (c : XL1 ν_val L)

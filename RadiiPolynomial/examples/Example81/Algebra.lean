@@ -56,22 +56,19 @@ def x₀ : Fin L → ℝ | _ => 1 / 2
 
 def x₀_q : Fin L → ℚ | _ => 1 / 2
 
-/-- Nonlinearity φ(a)₀ = a₀² - a₀ (sequence-level Cauchy product minus identity). -/
-def φ_scalar (a : Fin L → l1Weighted ν_val) : Fin L → l1Weighted ν_val
-  | _ => a 0 * a 0 - a 0
-
 open MvPolyBridge (CompPoly) in
 def φ_scalar_cpoly : Fin L → CompPoly L
   | _ => .X 0 * .X 0 - .X 0
+
+def φ_scalar (a : Fin L → l1Weighted ν_val) (l : Fin L) : l1Weighted ν_val :=
+  (φ_scalar_cpoly l).evalAlg a
 
 def φ_scalar_spec (j : Fin L) : MvPolynomial (Fin L) ℚ :=
   (φ_scalar_cpoly j).toMvPoly
 
 lemma φ_scalar_eq_spec (a : XL1 ν_val L) (l : Fin L) :
-    φ_scalar a l = MvPolyBridge.evalInBanach (φ_scalar_spec l) a := by
-  fin_cases l
-  simp only [φ_scalar, φ_scalar_spec, φ_scalar_cpoly, MvPolyBridge.CompPoly.toMvPoly,
-    MvPolyBridge.evalInBanach, map_mul, map_sub, MvPolynomial.aeval_X]
+    φ_scalar a l = MvPolyBridge.evalInBanach (φ_scalar_spec l) a :=
+  MvPolyBridge.compPoly_evalAlg_eq_evalInBanach _ _
 
 @[simp] lemma toSeq_φ_scalar (a : XL1 ν_val L) (n : ℕ) :
     l1Weighted.toSeq (φ_scalar a 0) n =
@@ -81,7 +78,7 @@ lemma φ_scalar_eq_spec (a : XL1 ν_val L) (l : Fin L) :
 
 lemma differentiable_φ_scalar_component (l : Fin L) :
     Differentiable ℝ (fun a : XL1 ν_val L => φ_scalar a l) := by
-  fin_cases l; simp only [φ_scalar]; fun_prop
+  fin_cases l; simp only [φ_scalar, φ_scalar_cpoly, MvPolyBridge.CompPoly.evalAlg]; fun_prop
 
 private abbrev proj_L (l : Fin L) :=
   ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin L => l1Weighted ν_val) l

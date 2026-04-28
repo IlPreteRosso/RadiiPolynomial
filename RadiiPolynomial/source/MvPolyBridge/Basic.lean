@@ -184,8 +184,8 @@ private lemma toSeq_algebraMap_rat (r : ℚ) (n : ℕ) :
   change l1Weighted.toSeq ((algebraMap ℝ (l1Weighted ν) ((r : ℚ) : ℝ))) n = _
   rw [l1Weighted.algebraMap_apply, l1Weighted.smul_toSeq, l1Weighted.one_toSeq_eq]
   cases n with
-  | zero => simp [CauchyProduct.one]
-  | succ n => simp [CauchyProduct.one]
+  | zero => simp
+  | succ n => simp
 
 /-- `PowerSeries.coeff n (PowerSeries.C r)` = Kronecker delta at 0. -/
 private lemma coeff_C_eq (r : ℚ) (n : ℕ) :

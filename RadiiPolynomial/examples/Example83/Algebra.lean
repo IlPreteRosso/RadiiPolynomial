@@ -64,38 +64,34 @@ def data : IVP.StdIVPData ν_val L N where
 
 /-! ## 3. Lorenz Nonlinearity φ -/
 
-def σ_val : ℝ := 10
-def ρ_val : ℝ := 28
-def β_val : ℝ := 8 / 3
+abbrev σ_q : ℚ := 10
+abbrev ρ_q_val : ℚ := 28
+abbrev β_q : ℚ := 8 / 3
+
+def σ_val : ℝ := (σ_q : ℚ)
+def ρ_val : ℝ := (ρ_q_val : ℚ)
+def β_val : ℝ := (β_q : ℚ)
 
 def x₀ : Fin L → ℝ
   | 0 => 1
   | 1 => 0
   | 2 => 0
 
-def φ_lorenz (a : Fin L → l1Weighted ν_val) : Fin L → l1Weighted ν_val
-  | 0 => σ_val • (a 1 - a 0)
-  | 1 => ρ_val • a 0 - a 1 - a 0 * a 2
-  | 2 => -(β_val • a 2) + a 0 * a 1
-
 open MvPolyBridge (CompPoly) in
 def φ_lorenz_cpoly : Fin L → CompPoly L
-  | 0 => .C 10 * (.X 1 - .X 0)
-  | 1 => .C 28 * .X 0 - .X 1 - .X 0 * .X 2
-  | 2 => -(.C (8 / 3)) * .X 2 + .X 0 * .X 1
+  | 0 => .smul σ_q (.X 1 - .X 0)
+  | 1 => .smul ρ_q_val (.X 0) - .X 1 - .X 0 * .X 2
+  | 2 => -(.smul β_q (.X 2)) + .X 0 * .X 1
+
+def φ_lorenz (a : Fin L → l1Weighted ν_val) (l : Fin L) : l1Weighted ν_val :=
+  (φ_lorenz_cpoly l).evalBanach a
 
 def φ_lorenz_spec (j : Fin L) : MvPolynomial (Fin L) ℚ :=
   (φ_lorenz_cpoly j).toMvPoly
 
 lemma φ_lorenz_eq_spec (a : XL1 ν_val L) (l : Fin L) :
-    φ_lorenz a l = MvPolyBridge.evalInBanach (φ_lorenz_spec l) a := by
-  fin_cases l <;>
-    simp only [φ_lorenz, φ_lorenz_spec, φ_lorenz_cpoly, MvPolyBridge.CompPoly.toMvPoly,
-      MvPolyBridge.evalInBanach, σ_val, ρ_val, β_val,
-      map_mul, map_sub, map_add, map_neg, MvPolynomial.aeval_C, MvPolynomial.aeval_X,
-      Algebra.algebraMap_eq_smul_one, neg_mul, smul_mul_assoc, one_mul, smul_sub,
-      l1Weighted.ratSmul_eq] <;>
-    push_cast <;> ring
+    φ_lorenz a l = MvPolyBridge.evalInBanach (φ_lorenz_spec l) a :=
+  MvPolyBridge.compPoly_evalBanach_eq_evalInBanach _ _
 
 -- @[simp] lemma toSeq_φ_lorenz_0 (a : XL1 ν_val L) (n : ℕ) :
 --     l1Weighted.toSeq (φ_lorenz a 0) n =
@@ -130,7 +126,8 @@ def Dφ_lorenz (h : Fin L → l1Weighted ν_val) : Fin L → l1Weighted ν_val
 
 lemma differentiable_φ_lorenz_component (l : Fin L) :
     Differentiable ℝ (fun a : XL1 ν_val L => φ_lorenz a l) := by
-  fin_cases l <;> simp only [φ_lorenz] <;> fun_prop
+  fin_cases l <;> simp only [φ_lorenz, φ_lorenz_cpoly, MvPolyBridge.CompPoly.evalBanach] <;>
+    fun_prop
 
 private abbrev proj_L (l : Fin L) :=
   ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin L => l1Weighted ν_val) l
@@ -218,32 +215,20 @@ lemma fderiv_G_lorenz_tail (h : XL1 ν_val L) (l : Fin L) (n : ℕ) (hn : N < n)
 
 /-! ## 7. ℚ Bridges and Support Bounds -/
 
-abbrev σ_q : ℚ := 10
-abbrev ρ_q_val : ℚ := 28
-abbrev β_q : ℚ := 8 / 3
 def x₀_q : Fin L → ℚ | 0 => 1 | 1 => 0 | 2 => 0
-
-def φ_lorenz_Q (l : Fin L) (n : ℕ) : ℚ :=
-  match l with
-  | 0 => σ_q * ((abar_Q 1).getD n 0 - (abar_Q 0).getD n 0)
-  | 1 => ρ_q_val * (abar_Q 0).getD n 0 - (abar_Q 1).getD n 0 -
-      CauchyProduct (fun k => (abar_Q 0).getD k 0) (fun k => (abar_Q 2).getD k 0) n
-  | 2 => -(β_q * (abar_Q 2).getD n 0) +
-      CauchyProduct (fun k => (abar_Q 0).getD k 0) (fun k => (abar_Q 1).getD k 0) n
 
 def F_coeffs_Q (l : Fin L) (n : ℕ) : ℚ :=
   match n with
   | 0 => (abar_Q l).getD 0 0 - x₀_q l
-  | n + 1 => ((n : ℚ) + 1) * (abar_Q l).getD (n + 1) 0 - φ_lorenz_Q l n
+  | n + 1 => ((n : ℚ) + 1) * (abar_Q l).getD (n + 1) 0 -
+      (φ_lorenz_cpoly l).evalCoeff abar_Q n
 
 lemma φ_lorenz_bridge (l : Fin L) (n : ℕ) :
-    l1Weighted.toSeq (φ_lorenz data.abar l) n = (φ_lorenz_Q l n : ℝ) := by
-  rw [φ_lorenz_eq_spec]
-  rw [MvPolyBridge.toSeq_evalInBanach _ _ abar_Q (fun i n => data.abar_toSeq_eq i n)]
-  norm_cast
-  fin_cases l <;>
-    simp [φ_lorenz_spec, φ_lorenz_cpoly, MvPolyBridge.CompPoly.toMvPoly,
-      φ_lorenz_Q, σ_q, ρ_q_val, β_q]
+    l1Weighted.toSeq (φ_lorenz data.abar l) n =
+      ((φ_lorenz_cpoly l).evalCoeff abar_Q n : ℝ) := by
+  rw [φ_lorenz_eq_spec,
+    MvPolyBridge.toSeq_evalInBanach _ _ abar_Q (fun i n => data.abar_toSeq_eq i n)]
+  exact_mod_cast (MvPolyBridge.CompPoly.evalCoeff_eq_mvPolyCoeffQ _ abar_Q n).symm
 
 lemma F_coeffs_bridge (l : Fin L) (n : ℕ) :
     F_coeffs data.abar l n = (F_coeffs_Q l n : ℝ) := by

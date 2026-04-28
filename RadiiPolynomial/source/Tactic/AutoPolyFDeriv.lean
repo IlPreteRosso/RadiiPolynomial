@@ -42,6 +42,7 @@ variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
   {ι : Type*} [Fintype ι]
   {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
 
+ omit [Fintype ι] in
 /-- `fderiv` of coordinate projection `(· i)` on a non-dependent Pi type `ι → F`. -/
 @[simp]
 theorem fderiv_pi_apply (i : ι) (x : ι → F) :
@@ -49,6 +50,7 @@ theorem fderiv_pi_apply (i : ι) (x : ι → F) :
   show fderiv 𝕜 (⇑(ContinuousLinearMap.proj (R := 𝕜) i)) x = _
   exact ContinuousLinearMap.fderiv _
 
+ omit [Fintype ι] in
 /-- Differentiability of coordinate projection — registered with `fun_prop` so that
 `simp (discharger := fun_prop)` can discharge `DifferentiableAt` goals for Pi projections
 without stuck metavariables. -/
@@ -70,7 +72,7 @@ lemma RadiiPolynomial.l1Weighted.smul_proj_eq_leftMul_comp_proj
     a • (ContinuousLinearMap.proj (R := ℝ) i :
       (ι → RadiiPolynomial.l1Weighted ν) →L[ℝ] RadiiPolynomial.l1Weighted ν) =
     (RadiiPolynomial.l1Weighted.leftMul a).comp (ContinuousLinearMap.proj i) := by
-  ext h; simp [RadiiPolynomial.l1Weighted.leftMul_apply, smul_eq_mul]
+  ext h; simp
 
 -- Combined fderiv + iteratedDeriv lemma set with Banach algebra bridge.
 -- Unmatched lemmas are harmless (simp skips them).
