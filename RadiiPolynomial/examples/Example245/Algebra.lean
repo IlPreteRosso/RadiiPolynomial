@@ -30,13 +30,13 @@ lemma id_eq_smulCLM_one : ContinuousLinearMap.id ℝ ℝ = smulCLM 1 := by
 
 lemma smulCLM_comp (a b : ℝ) : (smulCLM a).comp (smulCLM b) = smulCLM (a * b) := by
   ext
-  simp only [smulCLM_apply, comp_smulₛₗ, RingHom.id_apply, comp_id, coe_smul', coe_id',
+  simp only [smulCLM_apply, comp_smulₛₗ, RingHom.id_apply, comp_id, FunLike.coe_smul, coe_id',
     Pi.smul_apply, id_eq, smul_eq_mul, mul_one]
   field_simp
 
 lemma smulCLM_sub (a b : ℝ) : smulCLM a - smulCLM b = smulCLM (a - b) := by
   ext;
-  simp only [coe_sub', coe_smul', coe_id', Pi.sub_apply, Pi.smul_apply, id_eq, smul_eq_mul,
+  simp only [FunLike.coe_sub, FunLike.coe_smul, coe_id', Pi.sub_apply, Pi.smul_apply, id_eq, smul_eq_mul,
     mul_one, smulCLM_apply]
 
 lemma id_sub_smulCLM (a : ℝ) :

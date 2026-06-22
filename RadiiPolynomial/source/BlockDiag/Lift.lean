@@ -101,7 +101,7 @@ lemma composedApprox_Z₀ (D : SystemBlockDiagData L N)
     ‖ContinuousLinearMap.id ℝ X - composedApproxCLM (ν := ν) D‖ ≤ Z₀ := by
   refine ContinuousLinearMap.opNorm_le_bound _
     (le_trans (finiteBlockMatrixNorm_nonneg (ν := ν) _) hZ₀) fun x => ?_
-  rw [ContinuousLinearMap.sub_apply, ContinuousLinearMap.id_apply,
+  rw [sub_apply, ContinuousLinearMap.id_apply,
     composedApproxCLM_apply, sub_sub_cancel]
   exact (liftDefect_norm_le (ν := ν) D x).trans
     (mul_le_mul_of_nonneg_right hZ₀ (norm_nonneg x))

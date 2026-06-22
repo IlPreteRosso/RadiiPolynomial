@@ -110,6 +110,8 @@ have ht1 : sum' k : Z, ||c (k + 1)|| = sum' k : Z, ||c k|| :=
 
 When there's friction in proofs (rw can't match, type mismatch between abbrevs), resolve by creating a better API lemma rather than inlining `show`, `change`, `conv`. A clean API lemma is reusable and makes downstream proofs simpler.
 
+Do not put ad hoc example-specific facts into the library API. If the fact only exists because one certificate has a particular finite case or numeral, keep the cleanup local/private at the proof site. For example, `MvPolynomial.C_ofNat_eq` is a general bridge, but a global `C_two_eq` lemma is too narrow; use `rw [MvPolynomial.C_ofNat_eq]` locally when a proof reduces to a concrete `C 2` normalization.
+
 For `Fin 1`, use `Subsingleton.elim l 0; subst` instead of `fin_cases l` to avoid `(fun i => i) {0, ...}` pattern mismatch.
 
 ## Design decisions

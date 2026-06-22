@@ -66,16 +66,19 @@ lemma matrix_isUnit_of_toWeightedCLM_isUnit
   obtain ⟨u, hu⟩ := h
   have h_inj : Function.Injective (toWeightedCLM (ν := ν) M) := by
     rw [← hu]
-    have h_left_inv : Function.LeftInverse u.inv u.val := fun x => by
+    have h_left_inv :
+        Function.LeftInverse
+          (fun y => (u⁻¹).val y)
+          (fun x => u.val x) := fun x => by
       have hx := congrFun (congrArg DFunLike.coe u.inv_mul) x
-      simpa only [ContinuousLinearMap.mul_apply, ContinuousLinearMap.one_apply] using hx
+      simpa only [mul_apply_eq_comp, one_apply_eq_self] using hx
     exact h_left_inv.injective
   have h_det_lin : LinearMap.det (Matrix.toLin' M) = 0 := by
     rw [LinearMap.det_toLin']
     exact h_det
   have h_ker_nontrivial := LinearMap.bot_lt_ker_of_det_eq_zero h_det_lin
   rw [bot_lt_iff_ne_bot, ne_eq, Submodule.eq_bot_iff] at h_ker_nontrivial
-  push_neg at h_ker_nontrivial
+  push Not at h_ker_nontrivial
   obtain ⟨v, hv_ker, hv_ne⟩ := h_ker_nontrivial
   rw [LinearMap.mem_ker] at hv_ker
   have hv_mulVec : M *ᵥ v = 0 := by

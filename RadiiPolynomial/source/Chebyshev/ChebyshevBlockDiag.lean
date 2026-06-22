@@ -108,6 +108,7 @@ def defectCheb_apply (D : SystemBlockDiagData L N) (h : XCheb ν L) : XCheb ν L
 
 /-! ### Linearity -/
 
+omit [NeZero L] in
 lemma defectCheb_apply_add (D : SystemBlockDiagData L N) (h₁ h₂ : XCheb ν L) :
     defectCheb_apply D (h₁ + h₂) = defectCheb_apply D h₁ + defectCheb_apply D h₂ := by
   funext l; apply lpOneAlg.ext_toRealSeq; funext k
@@ -122,6 +123,7 @@ lemma defectCheb_apply_add (D : SystemBlockDiagData L N) (h₁ h₂ : XCheb ν L
     exact (SystemBlockDiagData.actionFinite_add D _ _).symm ▸ rfl
   | negSucc _ => simp [defectCheb_seq, lpAlgRingData.toReal_zero]
 
+omit [NeZero L] in
 lemma defectCheb_apply_smul (D : SystemBlockDiagData L N) (r : ℝ) (h : XCheb ν L) :
     defectCheb_apply D (r • h) = r • defectCheb_apply D h := by
   funext l; apply lpOneAlg.ext_toRealSeq; funext k
@@ -211,7 +213,7 @@ lemma composedApproxCheb_Z₀ (D : SystemBlockDiagData L N) {Z₀ : ℝ}
   refine ContinuousLinearMap.opNorm_le_bound _ (le_trans
     (finiteBlockMatrixNorm_nonneg (ν := ν) _) hZ₀) fun x => ?_
   -- Use sub_apply to evaluate: (id - composedApprox)(x) = x - (x - defect(x)) = defect(x)
-  rw [ContinuousLinearMap.sub_apply, ContinuousLinearMap.id_apply, composedApproxCheb_apply,
+  rw [sub_apply, ContinuousLinearMap.id_apply, composedApproxCheb_apply,
     sub_sub_cancel]
   exact (defectCheb_norm_le D x).trans (mul_le_mul_of_nonneg_right hZ₀ (norm_nonneg x))
 
@@ -227,7 +229,7 @@ lemma composedApproxCheb_tail_toReal (D : SystemBlockDiagData L N)
   have hsub : lpOneAlg.toRealSeq (h l - defectCheb_apply D h l : l1Chebyshev ν) (↑n : ℤ) =
       lpOneAlg.toRealSeq (h l) (↑n : ℤ) - lpOneAlg.toRealSeq (defectCheb_apply D h l) (↑n : ℤ) :=
     congr_fun (lpOneAlg.toRealSeq_add (h l) (-defectCheb_apply D h l)) (↑n : ℤ) ▸ by
-      simp [sub_eq_add_neg, lpAlgRingData.toReal_neg, lpOneAlg.toRealSeq]; rfl
+      simp [sub_eq_add_neg, lpOneAlg.toRealSeq]; rfl
   rw [hsub]
   -- defect on tail = 0
   have h_zero : lpOneAlg.toRealSeq (defectCheb_apply D h l) (↑n : ℤ) = 0 := by

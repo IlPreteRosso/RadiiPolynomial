@@ -100,12 +100,15 @@ private def chebyshevShiftDiv_seq (c : l1Chebyshev ν) : ℤ → ℝ
     else (l1Chebyshev.toSeq c (↑k + 1) - l1Chebyshev.toSeq c (↑k - 1)) / (2 * (k : ℝ))
   | (Int.negSucc _) => 0
 
+omit [Fact (1 ≤ (ν : ℝ))] in
 @[simp] lemma chebyshevShiftDiv_seq_zero (c : l1Chebyshev ν) :
     chebyshevShiftDiv_seq c 0 = 0 := by simp [chebyshevShiftDiv_seq]
 
+omit [Fact (1 ≤ (ν : ℝ))] in
 @[simp] lemma chebyshevShiftDiv_seq_neg (c : l1Chebyshev ν) (n : ℕ) :
     chebyshevShiftDiv_seq c (Int.negSucc n) = 0 := by simp [chebyshevShiftDiv_seq]
 
+omit [Fact (1 ≤ (ν : ℝ))] in
 @[simp] lemma chebyshevShiftDiv_seq_pos (c : l1Chebyshev ν) (k : ℕ) (hk : k ≠ 0) :
     chebyshevShiftDiv_seq c (↑k) =
       (l1Chebyshev.toSeq c (↑k + 1) - l1Chebyshev.toSeq c (↑k - 1)) / (2 * (k : ℝ)) := by
@@ -124,6 +127,7 @@ where `‖c_m‖_fiber = |c_m| * ν^{|m|}`. Both are subsequences of `‖c‖`.
 Operator norm: `‖chebyshevShiftDiv c‖ ≤ ν * ‖c‖` (since `1/(2ν) + ν/2 ≤ ν` for `ν ≥ 1`).
 -/
 
+omit [Fact (1 ≤ (ν : ℝ))] in
 /-- Shifted subseries of `l1Chebyshev` norms are summable (shift invariance). -/
 private lemma summable_norm_shift (c : l1Chebyshev ν) (s : ℤ) :
     Summable (fun n : ℕ => ‖c (↑n + s)‖) :=
@@ -244,7 +248,7 @@ def chebyshevShiftDiv (c : l1Chebyshev ν) : l1Chebyshev ν :=
 
 @[simp] lemma chebyshevShiftDiv_toSeq (c : l1Chebyshev ν) (k : ℤ) :
     lpOneAlg.toRealSeq (chebyshevShiftDiv c) k = chebyshevShiftDiv_seq c k := by
-  simp [chebyshevShiftDiv, l1Chebyshev.toSeq, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
+  simp [chebyshevShiftDiv, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
 
 /-! ### Linearity of chebyshevShiftDiv -/
 
@@ -255,8 +259,8 @@ lemma chebyshevShiftDiv_add (c d : l1Chebyshev ν) :
   unfold chebyshevShiftDiv_seq
   cases k with
   | ofNat k => cases k with
-    | zero => simp [l1Chebyshev.toSeq_add]
-    | succ k => simp [l1Chebyshev.toSeq_add]; ring
+    | zero => simp
+    | succ k => simp; ring
   | negSucc _ => simp
 
 lemma chebyshevShiftDiv_smul (r : ℝ) (c : l1Chebyshev ν) :
@@ -350,6 +354,7 @@ def chebyshevIvpTail (φ : XCheb ν L → Fin L → l1Chebyshev ν)
     (a : XCheb ν L) : XCheb ν L := fun l =>
   a l + chebyshevShiftDiv_CLM (φ a l)
 
+omit [NeZero L] in
 lemma differentiable_chebyshevIvpTail (φ : XCheb ν L → Fin L → l1Chebyshev ν)
     (hφ : ∀ l, Differentiable ℝ (fun a : XCheb ν L => φ a l)) :
     Differentiable ℝ (chebyshevIvpTail φ) := by
@@ -363,6 +368,7 @@ lemma differentiable_chebyshevIvpTail (φ : XCheb ν L → Fin L → l1Chebyshev
 
 /-! ## Fréchet Derivative of Tail -/
 
+omit [NeZero L] in
 /-- Fderiv of `chebyshevIvpTail` at `ā` applied to `h`:
 `(fderiv(tail)(ā)(h)) l = h l + chebyshevShiftDiv_CLM((fderiv(φ·l)(ā))(h))`.
 Used for Z₁ bound (tail difference = chebyshevShiftDiv of Dφ). -/
@@ -383,7 +389,7 @@ lemma fderiv_chebyshevIvpTail (φ : XCheb ν L → Fin L → l1Chebyshev ν)
       (fderiv ℝ (fun a => (chebyshevIvpTail φ a) l) ā) h from by
     rw [fderiv_pi (fun i => differentiableAt_pi.mp
       (differentiable_chebyshevIvpTail φ hφ ā) i)]; rfl]
-  rw [hd.fderiv]; simp [chebyshevIvpTail]
+  rw [hd.fderiv]; simp
 
 /-! ## ℕ → ℤ Embedding for Composed Map
 
@@ -437,6 +443,7 @@ On tail modes (n > N) with `A.tailDiag = 1/(2k)`, the Chebyshev IVP action simpl
 `A.action(F(a))_n = (1/(2n)) · (2n·a_n + c_{n+1} - c_{n-1}) = a_n + chebyshevShiftDiv_seq(c)_n`
 where `c = φ(a)`. Both `a` and `chebyshevShiftDiv(c)` are in ℓ¹, so the result is in ℓ¹. -/
 
+omit [NeZero L] in
 /-- On tail modes, the action with tailDiag = 1/(2k) equals a_k + chebyshevShiftDiv_seq(c)_k. -/
 private lemma action_chebyshev_tail_eq {N : ℕ}
     (A : SystemBlockDiagData L N)
@@ -458,6 +465,7 @@ private lemma action_chebyshev_tail_eq {N : ℕ}
   field_simp
   push_cast; ring
 
+omit [NeZero L] in
 /-- Membership proof: `embedWithPassThrough(A.action(F(a)), a l)` is in ℓ¹
 when `A.tailDiag = 1/(2k)`. On tail modes, the ℕ-part equals
 `a_k + chebyshevShiftDiv(φ(a))_k`, both in ℓ¹. Negative modes come from `a l`
@@ -745,6 +753,7 @@ lemma chebyshev_Z₁_component_le_relaxed (d w : l1Chebyshev ν) (N : ℕ)
 Assembles per-component Z₁ bounds into `‖composedApprox - fderiv G ā‖ ≤ Z₁`.
 Analogous to `ivp_Z₁_le` from IVP/Setup.lean. -/
 
+omit [NeZero L] in
 /-- **Chebyshev Z₁ bound**: `‖composedApprox - fderiv G ā‖ ≤ Z₁`.
 Chains `chebyshev_Z₁_component_norm_le` with per-component Dφ norm bound.
 
@@ -779,6 +788,7 @@ lemma chebyshev_Z₁_le
     _ ≤ Z₁ * ‖h‖ := by
         rw [← mul_assoc]; exact mul_le_mul_of_nonneg_right hZ₁ (norm_nonneg _)
 
+omit [NeZero L] in
 /-- **Relaxed Chebyshev Z₁ bound** for IVPs where mode-0 couples all modes.
 
 Unlike `chebyshev_Z₁_le`, does NOT require `hfin` (composedApprox = fderiv G on k ≤ N).
@@ -833,6 +843,7 @@ The key bound `hZ₁` is assembled using `chebyshev_Z₁_le`, which chains:
 The user provides the composed map `G`, composed approximate derivative `composedApprox`,
 approximate solution `ā`, and the four numerical bounds Y₀, Z₀, Z₁, Z₂. -/
 
+omit [NeZero L] in
 /-- **Chebyshev System Theorem**: existence and uniqueness of a zero of `G`
 in `closedBall ā r₀`, given the radii polynomial `Z₂·r₀² - (1 - Z₀ - Z₁)·r₀ + Y₀ < 0`.
 

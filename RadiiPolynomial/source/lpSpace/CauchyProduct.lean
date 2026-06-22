@@ -142,7 +142,7 @@ lemma zero_of_support {a b : ℕ → R} {M : ℕ}
   simp only [Finset.mem_antidiagonal] at hkl
   by_cases hk : M < k
   · simp [ha k hk]
-  · push_neg at hk
+  · push Not at hk
     have hl : M < l := by omega
     simp [hb l hl]
 
@@ -159,7 +159,7 @@ lemma apply_of_support_le_split {a h : ℕ → R} {N n : ℕ}
       omega
     · intro k hk hk'
       simp only [Finset.mem_range] at hk hk'
-      push_neg at hk'
+      push Not at hk'
       rw [ha k hk', MulZeroClass.zero_mul]
   rw [h_restrict]
   have h_range_eq : Finset.range (N + 1) = insert 0 (Finset.Icc 1 N) := by
@@ -178,7 +178,7 @@ a `Fin (N+1)`-indexed sum: `Σ_{p : Fin (N+1)} (if p ≤ n then f(n-p) else 0) *
 Since all `l ≤ n ≤ N`, the `Fin (N+1)` range captures every antidiagonal pair.
 
 This form matches `Matrix.mulVec` of a lower-triangular Toeplitz matrix built from `f`.
-Used in `fderiv_F_coeffs_eq` to connect CauchyProduct (from `fderiv_evalInBanach`)
+Used in `ivp_hDF_block_nat` to connect CauchyProduct (from `fderiv_evalInBanach`)
 to the Jacobian matrix entries (from `DF_col`/`native_decide`). -/
 lemma eq_sum_fin {N : ℕ} (f g : ℕ → R) {n : ℕ} (hn : n ≤ N) :
     CauchyProduct f g n =

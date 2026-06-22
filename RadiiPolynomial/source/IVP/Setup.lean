@@ -33,9 +33,9 @@ the Newton-like map for the radii polynomial theorem.
 
 ## What Stays Equation-Specific
 
-- `φ` definition (e.g., `φ_lorenz`)
-- `differentiable_φ_component` (typically `fun_prop`)
-- Fderiv structure of φ (via `auto_poly_fderiv`)
+- `f` definition (the polynomial vector field, e.g. `f` in `Example83.Algebra`)
+- `differentiable_f_component` (typically `fun_prop`)
+- Fderiv structure of `f` (via `auto_poly_fderiv`)
 - ℚ mirrors and bridges
 -/
 
@@ -324,7 +324,7 @@ private lemma fderiv_ivpCoeffs_diff (φ : XL1 ν L → Fin L → l1Weighted ν)
           ((l1Weighted.toSeq_CLM n).hasFDerivAt.comp a (hφ j a).hasFDerivAt)
       rw [hfd.fderiv]; rfl
     rw [hd_sub c, hd_sub ā]
-    simp only [ContinuousLinearMap.sub_apply, l1Weighted.sub_toSeq]; ring
+    simp only [sub_apply, l1Weighted.sub_toSeq]; ring
 
 omit [NeZero L] in
 /-- Chain rule: `toSeq(fderiv(ivpMap A φ x₀) a h l) n = fderiv(a ↦ A.action(F a) l n) a h`.
@@ -387,7 +387,7 @@ lemma ivp_Z₂_le
   apply ContinuousLinearMap.opNorm_le_bound _
     (mul_nonneg hZ₂_nn (norm_nonneg _))
   intro h'
-  rw [ContinuousLinearMap.sub_apply]
+  rw [sub_apply]
   refine (pi_norm_le_iff_of_nonneg (mul_nonneg (mul_nonneg hZ₂_nn
     (norm_nonneg _)) (norm_nonneg _))).mpr fun l => ?_
   -- Construct w: shifted Dφ difference
@@ -425,7 +425,7 @@ lemma ivp_Z₂_le
         funext fun a => SystemBlockDiagData.action_tail _ _ _ _ hn]
       have hd := fun a => ((hF_diff l n a).hasFDerivAt.const_mul (A.tailDiag l n)).fderiv
       rw [hd c, hd ā]
-      simp only [ContinuousLinearMap.smul_apply, smul_eq_mul, ← mul_sub, hcd,
+      simp only [smul_apply, smul_eq_mul, ← mul_sub, hcd,
         SystemBlockDiagData.action_tail _ _ _ _ hn]
   rw [show ((fderiv ℝ G c h' - fderiv ℝ G ā h') : XL1 ν L) l = A.toCLM (ν := ν) w l from by
     show (fderiv ℝ G c h') l - (fderiv ℝ G ā h') l = _; exact l1Weighted.ext hseq]
@@ -624,7 +624,7 @@ lemma fderiv_ivpMap_tail
       fderiv ℝ (ivpFinCorrection A φ x₀ htail) ā := by
     rw [hdecomp]; exact fderiv_add (differentiable_ivpTail φ hφ ā)
       (differentiable_ivpFinCorrection A φ x₀ htail hφ ā)
-  rw [hfadd]; simp only [ContinuousLinearMap.add_apply, Pi.add_apply, l1Weighted.add_toSeq,
+  rw [hfadd]; simp only [add_apply, Pi.add_apply, l1Weighted.add_toSeq,
     fderiv_ivpFinCorrection_zero_tail A φ x₀ htail hφ ā h l n hn, add_zero]
 
 end IVP

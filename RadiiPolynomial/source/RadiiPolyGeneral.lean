@@ -309,7 +309,7 @@ lemma newton_operator_fderiv
   unfold NewtonLikeMap
 
   -- D(x) = I_E (derivative of identity)
-  have h1 : fderiv ℝ (fun x => x) x = I_E := fderiv_id'
+  have h1 : fderiv ℝ (fun x => x) x = I_E := fderiv_fun_id
 
   -- D(A(f(x))) = A ∘ Df(x) by chain rule
   have h2 : fderiv ℝ (fun x => A (f x)) x = A.comp (fderiv ℝ f x) := by
@@ -413,43 +413,43 @@ section HelperLemmas
 ## Helper Lemmas for Fixed Point Theorems
 -/
 
-omit [CompleteSpace F] in
-/-- Construct inverse of Df(x̃) from invertibility of A∘Df(x̃)
+-- omit [CompleteSpace F] in
+-- /-- Construct inverse of Df(x̃) from invertibility of A∘Df(x̃)
 
-    Key insight: If A : F →L[ℝ] E is injective and A∘B : E →L[ℝ] E is invertible,
-    then B : E →L[ℝ] F is invertible with inverse B⁻¹ = (A∘B)⁻¹ ∘ A.
+--     Key insight: If A : F →L[ℝ] E is injective and A∘B : E →L[ℝ] E is invertible,
+--     then B : E →L[ℝ] F is invertible with inverse B⁻¹ = (A∘B)⁻¹ ∘ A.
 
-    This is used to show Df(x̃) is invertible without requiring A to be invertible. -/
-lemma construct_derivative_inverse
-  {A : F →L[ℝ] E} {B : E →L[ℝ] F}
-  (hA_inj : Function.Injective A)
-  (h_norm : ‖I_E - A.comp B‖ < 1) :
-  B.IsInvertible := by
-  -- By Neumann series, A∘B is invertible
-  obtain ⟨inv_AB, h_left, h_right⟩ := invertible_comp_form h_norm
+--     This is used to show Df(x̃) is invertible without requiring A to be invertible. -/
+-- lemma construct_derivative_inverse
+--   {A : F →L[ℝ] E} {B : E →L[ℝ] F}
+--   (hA_inj : Function.Injective A)
+--   (h_norm : ‖I_E - A.comp B‖ < 1) :
+--   B.IsInvertible := by
+--   -- By Neumann series, A∘B is invertible
+--   obtain ⟨inv_AB, h_left, h_right⟩ := invertible_comp_form h_norm
 
-  -- Construct B⁻¹ = inv_AB ∘ A
-  let B_inv := inv_AB.comp A
+--   -- Construct B⁻¹ = inv_AB ∘ A
+--   let B_inv := inv_AB.comp A
 
-  -- Left inverse: B(B⁻¹(x)) = x
-  have h_inv_left : ∀ x, B (B_inv x) = x := by
-    intro x
-    have h1 : A (B (inv_AB (A x))) = A x := by
-      have := congrFun (congrArg DFunLike.coe h_left) (A x)
-      simp at this
-      exact this
-    exact hA_inj h1
+--   -- Left inverse: B(B⁻¹(x)) = x
+--   have h_inv_left : ∀ x, B (B_inv x) = x := by
+--     intro x
+--     have h1 : A (B (inv_AB (A x))) = A x := by
+--       have := congrFun (congrArg DFunLike.coe h_left) (A x)
+--       simp at this
+--       exact this
+--     exact hA_inj h1
 
-  -- Right inverse: B⁻¹(B(x)) = x
-  have h_inv_right : ∀ x, B_inv (B x) = x := by
-    intro x
-    have := congrFun (congrArg DFunLike.coe h_right) x
-    simp at this
-    exact this
+--   -- Right inverse: B⁻¹(B(x)) = x
+--   have h_inv_right : ∀ x, B_inv (B x) = x := by
+--     intro x
+--     have := congrFun (congrArg DFunLike.coe h_right) x
+--     simp at this
+--     exact this
 
-  -- Package as ContinuousLinearEquiv
-  use ContinuousLinearEquiv.equivOfInverse B B_inv h_inv_right h_inv_left
-  rfl
+--   -- Package as ContinuousLinearEquiv
+--   use ContinuousLinearEquiv.equivOfInverse B B_inv h_inv_right h_inv_left
+--   rfl
 
 omit [CompleteSpace E] in
 /-- T maps the closed ball into itself when the radii polynomial is negative

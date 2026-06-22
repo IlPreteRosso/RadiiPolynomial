@@ -225,8 +225,8 @@ lemma StdIVPData.composedApprox_eq_fderiv_G_fin
       toCoeff (ν := ν) ((fderiv ℝ (d.G φ x₀) d.abar) h) l n :=
   ivpComposedApprox_eq_fderiv_fin d.approxInverse d.approxDeriv φ x₀ d.tailCancel
     d.htail_diag_inv _ hφ_diff d.abar
-    (ivp_hDF_block_nat d.approxDeriv φ φ_spec x₀ d.abar d.abar_Q
-      hφ_eq hφ_diff d.abar_toSeq_eq Dφ_Q hDφ_Q
+    (ivp_hDF_block_nat d.approxDeriv φ φ_spec x₀ d.abar
+      hφ_eq hφ_diff Dφ_Q hDφ_Q
       d.DF_col (fun _ _ _ _ => rfl) hDF_nat)
     h l n hn
 
@@ -241,6 +241,35 @@ lemma Z₀_le {Z₀ : ℝ} (hZ₀ : finiteBlockMatrixNorm ν d.defect.finBlock �
     Z₀_norm (ContinuousLinearMap.id ℝ (XL1 ν L))
       ((StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ Z₀ :=
   IVP.ivp_Z₀_le d.approxInverse d.approxDeriv d.tailCancel hZ₀
+
+/-! ## 7'. F-Zero Bridge (for the f-F bridge / `analytic_solution_unique`) -/
+
+/-- `data.G φ x₀ a = 0` implies `ivpCoeffs φ x₀ a` is identically zero, provided the
+defect's finite block has operator norm strictly less than 1. The radii polynomial's
+Z₀-bound gives precisely this strict inequality (Z₀ < 1 is part of the radii polynomial
+condition `generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0`).
+
+Proof structure:
+1. `G = approxInverse.action ∘ ivpCoeffs` (via `ivpMap_coeff`), so `G a = 0` gives
+   `approxInverse.action (ivpCoeffs ...) l n = 0` per coefficient.
+2. `approxInverse` has finite block injective (by `finite_block_injective_of_defect_norm_lt_one`)
+   and tail-diagonal `1/n ≠ 0` (by `htail_diag_inv`).
+3. `seq_zero_of_action_zero` upgrades action-zero to coefficient-zero. -/
+lemma ivpCoeffs_zero_of_G_zero
+    (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
+    (hZ₀_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
+    {a : XL1 ν L} (hG : d.G φ x₀ a = 0) :
+    ∀ l n, ivpCoeffs φ x₀ a l n = 0 := by
+  -- Step 1: convert XL1-zero to per-coefficient action-zero.
+  have h_action : ∀ l n, d.approxInverse.action (ivpCoeffs φ x₀ a) l n = 0 := fun l n => by
+    rw [← d.G_coeff φ x₀ a l n, congrFun hG l]
+    rfl
+  -- Step 2: apply the per-coefficient injectivity bridge.
+  refine SystemBlockDiagData.seq_zero_of_action_zero d.approxInverse ?_ ?_ h_action
+  · exact finite_block_injective_of_defect_norm_lt_one d.approxInverse d.approxDeriv hZ₀_lt_one
+  · intro l n hn
+    rw [d.htail_diag_inv l n hn]
+    exact one_div_ne_zero (Nat.cast_ne_zero.mpr (by omega))
 
 /-! ## 8. Main Existence/Uniqueness Skeleton -/
 

@@ -82,7 +82,7 @@ macro "auto_poly_fderiv" : tactic => `(tactic| (
     simp (discharger := fun_prop) only [
       -- === fderiv rules ===
       -- Identity / constants / linear maps
-      fderiv_id', fderiv_const_apply, ContinuousLinearMap.fderiv,
+      fderiv_fun_id, fderiv_const_apply, ContinuousLinearMap.fderiv,
       -- Pi projection (system-level: fderiv (· i) = proj i)
       fderiv_pi_apply,
       -- Additive
@@ -96,7 +96,7 @@ macro "auto_poly_fderiv" : tactic => `(tactic| (
       -- Powers
       fderiv_fun_pow, fderiv_pow_ring,
       -- Composition
-      fderiv_comp',
+      fderiv_fun_comp,
       -- === iteratedDeriv rules ===
       -- Base cases / constants
       iteratedDeriv_fun_id, iteratedDeriv_fun_id_zero, iteratedDeriv_const,
@@ -120,14 +120,14 @@ macro "auto_poly_fderiv" : tactic => `(tactic| (
 open Lean.Parser.Tactic in
 macro "auto_poly_fderiv" "[" extras:simpLemma,* "]" : tactic => `(tactic| (
     simp (discharger := fun_prop) only [
-      fderiv_id', fderiv_const_apply, ContinuousLinearMap.fderiv,
+      fderiv_fun_id, fderiv_const_apply, ContinuousLinearMap.fderiv,
       fderiv_pi_apply,
       fderiv_fun_add, fderiv_fun_sub, fderiv_fun_neg,
       fderiv_add_const, fderiv_sub_const, fderiv_const_add, fderiv_const_sub,
       fderiv_fun_mul, fderiv_mul_const, fderiv_mul_const', fderiv_const_mul,
       fderiv_fun_const_smul,
       fderiv_fun_pow, fderiv_pow_ring,
-      fderiv_comp',
+      fderiv_fun_comp,
       iteratedDeriv_fun_id, iteratedDeriv_fun_id_zero, iteratedDeriv_const,
       iteratedDeriv_fun_add, iteratedDeriv_fun_sub, iteratedDeriv_fun_neg,
       iteratedDeriv_const_add, iteratedDeriv_const_sub,

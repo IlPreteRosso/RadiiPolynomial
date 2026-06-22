@@ -439,7 +439,7 @@ lemma ScalarBlockDiagData.toScalarCLM_toSeq_eq_action {N : ℕ} {ν : PosReal}
   by_cases hn : n ≤ N
   · rw [if_pos hn, A.toScalarCLM_toSeq_fin (ν := ν) v ⟨n, Nat.lt_succ_of_le hn⟩]
     simp_rw [hmat, hvec]
-  · push_neg at hn
+  · push Not at hn
     rw [if_neg (not_le.mpr hn), A.toScalarCLM_toSeq_tail v n hn, htail n hn, hvec]
 
 /-- Per-term evaluator for `‖A · v‖` norm sums.
@@ -521,7 +521,7 @@ theorem systemBlockDiagActionEval_correct {L N : ℕ}
     exact_mod_cast IntervalDyadic.mem_ofIntervalRat
       (IntervalRat.mem_singleton _) cfg.precision hprec
   · -- Tail
-    push_neg at hn
+    push Not at hn
     rw [if_neg (not_le.mpr hn)]
     rw [A.action_tail c l n hn, htail l n hn, hvec]
     exact_mod_cast IntervalDyadic.mem_ofIntervalRat

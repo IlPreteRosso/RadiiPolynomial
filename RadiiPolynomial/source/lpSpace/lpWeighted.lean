@@ -376,6 +376,71 @@ noncomputable def trunc_CLM (N : ℕ) : l1Weighted ν →L[ℝ] l1Weighted ν :=
 @[simp] lemma trunc_CLM_apply (N : ℕ) (a : l1Weighted ν) :
     trunc_CLM N a = trunc N a := rfl
 
+/-- Express `trunc N a` as a finite sum of `single`-monomials:
+`π_N a = ∑_{k ≤ N} δ_k · a_k`. This is the explicit "finite-support decomposition" —
+the sum has support exactly `{0, …, N}` and each summand is a monomial.
+
+Combined with `tendsto_trunc`, this realizes `l1Weighted ν` as the topological
+closure of the ℝ-span of the monoid-algebra basis `{δ_n}_{n ∈ ℕ}` — i.e., the
+Banach completion of `AddMonoidAlgebra ℝ ℕ` with the weighted ℓ¹ norm. -/
+lemma trunc_eq_sum (N : ℕ) (a : l1Weighted ν) :
+    trunc N a = ∑ k ∈ Finset.range (N + 1), single k (toSeq a k) := by
+  apply ext; intro n
+  rw [coeff_trunc, toSeq_finset_sum]
+  by_cases hn : n ≤ N
+  · rw [if_pos hn]
+    rw [Finset.sum_eq_single n
+      (fun m _ hne => single_toSeq_ne m n (toSeq a m) (Ne.symm hne))
+      (fun h => absurd (Finset.mem_range.mpr (Nat.lt_succ_iff.mpr hn)) h)]
+    exact (single_toSeq_self n (toSeq a n)).symm
+  · rw [if_neg hn]
+    refine (Finset.sum_eq_zero ?_).symm
+    intro k hk
+    have hne : n ≠ k := fun h => hn (h ▸ Nat.lt_succ_iff.mp (Finset.mem_range.mp hk))
+    exact single_toSeq_ne k n (toSeq a k) hne
+
+/-- Truncations converge to the original element: `trunc N a → a` as `N → ∞` (in the
+ℓ¹_ν norm). This is the **density argument** for finite-support sequences: the closure
+of the ℝ-span of `{δ_n}_{n ∈ ℕ}` is all of `l1Weighted ν`. Reusable for any "extend by
+density" argument — pair with continuity of a function on `l1Weighted ν` to reduce
+proving an identity to its restriction on truncations.
+
+Proof: `‖trunc N a - a‖` is exactly the tail of the norm series `∑' n, |a_n|·ν^n`
+(via `norm_eq_finRangeSum_add_tailTsum`), which → 0 because the series converges. -/
+lemma tendsto_trunc (a : l1Weighted ν) :
+    Filter.Tendsto (fun N => trunc N a) Filter.atTop (𝓝 a) := by
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  have hsum := summable_weighted a
+  have htend : Filter.Tendsto
+      (fun K => ∑ n ∈ Finset.range K, |toSeq a n| * (ν : ℝ) ^ n)
+      Filter.atTop (𝓝 ‖a‖) := by
+    rw [norm_eq_tsum]; exact hsum.hasSum.tendsto_sum_nat
+  rw [Metric.tendsto_atTop] at htend
+  obtain ⟨K₀, hK₀⟩ := htend ε hε
+  refine ⟨K₀, fun N hN => ?_⟩
+  have hcoeff_zero : ∀ k, k < N + 1 → toSeq (trunc N a - a) k = 0 := fun k hk => by
+    simp only [sub_toSeq, coeff_trunc, show k ≤ N from by omega, if_true, sub_self]
+  have hcoeff_abs : ∀ k, |toSeq (trunc N a - a) (k + (N+1))| = |toSeq a (k + (N+1))| := fun k => by
+    simp only [sub_toSeq, coeff_trunc, show ¬ (k + (N+1) ≤ N) from by omega, if_false,
+      zero_sub, abs_neg]
+  have hnorm_eq : ‖trunc N a - a‖ =
+      ∑' k, |toSeq a (k + (N+1))| * (ν : ℝ) ^ (k + (N+1)) := by
+    rw [norm_eq_tailTsum_of_fin_zero (trunc N a - a) (N+1) hcoeff_zero]
+    exact tsum_congr fun k => by rw [hcoeff_abs]
+  have h_total : ‖a‖ = (∑ n ∈ Finset.range (N+1), |toSeq a n| * (ν : ℝ) ^ n) +
+      ∑' k, |toSeq a (k + (N+1))| * (ν : ℝ) ^ (k + (N+1)) :=
+    norm_eq_finRangeSum_add_tailTsum a (N+1)
+  have h_partial_le : ∑ n ∈ Finset.range (N+1), |toSeq a n| * (ν : ℝ) ^ n ≤ ‖a‖ := by
+    rw [norm_eq_tsum]
+    exact hsum.sum_le_tsum _ (fun n _ => mul_nonneg (abs_nonneg _) (pow_nonneg ν.coe_nonneg n))
+  have hdist := hK₀ (N+1) (by omega)
+  rw [Real.dist_eq, abs_sub_comm, abs_of_nonneg (by linarith)] at hdist
+  rw [dist_eq_norm, hnorm_eq,
+    show (∑' k, |toSeq a (k + (N+1))| * (ν : ℝ) ^ (k + (N+1))) =
+         ‖a‖ - ∑ n ∈ Finset.range (N+1), |toSeq a n| * (ν : ℝ) ^ n from by linarith]
+  exact hdist
+
 end Truncation
 
 section TailProjection
@@ -438,6 +503,41 @@ Bridge via `CauchyProduct.eq_addRingConvolution`. -/
     toSeq (a * b) n = CauchyProduct (toSeq a) (toSeq b) n := by
   have h := congr_fun (CauchyProduct.eq_addRingConvolution (toSeq a) (toSeq b)) n
   rw [h]; rfl
+
+/-- Product of two `single`-monomials: the additive-monoid-algebra convolution identity
+`(δ_m · r) ★ (δ_n · s) = δ_{m+n} · (r · s)`. This is the core "monoid algebra" content of
+the Banach algebra structure on `l1Weighted ν` — it identifies the multiplication on
+`l1Weighted ν` (Cauchy product) with the convolution on `AddMonoidAlgebra ℝ ℕ` restricted
+to the basis `{δ_n}`. Combined with `eval_single` (`eval(δ_n · x) z = x · z^n`), it
+witnesses `eval` as the algebra hom lifting the monoid hom `n ↦ z^n` (universal property
+of the monoid algebra). -/
+lemma single_mul (m n : ℕ) (r s : ℝ) :
+    (single (ν := ν) m r) * single n s = single (m + n) (r * s) := by
+  apply ext; intro k
+  rw [toSeq_mul, CauchyProduct.apply]
+  simp only [single_toSeq]
+  by_cases hk : k = m + n
+  · subst hk
+    rw [Finset.sum_eq_single (m, n)]
+    · simp
+    · rintro ⟨i, j⟩ hij hne
+      simp only [Finset.mem_antidiagonal] at hij
+      by_cases hi : i = m
+      · subst hi
+        have hjn : j = n := by omega
+        subst hjn; exact absurd rfl hne
+      · simp [hi]
+    · intro h
+      exact absurd (Finset.mem_antidiagonal.mpr (rfl : m + n = m + n)) h
+  · rw [if_neg hk]
+    apply Finset.sum_eq_zero
+    rintro ⟨i, j⟩ hij
+    simp only [Finset.mem_antidiagonal] at hij
+    by_cases hi : i = m
+    · subst hi
+      have hjn : j ≠ n := fun h => hk (by subst h; omega)
+      simp [hjn]
+    · simp [hi]
 
 /-- `toSeq` of the multiplicative identity. -/
 @[simp] lemma one_toSeq_eq (n : ℕ) :

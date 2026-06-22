@@ -78,7 +78,20 @@ lemma ivpComposedApprox_toCLM_tail
 
 /-- Z₀ bound: `‖I - composedApprox.toCLM‖ ≤ finBlockMatrixNorm(defect)`.
 Since the defect has `tailBound = 0` (from tail cancellation), the bound is purely
-from finite block norms. -/
+from finite block norms.
+
+TODO (unify with `SystemBlockDiagData.Z₀_le_of_tailCancel`): this lemma
+exists as a sibling because A† for IVPs has unbounded tail (`Λ_n = n`)
+and cannot be a `SystemBlockDiagData L N` against the single weight `ν`.
+We therefore take `A_dag : BlockDiagOp L N` and bound the composed
+operator `ivpComposedApprox A A_dag htail_cancel` (which IS a
+`SystemBlockDiagData` thanks to tail cancellation producing zero tail).
+A future two-weight `SystemBlockDiagData ν₁ ν₂` mapping
+`XL1 ν₁ L → XL1 ν₂ L` with a `ν₂`-tail bound would let A† live as
+`SystemBlockDiagData ν ω` (ω-weighted space, see `OmegaWeighted.lean`)
+and reduce this to a direct application of
+`Z₀_le_of_tailCancel`. See the `project_ivp_codomain_design` memory
+note for the rationale of the current "compile-away-ω" design. -/
 lemma ivp_Z₀_le
     (A : SystemBlockDiagData L N) (A_dag : BlockDiagOp L N)
     (htail_cancel : ∀ l : Fin L, ∀ n, N < n →
@@ -217,7 +230,7 @@ theorem ivp_system_theorem
   have sub_seq : ∀ (f g : XL1 ν L →L[ℝ] XL1 ν L) (x : XL1 ν L) (l : Fin L) (n : ℕ),
       l1Weighted.toSeq (((f - g) x) l) n =
         l1Weighted.toSeq ((f x) l) n - l1Weighted.toSeq ((g x) l) n := by
-    intros; simp [ContinuousLinearMap.sub_apply]; rfl
+    intros; simp [sub_apply]; rfl
   have h_Y₀ := ivp_Y₀_le A φ x₀ hmem ā S hSN hsupport hY₀_nn hY₀
   have h_Z₀ := ivp_Z₀_le A A_dag htail_cancel hZ₀
   have h_Z₁ := ivp_Z₁_le CA G ā (fun h l => (fderiv ℝ (fun a => φ a l) ā) h)

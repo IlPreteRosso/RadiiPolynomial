@@ -71,8 +71,8 @@ theorem differentiable_sq : Differentiable ℝ (sq : l1Weighted ν → l1Weighte
   fun a => (hasFDerivAt_sq a).differentiableAt
 
 theorem hasFDerivAt_F_sub_const (c a : l1Weighted ν) :
-    HasFDerivAt (F_sub_const c) ((2 : ℝ) • leftMul a) a := by
-  rw [F_sub_const_eq_fun]; auto_hasFDerivAt
+    HasFDerivAt (F_sub_const c) ((2 : ℝ) • leftMul a) a :=
+  (hasFDerivAt_sq a).sub_const c
 
 theorem fderiv_F_sub_const (c a : l1Weighted ν) :
     fderiv ℝ (F_sub_const c) a = (2 : ℝ) • leftMul a :=
@@ -233,19 +233,14 @@ lemma approxDeriv_sub_fderiv_fin_kill {N : ℕ}
     (n : ℕ) (hn : n ≤ N) :
     l1Weighted.toSeq (((approxDeriv sol).toScalarCLM (ν := ν) -
       fderiv ℝ (F lam0) (sol.toL1 : l1Weighted ν)) h) n = 0 := by
-  simp only [ContinuousLinearMap.sub_apply, l1Weighted.sub_toSeq, fderiv_F,
-    ContinuousLinearMap.smul_apply, leftMul_apply, l1Weighted.smul_toSeq]
-  -- Goal: A†(h)[n] - 2*(ā·h)[n] = 0
-  -- A†(h)[n] = CauchyProduct(2*toSeq, h)[n] via the Cauchy bridge
-  rw [ScalarBlockDiagData.toScalarCLM_toSeq_fin_eq_cauchy (approxDeriv sol)
-    (fun k => 2 * sol.toSeq k) (approxDeriv_finBlock_eq_cauchy sol) h n hn]
-  -- 2*(ā·h)[n] = CauchyProduct(2*toSeq, h)[n]
-  have hmul : 2 * l1Weighted.toSeq ((sol.toL1 : l1Weighted ν) * h) n =
-      CauchyProduct (fun k => 2 * sol.toSeq k) (l1Weighted.toSeq h) n := by
-    rw [l1Weighted.toSeq_mul]
-    simp only [sol.toL1_toSeq, CauchyProduct.apply, Finset.mul_sum]
-    exact Finset.sum_congr rfl (fun i _ => by ring)
-  rw [hmul, sub_self]
+  rw [sub_apply, l1Weighted.sub_toSeq, fderiv_F,
+    (approxDeriv sol).toScalarCLM_toSeq_fin_eq_cauchy (ν := ν)
+      (fun k => 2 * sol.toSeq k) (approxDeriv_finBlock_eq_cauchy sol) h n hn,
+    smul_apply, leftMul_apply, l1Weighted.smul_toSeq,
+    l1Weighted.toSeq_mul, ApproxSolution.toL1_toSeq]
+  have heq : (fun k => 2 * sol.toSeq k) = ((2 : ℝ) • sol.toSeq : ℕ → ℝ) := rfl
+  rw [heq, CauchyProduct.smul_mul]
+  simp [smul_eq_mul]
 
 /-! ### Shifted coefficient sequence for Z₁ norm bound -/
 
@@ -283,36 +278,33 @@ lemma approxDeriv_sub_fderiv_tail_eq {N : ℕ}
     l1Weighted.toSeq (((approxDeriv sol).toScalarCLM (ν := ν) -
       fderiv ℝ (F lam0) (sol.toL1 : l1Weighted ν)) h) n =
     -(2 : ℝ) * l1Weighted.toSeq ((shiftedL1 sol : l1Weighted ν) * h) n := by
-  simp only [ContinuousLinearMap.sub_apply, l1Weighted.sub_toSeq, fderiv_F,
-    ContinuousLinearMap.smul_apply, leftMul_apply, l1Weighted.smul_toSeq]
-  -- LHS: tail diagonal gives 2ā₀·h_n
-  rw [ScalarBlockDiagData.toScalarCLM_toSeq_tail (approxDeriv sol) h n hn]
-  simp only [approxDeriv, ScalarBlockDiagData.ofParts, ScalarBlockDiagData.tailDiag0]
-  -- RHS: expand both Cauchy products
-  have hmul_full : l1Weighted.toSeq ((sol.toL1 : l1Weighted ν) * h) n =
-      CauchyProduct sol.toSeq (l1Weighted.toSeq h) n := by
-    rw [l1Weighted.toSeq_mul]; simp [sol.toL1_toSeq]
-  have hmul_shifted : l1Weighted.toSeq ((shiftedL1 sol : l1Weighted ν) * h) n =
-      CauchyProduct (shiftedSeq sol) (l1Weighted.toSeq h) n := by
-    rw [l1Weighted.toSeq_mul, show l1Weighted.toSeq (shiftedL1 sol : l1Weighted ν) = shiftedSeq sol from rfl]
-  rw [hmul_full, hmul_shifted]
-  -- Split full Cauchy product: a₀·h_n + ∑_{k∈[1,N]} a_k·h_{n-k}
-  rw [CauchyProduct.apply_of_support_le_split
-    (fun k hk => sol.toSeq_zero_of_gt k hk) hn]
-  -- Split shifted Cauchy product similarly
-  rw [CauchyProduct.apply_of_support_le_split
-    (fun k (hk : N < k) => by simp [shiftedSeq, Finset.mem_Icc]; omega) hn]
-  -- Simplify shiftedSeq: 0 ∉ [1,N] gives 0, k ∈ [1,N] gives sol.toSeq k
-  have h_shifted_sum :
-      shiftedSeq sol 0 * l1Weighted.toSeq h n +
-      ∑ k ∈ Finset.Icc 1 N, shiftedSeq sol k * l1Weighted.toSeq h (n - k) =
-      ∑ k ∈ Finset.Icc 1 N, sol.toSeq k * l1Weighted.toSeq h (n - k) := by
-    rw [show shiftedSeq sol 0 = 0 from if_neg (by simp [Finset.mem_Icc]),
-      zero_mul, zero_add]
-    exact Finset.sum_congr rfl fun k hk =>
-      show (if k ∈ Finset.Icc 1 N then sol.toSeq k else 0) * _ = _ by rw [if_pos hk]
-  rw [h_shifted_sum, show sol.aBar_fin (0 : Fin (N + 1)) = sol.toSeq 0 from
-    (sol.toSeq_eq_fin 0).symm]
+  have hsup : ∀ k, N < k → sol.toSeq k = 0 := fun k hk => sol.toSeq_zero_of_gt k hk
+  have hShifted_sup : ∀ k, N < k → shiftedSeq sol k = 0 := by
+    intro k hk
+    simp only [shiftedSeq, Finset.mem_Icc, if_neg (show ¬(1 ≤ k ∧ k ≤ N) from by omega)]
+  have hShifted0 : shiftedSeq sol 0 = 0 := by
+    simp only [shiftedSeq, Finset.mem_Icc, if_neg (show ¬(1 ≤ 0 ∧ 0 ≤ N) from by omega)]
+  have hShifted_in : ∀ k ∈ Finset.Icc 1 N, shiftedSeq sol k = sol.toSeq k := by
+    intro k hk
+    simp only [shiftedSeq, if_pos hk]
+  have hToSeq0_eq : sol.toSeq 0 = sol.aBar_fin 0 := by
+    have := sol.toSeq_eq_fin ⟨0, Nat.succ_pos N⟩
+    simpa using this
+  have htail : (approxDeriv sol).tailDiag0 n = 2 * sol.aBar_fin 0 := rfl
+  rw [sub_apply, l1Weighted.sub_toSeq, fderiv_F,
+    (approxDeriv sol).toScalarCLM_toSeq_tail h n hn, htail,
+    smul_apply, leftMul_apply, l1Weighted.smul_toSeq,
+    l1Weighted.toSeq_mul, ApproxSolution.toL1_toSeq,
+    CauchyProduct.apply_of_support_le_split hsup hn, ← hToSeq0_eq]
+  -- RHS expansion
+  show _ = -(2 : ℝ) * l1Weighted.toSeq ((shiftedL1 sol : l1Weighted ν) * h) n
+  rw [l1Weighted.toSeq_mul]
+  show _ = -(2 : ℝ) * CauchyProduct (shiftedSeq sol) (l1Weighted.toSeq h) n
+  rw [CauchyProduct.apply_of_support_le_split hShifted_sup hn, hShifted0]
+  have hSumEq : ∑ k ∈ Finset.Icc 1 N, shiftedSeq sol k * l1Weighted.toSeq h (n - k)
+      = ∑ k ∈ Finset.Icc 1 N, sol.toSeq k * l1Weighted.toSeq h (n - k) :=
+    Finset.sum_congr rfl (fun k hk => by rw [hShifted_in k hk])
+  rw [hSumEq]
   ring
 
 /-- **Z₁ pipeline**: Uses `Z₁_le_of_fin_kill_tail_dom` (general API) with

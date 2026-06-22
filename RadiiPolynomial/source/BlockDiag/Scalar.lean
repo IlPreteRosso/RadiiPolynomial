@@ -298,8 +298,8 @@ lemma ScalarBlockDiagData.id_sub_comp_toScalarCLM_apply_eq
       (A.toScalarCLM (ν := ν)).comp (B.toScalarCLM (ν := ν))) x =
     ((ContinuousLinearMap.id ℝ (XL1 ν 1) -
       (A.toCLM (ν := ν)).comp (B.toCLM (ν := ν))) (fun _ => x)) 0 := by
-  simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.coe_id', id_eq,
-    ContinuousLinearMap.coe_comp', Function.comp_apply, Pi.sub_apply,
+  simp only [sub_apply, ContinuousLinearMap.coe_id', id_eq,
+    ContinuousLinearMap.coe_comp, Function.comp_apply, Pi.sub_apply,
     ScalarBlockDiagData.toScalarCLM_apply]
   rw [← XL1_fin1_eq_const (B.toCLM (ν := ν) (fun _ => x))]
 

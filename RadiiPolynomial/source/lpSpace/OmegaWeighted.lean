@@ -1,4 +1,6 @@
 import RadiiPolynomial.source.lpSpace.lpWeighted
+import Mathlib.Analysis.SpecificLimits.Normed
+import Mathlib.Topology.Algebra.InfiniteSum.Real
 
 /-!
 # Omega-weighted sequence space for IVP problems
@@ -168,15 +170,6 @@ lemma l1Omega.geom_to_omega_mem (a : l1Weighted ν) :
       |l1Weighted.toSeq a n| * ((ν : ℝ) * (ν : ℝ) ^ n) from fun n => by ring] at hsm
     exact hsm
 
-/-- Finite-support sequences belong to `ℓ¹_ω` (for constructing F_lorenz(ābar)). -/
-lemma l1Omega.mem_of_finite_support (a : ℕ → ℝ) (M : ℕ) (hsupp : ∀ n, M < n → a n = 0) :
-    l1Omega.Mem ν a := by
-  rw [l1Omega.mem_iff]
-  exact summable_of_ne_finset_zero (s := Finset.Icc 0 M) fun n hn => by
-    have : M < n := by
-      simp only [Finset.mem_Icc, not_and_or, not_le] at hn; omega
-    simp [hsupp n this]
-
 /-- `ℓ¹_ω` membership is closed under subtraction. -/
 lemma l1Omega.mem_sub {f g : ℕ → ℝ} (hf : l1Omega.Mem ν f) (hg : l1Omega.Mem ν g) :
     l1Omega.Mem ν (fun n => f n - g n) := by
@@ -189,62 +182,6 @@ lemma l1Omega.mem_sub {f g : ℕ → ℝ} (hf : l1Omega.Mem ν f) (hg : l1Omega.
       by linarith [le_abs_self (f n), neg_abs_le (g n)]⟩
   exact (mul_le_mul_of_nonneg_right hab OmegaScaledReal.omegaWeight_nonneg).trans_eq
     (add_mul _ _ _)
-
-/-- The sequence `{c₀, 1·a₁ - φ₀, 2·a₂ - φ₁, 3·a₃ - φ₂, ...}` belongs to `ℓ¹_ω`.
-Ref: Proposition 8.1.5 — derivative-shift `(n+1)·a_{n+1}` is omega-summable,
-and `φ ∈ ℓ¹_ν ↪ ℓ¹_ω`. -/
-lemma l1Omega.mem_deriv_shift_sub (a : l1Weighted ν) (φ : l1Weighted ν) (c₀ : ℝ) :
-    l1Omega.Mem ν (fun n => match n with
-      | 0 => c₀
-      | n + 1 => ((n : ℝ) + 1) * l1Weighted.toSeq a (n + 1) -
-          l1Weighted.toSeq φ n) := by
-  rw [l1Omega.mem_iff, ← summable_nat_add_iff (k := 1)]
-  -- Comparison: |f(n+1)| * ω_{n+1} ≤ ν·|a_{n+1}|·ν^{n+1} + ν²·|φ_n|·ν^n
-  have ha := (l1Weighted.mem_iff (l1Weighted.toSeq a)).mp a.toLp.2
-  have hφ := (l1Weighted.mem_iff (l1Weighted.toSeq φ)).mp φ.toLp.2
-  refine Summable.of_nonneg_of_le
-    (fun n => mul_nonneg (abs_nonneg _) OmegaScaledReal.omegaWeight_nonneg)
-    (fun n => ?_)
-    (((summable_nat_add_iff (k := 1)).mpr ha).mul_left (ν : ℝ) |>.add
-      (hφ.mul_left ((ν : ℝ) ^ 2)))
-  -- Pointwise: |((n+1) * a_{n+1} - φ_n)| * ω_{n+1} ≤ ν * |a_{n+1}| * ν^{n+1} + ν²*|φ_n|*ν^n
-  simp only [OmegaScaledReal.omegaWeight]
-  have hne : (↑(n + 2) : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
-  rw [show (n + 1 + 1 : ℕ) = n + 2 from by omega]
-  -- Triangle inequality: |x - y| ≤ |x| + |y| where x = (n+1)*a_{n+1}
-  have h1 : |((n : ℝ) + 1) * l1Weighted.toSeq a (n + 1) - l1Weighted.toSeq φ n| ≤
-      ((n : ℝ) + 1) * |l1Weighted.toSeq a (n + 1)| + |l1Weighted.toSeq φ n| := by
-    refine (abs_sub _ _).trans ?_
-    rw [abs_mul, abs_of_nonneg (by positivity : (0 : ℝ) ≤ (n : ℝ) + 1)]
-  -- ω_{n+1} = ν^{n+2}/(n+2), and (n+1)/(n+2) ≤ 1, 1/(n+2) ≤ 1
-  have hω_nn : (0 : ℝ) ≤ (ν : ℝ) ^ (n + 2) / (↑(n + 2) : ℝ) :=
-    div_nonneg (pow_nonneg ν.2.le _) (by positivity)
-  have hdiv1 : ((n : ℝ) + 1) / (↑(n + 2) : ℝ) ≤ 1 := by
-    rw [div_le_one (by positivity)]; push_cast; linarith
-  have hdiv2 : (1 : ℝ) / (↑(n + 2) : ℝ) ≤ 1 := by
-    rw [div_le_one (by positivity)]; push_cast; linarith
-  calc _ ≤ (((n : ℝ) + 1) * |l1Weighted.toSeq a (n + 1)| + |l1Weighted.toSeq φ n|) *
-            ((ν : ℝ) ^ (n + 2) / ↑(n + 2)) :=
-          mul_le_mul_of_nonneg_right h1 hω_nn
-    _ ≤ (ν : ℝ) * (|l1Weighted.toSeq a (n + 1)| * (ν : ℝ) ^ (n + 1)) +
-        (ν : ℝ) ^ 2 * (|l1Weighted.toSeq φ n| * (ν : ℝ) ^ n) := by
-      -- Split into two terms and bound each
-      rw [add_mul]
-      apply add_le_add
-      · -- (n+1) * |a| * (ν^{n+2}/(n+2)) ≤ |a| * ν^{n+2} = ν * |a|*ν^{n+1}
-        have hb := mul_nonneg (abs_nonneg (l1Weighted.toSeq a (n + 1))) (pow_nonneg ν.2.le (n + 2))
-        calc _ = (↑n + 1) / ↑(n + 2) * (|l1Weighted.toSeq a (n + 1)| * (ν : ℝ) ^ (n + 2)) := by ring
-          _ ≤ 1 * (|l1Weighted.toSeq a (n + 1)| * (ν : ℝ) ^ (n + 2)) :=
-              mul_le_mul_of_nonneg_right hdiv1 hb
-          _ = (ν : ℝ) * (|l1Weighted.toSeq a (n + 1)| * (ν : ℝ) ^ (n + 1)) := by
-              rw [one_mul, pow_succ]; ring
-      · -- |φ| * (ν^{n+2}/(n+2)) ≤ |φ| * ν^{n+2} = ν² * |φ| * ν^n
-        have hb := mul_nonneg (abs_nonneg (l1Weighted.toSeq φ n)) (pow_nonneg ν.2.le (n + 2))
-        calc _ = 1 / ↑(n + 2) * (|l1Weighted.toSeq φ n| * (ν : ℝ) ^ (n + 2)) := by ring
-          _ ≤ 1 * (|l1Weighted.toSeq φ n| * (ν : ℝ) ^ (n + 2)) :=
-              mul_le_mul_of_nonneg_right hdiv2 hb
-          _ = (ν : ℝ) ^ 2 * (|l1Weighted.toSeq φ n| * (ν : ℝ) ^ n) := by
-              rw [one_mul, pow_succ, pow_succ]; ring
 
 end Bridges
 
@@ -559,5 +496,165 @@ noncomputable def lambdaN_CLM (N : ℕ) : l1Weighted ν →L[ℝ] l1Weighted ν 
     lambdaN_CLM N a = lambdaN N a := rfl
 
 end LambdaN
+
+section DerivShift
+
+variable {ν : PosReal}
+
+/-- The derivative-shift sequence: `(D a)_n = (n+1) · a_{n+1}`.
+Coefficient sequence of `dx/dt` when `x(t) = Σ a_n t^n`. -/
+private def derivShift_seq (a : l1Weighted ν) : ℕ → ℝ :=
+  fun n => ((n : ℝ) + 1) * l1Weighted.toSeq a (n + 1)
+
+private lemma derivShift_mem (a : l1Weighted ν) :
+    l1Omega.Mem ν (derivShift_seq a) :=
+  l1Omega.deriv_shift_mem a
+
+/-- The derivative-shift operator `D : ℓ¹_ν → ℓ¹_ω`.
+The `(n+1)` factor is exactly compensated by `ω_n = ν^{n+1}/(n+1)`, so the operator
+maps into ℓ¹_ω rather than ℓ¹_ν. Term-by-term differentiation:
+`d/dt eval(a, t) = eval(D a, t)` for `|t| < ν` (proved in `Eval.lean`).
+Ref: Proposition 8.1.5. -/
+noncomputable def derivShift (a : l1Weighted ν) : l1Omega ν :=
+  l1Omega.mk (derivShift_seq a) (derivShift_mem a)
+
+@[simp] lemma derivShift_apply (a : l1Weighted ν) (n : ℕ) :
+    l1Omega.toSeq (derivShift a) n = ((n : ℝ) + 1) * l1Weighted.toSeq a (n + 1) := rfl
+
+lemma derivShift_linear_add (a b : l1Weighted ν) :
+    derivShift (a + b) = derivShift a + derivShift b := by
+  apply l1Omega.ext; intro n
+  show ((n : ℝ) + 1) * l1Weighted.toSeq (a + b) (n + 1) =
+       ((n : ℝ) + 1) * l1Weighted.toSeq a (n + 1) +
+       ((n : ℝ) + 1) * l1Weighted.toSeq b (n + 1)
+  rw [l1Weighted.add_toSeq]; ring
+
+lemma derivShift_linear_smul (r : ℝ) (a : l1Weighted ν) :
+    derivShift (r • a) = r • derivShift a := by
+  apply l1Omega.ext; intro n
+  show ((n : ℝ) + 1) * l1Weighted.toSeq (r • a) (n + 1) =
+       r * (((n : ℝ) + 1) * l1Weighted.toSeq a (n + 1))
+  rw [l1Weighted.smul_toSeq]; ring
+
+lemma derivShift_norm_le (a : l1Weighted ν) :
+    ‖derivShift a‖ ≤ ‖a‖ := by
+  rw [l1Omega.norm_eq_tsum, l1Weighted.norm_eq_tsum]
+  -- Each term: |D(a)_n| · ω_n = (n+1)·|a_{n+1}|·ω_n = |a_{n+1}|·ν^{n+1}
+  have h_term_eq : ∀ n, |l1Omega.toSeq (derivShift a) n| * OmegaScaledReal.omegaWeight ν n
+                  = |l1Weighted.toSeq a (n + 1)| * (ν : ℝ) ^ (n + 1) := fun n => by
+    have hcast : (n : ℝ) + 1 = ↑(n + 1) := by push_cast; ring
+    have hpos : (0 : ℝ) < ↑(n + 1) := by positivity
+    rw [derivShift_apply, hcast, abs_mul, abs_of_pos hpos,
+        mul_comm (↑(n + 1) : ℝ) _, mul_assoc, omegaWeight_mul_index]
+  have hb : Summable (fun n => |l1Weighted.toSeq a n| * (ν : ℝ) ^ n) :=
+    l1Weighted.summable_weighted a
+  rw [show (fun n => |l1Omega.toSeq (derivShift a) n| * OmegaScaledReal.omegaWeight ν n) =
+      (fun n => |l1Weighted.toSeq a (n + 1)| * (ν : ℝ) ^ (n + 1)) from funext h_term_eq]
+  -- Σ |a_{n+1}|·ν^{n+1} = (Σ |a_n|·ν^n) - |a_0|·ν^0 ≤ Σ |a_n|·ν^n
+  rw [hb.tsum_eq_zero_add]
+  linarith [mul_nonneg (abs_nonneg (l1Weighted.toSeq a 0)) (pow_nonneg ν.2.le 0)]
+
+/-- The derivative-shift operator as a CLM `ℓ¹_ν →L[ℝ] ℓ¹_ω`.
+Operator norm ≤ 1.
+Ref: Proposition 8.1.5. -/
+noncomputable def derivShift_CLM : l1Weighted ν →L[ℝ] l1Omega ν :=
+  LinearMap.mkContinuous
+    { toFun := derivShift
+      map_add' := derivShift_linear_add
+      map_smul' := fun r a => by simp [derivShift_linear_smul] }
+    1
+    (fun a => by rw [one_mul]; exact derivShift_norm_le a)
+
+@[simp] lemma derivShift_CLM_apply (a : l1Weighted ν) :
+    derivShift_CLM a = derivShift a := rfl
+
+end DerivShift
+
+section Eval
+
+variable {ν : PosReal}
+
+/-- Summability of `Σ |b_n| · |t|^n` for `b ∈ ℓ¹_ω` and `|t| < ν` (strict).
+The bound `(n+1) · (|t|/ν)^n` is used as the conversion factor between `ω_n` and `|t|^n`. -/
+theorem l1Omega.summable_eval (b : l1Omega ν) {t : ℝ} (ht : |t| < ν) :
+    Summable fun n => l1Omega.toSeq b n * t ^ n := by
+  have hν : (0 : ℝ) < ν := ν.2
+  set r : ℝ := |t| / ν with hr_def
+  have hr_lt : r < 1 := (div_lt_one hν).mpr ht
+  have hr_nn : (0 : ℝ) ≤ r := div_nonneg (abs_nonneg _) hν.le
+  have hr_norm : ‖r‖ < 1 := by rw [Real.norm_eq_abs, abs_of_nonneg hr_nn]; exact hr_lt
+  -- Σ (n+1) · r^n is summable for r < 1
+  have h_geom_summable : Summable (fun n : ℕ => ((n : ℝ) + 1) * r ^ n) := by
+    have h_n : Summable (fun n : ℕ => (n : ℝ) * r ^ n) := by
+      simpa [pow_one] using summable_pow_mul_geometric_of_norm_lt_one (k := 1) hr_norm
+    have h_0 : Summable (fun n : ℕ => r ^ n) :=
+      summable_geometric_of_lt_one hr_nn hr_lt
+    refine (h_n.add h_0).congr fun n => ?_
+    ring
+  -- Each term bounded by the tsum
+  set M : ℝ := ∑' n : ℕ, ((n : ℝ) + 1) * r ^ n with hM_def
+  have h_term_le : ∀ n : ℕ, ((n : ℝ) + 1) * r ^ n ≤ M :=
+    fun n => h_geom_summable.le_tsum n (fun k _ => by positivity)
+  -- Bound |b_n · t^n| by (M/ν) · (|b_n| · ω_n)
+  refine Summable.of_norm_bounded
+    (g := fun n => (M / ν) * (|l1Omega.toSeq b n| * OmegaScaledReal.omegaWeight ν n))
+    (((l1Omega.mem_iff _).mp b.2).mul_left (M / ν)) (fun n => ?_)
+  rw [Real.norm_eq_abs, abs_mul, abs_pow]
+  -- Want: |b_n| · |t|^n ≤ M/ν · |b_n| · ω_n
+  -- ω_n = ν^{n+1}/(n+1), and (n+1) · r^n ≤ M ⟹ |t|^n ≤ M/ν · ω_n
+  have hn1 : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hbn_nn : 0 ≤ |l1Omega.toSeq b n| := abs_nonneg _
+  have h_t_pow_eq : |t|^n = r^n * (ν : ℝ)^n := by
+    rw [hr_def, div_pow, div_mul_cancel₀ _ (pow_ne_zero n hν.ne')]
+  -- |t|^n ≤ M · ν^n / (n+1)
+  have h_t_le : |t|^n ≤ M * (ν : ℝ)^n / ((n : ℝ) + 1) := by
+    rw [h_t_pow_eq, le_div_iff₀ hn1]
+    have heq : r^n * (ν : ℝ)^n * ((n : ℝ) + 1) = (((n : ℝ) + 1) * r^n) * (ν : ℝ)^n := by ring
+    rw [heq]
+    exact mul_le_mul_of_nonneg_right (h_term_le n) (pow_nonneg hν.le n)
+  calc |l1Omega.toSeq b n| * |t|^n
+      ≤ |l1Omega.toSeq b n| * (M * (ν : ℝ)^n / ((n : ℝ) + 1)) :=
+        mul_le_mul_of_nonneg_left h_t_le hbn_nn
+    _ = M / ν * (|l1Omega.toSeq b n| * OmegaScaledReal.omegaWeight ν n) := by
+        unfold OmegaScaledReal.omegaWeight
+        rw [pow_succ]
+        field_simp
+        push_cast
+        ring
+
+/-- Absolute summability for `ℓ¹_ω` evaluation, used as a uniform bound on the disk. -/
+theorem l1Omega.summable_abs_eval (b : l1Omega ν) {t : ℝ} (ht : |t| < ν) :
+    Summable fun n => |l1Omega.toSeq b n| * |t| ^ n := by
+  have h := l1Omega.summable_eval b (t := |t|) (by rwa [abs_abs])
+  refine (h.abs).congr fun n => ?_
+  rw [abs_mul, abs_pow, abs_abs]
+
+/-- Evaluate an `ℓ¹_ω` sequence as a power series at `t ∈ ℝ` with `|t| < ν`.
+Convergence is strict (`|t| < ν`, not `≤`) because the `(n+1)` factor in `ω_n` doesn't
+quite control the boundary. Used to express the time-derivative of `l1Weighted.eval`. -/
+def l1Omega.eval (b : l1Omega ν) (t : ℝ) : ℝ :=
+  ∑' n, l1Omega.toSeq b n * t ^ n
+
+theorem l1Omega.eval_at_zero (b : l1Omega ν) : l1Omega.eval b 0 = l1Omega.toSeq b 0 := by
+  unfold l1Omega.eval
+  rw [tsum_eq_single 0 (fun n hn => by simp [hn])]
+  simp
+
+theorem l1Omega.eval_add (b c : l1Omega ν) {t : ℝ} (ht : |t| < ν) :
+    l1Omega.eval (b + c) t = l1Omega.eval b t + l1Omega.eval c t := by
+  show ∑' n, l1Omega.toSeq (b + c) n * t ^ n =
+       (∑' n, l1Omega.toSeq b n * t ^ n) + ∑' n, l1Omega.toSeq c n * t ^ n
+  simp_rw [show ∀ n, l1Omega.toSeq (b + c) n = l1Omega.toSeq b n + l1Omega.toSeq c n
+    from l1Omega.add_toSeq b c, add_mul]
+  exact (l1Omega.summable_eval b ht).tsum_add (l1Omega.summable_eval c ht)
+
+theorem l1Omega.eval_smul (r : ℝ) (b : l1Omega ν) (t : ℝ) :
+    l1Omega.eval (r • b) t = r * l1Omega.eval b t := by
+  show ∑' n, l1Omega.toSeq (r • b) n * t ^ n = r * ∑' n, l1Omega.toSeq b n * t ^ n
+  simp_rw [show ∀ n, l1Omega.toSeq (r • b) n = r * l1Omega.toSeq b n
+    from l1Omega.smul_toSeq r b, mul_assoc]
+  rw [tsum_mul_left]
+
+end Eval
 
 end RadiiPolynomial

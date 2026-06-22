@@ -1,4 +1,5 @@
 import RadiiPolynomial.source.MvPolyBridge.Basic
+import RadiiPolynomial.source.lpSpace.Eval
 
 /-!
 # Computable Polynomial AST
@@ -14,16 +15,58 @@ evaluation targets:
 ## Usage
 
 ```lean
-def φ_cpoly : Fin L → CompPoly L := fun _ => .X 0 * .X 0 - .X 0
+def f_cpoly : Fin L → CompPoly L := fun _ => .X 0 * .X 0 - .X 0
 
-def φ (a) l       := (φ_cpoly l).evalAlg a                     -- Banach algebra
-def φ_spec (j)    := (φ_cpoly j).toMvPoly                      -- MvPolynomial bridge
-def Dφ_Q (j m) k  := ((φ_cpoly j).pderiv m).evalCoeff arrs k  -- computable Jacobian
+def f (a) l      := (f_cpoly l).evalBanach a                    -- Banach algebra
+def f_spec (j)   := (f_cpoly j).toMvPoly                        -- MvPolynomial bridge
+def Df_Q (j m) k := ((f_cpoly j).pderiv m).evalCoeff arrs k     -- computable Jacobian
 ```
 -/
 
 open scoped BigOperators
 open RadiiPolynomial MvPolyBridge
+
+/-! ### Mathlib-ready: smoothness of multivariate polynomials
+
+The single-variable analogue `Polynomial.contDiff_aeval` is in
+`Mathlib/Analysis/Calculus/ContDiff/Polynomial.lean`. The lemma below extends it to
+multivariate polynomials and is suitable for upstreaming. The proof inducts via
+`MvPolynomial.induction_on` (3 cases: `C`, `add`, `mul_X`); each case dispatches to
+the corresponding `ContDiff` closure lemma. -/
+
+namespace MvPolynomial
+
+@[simp] theorem C_natCast_eq {σ R : Type*} [CommSemiring R] (n : ℕ) :
+    MvPolynomial.C (n : R) = (n : MvPolynomial σ R) :=
+  map_natCast MvPolynomial.C n
+
+@[simp] theorem C_ofNat_eq {σ R : Type*} [CommSemiring R] (n : ℕ) [n.AtLeastTwo] :
+    MvPolynomial.C (OfNat.ofNat n : R) = (OfNat.ofNat n : MvPolynomial σ R) :=
+  map_ofNat MvPolynomial.C n
+
+@[simp] theorem C_intCast_eq {σ R : Type*} [CommRing R] (z : ℤ) :
+    MvPolynomial.C (z : R) = (z : MvPolynomial σ R) :=
+  map_intCast MvPolynomial.C z
+
+/-- Multivariate polynomials, viewed as functions on `σ → 𝕜`, are `C^n` for any `n`.
+Multivariate analogue of `Polynomial.contDiff_aeval`. -/
+lemma contDiff_aeval {σ R 𝕜 : Type*} [Fintype σ] [CommSemiring R]
+    [NontriviallyNormedField 𝕜] [Algebra R 𝕜]
+    (p : MvPolynomial σ R) (n : WithTop ℕ∞) :
+    ContDiff 𝕜 n (fun x : σ → 𝕜 => aeval x p) := by
+  induction p using MvPolynomial.induction_on with
+  | C r =>
+      simp only [aeval_C]
+      exact contDiff_const
+  | add p q ihp ihq =>
+      simp only [map_add]
+      exact ihp.add ihq
+  | mul_X p i ih =>
+      simp only [map_mul, aeval_X]
+      exact ih.mul
+        ((ContinuousLinearMap.proj (R := 𝕜) (φ := fun _ : σ => 𝕜) i).contDiff)
+
+end MvPolynomial
 
 namespace MvPolyBridge
 
@@ -80,6 +123,35 @@ noncomputable def toMvPoly : CompPoly L → MvPolynomial (Fin L) ℚ
   | .neg p => -p.toMvPoly
   | .smul r p => MvPolynomial.C r * p.toMvPoly
 
+attribute [simp] pderiv.eq_1 pderiv.eq_2 pderiv.eq_3 pderiv.eq_4
+  pderiv.eq_5 pderiv.eq_6 pderiv.eq_7
+  toMvPoly.eq_1 toMvPoly.eq_2 toMvPoly.eq_3 toMvPoly.eq_4
+  toMvPoly.eq_5 toMvPoly.eq_6 toMvPoly.eq_7
+
+@[simp] theorem pderiv_add_op (m : Fin L) (p q : CompPoly L) :
+    pderiv m (p + q) = pderiv m p + pderiv m q := rfl
+
+@[simp] theorem pderiv_sub_op (m : Fin L) (p q : CompPoly L) :
+    pderiv m (p - q) = pderiv m p - pderiv m q := rfl
+
+@[simp] theorem pderiv_mul_op (m : Fin L) (p q : CompPoly L) :
+    pderiv m (p * q) = pderiv m p * q + p * pderiv m q := rfl
+
+@[simp] theorem pderiv_neg_op (m : Fin L) (p : CompPoly L) :
+    pderiv m (-p) = -pderiv m p := rfl
+
+@[simp] theorem toMvPoly_add_op (p q : CompPoly L) :
+    (p + q).toMvPoly = p.toMvPoly + q.toMvPoly := rfl
+
+@[simp] theorem toMvPoly_sub_op (p q : CompPoly L) :
+    (p - q).toMvPoly = p.toMvPoly - q.toMvPoly := rfl
+
+@[simp] theorem toMvPoly_mul_op (p q : CompPoly L) :
+    (p * q).toMvPoly = p.toMvPoly * q.toMvPoly := rfl
+
+@[simp] theorem toMvPoly_neg_op (p : CompPoly L) :
+    (-p).toMvPoly = -p.toMvPoly := rfl
+
 theorem evalCoeff_eq_mvPolyCoeffQ (p : CompPoly L) (arrs : Fin L → Array ℚ) (n : ℕ) :
     p.evalCoeff arrs n = mvPolyCoeffQ p.toMvPoly arrs n := by
   induction p generalizing n with
@@ -121,6 +193,12 @@ theorem pderiv_toMvPoly (m : Fin L) (p : CompPoly L) :
       simp only [CompPoly.pderiv, toMvPoly, map_neg, ih]
   | smul r p ih =>
       simp only [CompPoly.pderiv, toMvPoly, MvPolynomial.pderiv_C_mul, ih]
+
+/-- Iterated computable partial derivatives commute with the `MvPolynomial` bridge. -/
+theorem pderiv_pderiv_toMvPoly (i j : Fin L) (p : CompPoly L) :
+    ((p.pderiv i).pderiv j).toMvPoly =
+      MvPolynomial.pderiv j (MvPolynomial.pderiv i p.toMvPoly) := by
+  rw [← pderiv_toMvPoly i p, ← pderiv_toMvPoly j (p.pderiv i)]
 
 noncomputable def evalAlg {R : Type*} [CommRing R] [Algebra ℚ R]
     (p : CompPoly L) (a : Fin L → R) : R :=
@@ -188,6 +266,71 @@ theorem compPoly_evalBanach_eq_evalInBanach {ν : PosReal} {L : ℕ}
     (p : CompPoly L) (a : Fin L → l1Weighted ν) :
     p.evalBanach a = evalInBanach p.toMvPoly a :=
   (p.evalBanach_eq_evalAlg a).trans (p.evalAlg_eq_aeval a)
+
+/-- The pointwise interpretation of a `CompPoly` is `C^∞` — the polynomial-function
+view on `ℝ^L` is smooth.
+
+The proof factors through `MvPolynomial.contDiff_aeval`: bridge `evalBanach` to `aeval`
+(via `evalBanach_eq_evalAlg` + `evalAlg_eq_aeval`), then invoke smoothness of multivariate
+polynomial functions. The induction lives at the `MvPolynomial` layer (3 constructors)
+rather than the `CompPoly` layer (7 constructors).
+
+Used in the f-F bridge: `ContDiff` on `ℝ^L` plus compactness of any closed ball gives a
+Lipschitz constant via `ContDiffOn.exists_lipschitzOnWith`, feeding directly into
+Picard-Lindelöf for the function-space uniqueness lift. -/
+theorem contDiff_evalBanach {L : ℕ} (p : CompPoly L) :
+    ContDiff ℝ ⊤ (fun x : Fin L → ℝ => p.evalBanach x) := by
+  have h : (fun x : Fin L → ℝ => p.evalBanach x) =
+           (fun x => MvPolynomial.aeval x p.toMvPoly) :=
+    funext fun x => (p.evalBanach_eq_evalAlg x).trans (p.evalAlg_eq_aeval x)
+  rw [h]
+  exact MvPolynomial.contDiff_aeval p.toMvPoly ⊤
+
+/-- Differentiability follows from smoothness; kept as a named lemma for ergonomic use. -/
+theorem differentiable_evalBanach {L : ℕ} (p : CompPoly L) :
+    Differentiable ℝ (fun x : Fin L → ℝ => p.evalBanach x) :=
+  (contDiff_evalBanach p).differentiable (by decide)
+
+/-- Banach-algebra interpretation of a computable polynomial is differentiable on `l1Weighted`.
+
+This is the computable-AST wrapper around `differentiable_evalInBanach`; the analytic
+work stays at the `MvPolynomial` bridge layer. -/
+theorem differentiable_evalBanach_l1Weighted {ν : PosReal} {L : ℕ} (p : CompPoly L) :
+    Differentiable ℝ (fun x : Fin L → l1Weighted ν => p.evalBanach x) := by
+  have h :
+      (fun x : Fin L → l1Weighted ν => p.evalBanach x) =
+        fun x => evalInBanach p.toMvPoly x :=
+    funext fun x => compPoly_evalBanach_eq_evalInBanach p x
+  rw [h]
+  exact differentiable_evalInBanach p.toMvPoly
+
+/-- **Mertens-recursive evaluation bridge** — the analytic counterpart to `evalBanach_eq_evalAlg`.
+
+For a polynomial `p : CompPoly L` and a sequence `a : Fin L → l1Weighted ν`, the analytic
+evaluation of `p.evalBanach a` at a point `t` (with `|t| ≤ ν`) factors through pointwise
+evaluation: it equals `p` applied to the function values `i ↦ eval (a i) t`.
+
+The proof factors through Mathlib's `MvPolynomial.comp_aeval_apply`: bridge `evalBanach`
+to `aeval` (via `evalBanach_eq_evalAlg` + `evalAlg_eq_aeval`), then exploit that
+`evalAlgHomQ t ht : l1Weighted ν →ₐ[ℚ] ℝ` is an algebra homomorphism — so applying it
+to `aeval a φ` equals `aeval (evalAlgHomQ t ht ∘ a) φ`, which is exactly evaluation at the
+function values.
+
+Mertens' theorem is what makes `evalAlgHom` a ring hom in the first place; this is where
+the analytic content sits. The induction is "compiled away" by `comp_aeval_apply`.
+
+Combined with `hasDerivAt_eval`, this is the algebraic engine of the f-F bridge:
+if `F(a) = 0` (sequence-space), then `t ↦ eval (a · , t)` solves the ODE `ẋ = f(x)`. -/
+theorem eval_evalBanach {ν : PosReal} {L : ℕ}
+    (p : CompPoly L) (a : Fin L → l1Weighted ν) {t : ℝ} (ht : |t| ≤ ν) :
+    l1Weighted.eval (p.evalBanach a) t =
+      p.evalBanach (fun i => l1Weighted.eval (a i) t) := by
+  rw [p.evalBanach_eq_evalAlg, p.evalAlg_eq_aeval]
+  rw [show l1Weighted.eval (MvPolynomial.aeval a p.toMvPoly) t =
+        l1Weighted.evalAlgHomQ t ht (MvPolynomial.aeval a p.toMvPoly) from rfl]
+  rw [MvPolynomial.comp_aeval_apply]
+  rw [← p.evalAlg_eq_aeval, ← p.evalBanach_eq_evalAlg]
+  rfl
 
 theorem compPoly_Dφ_bridge {ν : PosReal} {L : ℕ}
     (φ_comp : Fin L → CompPoly L)

@@ -55,7 +55,7 @@ lemma sum4_swap_pairs
     Equiv.prodAssoc (α := α × β) (β := α) (γ := β)
   let e : (((α × β) × α) × β) ≃ (((α × β) × α) × β) :=
     (assoc.trans (Equiv.prodComm (α × β) (α × β))).trans assoc.symm
-  simpa [e] using
+  simpa [e, assoc, Equiv.prodAssoc, Equiv.prodComm] using
     (Equiv.sum_comp e (fun t : (((α × β) × α) × β) =>
       f t.1.1.1 t.1.1.2 t.1.2 t.2)).symm
 

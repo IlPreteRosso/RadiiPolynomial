@@ -35,7 +35,7 @@ The value of MvPolynomial is NOT computation — it's PROOF automation.
 By stating φ as `MvPolynomial (Fin L) ℚ`, we get:
 - `differentiable_aeval` (replaces ~60 lines of manual differentiability proofs)
 - `fderiv_aeval` (replaces ~100 lines of fderiv computation)
-- `pderiv`-based DF verification (replaces ~200 lines of `fderiv_F_coeffs_eq`)
+- `pderiv`-based DF verification (~200 lines collapsed into `ivp_hDF_block_nat`)
 - degree-based Z₂ bound (replaces ~60 lines of bilinear bound proofs)
 -/
 
@@ -52,12 +52,12 @@ variable {σ : Type*} {R : Type*} [CommSemiring R]
 
 /-- Each partial derivative drops the total degree by at least 1.
     Proof: decompose p into monomials; `pderiv_monomial` shifts exponents down;
-    bound the sum via `totalDegree_finset_sum` + `totalDegree_monomial_le`. -/
+    bound the sum via `totalDegree_finsetSum` + `totalDegree_monomial_le`. -/
 theorem totalDegree_pderiv_le [DecidableEq σ] (i : σ) (p : MvPolynomial σ R) :
     (pderiv i p).totalDegree ≤ p.totalDegree - 1 := by
   conv_lhs => rw [p.as_sum]
   rw [map_sum]
-  refine (totalDegree_finset_sum _ _).trans (Finset.sup_le fun s hs => ?_)
+  refine (totalDegree_finsetSum _ _).trans (Finset.sup_le fun s hs => ?_)
   rw [pderiv_monomial]
   by_cases h : coeff s p * ↑(s i) = 0
   · simp [h]
@@ -424,8 +424,8 @@ theorem fderiv_evalInBanach (p : MvPolynomial (Fin L) ℚ)
     rw [hfd, ih]
     -- Apply to h and work at l1Weighted level
     ext1 h
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.sum_apply,
-      ContinuousLinearMap.comp_apply, ContinuousLinearMap.smul_apply,
+    simp only [add_apply, sum_apply,
+      ContinuousLinearMap.comp_apply, smul_apply,
       ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply,
       smul_eq_mul, Finset.smul_sum]
     -- Expand pderiv on RHS using pderiv_mul + evalInBanach API
@@ -460,7 +460,7 @@ theorem fderiv_diff_evalInBanach (p : MvPolynomial (Fin L) ℚ)
         (evalInBanach (MvPolynomial.pderiv i p) c -
           evalInBanach (MvPolynomial.pderiv i p) a) * h i := by
   rw [fderiv_evalInBanach p c, fderiv_evalInBanach p a]
-  simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.sum_apply,
+  simp only [sub_apply, sum_apply,
     ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply,
     l1Weighted.leftMul_apply, ← Finset.sum_sub_distrib]
   congr 1; ext i; rw [← sub_mul]
@@ -477,7 +477,7 @@ theorem toSeq_fderiv_evalInBanach
           l1Weighted.toSeq (evalInBanach (MvPolynomial.pderiv (↑m) p) a) (n - (q : ℕ))
         else 0) * l1Weighted.toSeq (h m) (q : ℕ) := by
   rw [fderiv_evalInBanach]
-  simp only [ContinuousLinearMap.sum_apply, ContinuousLinearMap.comp_apply,
+  simp only [sum_apply, ContinuousLinearMap.comp_apply,
     ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply,
     l1Weighted.toSeq_finset_sum, l1Weighted.toSeq_mul]
   simp_rw [CauchyProduct.eq_sum_fin _ _ hn]
@@ -534,7 +534,7 @@ theorem norm_fderiv_evalInBanach_le
       ∑ j : Fin L, ‖evalInBanach (MvPolynomial.pderiv j q) a‖ := by
   rw [fderiv_evalInBanach]
   apply ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun h => ?_
-  simp only [ContinuousLinearMap.sum_apply, ContinuousLinearMap.comp_apply,
+  simp only [sum_apply, ContinuousLinearMap.comp_apply,
     ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply]
   exact norm_sum_mul_pi_le _ _
 

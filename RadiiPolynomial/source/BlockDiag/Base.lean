@@ -390,9 +390,18 @@ lemma SystemBlockDiagData.fderiv_action_fin {E : Type*}
       HasFDerivAt.sum fun k (_ : k ∈ Finset.univ) =>
         (hb j k x).hasFDerivAt.const_mul
           (A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k)
-    convert this using 1; (ext a; simp [Finset.sum_apply])
+    have hsum :
+        (fun a =>
+          ∑ j : Fin L, ∑ k : Fin (N + 1),
+            A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k * b a j k) =
+          (∑ j : Fin L, ∑ k : Fin (N + 1),
+            fun a => A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k * b a j k) := by
+      funext a
+      simp [Finset.sum_apply]
+    rw [hsum]
+    exact this
   rw [hfderiv.fderiv]
-  simp only [ContinuousLinearMap.sum_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+  simp only [sum_apply, smul_apply, smul_eq_mul]
   symm; exact (hact _).trans (A.actionFinite_finite _ l n hn)
 
 /-- Pointwise nonnegativity witness for the uniform tail bound. -/

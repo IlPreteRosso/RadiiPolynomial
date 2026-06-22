@@ -4,34 +4,25 @@ import RadiiPolynomial.source.MvPolyBridge.Basic
 /-!
 # Generic DF Block Verification for IVP Systems
 
-Eliminates the ~80-line `fderiv_F_coeffs_eq` boilerplate from each IVP example.
-
-## Problem
-
-Each IVP example must prove that the Fréchet derivative of `ivpCoeffs` matches the
-numerical Jacobian data stored in `A_dag.finBlock`. This proof follows the same structure
-every time:
-- Zero case: fderiv of affine = coordinate projection
-- Succ case: chain rule → HasFDerivAt decomposition → toSeq_fderiv_evalInBanach → Toeplitz sum
+The chain-rule plumbing for the Jacobian of the IVP zero-finding map. Each IVP
+example needs to prove that the Fréchet derivative of `ivpCoeffs` agrees with
+the numerical Jacobian stored in `A_dag.finBlock`. This file packages the
+shared 60-line chain-rule + `HasFDerivAt` decomposition + `toSeq_fderiv_evalInBanach`
++ Toeplitz-sum argument into `ivp_hDF_block_nat`.
 
 ## Solution
 
-`ivp_hDF_block` provides the generic proof. The user supplies:
+`ivp_hDF_block_nat` provides the generic proof. The user supplies:
 1. `φ_spec` — MvPolynomial specification of the nonlinearity
 2. `Dφ_Q` — computable ℚ mirror of `pderiv(φ_spec)` evaluated at ābar
 3. Proofs connecting these (`hφ_eq`, `habar`, `hDφ_Q`, `hDF`)
 
-The chain rule + HasFDerivAt decomposition (~60 lines) lives here, not in each example.
+## Live consumer
 
-## Usage
-
-```
--- In Algebra.lean, replace the 80-line fderiv_F_coeffs_eq with:
-lemma fderiv_F_coeffs_eq ... :=
-  IVP.ivp_hDF_block approxDeriv φ_scalar φ_scalar_spec x₀ abar (fun _ => abar_0)
-    φ_scalar_eq_spec differentiable_φ_scalar_component abar_toSeq_eq
-    Dφ_pderiv_Q Dφ_pderiv_bridge hDF_match h j k
-```
+The StdIVPData wrapper `IVP.StdIVPData.composedApprox_eq_fderiv_G_fin`
+(`source/IVP/StandardIVP.lean`) calls `ivp_hDF_block_nat` and delivers the
+toCoeff/G-side framing that the per-example Z₁ bound consumes (see
+`composedApprox_eq_fderiv_G_fin` in each `examples/Example*/Algebra.lean`).
 -/
 
 open scoped BigOperators Topology
@@ -70,6 +61,7 @@ def ivp_DF_of_Dφ_nat (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (if j = m ∧ col = n + 1 then (n : ℚ) + 1 else 0) -
       (if col ≤ n then Dφ_Q j m (n - col) else 0)
 
+omit [NeZero L] in
 /-- `ivp_DF_of_Dφ_nat` agrees with `ivp_DF_of_Dφ` on `Fin` indices. -/
 lemma ivp_DF_of_Dφ_nat_eq (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (j m : Fin L) (k p : Fin (N + 1)) :
@@ -78,6 +70,7 @@ lemma ivp_DF_of_Dφ_nat_eq (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
 
 /-! ## 2. Bridge Lemma: Dφ_Q matches analytical pderiv -/
 
+omit [NeZero L] in
 /-- Internal bridge: if `Dφ_Q j m k` matches `toSeq(evalInBanach(pderiv m (spec j), ā)) k`,
 then the Toeplitz extension matches `toSeq_fderiv_evalInBanach`. -/
 private lemma ivp_Dφ_jacobian_bridge
@@ -100,6 +93,7 @@ private lemma ivp_Dφ_jacobian_bridge
 
 /-! ## 3. Main Generic Theorem -/
 
+omit [NeZero L] in
 /-- **Generic DF block correctness for IVP systems.**
 
 Given:
@@ -116,13 +110,10 @@ theorem ivp_hDF_block
     (φ_spec : Fin L → MvPolynomial (Fin L) ℚ)
     (x₀ : Fin L → ℝ)
     (ā : XL1 ν L)
-    (abar_Q : Fin L → Array ℚ)
     -- Spec compatibility
     (hφ_eq : ∀ (a : XL1 ν L) (l : Fin L),
       φ a l = MvPolyBridge.evalInBanach (φ_spec l) a)
     (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
-    (habar : ∀ (l : Fin L) (n : ℕ),
-      l1Weighted.toSeq (ā l) n = ((abar_Q l).getD n 0 : ℝ))
     -- Computable pderiv mirror
     (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (hDφ_Q : ∀ (j m : Fin L) (k : ℕ),
@@ -184,13 +175,17 @@ theorem ivp_hDF_block
           (fderiv ℝ (fun a => φ a j) ā)) ā := by
       have := ((l1Weighted.toSeq_CLM (ν := ν) n).hasFDerivAt
         (x := φ ā j)).comp ā (hφ_diff j ā).hasFDerivAt
-      convert this using 1
+      change HasFDerivAt
+        (fun a : XL1 ν L => (l1Weighted.toSeq_CLM (ν := ν) n) (φ a j))
+        ((l1Weighted.toSeq_CLM (ν := ν) n).comp
+          (fderiv ℝ (fun a => φ a j) ā)) ā
+      exact this
     rw [show (fun a => ((n : ℝ) + 1) * l1Weighted.toSeq (a j) (n + 1) -
         l1Weighted.toSeq (φ a j) n) =
       (fun a => ((n : ℝ) + 1) * l1Weighted.toSeq (a j) (n + 1)) -
         (fun a => l1Weighted.toSeq (φ a j) n) from rfl,
-      (hd1.sub hd2).fderiv, ContinuousLinearMap.sub_apply]
-    simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.comp_apply,
+      (hd1.sub hd2).fderiv, sub_apply]
+    simp only [smul_apply, ContinuousLinearMap.comp_apply,
       smul_eq_mul]
     -- Unfold toSeq_CLM to toSeq
     change ((n : ℝ) + 1) * l1Weighted.toSeq (h j) (n + 1) -
@@ -232,6 +227,7 @@ theorem ivp_hDF_block
 
 /-! ## 4. Generic Dφ Operator Norm Bound -/
 
+omit [NeZero L] in
 /-- **Generic Dφ operator norm bound for IVP systems.**
 
 Given `φ_spec` and a per-component bound `K` on `Σ_m ‖pderiv_m(φ_spec l) at ā‖`,
@@ -248,8 +244,7 @@ lemma ivp_Dφ_norm_le
     (ā : XL1 ν L)
     (hφ_eq : ∀ (a : XL1 ν L) (l : Fin L),
       φ a l = MvPolyBridge.evalInBanach (φ_spec l) a)
-    (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
-    {K : ℝ} (hK : 0 ≤ K)
+    {K : ℝ}
     (hDφ_le : ∀ (l : Fin L),
       ∑ m : Fin L,
         ‖MvPolyBridge.evalInBanach (MvPolynomial.pderiv (↑m) (φ_spec l)) ā‖ ≤ K)
@@ -259,7 +254,7 @@ lemma ivp_Dφ_norm_le
     funext (fun a => hφ_eq a l)
   rw [hfun_eq, fderiv_evalInBanach]
   -- ‖Σ_i leftMul(g_i)(h_i)‖ ≤ Σ_i ‖g_i‖ * ‖h_i‖ ≤ (Σ_i ‖g_i‖) * ‖h‖
-  simp only [ContinuousLinearMap.sum_apply, ContinuousLinearMap.comp_apply,
+  simp only [sum_apply, ContinuousLinearMap.comp_apply,
     ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply]
   calc ‖∑ i : Fin L, evalInBanach (MvPolynomial.pderiv (↑i) (φ_spec l)) ā * h i‖
       ≤ ∑ i : Fin L, ‖evalInBanach (MvPolynomial.pderiv (↑i) (φ_spec l)) ā * h i‖ :=
@@ -274,6 +269,7 @@ lemma ivp_Dφ_norm_le
 
 /-! ## 5. Convenience: ivp_hDF_block_nat -/
 
+omit [NeZero L] in
 /-- Convenience version of `ivp_hDF_block` accepting a `Fin`-bounded `native_decide` proof.
 
 The user provides:
@@ -288,12 +284,9 @@ theorem ivp_hDF_block_nat
     (φ_spec : Fin L → MvPolynomial (Fin L) ℚ)
     (x₀ : Fin L → ℝ)
     (ā : XL1 ν L)
-    (abar_Q : Fin L → Array ℚ)
     (hφ_eq : ∀ (a : XL1 ν L) (l : Fin L),
       φ a l = MvPolyBridge.evalInBanach (φ_spec l) a)
     (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
-    (habar : ∀ (l : Fin L) (n : ℕ),
-      l1Weighted.toSeq (ā l) n = ((abar_Q l).getD n 0 : ℝ))
     (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (hDφ_Q : ∀ (j m : Fin L) (k : ℕ),
       l1Weighted.toSeq (MvPolyBridge.evalInBanach
@@ -309,7 +302,7 @@ theorem ivp_hDF_block_nat
     (fderiv ℝ (fun a => ivpCoeffs φ x₀ a j ↑k) ā) h =
       ∑ m : Fin L, (A_dag.finBlock j m).mulVec
         (fun p => toCoeff (ν := ν) h m ↑p) k :=
-  ivp_hDF_block A_dag φ φ_spec x₀ ā abar_Q hφ_eq hφ_diff habar Dφ_Q hDφ_Q
+  ivp_hDF_block A_dag φ φ_spec x₀ ā hφ_eq hφ_diff Dφ_Q hDφ_Q
     (fun j m k p => by
       rw [hDF_finBlock j m k p, show ((DF_cols j m (p : ℕ)).getD (k : ℕ) 0 : ℝ) =
         ((ivp_DF_of_Dφ (N := N) Dφ_Q j m k p : ℚ) : ℝ) from by

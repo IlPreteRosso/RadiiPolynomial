@@ -229,7 +229,14 @@ lemma SystemBlockDiagData.applyX_add
       toCoeff (ν := ν) y l n from funext fun i => funext fun k => rfl]
     exact congrArg (fun f => f l n)
       (SystemBlockDiagData.action_add (A := A) (c := toCoeff (ν := ν) x) (d := toCoeff (ν := ν) y))
-  convert this using 1
+  calc
+    l1Weighted.toSeq (A.applyX (ν := ν) (x + y) l) n =
+        toCoeff (ν := ν) (A.applyX (ν := ν) (x + y)) l n := rfl
+    _ = toCoeff (ν := ν) (A.applyX (ν := ν) x) l n +
+        toCoeff (ν := ν) (A.applyX (ν := ν) y) l n := this
+    _ = l1Weighted.toSeq ((A.applyX (ν := ν) x + A.applyX (ν := ν) y) l) n := by
+      rw [Pi.add_apply]
+      exact (l1Weighted.add_toSeq (A.applyX (ν := ν) x l) (A.applyX (ν := ν) y l) n).symm
 
 lemma SystemBlockDiagData.applyX_smul
     (A : SystemBlockDiagData L N) (r : ℝ) (x : XL1 ν L) :
@@ -242,7 +249,13 @@ lemma SystemBlockDiagData.applyX_smul
       from funext fun i => funext fun k => rfl]
     exact congrArg (fun f => f l n)
       (SystemBlockDiagData.action_smul (A := A) (r := r) (c := toCoeff (ν := ν) x))
-  convert this using 1
+  calc
+    l1Weighted.toSeq (A.applyX (ν := ν) (r • x) l) n =
+        toCoeff (ν := ν) (A.applyX (ν := ν) (r • x)) l n := rfl
+    _ = r * toCoeff (ν := ν) (A.applyX (ν := ν) x) l n := this
+    _ = l1Weighted.toSeq ((r • A.applyX (ν := ν) x) l) n := by
+      rw [Pi.smul_apply]
+      exact (l1Weighted.smul_toSeq r (A.applyX (ν := ν) x l) n).symm
 
 /-- Linear-map lift of the 8.2 block operator data on `(ℓ¹_ν)^L`. -/
 def SystemBlockDiagData.toLinearMap
@@ -323,7 +336,7 @@ lemma SystemBlockDiagData.actionFinite_component_norm_le_restricted
         (v := fun k => toCoeff (ν := ν) x j k)).trans ?_
   refine (Finset.sum_le_sum (g := fun j =>
       if j ∈ active then blockEntryNorm ν A.finBlock l j * ‖x‖ else 0) fun j _ => ?_).trans_eq ?_
-  · dsimp only; by_cases hj : j ∈ active
+  · by_cases hj : j ∈ active
     · rw [if_pos hj]; exact mul_le_mul_of_nonneg_left
         ((by simpa [toCoeff, l1Weighted.toSeq] using
           l1Weighted.finSum_weighted_toSeq_le_norm (ν := ν) (a := x j) (N := N) :
@@ -452,7 +465,7 @@ lemma SystemBlockDiagData.toCoeff_id_sub_comp_toCLM [NeZero L]
     toCoeff (ν := ν) ((ContinuousLinearMap.id ℝ (XL1 ν L) -
       (A.toCLM (ν := ν)).comp (B.toCLM (ν := ν))) x) l n =
       toCoeff (ν := ν) x l n - A.action (B.action (toCoeff (ν := ν) x)) l n := by
-  rw [ContinuousLinearMap.sub_apply]
+  rw [sub_apply]
   change l1Weighted.toSeq
       ((x - ((A.toCLM (ν := ν)).comp (B.toCLM (ν := ν)) x)) l) n =
       toCoeff (ν := ν) x l n - A.action (B.action (toCoeff (ν := ν) x)) l n
@@ -560,6 +573,35 @@ lemma SystemBlockDiagData.injective_toCLM_of_finite_part_injective [NeZero L]
     exact if hn : n ≤ N then h_fin_zero l ⟨n, Nat.lt_succ_of_le hn⟩
       else h_tail_zero l n (Nat.lt_of_not_ge hn))
 
+/-- Per-coefficient zero-input recovery from zero-action. Given `A`'s
+finite-block injectivity and tail nonvanishing, `A.action c = 0` (pointwise)
+implies `c = 0` (pointwise) — even when `c` is just a `SystemCoeff` and not
+necessarily `toCoeff` of any `XL1` element.
+
+This is the per-`SystemCoeff` analogue of
+`injective_toCLM_of_finite_part_injective`, used to bridge `G a = 0` to
+`ivpCoeffs ... = 0` in the f-F bridge: `G = approxInverse.action ∘ ivpCoeffs`,
+so `G a = 0` gives `action (ivpCoeffs ...) = 0`, and this lemma upgrades to
+`ivpCoeffs ... = 0`. -/
+lemma SystemBlockDiagData.seq_zero_of_action_zero [NeZero L]
+    (A : SystemBlockDiagData L N)
+    (h_fin :
+      ∀ d : SystemCoeff L,
+        (∀ l : Fin L, ∀ n : Fin (N + 1),
+          (∑ j : Fin L, ∑ k : Fin (N + 1), A.finBlock l j n k * d j k) = 0) →
+        (∀ l : Fin L, ∀ n : Fin (N + 1), d l n = 0))
+    (h_tail : ∀ l n, N < n → A.tailDiag l n ≠ 0)
+    {c : SystemCoeff L} (h : ∀ l n, A.action c l n = 0) :
+    ∀ l n, c l n = 0 := by
+  have h_tail_zero : ∀ l n, N < n → c l n = 0 := fun l n hn =>
+    (mul_eq_zero.mp ((A.action_tail c l n hn).symm.trans (h l n))).resolve_left
+      (h_tail l n hn)
+  have h_fin_zero := h_fin c fun l n => (A.action_fin c l n).symm.trans (h l ↑n)
+  intro l n
+  by_cases hn : n ≤ N
+  · exact h_fin_zero l ⟨n, Nat.lt_succ_of_le hn⟩
+  · exact h_tail_zero l n (Nat.lt_of_not_ge hn)
+
 /-! ## 7. Block Identity Action
 
 Helper: `x_{l,n} = ∑_j ∑_k (if l = j then I else 0)_{n,k} * x_{j,k}`. -/
@@ -618,7 +660,23 @@ lemma SystemBlockDiagData.id_sub_comp_eq_defect_toCLM [NeZero L]
     simp [htail l n hlt]
 
 /-- Z₀ bound for tail-canceling pairs (general L):
-`‖I - A.toCLM ∘ B.toCLM‖ ≤ finiteBlockMatrixNorm(defect.finBlock)`. -/
+`‖I - A.toCLM ∘ B.toCLM‖ ≤ finiteBlockMatrixNorm(defect.finBlock)`.
+
+TODO (unification with `IVP.ivp_Z₀_le`): this lemma requires both `A`
+and `B` to be `SystemBlockDiagData L N` against a single weight `ν`
+(bounded tail in the `ν`-norm). The IVP setting needs `B = A†` with
+unbounded tail (`Λ_n = n`), which is bounded only relative to the
+omega-weighted space `ℓ¹_ω` (`ω_k = ν^{k+1}/(k+1)`); see
+`OmegaWeighted.lean`. The current workaround is `IVP.ivp_Z₀_le`
+(`IVP/Theorem.lean`), which takes `A_dag : BlockDiagOp` (the looser
+structure permitting unbounded tail) and bounds the *composed*
+approximation `ivpComposedApprox A A_dag` instead of A_dag in
+isolation. A future two-weight `SystemBlockDiagData ν₁ ν₂` (mapping
+`XL1 ν₁ L → XL1 ν₂ L` with a `ν₂`-tail bound) would let A† live as
+`SystemBlockDiagData ν ω` and A as `SystemBlockDiagData ω ν`, making
+`ivp_Z₀_le` a direct corollary of this lemma. See the
+`project_ivp_codomain_design` memory note for the design rationale of
+the current "compile-away-ω" approach. -/
 lemma SystemBlockDiagData.Z₀_le_of_tailCancel [NeZero L]
     (A B : SystemBlockDiagData L N)
     (htail : ∀ l, ∀ n, N < n → A.tailDiag l n * B.tailDiag l n = 1) :
@@ -724,7 +782,7 @@ lemma defectOfBlockDiagOp_toCLM_eq [NeZero L]
   -- Expand LHS: toCoeff((I - A∘DF)(x)) = toCoeff(x) - toCoeff(A(DF(x)))
   --           = toCoeff(x) - A.action(toCoeff(DF(x)))
   -- Expand RHS: toCoeff(defect.toCLM(x)) = defect.action(toCoeff(x))
-  simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.coe_id', id_eq,
+  simp only [sub_apply, ContinuousLinearMap.coe_id', id_eq,
     ContinuousLinearMap.comp_apply, SystemBlockDiagData.toCoeff_toCLM]
   show toCoeff (ν := ν) x l n - A.action (toCoeff (ν := ν) (DF_CLM x)) l n =
     (defectOfBlockDiagOp A B).action (toCoeff (ν := ν) x) l n
@@ -762,7 +820,7 @@ lemma defect_of_composed_toCLM_eq [NeZero L]
     ContinuousLinearMap.id ℝ (XL1 ν L) - G_CLM =
     (defectOfBlockDiagOp A B).toCLM (ν := ν) := by
   apply toCLM_ext_of_toCoeff_eq; intro x l n
-  simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.coe_id', id_eq,
+  simp only [sub_apply, ContinuousLinearMap.coe_id', id_eq,
     SystemBlockDiagData.toCoeff_toCLM]
   show toCoeff (ν := ν) x l n - toCoeff (ν := ν) (G_CLM x) l n =
     (defectOfBlockDiagOp A B).action (toCoeff (ν := ν) x) l n
@@ -973,7 +1031,7 @@ lemma FiniteBlockMatrix.isUnit_toMatrix_of_blockNorm_lt_one [NeZero L]
       apply XL1.ext; intro l n
       rw [toCoeff_zero]
       have hPx_coeff : toCoeff (ν := ν) (P x) l n = c l n - D.action c l n := by
-        simp only [hP_def, ContinuousLinearMap.sub_apply, ContinuousLinearMap.coe_id',
+        simp only [hP_def, sub_apply, ContinuousLinearMap.coe_id',
           id_eq]
         show toCoeff (ν := ν) x l n - D.action (toCoeff (ν := ν) x) l n =
           c l n - D.action c l n
