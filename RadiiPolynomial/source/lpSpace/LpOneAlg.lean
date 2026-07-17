@@ -259,9 +259,8 @@ class lpOneAlgConvCompat (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) 
     Summable fun ab : DiscreteConvolution.addFiber k =>
       lpOneAlg.toRealSeq f ab.1.1 * lpOneAlg.toRealSeq g ab.1.2
   tripleConvSummable : ∀ (f g h : lpOneAlg M E) (x : M),
-    Summable fun p : DiscreteConvolution.tripleAddFiber x =>
-      lpOneAlg.toRealSeq f p.1.1 * lpOneAlg.toRealSeq g p.1.2.1 *
-        lpOneAlg.toRealSeq h p.1.2.2
+    DiscreteConvolution.AddTripleConvolutionSummable
+      (lpOneAlg.toRealSeq f) (lpOneAlg.toRealSeq g) (lpOneAlg.toRealSeq h) x
   norm_conv_le_fiber : ∀ (f g : lpOneAlg M E) (k : M),
     ‖lpAlgRingData.ofReal (E := E) k
       (DiscreteConvolution.addRingConvolution (lpOneAlg.toRealSeq f)

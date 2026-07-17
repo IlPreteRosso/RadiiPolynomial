@@ -6,7 +6,7 @@ This is a Lean 4 formalization of radii polynomial methods for rigorous ODE solu
 
 ```
 RadiiPolynomial/
-  RadiiPolynomial.lean           -- root import (all source + examples, builds all oleans)
+  RadiiPolynomial.lean           -- root import (all source + production examples, builds all oleans)
   RadiiPolynomial/
     source/
       lpSpace/                   -- lpOneAlg (ℓ¹ Banach algebra), WeightedScalar, l1Weighted
@@ -18,10 +18,12 @@ RadiiPolynomial/
         Theorem.lean             -- Thm 8.2.2: ivp_system_theorem (unused, kept for reference)
         DFBlock.lean             -- ivp_hDF_block_nat: generic DF verification
         StandardIVP.lean         -- StdIVPData bundle + existsUnique (calls 7.6.2 directly)
+        Bridge.lean              -- forward bridge (Lemma 8.1.4): solves_ODE_of_F_zero + PL uniqueness lift
+        AnalyticGlue.lean        -- IsAnalyticSolution, x_analytic, analytic_existsUnique on (-ν, ν)
       Chebyshev/                 -- Chebyshev polynomial algebra + ChebyshevIVP
       MvPolyBridge/              -- multivariate polynomial bridge + system Z2 norm bounds
-        POC.lean                 -- proof-of-concept tests (evalInBanach, pderiv↔fderiv)
-      Tactic/                    -- auto_poly_fderiv, pderiv_simp, FinMatrixBound
+        CompPoly.lean            -- CompPoly AST; evalBanach (canonical) + vectorField interpretations
+      Tactic/                    -- auto_poly_fderiv, pderiv_simp, compPolyOf%, FinMatrixBound
       Core.lean                  -- canonical bounds (Y0_norm, Z0_norm, Z1_norm, Z2_norm)
       RadiiPolyGeneral.lean      -- general_radii_polynomial_theorem (Thm 7.6.2)
       LeanCertEval.lean          -- ℚ evaluators + ℝ→ℚ norm bridges for certificates
@@ -31,10 +33,7 @@ RadiiPolynomial/
       Example83/                 -- Lorenz IVP, Taylor basis (L=3, N=30)
       Example77/                 -- parameterized zero-finding (section 7.7, scalar l1_nu)
       Example245/                -- algebraic fixed point (section 2.4.5, scalar R)
-      Example1421/               -- Chebyshev IVP x'=x(x-1) (scaffolding, needs Julia data)
-      TestQuadratic/             -- f-F bridge test: x² - λ = 0 (pipeline skeleton)
-      TestCubic/                 -- f-F bridge test: x³ - λ = 0
-      TestCrossProduct/          -- f-F bridge test: xy - λ = 0, x + y - 2 = 0
+      Example1421/               -- Chebyshev IVP x'=x(x-1); excluded from root import until Julia-exported data lands
 ```
 
 **Theorem hierarchy:**
@@ -44,13 +43,11 @@ RadiiPolynomial/
 - Example77 uses 7.6.2 directly (parameterized zero-finding, NOT an IVP)
 - Example81/83 use `StdIVPData.existsUnique` which calls 7.6.2 directly (not 8.2.2)
 
-**f-F bridge (Test examples):**
-The pipeline from original equation to coefficient recurrence:
-1. Substitute Taylor expansion into ODE/equation
-2. Match coefficients of like powers (formal PowerSeries equality)
-3. Define F(a) = 0 on ℓ¹_ν (Banach algebra operations)
-4. Semantic bridge: F(a)=0 ⟹ eval(a,z) satisfies the original equation
-Test files (TestQuadratic/TestCubic/TestCrossProduct) exercise this pipeline with sorried proofs.
+**f-F bridge (formalized end-to-end, sorry-free):**
+The semantic bridge from the sequence-space zero F(a) = 0 back to the original equation:
+- `IVP/Bridge.lean` — forward bridge (book Lemma 8.1.4): `solves_ODE_of_F_zero` (F(a)=0 ⟹ t ↦ eval(a,t) solves the ODE), plus the Picard–Lindelöf uniqueness lift `analytic_solution_unique` (the RP trajectory bound supplies the Lipschitz radius)
+- `IVP/AnalyticGlue.lean` — packages both for any `StdIVPData`: `IsAnalyticSolution`, canonical solution `x_analytic`, `analytic_existsUnique` on (-ν, ν)
+- Example81/83 `Analytic.lean` instantiate `analytic_existsUnique`; Example77 `Analytic.lean` proves the pinning theorem `x_analytic_sq_eq` (eval(x̃,t)² = λ₀ + t via `eval_mul`/Mertens)
 
 **Algebra architecture:**
 - `lpOneAlg M E` (`LpOneAlg.lean`) — generic ℓ¹ Banach algebra with non-uniform fibers

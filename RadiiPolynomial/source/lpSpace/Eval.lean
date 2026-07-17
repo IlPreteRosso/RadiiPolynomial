@@ -110,9 +110,9 @@ support `{n}`. -/
   unfold eval
   rw [tsum_eq_single n (fun k hk => by
     rw [show seq (l1Weighted.single (ν := ν) n x) k = 0
-        from l1Weighted.single_toSeq_ne n k x hk]; ring)]
+        from l1Weighted.single_toSeq_of_ne n k x hk]; ring)]
   rw [show seq (l1Weighted.single (ν := ν) n x) n = x
-      from l1Weighted.single_toSeq_self n x]
+      from l1Weighted.single_toSeq_same n x]
 
 /-- eval is additive. -/
 theorem eval_add (a b : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
@@ -187,8 +187,9 @@ lemma abs_eval_le (a : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
 
 /-! ## Density-based proof of Mertens' theorem
 
-`eval_mul` (below) is proved via the categorical structure of `l1Weighted ν`
-as the Banach completion of the additive monoid algebra `ℝ[ℕ]`:
+`eval_mul` (below) is proved by a density argument reflecting the interpretation
+of `l1Weighted ν` as the weighted Banach completion of the finite-support
+additive monoid algebra `ℝ[ℕ]`:
 
 1. **Monomial side** (`single_mul`, `eval_single`): the identity holds on the
    generators `δ_m, δ_n` by direct computation —

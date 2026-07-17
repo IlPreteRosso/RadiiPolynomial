@@ -285,10 +285,11 @@ def single (n : ℕ) (x : ℝ) : l1Weighted ν :=
     toSeq (single (ν := ν) idx x) n = if n = idx then x else 0 := by
   simp only [single, mk_apply]
 
-@[simp] lemma single_toSeq_self (n : ℕ) (x : ℝ) :
+@[simp] lemma single_toSeq_same (n : ℕ) (x : ℝ) :
     toSeq (single n x : l1Weighted ν) n = x := by
   simp only [single_toSeq, ite_true]
-lemma single_toSeq_ne (n k : ℕ) (x : ℝ) (h : k ≠ n) :
+
+lemma single_toSeq_of_ne (n k : ℕ) (x : ℝ) (h : k ≠ n) :
     toSeq (single n x : l1Weighted ν) k = 0 := by
   simp only [single_toSeq, if_neg h]
 
@@ -322,11 +323,11 @@ noncomputable def single_CLM (n : ℕ) : ℝ →L[ℝ] l1Weighted ν :=
 @[simp] lemma single_CLM_apply (n : ℕ) (x : ℝ) :
     (single_CLM (ν := ν) n) x = single n x := rfl
 
-@[simp] lemma single_CLM_toSeq_self (n : ℕ) (x : ℝ) :
-    toSeq (single_CLM (ν := ν) n x) n = x := single_toSeq_self n x
+@[simp] lemma single_CLM_toSeq_same (n : ℕ) (x : ℝ) :
+    toSeq (single_CLM (ν := ν) n x) n = x := single_toSeq_same n x
 
-@[simp] lemma single_CLM_toSeq_ne (n k : ℕ) (x : ℝ) (h : k ≠ n) :
-    toSeq (single_CLM (ν := ν) n x) k = 0 := single_toSeq_ne n k x h
+@[simp] lemma single_CLM_toSeq_of_ne (n k : ℕ) (x : ℝ) (h : k ≠ n) :
+    toSeq (single_CLM (ν := ν) n x) k = 0 := single_toSeq_of_ne n k x h
 
 end Single
 
@@ -390,14 +391,14 @@ lemma trunc_eq_sum (N : ℕ) (a : l1Weighted ν) :
   by_cases hn : n ≤ N
   · rw [if_pos hn]
     rw [Finset.sum_eq_single n
-      (fun m _ hne => single_toSeq_ne m n (toSeq a m) (Ne.symm hne))
+      (fun m _ hne => single_toSeq_of_ne m n (toSeq a m) (Ne.symm hne))
       (fun h => absurd (Finset.mem_range.mpr (Nat.lt_succ_iff.mpr hn)) h)]
-    exact (single_toSeq_self n (toSeq a n)).symm
+    exact (single_toSeq_same n (toSeq a n)).symm
   · rw [if_neg hn]
     refine (Finset.sum_eq_zero ?_).symm
     intro k hk
     have hne : n ≠ k := fun h => hn (h ▸ Nat.lt_succ_iff.mp (Finset.mem_range.mp hk))
-    exact single_toSeq_ne k n (toSeq a k) hne
+    exact single_toSeq_of_ne k n (toSeq a k) hne
 
 /-- Truncations converge to the original element: `trunc N a → a` as `N → ∞` (in the
 ℓ¹_ν norm). This is the **density argument** for finite-support sequences: the closure
@@ -514,7 +515,7 @@ of the monoid algebra). -/
 lemma single_mul (m n : ℕ) (r s : ℝ) :
     (single (ν := ν) m r) * single n s = single (m + n) (r * s) := by
   apply ext; intro k
-  rw [toSeq_mul, CauchyProduct.apply]
+  rw [toSeq_mul, CauchyProduct.apply, single_toSeq]
   simp only [single_toSeq]
   by_cases hk : k = m + n
   · subst hk

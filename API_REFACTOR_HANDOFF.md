@@ -2,6 +2,14 @@
 
 Date: 2026-06-22
 
+> **Historical snapshot — refreshed 2026-07-10.** The staged-refactor state
+> described below was superseded when the refactor landed on `main` as
+> `dc5d550`. Do not follow the instructions below to preserve or commit a
+> staged refactor baseline. For current project context, start with this
+> checkout's `AGENTS.md`, Codex's project-memory import, and the current
+> inner-repository `git status`. The detailed migrated corpus remains at
+> `/Users/ilpreterosso/.claude/projects/-Users-ilpreterosso-VSCode-Lean-RadiiPolynomial/memory/MEMORY.md`.
+
 ## Goal
 
 Refactor the API while preserving the mathematical layering:

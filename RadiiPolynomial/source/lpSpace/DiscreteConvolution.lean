@@ -21,27 +21,6 @@ open scoped BigOperators
 
 noncomputable section
 
-/-! ### HasMulAntidiagonal
-
-Multiplicative analog of `Finset.HasAntidiagonal`, defined locally until upstreamed to Mathlib. -/
-
-namespace Finset
-
-/-- The class of multiplicative monoids with a multiplicative antidiagonal. -/
-@[to_additive existing HasAntidiagonal]
-class HasMulAntidiagonal (M : Type*) [Monoid M] where
-  /-- The multiplicative antidiagonal of `n` is the finset of pairs `(i, j)` such that
-  `i * j = n`. -/
-  mulAntidiagonal : M → Finset (M × M)
-  /-- A pair belongs to `mulAntidiagonal n` iff the product of its components equals `n`. -/
-  mem_mulAntidiagonal {n} {a} : a ∈ mulAntidiagonal n ↔ a.fst * a.snd = n
-
-export HasMulAntidiagonal (mulAntidiagonal mem_mulAntidiagonal)
-
-attribute [simp] mem_mulAntidiagonal
-
-end Finset
-
 namespace DiscreteConvolution
 
 variable {M S E E' F R : Type*}
