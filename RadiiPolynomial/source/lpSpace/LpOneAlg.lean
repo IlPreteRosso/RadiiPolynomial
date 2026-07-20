@@ -285,6 +285,24 @@ class lpOneMulAlgConvCompat (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type
         (lpOneAlg.mulToRealSeq g) k)‖ ≤
     ∑' ab : DiscreteConvolution.mulFiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖
 
+/-- Pointwise weighted bound for two extracted scalar coefficients. -/
+@[to_additive (dont_translate := E 𝕜) lpOneAlg.norm_toRealSeq_add_weight_le]
+private theorem lpOneAlg.norm_mulToRealSeq_mul_weight_le
+    {𝕜 : Type*} [NormedField 𝕜]
+    {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+    [Monoid M] [lpAlgRingData 𝕜 M E] [lpOneMulAlgWeightMul 𝕜 M E]
+    (f g : lpOneAlg M E) {j l k : M} (hjl : j * l = k) :
+    ‖lpOneAlg.mulToRealSeq f j‖ * ‖lpOneAlg.mulToRealSeq g l‖ *
+        ‖lpAlgRingData.ofReal (E := E) k (1 : 𝕜)‖ ≤
+      ‖f j‖ * ‖g l‖ := by
+  subst k
+  rw [lpOneAlg.norm_eq_abs_mulToReal_mul_weight f j,
+    lpOneAlg.norm_eq_abs_mulToReal_mul_weight g l]
+  have hw := lpOneMulAlgWeightMul.norm_ofReal_mul_le (E := E) j l (1 : 𝕜) 1
+  simp only [mul_one] at hw
+  exact (mul_le_mul_of_nonneg_left hw
+    (mul_nonneg (norm_nonneg _) (norm_nonneg _))).trans_eq (by ring)
+
 /-- Generic per-index bound: given fiber summability, proves the norm bound
 via triangle inequality + submultiplicativity. Shared by both convolution paths. -/
 @[to_additive (dont_translate := E 𝕜) lpOneAlg.norm_conv_le_fiber_generic]
@@ -302,18 +320,9 @@ private theorem lpOneAlg.norm_mulConv_le_fiber_generic
   rw [lpAlgRingData.norm_ofReal_eq, DiscreteConvolution.ringConvolution_apply_eq]
   have hnorm_fiber : Summable (fun ab : DiscreteConvolution.mulFiber k =>
       ‖f ab.1.1‖ * ‖g ab.1.2‖) := (lpOneAlg.summable_norm_prod f g).subtype _
-  have h_elem (ab : DiscreteConvolution.mulFiber k) :
-      ‖lpOneAlg.mulToRealSeq f ab.1.1‖ * ‖lpOneAlg.mulToRealSeq g ab.1.2‖ *
-        ‖lpAlgRingData.ofReal (E := E) k (1 : 𝕜)‖ ≤
-      ‖f ab.1.1‖ * ‖g ab.1.2‖ := by
-    obtain ⟨⟨j, l⟩, hjl⟩ := ab
-    rw [DiscreteConvolution.mem_mulFiber] at hjl; subst hjl
-    rw [lpOneAlg.norm_eq_abs_mulToReal_mul_weight f j,
-      lpOneAlg.norm_eq_abs_mulToReal_mul_weight g l]
-    have hw := lpOneMulAlgWeightMul.norm_ofReal_mul_le (E := E) j l (1 : 𝕜) 1
-    simp only [mul_one] at hw
-    exact (mul_le_mul_of_nonneg_left hw
-      (mul_nonneg (norm_nonneg _) (norm_nonneg _))).trans_eq (by ring)
+  have h_elem (ab : DiscreteConvolution.mulFiber k) :=
+    lpOneAlg.norm_mulToRealSeq_mul_weight_le f g
+      (DiscreteConvolution.mem_mulFiber.mp ab.2)
   have h_tri : ‖∑' ab : DiscreteConvolution.mulFiber k,
       lpOneAlg.mulToRealSeq f ab.1.1 * lpOneAlg.mulToRealSeq g ab.1.2‖ ≤
       ∑' ab : DiscreteConvolution.mulFiber k,
@@ -342,16 +351,11 @@ private theorem lpOneAlg.abs_mulConvSummable_of_weightMul
   have hw := lpOneAlg.norm_mulOfReal_one_pos (E := E) k
   refine (hnorm.const_smul (‖lpAlgRingData.ofReal (E := E) k (1 : 𝕜)‖⁻¹)).of_norm_bounded
     fun ab => ?_
-  have hmem := ab.2; rw [DiscreteConvolution.mem_mulFiber] at hmem
   rw [Real.norm_of_nonneg (mul_nonneg (norm_nonneg _) (norm_nonneg _))]
   simp only [smul_eq_mul]
-  rw [lpOneAlg.norm_eq_abs_mulToReal_mul_weight f ab.1.1,
-    lpOneAlg.norm_eq_abs_mulToReal_mul_weight g ab.1.2]
-  have hsub := lpOneMulAlgWeightMul.norm_ofReal_mul_le (E := E) ab.1.1 ab.1.2 (1 : 𝕜) 1
-  simp only [mul_one] at hsub; rw [hmem] at hsub
   rw [← div_eq_inv_mul, le_div_iff₀ hw]
-  exact (mul_le_mul_of_nonneg_left hsub
-    (mul_nonneg (norm_nonneg _) (norm_nonneg _))).trans_eq (by ring)
+  exact lpOneAlg.norm_mulToRealSeq_mul_weight_le f g
+    (DiscreteConvolution.mem_mulFiber.mp ab.2)
 
 @[to_additive (dont_translate := E 𝕜) lpOneAlg.convSummable_of_weightMul]
 private theorem lpOneAlg.mulConvSummable_of_weightMul
@@ -388,15 +392,7 @@ private theorem lpOneAlg.tripleMulConvSummable_of_weightMul
     fun p => ?_
   have hmem := p.2; rw [DiscreteConvolution.mem_tripleMulFiber] at hmem
   simp only [smul_eq_mul]
-  have hnorm_prod : ‖lpOneAlg.mulToRealSeq f p.1.1 * lpOneAlg.mulToRealSeq g p.1.2.1 *
-      lpOneAlg.mulToRealSeq h p.1.2.2‖ ≤
-      ‖lpOneAlg.mulToRealSeq f p.1.1‖ * ‖lpOneAlg.mulToRealSeq g p.1.2.1‖ *
-      ‖lpOneAlg.mulToRealSeq h p.1.2.2‖ := by
-    rw [show ‖_ * _ * _‖ = ‖_ * _‖ * ‖_‖ from norm_mul _ _,
-        show ‖lpOneAlg.mulToRealSeq f p.1.1 * lpOneAlg.mulToRealSeq g p.1.2.1‖ =
-          ‖lpOneAlg.mulToRealSeq f p.1.1‖ * ‖lpOneAlg.mulToRealSeq g p.1.2.1‖
-          from norm_mul _ _]
-  refine hnorm_prod.trans ?_
+  rw [norm_mul, norm_mul]
   rw [lpOneAlg.norm_eq_abs_mulToReal_mul_weight f p.1.1,
     lpOneAlg.norm_eq_abs_mulToReal_mul_weight g p.1.2.1,
     lpOneAlg.norm_eq_abs_mulToReal_mul_weight h p.1.2.2]
@@ -488,15 +484,23 @@ theorem mul_memℓp_mul (f g : lpOneAlg M E) :
     (DiscreteConvolution.sigmaMulFiberEquiv.summable_iff.mpr (summable_norm_prod f g)).sigma
 
 omit [lpOneMulAlgConvCompat 𝕜 M E] in
-@[to_additive (dont_translate := E 𝕜) one_memℓp]
-theorem one_memℓp_mul :
+/-- `delta r` belongs to ℓ¹. Used by the identity and scalar casts. -/
+@[to_additive (dont_translate := E 𝕜) delta_memℓp]
+private theorem delta_memℓp_mul (r : 𝕜) :
     Memℓp (fun m => lpAlgRingData.ofReal (E := E) m
-      (DiscreteConvolution.delta (1 : 𝕜) m)) 1 := by
+      (DiscreteConvolution.delta r m)) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
   exact summable_of_ne_finset_zero (s := {1}) (fun b hb => by
     rw [Finset.mem_singleton] at hb
-    rw [DiscreteConvolution.delta_ne (1 : 𝕜) hb, lpAlgRingData.ofReal_zero, norm_zero])
+    rw [DiscreteConvolution.delta_ne r hb, lpAlgRingData.ofReal_zero, norm_zero])
+
+omit [lpOneMulAlgConvCompat 𝕜 M E] in
+@[to_additive (dont_translate := E 𝕜) one_memℓp]
+theorem one_memℓp_mul :
+    Memℓp (fun m => lpAlgRingData.ofReal (E := E) m
+      (DiscreteConvolution.delta (1 : 𝕜) m)) 1 := by
+  exact delta_memℓp_mul (1 : 𝕜)
 
 omit [DecidableEq M] in
 @[to_additive (dont_translate := E 𝕜) norm_mul_le']
@@ -557,18 +561,6 @@ theorem mulToRealSeq_one_fun :
   show lpAlgRingData.toReal m
     (lpAlgRingData.ofReal (E := E) m (DiscreteConvolution.delta (1 : 𝕜) m)) = _
   rw [lpAlgRingData.toReal_ofReal]
-
-omit [lpOneMulAlgConvCompat 𝕜 M E] in
-/-- `delta r` membership in ℓ¹ (multiplicative). Used by `natCast`/`intCast`. -/
-@[to_additive (dont_translate := E 𝕜) delta_memℓp]
-private theorem delta_memℓp_mul (r : 𝕜) :
-    Memℓp (fun m => lpAlgRingData.ofReal (E := E) m
-      (DiscreteConvolution.delta r m)) 1 := by
-  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
-  simp only [ENNReal.toReal_one, Real.rpow_one]
-  exact summable_of_ne_finset_zero (s := {1}) (fun b hb => by
-    rw [Finset.mem_singleton] at hb
-    rw [DiscreteConvolution.delta_ne r hb, lpAlgRingData.ofReal_zero, norm_zero])
 
 @[to_additive (dont_translate := E 𝕜) instRing]
 instance instMulRing : Ring (lpOneAlg M E) where

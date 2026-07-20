@@ -4,8 +4,6 @@ import Mathlib.Data.Real.Basic
 
 open scoped BigOperators
 
-noncomputable section
-
 namespace RadiiPolynomial
 
 section Generic

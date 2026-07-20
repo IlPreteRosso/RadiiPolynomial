@@ -1,6 +1,7 @@
 import Mathlib.Analysis.Calculus.FDeriv.Pow
 import Mathlib.Analysis.Calculus.FDeriv.Prod
 import Mathlib.Analysis.Calculus.IteratedDeriv.Lemmas
+import RadiiPolynomial.source.Calculus.Pi
 import RadiiPolynomial.source.lpSpace.lpWeighted
 
 /-!
@@ -31,33 +32,6 @@ auto_poly_fderiv                    -- base
 auto_poly_fderiv [extra₁, ...]     -- with additional simp lemmas
 ```
 -/
-
-/-! ## Pi projection bridge
-
-`ContinuousLinearMap.fderiv` won't fire on `fderiv ℝ (fun a => a i) x` because `simp` doesn't
-recognize `(· i)` as the coercion of `ContinuousLinearMap.proj i`. This bridge lemma fills the gap.
--/
-
-variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
-  {ι : Type*} [Fintype ι]
-  {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
-
- omit [Fintype ι] in
-/-- `fderiv` of coordinate projection `(· i)` on a non-dependent Pi type `ι → F`. -/
-@[simp]
-theorem fderiv_pi_apply (i : ι) (x : ι → F) :
-    fderiv 𝕜 (fun a : ι → F => a i) x = ContinuousLinearMap.proj i := by
-  show fderiv 𝕜 (⇑(ContinuousLinearMap.proj (R := 𝕜) i)) x = _
-  exact ContinuousLinearMap.fderiv _
-
- omit [Fintype ι] in
-/-- Differentiability of coordinate projection — registered with `fun_prop` so that
-`simp (discharger := fun_prop)` can discharge `DifferentiableAt` goals for Pi projections
-without stuck metavariables. -/
-@[fun_prop]
-theorem differentiable_pi_apply (i : ι) :
-    Differentiable 𝕜 (fun a : ι → F => a i) :=
-  (ContinuousLinearMap.proj i : (ι → F) →L[𝕜] F).differentiable
 
 /-! ## Pi-level Banach algebra bridge
 

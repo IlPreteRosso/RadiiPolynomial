@@ -1,5 +1,6 @@
 import RadiiPolynomial.source.IVP.Setup
-import RadiiPolynomial.source.MvPolyBridge.CompPoly
+import RadiiPolynomial.source.MvPolyBridge.CompPoly.L1
+import RadiiPolynomial.source.lpSpace.EvalDeriv
 import Mathlib.Analysis.ODE.ExistUnique
 import Mathlib.Analysis.ODE.Gronwall
 import Mathlib.Analysis.Calculus.Deriv.Prod

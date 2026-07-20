@@ -1,14 +1,14 @@
 import RadiiPolynomial.source.IVP.Setup
-import RadiiPolynomial.source.MvPolyBridge.Basic
+import RadiiPolynomial.source.MvPolyBridge.L1Weighted
 
 /-!
 # Generic DF Block Verification for IVP Systems
 
-The chain-rule plumbing for the Jacobian of the IVP zero-finding map. Each IVP
-example needs to prove that the Fréchet derivative of `ivpCoeffs` agrees with
-the numerical Jacobian stored in `A_dag.finBlock`. This file packages the
-shared 60-line chain-rule + `HasFDerivAt` decomposition + `toSeq_fderiv_evalInBanach`
-+ Toeplitz-sum argument into `ivp_hDF_block_nat`.
+The Jacobian bridge for the IVP zero-finding map. Each IVP example needs to
+prove that the Fréchet derivative of `ivpCoeffs` agrees with the numerical
+Jacobian stored in `A_dag.finBlock`. This file combines the coefficient
+derivative formulas from `IVP.Setup`, `toSeq_fderiv_evalInBanach`, and the
+Toeplitz row action into `ivp_hDF_block_nat`.
 
 ## Solution
 
@@ -40,19 +40,13 @@ variable {ν : PosReal} {L N : ℕ} [NeZero L]
 
 For the IVP map F(a)_l_k:
 - k = 0: F₀ = a_{l,0} - x₀_l  →  DF_{0,m,p} = δ_{l,m} · δ_{0,p}
-- k = n+1: F_{n+1} = (n+1)·a_{l,n+1} - φ_l(a)_n  →  DF_{n+1,m,p} = (n+1)·δ_{l,m}·δ_{n+1,p} - Dφ_{l,n,m,p}
+- k = n+1: F_{n+1} = (n+1)·a_{l,n+1} - φ_l(a)_n
+  → DF_{n+1,m,p} = (n+1)·δ_{l,m}·δ_{n+1,p} - Dφ_{l,n,m,p}
 
-where `Dφ_{l,n,m,p} = Dφ_Q l m (n-p)` for `p ≤ n`, 0 otherwise (Toeplitz structure). -/
-def ivp_DF_of_Dφ (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
-    (j m : Fin L) (k p : Fin (N + 1)) : ℚ :=
-  match (k : ℕ) with
-  | 0 => if j = m ∧ (p : ℕ) = 0 then 1 else 0
-  | Nat.succ n =>
-    (if j = m ∧ (p : ℕ) = n + 1 then (n : ℚ) + 1 else 0) -
-      (if (p : ℕ) ≤ n then Dφ_Q j m (n - (p : ℕ)) else 0)
+where `Dφ_{l,n,m,p} = Dφ_Q l m (n-p)` for `p ≤ n`, 0 otherwise (Toeplitz structure).
 
-/-- ℕ-argument version of `ivp_DF_of_Dφ`, directly comparable to `DF_col.getD` entries
-via `native_decide`. Avoids `Fin` coercion issues in the verification step. -/
+This natural-indexed form is canonical because certificates verify array entries by
+`native_decide`; `ivp_DF_of_Dφ` below only restricts it to the finite block. -/
 def ivp_DF_of_Dφ_nat (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (j m : Fin L) (row col : ℕ) : ℚ :=
   match row with
@@ -61,12 +55,35 @@ def ivp_DF_of_Dφ_nat (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (if j = m ∧ col = n + 1 then (n : ℚ) + 1 else 0) -
       (if col ≤ n then Dφ_Q j m (n - col) else 0)
 
+/-- Finite-block restriction of the natural-indexed expected IVP Jacobian. -/
+def ivp_DF_of_Dφ (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
+    (j m : Fin L) (k p : Fin (N + 1)) : ℚ :=
+  ivp_DF_of_Dφ_nat Dφ_Q j m (k : ℕ) (p : ℕ)
+
 omit [NeZero L] in
 /-- `ivp_DF_of_Dφ_nat` agrees with `ivp_DF_of_Dφ` on `Fin` indices. -/
 lemma ivp_DF_of_Dφ_nat_eq (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (j m : Fin L) (k p : Fin (N + 1)) :
     ivp_DF_of_Dφ_nat Dφ_Q j m (k : ℕ) (p : ℕ) = ivp_DF_of_Dφ (N := N) Dφ_Q j m k p := by
-  simp [ivp_DF_of_Dφ_nat, ivp_DF_of_Dφ]
+  rfl
+
+omit [NeZero L] in
+/-- A rational Kronecker delta selects one matrix-vector coordinate after casting. -/
+private lemma sum_delta_cast_mul {M : ℕ}
+    (v : Fin L → Fin M → ℝ) (j : Fin L) (q : ℕ) (hq : q < M) (c : ℚ) :
+    (∑ m : Fin L, ∑ p : Fin M,
+      ((if j = m ∧ (p : ℕ) = q then c else 0 : ℚ) : ℝ) * v m p) =
+        (c : ℝ) * v j ⟨q, hq⟩ := by
+  classical
+  rw [Finset.sum_eq_single j]
+  · rw [Finset.sum_eq_single ⟨q, hq⟩]
+    · simp
+    · intro p _ hp
+      simp [show (p : ℕ) ≠ q from fun hpq => hp (Fin.ext hpq)]
+    · simp
+  · intro m _ hm
+    simp [Ne.symm hm]
+  · simp
 
 /-! ## 2. Bridge Lemma: Dφ_Q matches analytical pderiv -/
 
@@ -90,6 +107,23 @@ private lemma ivp_Dφ_jacobian_bridge
   split_ifs with hp
   · exact_mod_cast (hDφ_Q j m _).symm
   · simp
+
+omit [NeZero L] in
+/-- A positive expected-Jacobian row acts as the IVP diagonal minus its Toeplitz row. -/
+private lemma sum_ivp_DF_succ
+    (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
+    (v : Fin L → Fin (N + 1) → ℝ) (j : Fin L)
+    (n : ℕ) (hk : n + 1 < N + 1) :
+    (∑ m : Fin L, ∑ p : Fin (N + 1),
+      ((ivp_DF_of_Dφ (N := N) Dφ_Q j m ⟨n + 1, hk⟩ p : ℚ) : ℝ) * v m p) =
+      ((n : ℝ) + 1) * v j ⟨n + 1, hk⟩ -
+        ∑ m : Fin L, ∑ p : Fin (N + 1),
+          ((if (p : ℕ) ≤ n then Dφ_Q j m (n - (p : ℕ)) else 0 : ℚ) : ℝ) * v m p := by
+  simp only [ivp_DF_of_Dφ, ivp_DF_of_Dφ_nat, Rat.cast_sub, sub_mul,
+    Finset.sum_sub_distrib]
+  rw [sum_delta_cast_mul v j (n + 1) hk ((n : ℚ) + 1)]
+  push_cast
+  rfl
 
 /-! ## 3. Main Generic Theorem -/
 
@@ -131,99 +165,25 @@ theorem ivp_hDF_block
   -- Rewrite RHS: unfold mulVec/dotProduct, apply hDF
   simp only [Matrix.mulVec, dotProduct]
   simp_rw [hDF]
-  revert k; intro ⟨k, hk⟩
+  revert k
+  intro ⟨k, hk⟩
   cases k with
   | zero =>
-    -- F(a)_{j,0} = toSeq(a j) 0 - x₀ j  (affine → fderiv = coordinate projection)
-    show (fderiv ℝ (fun a : XL1 ν L => ivpCoeffs φ x₀ a j 0) ā) h = _
-    conv_lhs => rw [show (fun a : XL1 ν L => ivpCoeffs φ x₀ a j 0) =
-      fun a => l1Weighted.toSeq (a j) 0 - x₀ j from funext fun a => rfl]
-    rw [fderiv_sub_const,
-      show (fun a : XL1 ν L => l1Weighted.toSeq (a j) 0) =
-        ⇑((l1Weighted.toSeq_CLM (ν := ν) 0).comp (ContinuousLinearMap.proj j)) from rfl,
-      ContinuousLinearMap.fderiv, ContinuousLinearMap.comp_apply,
-      ContinuousLinearMap.proj_apply]
-    -- RHS: Kronecker delta sum Σ_m Σ_p δ_{j,m}·δ_{0,p} · h_m_p = h_j_0
-    simp only [ivp_DF_of_Dφ]
-    change l1Weighted.toSeq (h j) 0 = _
-    rw [Finset.sum_eq_single j
-      (fun m _ hm => Finset.sum_eq_zero fun p _ => by
-        simp [show ¬(j = m) from Ne.symm hm])
-      (by simp),
-      Finset.sum_eq_single (⟨0, by omega⟩ : Fin (N + 1))
-      (fun p _ hp => by simp [show (p : ℕ) ≠ 0 from Fin.val_ne_of_ne hp])
-      (by simp)]
-    simp [toCoeff]
+    rw [fderiv_ivpCoeffs_zero_apply φ x₀ ā h j]
+    symm
+    simpa only [ivp_DF_of_Dφ, ivp_DF_of_Dφ_nat, toCoeff, Rat.cast_one,
+      one_mul] using
+      sum_delta_cast_mul (fun m p => toCoeff (ν := ν) h m (p : ℕ)) j 0
+        (Nat.zero_lt_succ N) (1 : ℚ)
   | succ n =>
-    -- F(a)_{j,n+1} = (n+1)·toSeq(a j)(n+1) - toSeq(φ a j) n
-    show (fderiv ℝ (fun a : XL1 ν L =>
-      ivpCoeffs φ x₀ a j ↑(⟨n + 1, hk⟩ : Fin (N + 1))) ā) h = _
-    conv_lhs => rw [show (fun a : XL1 ν L => ivpCoeffs φ x₀ a j
-        ↑(⟨n + 1, hk⟩ : Fin (N + 1))) =
-      fun a => ((n : ℝ) + 1) * l1Weighted.toSeq (a j) (n + 1) -
-        l1Weighted.toSeq (φ a j) n from funext fun a => rfl]
-    -- Chain rule decomposition
-    set proj_j := ContinuousLinearMap.proj (R := ℝ)
-        (φ := fun _ : Fin L => l1Weighted ν) j
-    have hd1 : HasFDerivAt
-        (fun a : XL1 ν L => ((n : ℝ) + 1) * l1Weighted.toSeq (a j) (n + 1))
-        (((n : ℝ) + 1) • ((l1Weighted.toSeq_CLM (n + 1)).comp proj_j)) ā :=
-      (((l1Weighted.toSeq_CLM (ν := ν) (n + 1)).comp proj_j).hasFDerivAt).const_mul _
-    have hd2 : HasFDerivAt
-        (fun a : XL1 ν L => l1Weighted.toSeq (φ a j) n)
-        ((l1Weighted.toSeq_CLM (ν := ν) n).comp
-          (fderiv ℝ (fun a => φ a j) ā)) ā := by
-      have := ((l1Weighted.toSeq_CLM (ν := ν) n).hasFDerivAt
-        (x := φ ā j)).comp ā (hφ_diff j ā).hasFDerivAt
-      change HasFDerivAt
-        (fun a : XL1 ν L => (l1Weighted.toSeq_CLM (ν := ν) n) (φ a j))
-        ((l1Weighted.toSeq_CLM (ν := ν) n).comp
-          (fderiv ℝ (fun a => φ a j) ā)) ā
-      exact this
-    rw [show (fun a => ((n : ℝ) + 1) * l1Weighted.toSeq (a j) (n + 1) -
-        l1Weighted.toSeq (φ a j) n) =
-      (fun a => ((n : ℝ) + 1) * l1Weighted.toSeq (a j) (n + 1)) -
-        (fun a => l1Weighted.toSeq (φ a j) n) from rfl,
-      (hd1.sub hd2).fderiv, sub_apply]
-    simp only [smul_apply, ContinuousLinearMap.comp_apply,
-      smul_eq_mul]
-    -- Unfold toSeq_CLM to toSeq
-    change ((n : ℝ) + 1) * l1Weighted.toSeq (h j) (n + 1) -
-      l1Weighted.toSeq ((fderiv ℝ (fun a => φ a j) ā) h) n = _
-    -- Rewrite fderiv(φ) using spec → toSeq_fderiv_evalInBanach
-    have hfun_eq : (fun a : XL1 ν L => φ a j) = (fun a => evalInBanach (φ_spec j) a) :=
-      funext (fun a => hφ_eq a j)
-    conv_lhs => rw [hfun_eq]
+    rw [fderiv_ivpCoeffs_succ_apply φ x₀ ā h j n (hφ_diff j ā),
+      show (fun a : XL1 ν L => φ a j) =
+        (fun a => evalInBanach (φ_spec j) a) from funext fun a => hφ_eq a j]
     rw [toSeq_fderiv_evalInBanach _ ā h (show n ≤ N from by omega)]
-    -- Now LHS = (n+1)*toCoeff(h,j,n+1) - Σ_m Σ_p (pderiv coeff)_{n-p} * toSeq(h m) p
-    -- Apply Dφ_Q bridge
     simp_rw [← ivp_Dφ_jacobian_bridge φ_spec ā Dφ_Q hDφ_Q j n]
-    -- Match with RHS
-    simp only [ivp_DF_of_Dφ]
-    simp only [show ∀ (m : Fin L) (p : Fin (N + 1)),
-      (((if j = m ∧ (p : ℕ) = n + 1 then (↑n + 1 : ℚ) else 0) -
-        (if (p : ℕ) ≤ n then Dφ_Q j m (n - (p : ℕ)) else 0) : ℚ) : ℝ) *
-        toCoeff (ν := ν) h m ↑p =
-      (if j = m ∧ (p : ℕ) = n + 1 then ((n : ℝ) + 1) * toCoeff (ν := ν) h m ↑p else 0) -
-        ↑(if (p : ℕ) ≤ n then Dφ_Q j m (n - (p : ℕ)) else (0 : ℚ)) *
-          toCoeff (ν := ν) h m ↑p
-      from fun m p => by split_ifs <;> (push_cast; ring)]
-    simp only [Finset.sum_sub_distrib]
-    congr 1
-    -- Collapse Kronecker delta: both sides = (n+1) * toCoeff h j (n+1)
-    trans ((↑n + 1) * toCoeff (ν := ν) h j (n + 1))
-    · simp [toCoeff]
-    · symm
-      have h_outer : ∀ m ∈ Finset.univ, m ≠ j →
-          ∑ p : Fin (N + 1),
-            (if j = m ∧ (↑p : ℕ) = n + 1 then ((↑n + 1) * toCoeff (ν := ν) h m ↑p) else 0) = 0 :=
-        fun m _ hm => Finset.sum_eq_zero fun p _ => by simp [Ne.symm hm]
-      have h_inner : ∀ p ∈ Finset.univ, p ≠ (⟨n + 1, hk⟩ : Fin (N + 1)) →
-          (if j = j ∧ (↑p : ℕ) = n + 1 then ((↑n + 1) * toCoeff (ν := ν) h j ↑p) else 0) = 0 :=
-        fun p _ hp => by simp [show (p : ℕ) ≠ n + 1 from fun h => hp (Fin.ext h)]
-      rw [Finset.sum_eq_single j h_outer (by simp),
-          Finset.sum_eq_single ⟨n + 1, hk⟩ h_inner (by simp)]
-      simp [toCoeff]
+    symm
+    simpa only [toCoeff] using
+      sum_ivp_DF_succ Dφ_Q (fun m p => toCoeff (ν := ν) h m (p : ℕ)) j n hk
 
 /-! ## 4. Generic Dφ Operator Norm Bound -/
 
@@ -250,22 +210,13 @@ lemma ivp_Dφ_norm_le
         ‖MvPolyBridge.evalInBanach (MvPolynomial.pderiv (↑m) (φ_spec l)) ā‖ ≤ K)
     (h : XL1 ν L) (l : Fin L) :
     ‖(fderiv ℝ (fun a => φ a l) ā) h‖ ≤ K * ‖h‖ := by
-  have hfun_eq : (fun a : XL1 ν L => φ a l) = (fun a => evalInBanach (φ_spec l) a) :=
-    funext (fun a => hφ_eq a l)
-  rw [hfun_eq, fderiv_evalInBanach]
-  -- ‖Σ_i leftMul(g_i)(h_i)‖ ≤ Σ_i ‖g_i‖ * ‖h_i‖ ≤ (Σ_i ‖g_i‖) * ‖h‖
+  rw [show (fun a : XL1 ν L => φ a l) =
+      (fun a => evalInBanach (φ_spec l) a) from funext fun a => hφ_eq a l,
+    fderiv_evalInBanach]
   simp only [sum_apply, ContinuousLinearMap.comp_apply,
     ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply]
-  calc ‖∑ i : Fin L, evalInBanach (MvPolynomial.pderiv (↑i) (φ_spec l)) ā * h i‖
-      ≤ ∑ i : Fin L, ‖evalInBanach (MvPolynomial.pderiv (↑i) (φ_spec l)) ā * h i‖ :=
-        norm_sum_le _ _
-    _ ≤ ∑ i : Fin L, ‖evalInBanach (MvPolynomial.pderiv (↑i) (φ_spec l)) ā‖ * ‖h i‖ :=
-        Finset.sum_le_sum fun i _ => norm_mul_le _ _
-    _ ≤ ∑ i : Fin L, ‖evalInBanach (MvPolynomial.pderiv (↑i) (φ_spec l)) ā‖ * ‖h‖ :=
-        Finset.sum_le_sum fun i _ => mul_le_mul_of_nonneg_left (norm_le_pi_norm h i) (norm_nonneg _)
-    _ = (∑ i : Fin L, ‖evalInBanach (MvPolynomial.pderiv (↑i) (φ_spec l)) ā‖) * ‖h‖ :=
-        (Finset.sum_mul _ _ _).symm
-    _ ≤ K * ‖h‖ := mul_le_mul_of_nonneg_right (hDφ_le l) (norm_nonneg _)
+  exact (norm_sum_mul_pi_le _ _).trans
+    (mul_le_mul_of_nonneg_right (hDφ_le l) (norm_nonneg _))
 
 /-! ## 5. Convenience: ivp_hDF_block_nat -/
 
@@ -304,11 +255,8 @@ theorem ivp_hDF_block_nat
         (fun p => toCoeff (ν := ν) h m ↑p) k :=
   ivp_hDF_block A_dag φ φ_spec x₀ ā hφ_eq hφ_diff Dφ_Q hDφ_Q
     (fun j m k p => by
-      rw [hDF_finBlock j m k p, show ((DF_cols j m (p : ℕ)).getD (k : ℕ) 0 : ℝ) =
-        ((ivp_DF_of_Dφ (N := N) Dφ_Q j m k p : ℚ) : ℝ) from by
-        rw [show (DF_cols j m (p : ℕ)).getD (k : ℕ) 0 =
-          ivp_DF_of_Dφ_nat Dφ_Q j m (k : ℕ) (p : ℕ) from hDF_nat j m k p,
-          ivp_DF_of_Dφ_nat_eq]])
+      rw [hDF_finBlock j m k p, hDF_nat j m k p]
+      rfl)
     h j k
 
 end IVP
