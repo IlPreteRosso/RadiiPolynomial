@@ -20,6 +20,7 @@ import RadiiPolynomial.source.lpSpace.MatrixCLM
 import RadiiPolynomial.source.lpSpace.OperatorNorm
 import RadiiPolynomial.source.lpSpace.OmegaWeighted
 import RadiiPolynomial.source.lpSpace.Eval
+import RadiiPolynomial.source.lpSpace.EvalDeriv
 
 -- Core theory
 import RadiiPolynomial.source.RadiiPolyGeneral
@@ -51,6 +52,7 @@ import RadiiPolynomial.source.IVP.Setup
 import RadiiPolynomial.source.IVP.Theorem
 import RadiiPolynomial.source.IVP.DFBlock
 import RadiiPolynomial.source.IVP.StandardIVP
+import RadiiPolynomial.source.IVP.CompPoly
 import RadiiPolynomial.source.IVP.Bridge
 import RadiiPolynomial.source.IVP.AnalyticGlue
 

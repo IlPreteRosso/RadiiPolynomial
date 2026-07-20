@@ -4,7 +4,7 @@ import RadiiPolynomial.source.lpSpace.OmegaWeighted
 import RadiiPolynomial.source.lpSpace.lpWeightedDeriv
 import RadiiPolynomial.source.IVP.Theorem
 import RadiiPolynomial.source.IVP.DFBlock
-import RadiiPolynomial.source.IVP.StandardIVP
+import RadiiPolynomial.source.IVP.CompPoly
 import RadiiPolynomial.source.Tactic.AutoPolyFDeriv
 import RadiiPolynomial.source.MvPolyBridge.Basic
 import RadiiPolynomial.source.MvPolyBridge.CompPoly
@@ -145,35 +145,22 @@ lemma Df_eq_fderiv (h : XL1 ν_val L) (l : Fin L) :
 
 /-! ## 5. DF Correctness (Jacobian via `ivp_hDF_block_nat`) -/
 
-private def Df_pderiv_Q (j m : Fin L) (k : ℕ) : ℚ :=
-  ((f_cpoly j).pderiv m).evalCoeff abar_Q k
-
-private lemma Df_pderiv_bridge (j m : Fin L) (k : ℕ) :
-    l1Weighted.toSeq (MvPolyBridge.evalInBanach
-      (MvPolynomial.pderiv (↑m) (f_spec j)) data.abar) k =
-      (Df_pderiv_Q j m k : ℝ) :=
-  MvPolyBridge.compPoly_Dφ_bridge f_cpoly f_spec
-    (fun _ => rfl)
-    abar_Q data.abar data.abar_toSeq_eq j m k
-
 /-- DF verification: single `native_decide` using `ivp_DF_of_Dφ_nat`. -/
 private lemma hDF_nat :
     ∀ (j m : Fin L) (row col : Fin (N + 1)),
       (DF_col j m (col : ℕ)).getD (row : ℕ) 0 =
-        IVP.ivp_DF_of_Dφ_nat Df_pderiv_Q j m (row : ℕ) (col : ℕ) := by
+        IVP.ivp_DF_of_Dφ_nat
+          (fun j m k => ((f_cpoly j).pderiv m).evalCoeff data.abar_Q k)
+          j m (row : ℕ) (col : ℕ) := by
   native_decide
 
 /-- `data.composedApprox = fderiv(G)` on finite modes (modes `0 ≤ n ≤ N`).
-Live wrapper around `IVP.ivp_hDF_block_nat`: the StdIVPData abstraction packages
-the per-example `Df_pderiv_Q`/`Df_pderiv_bridge`/`hDF_nat` triple together with
-the symbolic-vs-numerical Jacobian agreement into the toCoeff/G-side framing
-that the Z₁ bound consumes. -/
+The `CompPoly` adapter derives the symbolic specification, differentiability, and
+coefficient bridge; `hDF_nat` is the remaining equation-specific matrix check. -/
 lemma composedApprox_eq_fderiv_G_fin (h : XL1 ν_val L) (l : Fin L) (n : ℕ) (hn : n ≤ N) :
     toCoeff (ν := ν_val) (data.composedApprox.toCLM (ν := ν_val) h) l n =
       toCoeff (ν := ν_val) ((fderiv ℝ (data.G f x₀) data.abar) h) l n :=
-  data.composedApprox_eq_fderiv_G_fin f f_spec x₀
-    f_eq_spec differentiable_f_component
-    Df_pderiv_Q Df_pderiv_bridge hDF_nat h l n hn
+  data.composedApprox_eq_fderiv_G_fin_of_compPoly f_cpoly x₀ hDF_nat h l n hn
 
 /-! ## 6. Fderiv infrastructure (via StdIVPData) -/
 
@@ -197,9 +184,7 @@ def F_Q (l : Fin L) (n : ℕ) : ℚ :=
 lemma f_bridge (l : Fin L) (n : ℕ) :
     l1Weighted.toSeq (f data.abar l) n =
       ((f_cpoly l).evalCoeff abar_Q n : ℝ) := by
-  rw [f_eq_spec,
-    MvPolyBridge.toSeq_evalInBanach _ _ abar_Q (fun i n => data.abar_toSeq_eq i n)]
-  exact_mod_cast (MvPolyBridge.CompPoly.evalCoeff_eq_mvPolyCoeffQ _ abar_Q n).symm
+  exact (f_cpoly l).toSeq_evalBanach data.abar abar_Q data.abar_toSeq_eq n
 
 lemma F_bridge (l : Fin L) (n : ℕ) :
     F data.abar l n = (F_Q l n : ℝ) := by

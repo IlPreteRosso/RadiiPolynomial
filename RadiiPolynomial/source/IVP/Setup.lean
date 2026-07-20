@@ -279,6 +279,47 @@ lemma differentiable_ivpCoeffs (φ : XL1 ν L → Fin L → l1Weighted ν)
       ((l1Weighted.toSeq_CLM n).differentiable.comp (hφ j))
 
 omit [NeZero L] in
+/-- The derivative of the initial-condition row selects the zeroth coefficient. -/
+lemma fderiv_ivpCoeffs_zero_apply (φ : XL1 ν L → Fin L → l1Weighted ν)
+    (x₀ : Fin L → ℝ) (a h : XL1 ν L) (j : Fin L) :
+    (fderiv ℝ (fun x => ivpCoeffs φ x₀ x j 0) a) h =
+      l1Weighted.toSeq (h j) 0 := by
+  rw [show (fun x : XL1 ν L => ivpCoeffs φ x₀ x j 0) =
+      fun x => l1Weighted.toSeq (x j) 0 - x₀ j from funext fun _ => rfl,
+    fderiv_sub_const,
+    show (fun x : XL1 ν L => l1Weighted.toSeq (x j) 0) =
+      ⇑((l1Weighted.toSeq_CLM (ν := ν) 0).comp
+        (ContinuousLinearMap.proj j)) from rfl,
+    ContinuousLinearMap.fderiv, ContinuousLinearMap.comp_apply,
+    ContinuousLinearMap.proj_apply]
+  rfl
+
+omit [NeZero L] in
+/-- The derivative of a positive IVP row is its diagonal linear term minus `Dφ`. -/
+lemma fderiv_ivpCoeffs_succ_apply (φ : XL1 ν L → Fin L → l1Weighted ν)
+    (x₀ : Fin L → ℝ)
+    (a h : XL1 ν L) (j : Fin L) (n : ℕ)
+    (hφ : DifferentiableAt ℝ (fun x => φ x j) a) :
+    (fderiv ℝ (fun x => ivpCoeffs φ x₀ x j (n + 1)) a) h =
+      ((n : ℝ) + 1) * l1Weighted.toSeq (h j) (n + 1) -
+        l1Weighted.toSeq ((fderiv ℝ (fun x => φ x j) a) h) n := by
+  have hfd : HasFDerivAt (fun x : XL1 ν L => ivpCoeffs φ x₀ x j (n + 1))
+      (((n : ℝ) + 1) • ((l1Weighted.toSeq_CLM (n + 1)).comp
+        (ContinuousLinearMap.proj (R := ℝ)
+          (φ := fun _ : Fin L => l1Weighted ν) j)) -
+        (l1Weighted.toSeq_CLM (ν := ν) n).comp
+          (fderiv ℝ (fun x => φ x j) a)) a := by
+    show HasFDerivAt (fun x => ((n : ℝ) + 1) *
+      l1Weighted.toSeq (x j) (n + 1) - l1Weighted.toSeq (φ x j) n) _ a
+    exact (((l1Weighted.toSeq_CLM (n + 1)).comp
+      (ContinuousLinearMap.proj (R := ℝ)
+        (φ := fun _ : Fin L => l1Weighted ν) j)).hasFDerivAt.const_mul
+          ((n : ℝ) + 1)).sub
+      ((l1Weighted.toSeq_CLM n).hasFDerivAt.comp a hφ.hasFDerivAt)
+  rw [hfd.fderiv]
+  rfl
+
+omit [NeZero L] in
 /-- Fderiv difference of `ivpCoeffs` at two points: only the φ-fderiv difference survives.
 The linear part `(k+1) * toSeq(a j)(k+1)` has constant fderiv (cancels in difference). -/
 private lemma fderiv_ivpCoeffs_diff (φ : XL1 ν L → Fin L → l1Weighted ν)
@@ -293,37 +334,12 @@ private lemma fderiv_ivpCoeffs_diff (φ : XL1 ν L → Fin L → l1Weighted ν)
   cases k with
   | zero =>
     simp only [ite_true]
-    simp_rw [show (fun a => ivpCoeffs φ x₀ a j 0) =
-        fun a : XL1 ν L => l1Weighted.toSeq (a j) 0 - x₀ j from
-      funext fun _ => by simp only [ivpCoeffs]]
-    have hfd : ∀ a : XL1 ν L, fderiv ℝ
-        (fun a : XL1 ν L => l1Weighted.toSeq (a j) 0 - x₀ j) a =
-        (l1Weighted.toSeq_CLM (ν := ν) 0).comp
-          (ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin L => l1Weighted ν) j) := fun a => by
-      rw [show (fun a : XL1 ν L => l1Weighted.toSeq (a j) 0 - x₀ j) =
-          (⇑((l1Weighted.toSeq_CLM (ν := ν) 0).comp (ContinuousLinearMap.proj (R := ℝ)
-            (φ := fun _ : Fin L => l1Weighted ν) j)) - fun _ => x₀ j) from rfl,
-        (((l1Weighted.toSeq_CLM (ν := ν) 0).comp (ContinuousLinearMap.proj (R := ℝ)
-          (φ := fun _ : Fin L => l1Weighted ν) j)).hasFDerivAt.sub
-          (hasFDerivAt_const (𝕜 := ℝ) (x₀ j) a)).fderiv]; simp
-    rw [hfd, hfd, sub_self]
+    rw [fderiv_ivpCoeffs_zero_apply φ x₀ c h j,
+      fderiv_ivpCoeffs_zero_apply φ x₀ ā h j, sub_self]
   | succ n =>
     simp only [Nat.succ_ne_zero, ite_false, Nat.succ_sub_one]
-    have hd_sub : ∀ a : XL1 ν L,
-        (fderiv ℝ (fun x => ivpCoeffs φ x₀ x j (n + 1)) a) h =
-          ((n : ℝ) + 1) * l1Weighted.toSeq (h j) (n + 1) -
-            l1Weighted.toSeq ((fderiv ℝ (fun x => φ x j) a) h) n := fun a => by
-      have hfd : HasFDerivAt (fun x : XL1 ν L => ivpCoeffs φ x₀ x j (n + 1))
-          (((n : ℝ) + 1) • ((l1Weighted.toSeq_CLM (n + 1)).comp (ContinuousLinearMap.proj (R := ℝ)
-            (φ := fun _ : Fin L => l1Weighted ν) j)) -
-            (l1Weighted.toSeq_CLM (ν := ν) n).comp (fderiv ℝ (fun x => φ x j) a)) a := by
-        show HasFDerivAt (fun x => ((n : ℝ) + 1) * l1Weighted.toSeq (x j) (n + 1) -
-            l1Weighted.toSeq (φ x j) n) _ a
-        exact (((l1Weighted.toSeq_CLM (n + 1)).comp (ContinuousLinearMap.proj (R := ℝ)
-          (φ := fun _ : Fin L => l1Weighted ν) j)).hasFDerivAt.const_mul ((n : ℝ) + 1)).sub
-          ((l1Weighted.toSeq_CLM n).hasFDerivAt.comp a (hφ j a).hasFDerivAt)
-      rw [hfd.fderiv]; rfl
-    rw [hd_sub c, hd_sub ā]
+    rw [fderiv_ivpCoeffs_succ_apply φ x₀ c h j n (hφ j c),
+      fderiv_ivpCoeffs_succ_apply φ x₀ ā h j n (hφ j ā)]
     simp only [sub_apply, l1Weighted.sub_toSeq]; ring
 
 omit [NeZero L] in

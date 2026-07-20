@@ -3,7 +3,7 @@ Copyright (c) 2026 RadiiPolynomial contributors. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 -/
 import Lean
-import RadiiPolynomial.source.MvPolyBridge.CompPoly
+import RadiiPolynomial.source.MvPolyBridge.CompPoly.Core
 
 /-!
 # `compPolyOf%`: term elaborator that reifies a Lean lambda into `CompPoly L`
