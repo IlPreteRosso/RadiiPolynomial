@@ -444,16 +444,16 @@ instance (priority := 1100) lpOneAlg.instMulConvCompatOfAntidiag
     exact (lpOneAlg.mulFiber_finite k).summable (fun p : M × M =>
       lpOneAlg.mulToRealSeq f p.1 * lpOneAlg.mulToRealSeq g p.2)
   tripleMulConvSummable f g h x := by
-    haveI : ∀ k : M, Finite ↑(DiscreteConvolution.mulFiber k) :=
+    have : ∀ k : M, Finite ↑(DiscreteConvolution.mulFiber k) :=
       fun k => (lpOneAlg.mulFiber_finite k).to_subtype
-    haveI : Finite ↑(DiscreteConvolution.tripleMulFiber x) :=
+    have : Finite ↑(DiscreteConvolution.tripleMulFiber x) :=
       (DiscreteConvolution.leftMulAssocEquiv x).finite_iff.mp inferInstance
     exact (Set.toFinite _).summable
       (fun p : M × M × M =>
         lpOneAlg.mulToRealSeq f p.1 * lpOneAlg.mulToRealSeq g p.2.1 *
           lpOneAlg.mulToRealSeq h p.2.2)
   norm_mulConv_le_fiber f g k := by
-    haveI : Finite ↑(DiscreteConvolution.mulFiber k) :=
+    have : Finite ↑(DiscreteConvolution.mulFiber k) :=
       (lpOneAlg.mulFiber_finite k).to_subtype
     exact lpOneAlg.norm_mulConv_le_fiber_generic f g k
       ((lpOneAlg.mulFiber_finite k).summable (fun p : M × M =>

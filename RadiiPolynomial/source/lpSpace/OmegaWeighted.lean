@@ -211,11 +211,11 @@ noncomputable def shift (a : l1Weighted ν) : l1Weighted ν :=
 
 @[simp] lemma shift_zero_mode (a : l1Weighted ν) :
     l1Weighted.toSeq (shift a) 0 = 0 := by
-  simp [shift, shift_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
+  simp [shift, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
 
 @[simp] lemma shift_succ_mode (a : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (shift a) (n + 1) = l1Weighted.toSeq a n := by
-  simp [shift, shift_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
+  simp [shift, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
 
 private lemma shift_toSeq (a : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (shift a) n = shift_seq a n := by
@@ -308,7 +308,7 @@ noncomputable def shiftDivN (b : l1Weighted ν) : l1Weighted ν :=
 
 @[simp] lemma shiftDivN_zero_mode (b : l1Weighted ν) :
     l1Weighted.toSeq (shiftDivN b) 0 = 0 := by
-  simp [shiftDivN, shiftDivN_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
+  simp [shiftDivN, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
 
 @[simp] lemma shiftDivN_succ_mode (b : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (shiftDivN b) (n + 1) =

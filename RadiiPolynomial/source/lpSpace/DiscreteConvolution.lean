@@ -72,7 +72,7 @@ variable [Monoid M] [Finset.HasMulAntidiagonal M]
 variable [CommSemiring S] [AddCommMonoid E] [Module S E]
 
 /-- For types with `HasMulAntidiagonal`, the multiplicative fiber equals the mulAntidiagonal. -/
-@[to_additive addFiber_eq_antidiagonal
+@[to_additive
   /-- For types with `HasAntidiagonal`, the additive fiber equals the antidiagonal. -/]
 private lemma mulFiber_eq_mulAntidiagonal (x : M) :
     mulFiber x = ↑(Finset.mulAntidiagonal x) := by

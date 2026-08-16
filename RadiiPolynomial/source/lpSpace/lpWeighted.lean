@@ -159,7 +159,7 @@ noncomputable def toSeq_CLM (n : ℕ) : l1Weighted ν →L[ℝ] ℝ :=
         rw [norm_eq_tsum]
         exact (summable_weighted a).le_tsum n (fun k _ =>
           mul_nonneg (abs_nonneg _) (pow_nonneg ν.2.le _))
-      simp only [LinearMap.coe_mk, AddHom.coe_mk, Real.norm_eq_abs]
+      simp only [Real.norm_eq_abs]
       exact (le_inv_mul_iff₀ (pow_pos ν.2 n)).mpr (by rwa [mul_comm]))
 
 end CoordinateCLM
