@@ -66,7 +66,8 @@ Each example has three layers:
 - **Algebra.lean**: Equation-specific structure (phi, Dphi, fderiv proofs, Q bridges). Imports library + Numbers
 - **Certificate.lean**: Numerical verification (Y0, Z0, Z1, Z2 bounds, radii polynomial). Imports Algebra
 
-The library (`source/`) should never import from examples.
+Reusable modules under `Algebra`, `Analysis`, `Core`, `Operators`, `Certification`,
+`Applications`, and `Tactic` should never import from `Examples`.
 
 ### 7. The abstract theorem is the anchor
 

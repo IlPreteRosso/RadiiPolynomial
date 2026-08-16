@@ -7,7 +7,9 @@ Date: 2026-06-22
 > `dc5d550`. Do not follow the instructions below to preserve or commit a
 > staged refactor baseline. For current project context, start with this
 > checkout's `AGENTS.md`, Codex's project-memory import, and the current
-> inner-repository `git status`. The detailed migrated corpus remains at
+> inner-repository `git status`. The current module layout and dependency rules
+> are documented in `ARCHITECTURE.md`; module paths below are historical. The
+> detailed migrated corpus remains at
 > `/Users/ilpreterosso/.claude/projects/-Users-ilpreterosso-VSCode-Lean-RadiiPolynomial/memory/MEMORY.md`.
 
 ## Goal
