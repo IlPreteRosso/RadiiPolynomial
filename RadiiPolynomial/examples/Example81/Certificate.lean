@@ -111,6 +111,8 @@ lemma Y₀_le :
     (fun l => ?_)
   simp_rw [hc]; unfold Y₀_bound
   have hl : l = 0 := Subsingleton.elim l 0; subst hl
+  -- `finsum_bound` now requires a literal range endpoint, so unfold `N` first.
+  simp only [N]
   finsum_bound using (Y₀_eval 0) (fun k _ _ => Y₀_eval_correct 0 k)
 
 /-! ## Z₁ bound -/
@@ -137,6 +139,8 @@ private lemma Df_norm_le (h : XL1 ν_val L) (l : Fin L) :
       _ = ↑Z₁_bound * (↑↑N + 1) / ↑ν_q * ‖h‖ := by push_cast; ring
   rw [l1Weighted.norm_eq_Icc_sum_of_support _ N two_abar_sub_one_support]
   show _ ≤ ((396482 / 725760 : ℚ) : ℝ)
+  -- `finsum_bound` now requires a literal range endpoint, so unfold `N` first.
+  simp only [N]
   finsum_bound using
     (weightedTermEval two_abar_sub_one_Q ν_q)
     (fun k _ _ => weightedTermEval_correct two_abar_sub_one_Q ν_q k {}
@@ -225,7 +229,7 @@ private lemma radii_neg_icc :
     generalRadiiPolynomial (Y₀_bound : ℝ) (Z₀_bound : ℝ) (Z₁_bound : ℝ)
       (fun _ => (Z₂_bound : ℝ)) r < 0 := by
   unfold generalRadiiPolynomial Y₀_bound Z₀_bound Z₁_bound Z₂_bound r_minus
-  fast_bound
+  leancert
 
 lemma radii_neg :
     generalRadiiPolynomial (Y₀_bound : ℝ) (Z₀_bound : ℝ) (Z₁_bound : ℝ)
@@ -244,6 +248,19 @@ theorem main_theorem :
     (by unfold r_minus; positivity)
     (Y₀_le.trans (by unfold Y₀_bound; exact_mod_cast le_refl _))
     (data.Z₀_le Z₀_finBlockNorm_le)
+    (Z₁_le_cert.trans (by unfold Z₁_bound; exact_mod_cast le_refl _))
+    (fun c hc => Z₂_le_cert c hc)
+    radii_neg
+
+/-- Source-residual form of `main_theorem`: the unique validated point solves the
+unpreconditioned IVP Taylor coefficient equations. -/
+theorem ivp_main_theorem :
+    ∃! xTilde ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ),
+      ∀ l n, IVP.ivpCoeffs f x₀ xTilde l n = 0 :=
+  data.existsUnique_ivpCoeffs f x₀ differentiable_f_component
+    (by unfold r_minus; positivity)
+    (Y₀_le.trans (by unfold Y₀_bound; exact_mod_cast le_refl _))
+    Z₀_finBlockNorm_le
     (Z₁_le_cert.trans (by unfold Z₁_bound; exact_mod_cast le_refl _))
     (fun c hc => Z₂_le_cert c hc)
     radii_neg

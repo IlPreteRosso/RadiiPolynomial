@@ -54,12 +54,12 @@ private lemma norm_term_le {a : ℕ → ℝ} {z : ℝ} (hz : |z| ≤ ν) (n : �
 theorem summable_eval (a : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
     Summable fun n => seq a n * z ^ n :=
   (l1Weighted.summable_weighted a).of_norm_bounded fun n => by
-    simp only [Real.norm_eq_abs]; exact norm_term_le hz n
+    simpa only [Real.norm_eq_abs] using norm_term_le hz n
 
 private theorem summable_norm_eval (a : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
     Summable fun n => ‖seq a n * z ^ n‖ :=
   (l1Weighted.summable_weighted a).of_norm_bounded fun n => by
-    simp only [Real.norm_eq_abs, abs_abs]; exact norm_term_le hz n
+    simpa only [Real.norm_eq_abs, abs_abs] using norm_term_le hz n
 
 /-- Evaluate an ℓ¹_ν sequence as a power series at z ∈ ℝ. -/
 def eval (a : l1Weighted ν) (z : ℝ) : ℝ :=

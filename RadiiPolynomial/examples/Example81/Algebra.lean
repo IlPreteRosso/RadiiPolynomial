@@ -136,10 +136,7 @@ arithmetic. The nonlinear term is `(f_cpoly 0).evalCoeff` rather than a
 hand-written closed form, so the same definition works for any polynomial
 nonlinearity. -/
 def F_Q (n : ℕ) : ℚ :=
-  match n with
-  | 0 => abar_0.getD 0 0 - x₀_q 0
-  | n + 1 => ((n : ℚ) + 1) * abar_0.getD (n + 1) 0 -
-      (f_cpoly 0).evalCoeff (fun _ => abar_0) n
+  IVP.ivpCoeffsQ f_cpoly data.abar_Q x₀_q 0 n
 
 /-- The sequence-space operator `F`, generated from the vector field `f`
 via the IVP Taylor recurrence `IVP.ivpCoeffs`:
@@ -152,17 +149,16 @@ def F (a : XL1 ν_val L) : SystemCoeff L :=
 
 lemma F_bridge (l : Fin L) (n : ℕ) :
     F data.abar l n = (F_Q n : ℝ) := by
-  fin_cases l
-  simp only [F]
-  cases n with
-  | zero =>
-    show l1Weighted.toSeq (data.abar 0) 0 - x₀ 0 = _
-    rw [data.abar_toSeq_eq]; simp [F_Q, x₀_q, x₀, data]
-  | succ m =>
-    show ((m : ℝ) + 1) * l1Weighted.toSeq (data.abar 0) (m + 1) -
-      l1Weighted.toSeq (f data.abar 0) m = _
-    rw [data.abar_toSeq_eq, f_bridge m]
-    simp only [F_Q, data]; push_cast; ring
+  have hl : l = 0 := Subsingleton.elim l 0
+  subst l
+  have hx₀ : ∀ j, x₀ j = (x₀_q j : ℝ) := by
+    intro j
+    have hj : j = 0 := Subsingleton.elim j 0
+    subst j
+    norm_num [x₀, x₀_q]
+  change IVP.ivpCoeffs (fun a j => (f_cpoly j).evalBanach a) x₀ data.abar 0 n =
+    (IVP.ivpCoeffsQ f_cpoly data.abar_Q x₀_q 0 n : ℝ)
+  exact data.ivpCoeffs_abar_eq_cast_of_compPoly f_cpoly x₀ x₀_q hx₀ 0 n
 
 private lemma abar_toSeq_zero (k : ℕ) (hk : N < k) :
     l1Weighted.toSeq (data.abar 0) k = 0 := by

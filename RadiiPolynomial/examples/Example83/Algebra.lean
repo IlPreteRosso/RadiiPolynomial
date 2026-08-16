@@ -176,10 +176,7 @@ lemma fderiv_G_lorenz_tail (h : XL1 ν_val L) (l : Fin L) (n : ℕ) (hn : N < n)
 def x₀_q : Fin L → ℚ | 0 => 1 | 1 => 0 | 2 => 0
 
 def F_Q (l : Fin L) (n : ℕ) : ℚ :=
-  match n with
-  | 0 => (abar_Q l).getD 0 0 - x₀_q l
-  | n + 1 => ((n : ℚ) + 1) * (abar_Q l).getD (n + 1) 0 -
-      (f_cpoly l).evalCoeff abar_Q n
+  IVP.ivpCoeffsQ f_cpoly data.abar_Q x₀_q l n
 
 lemma f_bridge (l : Fin L) (n : ℕ) :
     l1Weighted.toSeq (f data.abar l) n =
@@ -188,17 +185,12 @@ lemma f_bridge (l : Fin L) (n : ℕ) :
 
 lemma F_bridge (l : Fin L) (n : ℕ) :
     F data.abar l n = (F_Q l n : ℝ) := by
-  simp only [F]
-  cases n with
-  | zero =>
-    show l1Weighted.toSeq (data.abar l) 0 - x₀ l = _
-    rw [data.abar_toSeq_eq]; simp [F_Q, x₀_q, x₀, data]
-    fin_cases l <;> push_cast <;> ring
-  | succ m =>
-    show ((m : ℝ) + 1) * l1Weighted.toSeq (data.abar l) (m + 1) -
-      l1Weighted.toSeq (f data.abar l) m = _
-    rw [data.abar_toSeq_eq, f_bridge l m]
-    simp only [F_Q, data]; push_cast; ring
+  have hx₀ : ∀ j, x₀ j = (x₀_q j : ℝ) := by
+    intro j
+    fin_cases j <;> norm_num [x₀, x₀_q]
+  change IVP.ivpCoeffs (fun a j => (f_cpoly j).evalBanach a) x₀ data.abar l n =
+    (IVP.ivpCoeffsQ f_cpoly data.abar_Q x₀_q l n : ℝ)
+  exact data.ivpCoeffs_abar_eq_cast_of_compPoly f_cpoly x₀ x₀_q hx₀ l n
 
 private lemma abar_toSeq_zero (l : Fin L) (k : ℕ) (hk : N < k) :
     l1Weighted.toSeq (data.abar l) k = 0 := by
@@ -245,6 +237,8 @@ lemma F_abar_mem (l : Fin L) :
 lemma abar_norm_0_le : ‖data.abar 0‖ ≤ (20 : ℝ) := by
   rw [l1Weighted.norm_eq_Icc_sum_of_support _ N
     (fun n hn => abar_toSeq_zero 0 n hn)]
+  -- `finsum_bound` now requires a literal range endpoint, so unfold `N` first.
+  simp only [N]
   show _ ≤ ((20 : ℚ) : ℝ); finsum_bound using
     (weightedTermEval (abar_Q 0) ν_q)
     (fun k _ _ => weightedTermEval_correct _ ν_q k {}
@@ -253,6 +247,7 @@ lemma abar_norm_0_le : ‖data.abar 0‖ ≤ (20 : ℝ) := by
 lemma abar_norm_1_le : ‖data.abar 1‖ ≤ (26 : ℝ) := by
   rw [l1Weighted.norm_eq_Icc_sum_of_support _ N
     (fun n hn => abar_toSeq_zero 1 n hn)]
+  simp only [N]
   show _ ≤ ((26 : ℚ) : ℝ); finsum_bound using
     (weightedTermEval (abar_Q 1) ν_q)
     (fun k _ _ => weightedTermEval_correct _ ν_q k {}
@@ -261,6 +256,7 @@ lemma abar_norm_1_le : ‖data.abar 1‖ ≤ (26 : ℝ) := by
 lemma abar_norm_2_le : ‖data.abar 2‖ ≤ (11 : ℝ) := by
   rw [l1Weighted.norm_eq_Icc_sum_of_support _ N
     (fun n hn => abar_toSeq_zero 2 n hn)]
+  simp only [N]
   show _ ≤ ((11 : ℚ) : ℝ); finsum_bound using
     (weightedTermEval (abar_Q 2) ν_q)
     (fun k _ _ => weightedTermEval_correct _ ν_q k {}

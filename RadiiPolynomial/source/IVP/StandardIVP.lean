@@ -271,6 +271,58 @@ lemma ivpCoeffs_zero_of_G_zero
     rw [d.htail_diag_inv l n hn]
     exact one_div_ne_zero (Nat.cast_ne_zero.mpr (by omega))
 
+/-- A vanishing IVP coefficient residual is sent to zero by the composed map `G`. -/
+lemma G_zero_of_ivpCoeffs_zero
+    (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
+    {a : XL1 ν L} (hF : ∀ l n, ivpCoeffs φ x₀ a l n = 0) :
+    d.G φ x₀ a = 0 := by
+  funext l
+  apply l1Weighted.ext
+  intro n
+  change l1Weighted.toSeq (d.G φ x₀ a l) n = 0
+  rw [d.G_coeff φ x₀ a l n]
+  by_cases hn : n ≤ N
+  · rw [SystemBlockDiagData.action_finite _ _ _ _ hn]
+    simp [hF]
+  · rw [SystemBlockDiagData.action_tail _ _ _ _ (by omega), hF, mul_zero]
+
+/-- The preconditioned map `G` vanishes exactly when the underlying IVP coefficient
+residual vanishes, provided the finite defect certifies injectivity of the approximate
+inverse. -/
+lemma G_eq_zero_iff_ivpCoeffs_eq_zero
+    (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
+    (hdefect : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
+    {a : XL1 ν L} :
+    d.G φ x₀ a = 0 ↔ ∀ l n, ivpCoeffs φ x₀ a l n = 0 :=
+  ⟨d.ivpCoeffs_zero_of_G_zero φ x₀ hdefect,
+    d.G_zero_of_ivpCoeffs_zero φ x₀⟩
+
+/-- Radii-polynomial negativity makes the finite defect strictly smaller than one.
+This is the injectivity fact needed to transport `G = 0` back to the source IVP
+coefficient residual. -/
+lemma defect_finBlockNorm_lt_one_of_radii
+    (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
+    {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
+    (hr₀ : 0 < r₀)
+    (hY₀ : Y₀_norm (d.G φ x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ Y₀)
+    (hZ₀fin : finiteBlockMatrixNorm ν d.defect.finBlock ≤ Z₀)
+    (hZ₁ : Z₁_norm (d.G φ x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L))
+      ((StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ Z₁)
+    (hZ₂ : ∀ c ∈ Metric.closedBall (d.abar : XL1 ν L) r₀,
+      Z₂_norm (d.G φ x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤
+        Z₂ r₀ * r₀)
+    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0) :
+    finiteBlockMatrixNorm ν d.defect.finBlock < 1 := by
+  have hY₀_nonneg : 0 ≤ Y₀ := (norm_nonneg _).trans hY₀
+  have hZ₁_nonneg : 0 ≤ Z₁ := (norm_nonneg _).trans hZ₁
+  have hZ₂r_nonneg : 0 ≤ Z₂ r₀ * r₀ :=
+    (norm_nonneg _).trans (hZ₂ d.abar (Metric.mem_closedBall_self hr₀.le))
+  have hZ_lt_one :=
+    general_radii_poly_neg_implies_Z_lt_one hY₀_nonneg hr₀ h_radii
+  unfold Z_bound_general at hZ_lt_one
+  have hZ₀_lt_one : Z₀ < 1 := by nlinarith
+  exact hZ₀fin.trans_lt hZ₀_lt_one
+
 /-! ## 8. Main Existence/Uniqueness Skeleton -/
 
 /-- Main existence/uniqueness theorem for standard IVP systems.
@@ -292,6 +344,36 @@ theorem existsUnique
       d.G φ x₀ xTilde = 0 :=
   general_radii_polynomial_theorem hr₀ hY₀ hZ₀ hZ₁ hZ₂
     (d.differentiable_G φ x₀ hφ_diff) h_radii Function.injective_id
+
+/-- Preferred existence/uniqueness theorem for standard IVP systems, stated at the
+source coefficient residual rather than only at the preconditioned map `G`.
+
+The finite `Z₀` certificate is used both for the canonical radii-polynomial bound and
+for the injectivity bridge `G = 0 ↔ ivpCoeffs = 0`. -/
+theorem existsUnique_ivpCoeffs
+    (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
+    (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
+    {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
+    (hr₀ : 0 < r₀)
+    (hY₀ : Y₀_norm (d.G φ x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ Y₀)
+    (hZ₀fin : finiteBlockMatrixNorm ν d.defect.finBlock ≤ Z₀)
+    (hZ₁ : Z₁_norm (d.G φ x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L))
+      ((StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ Z₁)
+    (hZ₂ : ∀ c ∈ Metric.closedBall (d.abar : XL1 ν L) r₀,
+      Z₂_norm (d.G φ x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤
+        Z₂ r₀ * r₀)
+    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0) :
+    ∃! xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀,
+      ∀ l n, ivpCoeffs φ x₀ xTilde l n = 0 := by
+  have hdefect := d.defect_finBlockNorm_lt_one_of_radii φ x₀
+    hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii
+  rcases d.existsUnique φ x₀ hφ_diff hr₀ hY₀ (d.Z₀_le hZ₀fin)
+      hZ₁ hZ₂ h_radii with ⟨xTilde, hxTilde, hunique⟩
+  refine ⟨xTilde, ⟨hxTilde.1,
+    (d.G_eq_zero_iff_ivpCoeffs_eq_zero φ x₀ hdefect).mp hxTilde.2⟩, ?_⟩
+  intro y hy
+  exact hunique y ⟨hy.1,
+    (d.G_eq_zero_iff_ivpCoeffs_eq_zero φ x₀ hdefect).mpr hy.2⟩
 
 end StdIVPData
 

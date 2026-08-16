@@ -10,11 +10,48 @@ Derives the symbolic specification, differentiability, and rational Jacobian bri
 
 open RadiiPolynomial MvPolyBridge
 
+namespace IVP
+
+variable {L : ℕ}
+
+/-- Exact rational IVP residual of the stored approximate solution for a `CompPoly`
+vector field and rational initial condition. -/
+def ivpCoeffsQ
+    (f_cpoly : Fin L → CompPoly L) (abar_Q : Fin L → Array ℚ) (x₀_q : Fin L → ℚ)
+    (l : Fin L) (n : ℕ) : ℚ :=
+  match n with
+  | 0 => (abar_Q l).getD 0 0 - x₀_q l
+  | n + 1 => ((n : ℚ) + 1) * (abar_Q l).getD (n + 1) 0 -
+      (f_cpoly l).evalCoeff abar_Q n
+
+end IVP
+
 noncomputable section
 
 namespace IVP
 
 variable {ν : PosReal} {L N : ℕ} [NeZero L]
+
+/-- The real IVP residual at `d.abar` is the cast of `ivpCoeffsQ` when the vector
+field comes from `CompPoly` and the initial condition is rational. -/
+lemma StdIVPData.ivpCoeffs_abar_eq_cast_of_compPoly
+    (d : StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
+    (x₀ : Fin L → ℝ) (x₀_q : Fin L → ℚ)
+    (hx₀ : ∀ l, x₀ l = (x₀_q l : ℝ)) (l : Fin L) (n : ℕ) :
+    ivpCoeffs (fun a j => (f_cpoly j).evalBanach a) x₀ d.abar l n =
+      (ivpCoeffsQ f_cpoly d.abar_Q x₀_q l n : ℝ) := by
+  cases n with
+  | zero =>
+      simp only [ivpCoeffs, ivpCoeffsQ]
+      rw [d.abar_toSeq_eq, hx₀ l]
+      push_cast
+      rfl
+  | succ n =>
+      simp only [ivpCoeffs, ivpCoeffsQ]
+      rw [d.abar_toSeq_eq,
+        (f_cpoly l).toSeq_evalBanach d.abar d.abar_Q d.abar_toSeq_eq n]
+      push_cast
+      rfl
 
 /-- `StdIVPData.composedApprox` agrees with the derivative of the IVP map on finite modes
 when the vector field comes from a `CompPoly` system.
