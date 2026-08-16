@@ -162,7 +162,7 @@ private lemma A_tailDiag_eq (n : ℕ) :
   simp [A_inv, approxInverse, ScalarBlockDiagData.ofParts, ScalarBlockDiagData.tailDiag0,
     A_tail_coeff, sol, ā₀]
 
-/-! ## Bound Proofs — finsum_bound / fast_bound discharge all numerical steps -/
+/-! ## Bound Proofs — finsum_bound / leancert discharge all numerical steps -/
 
 /-! ### Y₀ -/
 
@@ -238,10 +238,10 @@ lemma Z₁_le : Z₁_norm (F lam0) sol.toL1
     simp only [ApproxSolution.toSeq, sol, ā₀, ā₁, ā₂]
     simp only [ν_val, PosReal.toReal, ν]; push_cast; norm_num
   exact Z₁_le_via_eval sol A_mat lam0 (Z₁_bnd : ℝ)
-    (of_point_interval (by
+    (by
       rw [h_shifted_sum]
       unfold approxInverse ScalarBlockDiagData.ofParts sol ā₀ ā₁ ā₂ Z₁_bnd
-      fast_bound))
+      leancert)
 
 /-! ### Z₂ -/
 
@@ -269,7 +269,7 @@ private lemma radii_neg_icc :
     generalRadiiPolynomial (Y₀_bnd : ℝ) (Z₀_bnd : ℝ) (Z₁_bnd : ℝ)
       (fun _ => (Z₂_bnd : ℝ)) r < 0 := by
   unfold generalRadiiPolynomial r₀ Y₀_bnd Z₀_bnd Z₁_bnd Z₂_bnd
-  fast_bound
+  leancert
 
 lemma radii_neg :
     generalRadiiPolynomial (Y₀_bnd : ℝ) (Z₀_bnd : ℝ) (Z₁_bnd : ℝ)

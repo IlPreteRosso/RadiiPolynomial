@@ -400,17 +400,6 @@ lemma norm_toScalarCLM_le_of_Q {N : ℕ} {ν : PosReal}
       (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le A.finBlock0 cols ν_q hcols hν (le_refl _))
       (le_of_eq htail)).trans (by exact_mod_cast hle)
 
-/-- Convert a pointwise interval bound (`∀ x ∈ Icc 0 0, e ≤ c`) to a scalar inequality.
-Lets `fast_bound` close scalar inequalities directly in ℝ. -/
-lemma of_point_interval {e c : ℝ}
-    (h : ∀ x ∈ Set.Icc (0 : ℝ) 0, e ≤ c) : e ≤ c :=
-  h 0 ⟨le_refl _, le_refl _⟩
-
-/-- Strict variant of `of_point_interval` for `fast_bound` on `< 0` goals. -/
-lemma of_point_interval_lt {e c : ℝ}
-    (h : ∀ x ∈ Set.Icc (0 : ℝ) 0, e < c) : e < c :=
-  h 0 ⟨le_refl _, le_refl _⟩
-
 /-! ## Norm-to-witness bridge for block-diagonal action
 
 Bridges `|toSeq(A.toScalarCLM v)[n]| * ν^n` to a witness evaluator.

@@ -80,11 +80,18 @@ elab_rules : tactic
       -- Apply bridge with the check mvar
       let proof := mkApp bridgeExpr checkMVar
 
-      -- Close with native_decide (+ converter fallback)
-      closeBridgeWithNativeDecide goal goalType proof checkMVar "finmatrix_bound" #[
+      -- Close with native_decide (+ converter fallback).
+      -- `closeBridgeWithVerificationTyped` (formerly `closeBridgeWithNativeDecide`) reports
+      -- outcomes as `Except BridgeFailure VerificationEvent` instead of throwing, so the
+      -- failure branch has to be re-raised here to keep this tactic failing loudly.
+      let result ← closeBridgeWithVerificationTyped goal goalType proof checkMVar
+        "finmatrix_bound" #[
         do evalTactic (← `(tactic| intro h; exact h)),
         do evalTactic (← `(tactic| intro h; push_cast at h ⊢; linarith))
       ]
+      match result with
+      | .ok _ => pure ()
+      | .error _ => throwError "finmatrix_bound: bridge verification failed"
 
 /-- Prove a matrix norm bound by decomposing into per-column sums and closing
     each with `finsum_bound using colNormTermEval`.

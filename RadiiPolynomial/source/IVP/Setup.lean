@@ -86,7 +86,7 @@ lemma ivpMap_coeff (A : SystemBlockDiagData L N) (φ : XL1 ν L → Fin L → l1
     (a : XL1 ν L) (l : Fin L) (n : ℕ) :
     l1Weighted.toSeq (ivpMap A φ x₀ hmem a l) n =
       A.action (ivpCoeffs φ x₀ a) l n := by
-  simp [ivpMap, l1Weighted.mk]
+  simp [ivpMap, l1Weighted.mk]; rfl
 
 /-! ## 3. Tail Decomposition -/
 
@@ -250,7 +250,7 @@ lemma ivp_Y₀_le
       rw [hsupport l n hn, mul_zero])]
   -- Step 3: rewrite toSeq to A.action
   simp_rw [show ∀ n, l1Weighted.toSeq (ivpMap A φ x₀ hmem ā l) n =
-    A.action (ivpCoeffs φ x₀ ā) l n from fun n => by simp [ivpMap, l1Weighted.mk]]
+    A.action (ivpCoeffs φ x₀ ā) l n from fun n => by simp [ivpMap, l1Weighted.mk]; rfl]
   exact hcomp l
 
 /-! ## 7. Differentiability of IVP Coefficients

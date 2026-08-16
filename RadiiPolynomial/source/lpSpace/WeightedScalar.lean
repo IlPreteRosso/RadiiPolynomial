@@ -59,7 +59,11 @@ class SubMulWeight {M : Type*} [AddCommMonoid M] (w : M → ℝ)
 /-! ### WeightedScalar Type -/
 
 /-- Generic weighted scalar fiber: `𝕜` with norm `‖x‖_𝕜 * w(m)`.
-`def` (not `abbrev`) prevents typeclass diamond with the standard `𝕜` norm. -/
+`def` (not `abbrev`) prevents typeclass diamond with the standard `𝕜` norm.
+`@[implicit_reducible]` lets `isDefEq` see through the synonym when checking implicit and
+instance-implicit arguments — enough for `simp`/`rfl` to close goals that differ only by it —
+while keeping it opaque to typeclass *search*, so the custom norm instance is still found. -/
+@[implicit_reducible]
 def WeightedScalar (𝕜 : Type*) {M : Type*} (_w : M → ℝ) (_m : M) := 𝕜
 
 namespace WeightedScalar

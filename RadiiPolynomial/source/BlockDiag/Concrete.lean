@@ -57,7 +57,7 @@ def ofCoeff (c : SystemCoeff L) (hc : ∀ l : Fin L, l1Weighted.Mem ν (c l)) : 
 lemma toCoeff_mem (x : XL1 ν L) (l : Fin L) :
     l1Weighted.Mem ν (toCoeff x l) := by
   change Memℓp (fun n => ScaledReal.ofReal (l1Weighted.toSeq (x l) n)) 1
-  simpa [toCoeff, l1Weighted.toSeq, ScaledReal.ofReal_apply] using (lp.memℓp (x l).toLp)
+  exact lp.memℓp (x l).toLp
 
 lemma toCoeff_eq_zero {x : XL1 ν L} {j : Fin L} (h : x j = 0) (n : ℕ) :
     toCoeff (ν := ν) x j n = 0 := by
@@ -67,7 +67,7 @@ lemma toCoeff_eq_zero {x : XL1 ν L} {j : Fin L} (h : x j = 0) (n : ℕ) :
     (c : SystemCoeff L) (hc : ∀ l : Fin L, l1Weighted.Mem ν (c l))
     (l : Fin L) (n : ℕ) :
     toCoeff (ofCoeff (ν := ν) c hc) l n = c l n := by
-  simp [toCoeff, ofCoeff, l1Weighted.mk]
+  simp [toCoeff, ofCoeff, l1Weighted.mk]; rfl
 
 @[simp] lemma ofCoeff_apply
     (c : SystemCoeff L) (hc : ∀ l : Fin L, l1Weighted.Mem ν (c l))
@@ -199,7 +199,7 @@ def SystemBlockDiagData.applyX
 lemma SystemBlockDiagData.toCoeff_applyX
     (A : SystemBlockDiagData L N) (x : XL1 ν L) :
     toCoeff (A.applyX (ν := ν) x) = A.action (toCoeff x) := by
-  funext l n; simp [SystemBlockDiagData.applyX, toCoeff, ofCoeff, l1Weighted.mk]
+  funext l n; simp [SystemBlockDiagData.applyX, toCoeff, ofCoeff, l1Weighted.mk]; rfl
 
 lemma SystemBlockDiagData.action_add
     (A : SystemBlockDiagData L N) (c d : SystemCoeff L) :

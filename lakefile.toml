@@ -12,8 +12,9 @@ git = "https://github.com/PatrickMassot/checkdecls.git"
 [[require]]
 name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4.git"
-rev = "81a5d257c8e410db227a6665ed08f64fea08e997"
+rev = "v4.33.0"
 
 [[require]]
 name = "LeanCert"
-path = "/Users/ilpreterosso/VSCode/Lean/LeanCert/leancert-main"
+git = "https://github.com/alerad/leancert.git"
+rev = "501b2c09e367721f58200f53261787a3d280abe2"

@@ -84,12 +84,12 @@ def stdBasis (j : Fin (N + 1)) : Space ν N :=
 @[simp]
 lemma stdBasis_apply_self (j : Fin (N + 1)) :
     stdBasis (ν := ν) j j = 1 := by
-  simp [stdBasis, ofVec]; rfl
+  simp [stdBasis, ofVec]
 
 @[simp]
 lemma stdBasis_apply_ne (i j : Fin (N + 1)) (h : i ≠ j) :
     stdBasis (ν := ν) j i = 0 := by
-  simp [stdBasis, ofVec, h]; rfl
+  simp [stdBasis, ofVec, h]
 
 lemma norm_stdBasis (j : Fin (N + 1)) :
     ‖stdBasis (ν := ν) j‖ = (ν : ℝ) ^ (j : ℕ) := by

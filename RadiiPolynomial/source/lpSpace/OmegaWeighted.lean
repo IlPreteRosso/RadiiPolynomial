@@ -211,15 +211,15 @@ noncomputable def shift (a : l1Weighted ν) : l1Weighted ν :=
 
 @[simp] lemma shift_zero_mode (a : l1Weighted ν) :
     l1Weighted.toSeq (shift a) 0 = 0 := by
-  simp [shift, shift_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]
+  simp [shift, shift_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
 
 @[simp] lemma shift_succ_mode (a : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (shift a) (n + 1) = l1Weighted.toSeq a n := by
-  simp [shift, shift_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]
+  simp [shift, shift_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
 
 private lemma shift_toSeq (a : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (shift a) n = shift_seq a n := by
-  simp [shift, l1Weighted.toSeq, l1Weighted.mk]
+  simp [shift, l1Weighted.toSeq, l1Weighted.mk]; rfl
 
 lemma shift_linear_add (a b : l1Weighted ν) :
     shift (a + b) = shift a + shift b := by
@@ -308,16 +308,17 @@ noncomputable def shiftDivN (b : l1Weighted ν) : l1Weighted ν :=
 
 @[simp] lemma shiftDivN_zero_mode (b : l1Weighted ν) :
     l1Weighted.toSeq (shiftDivN b) 0 = 0 := by
-  simp [shiftDivN, shiftDivN_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]
+  simp [shiftDivN, shiftDivN_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
 
 @[simp] lemma shiftDivN_succ_mode (b : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (shiftDivN b) (n + 1) =
       l1Weighted.toSeq b n / (↑(n + 1) : ℝ) := by
-  simp [shiftDivN, shiftDivN_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]
+  show shiftDivN_seq b (n + 1) = l1Weighted.toSeq b n / (↑(n + 1) : ℝ)
+  simp [shiftDivN_seq]
 
 private lemma shiftDivN_toSeq (b : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (shiftDivN b) n = shiftDivN_seq b n := by
-  simp [shiftDivN, l1Weighted.toSeq, l1Weighted.mk]
+  simp [shiftDivN, l1Weighted.toSeq, l1Weighted.mk]; rfl
 
 lemma shiftDivN_linear_add (b c : l1Weighted ν) :
     shiftDivN (b + c) = shiftDivN b + shiftDivN c := by
@@ -441,16 +442,17 @@ noncomputable def lambdaN (N : ℕ) (a : l1Weighted ν) : l1Weighted ν :=
 
 @[simp] lemma lambdaN_le_mode (N : ℕ) (a : l1Weighted ν) (n : ℕ) (hn : n ≤ N) :
     l1Weighted.toSeq (lambdaN N a) n = 0 := by
-  simp [lambdaN, lambdaN_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk,
-    not_lt.mpr hn]
+  show lambdaN_seq N a n = 0
+  simp [lambdaN_seq, not_lt.mpr hn]
 
 @[simp] lemma lambdaN_gt_mode (N : ℕ) (a : l1Weighted ν) (n : ℕ) (hn : N < n) :
     l1Weighted.toSeq (lambdaN N a) n = l1Weighted.toSeq a n / (n : ℝ) := by
-  simp [lambdaN, lambdaN_seq, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk, hn]
+  show lambdaN_seq N a n = l1Weighted.toSeq a n / (n : ℝ)
+  simp [lambdaN_seq, hn]
 
 private lemma lambdaN_toSeq (N : ℕ) (a : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (lambdaN N a) n = lambdaN_seq N a n := by
-  simp [lambdaN, l1Weighted.toSeq, l1Weighted.mk]
+  simp [lambdaN, l1Weighted.toSeq, l1Weighted.mk]; rfl
 
 lemma lambdaN_linear_add (N : ℕ) (a b : l1Weighted ν) :
     lambdaN N (a + b) = lambdaN N a + lambdaN N b := by
@@ -582,45 +584,28 @@ theorem l1Omega.summable_eval (b : l1Omega ν) {t : ℝ} (ht : |t| < ν) :
   set r : ℝ := |t| / ν with hr_def
   have hr_lt : r < 1 := (div_lt_one hν).mpr ht
   have hr_nn : (0 : ℝ) ≤ r := div_nonneg (abs_nonneg _) hν.le
-  have hr_norm : ‖r‖ < 1 := by rw [Real.norm_eq_abs, abs_of_nonneg hr_nn]; exact hr_lt
+  have hr_norm : ‖r‖ < 1 := by
+    simpa [Real.norm_eq_abs, abs_of_nonneg hr_nn] using hr_lt
   -- Σ (n+1) · r^n is summable for r < 1
   have h_geom_summable : Summable (fun n : ℕ => ((n : ℝ) + 1) * r ^ n) := by
-    have h_n : Summable (fun n : ℕ => (n : ℝ) * r ^ n) := by
-      simpa [pow_one] using summable_pow_mul_geometric_of_norm_lt_one (k := 1) hr_norm
-    have h_0 : Summable (fun n : ℕ => r ^ n) :=
-      summable_geometric_of_lt_one hr_nn hr_lt
-    refine (h_n.add h_0).congr fun n => ?_
-    ring
+    simpa using
+      (summable_choose_mul_geometric_of_norm_lt_one (R := ℝ) 1 hr_norm)
   -- Each term bounded by the tsum
-  set M : ℝ := ∑' n : ℕ, ((n : ℝ) + 1) * r ^ n with hM_def
-  have h_term_le : ∀ n : ℕ, ((n : ℝ) + 1) * r ^ n ≤ M :=
-    fun n => h_geom_summable.le_tsum n (fun k _ => by positivity)
+  set M : ℝ := ∑' n : ℕ, ((n : ℝ) + 1) * r ^ n
   -- Bound |b_n · t^n| by (M/ν) · (|b_n| · ω_n)
   refine Summable.of_norm_bounded
     (g := fun n => (M / ν) * (|l1Omega.toSeq b n| * OmegaScaledReal.omegaWeight ν n))
     (((l1Omega.mem_iff _).mp b.2).mul_left (M / ν)) (fun n => ?_)
   rw [Real.norm_eq_abs, abs_mul, abs_pow]
-  -- Want: |b_n| · |t|^n ≤ M/ν · |b_n| · ω_n
-  -- ω_n = ν^{n+1}/(n+1), and (n+1) · r^n ≤ M ⟹ |t|^n ≤ M/ν · ω_n
-  have hn1 : (0 : ℝ) < (n : ℝ) + 1 := by positivity
-  have hbn_nn : 0 ≤ |l1Omega.toSeq b n| := abs_nonneg _
-  have h_t_pow_eq : |t|^n = r^n * (ν : ℝ)^n := by
+  have h_t_pow_eq : |t| ^ n = r ^ n * (ν : ℝ) ^ n := by
     rw [hr_def, div_pow, div_mul_cancel₀ _ (pow_ne_zero n hν.ne')]
-  -- |t|^n ≤ M · ν^n / (n+1)
-  have h_t_le : |t|^n ≤ M * (ν : ℝ)^n / ((n : ℝ) + 1) := by
-    rw [h_t_pow_eq, le_div_iff₀ hn1]
-    have heq : r^n * (ν : ℝ)^n * ((n : ℝ) + 1) = (((n : ℝ) + 1) * r^n) * (ν : ℝ)^n := by ring
-    rw [heq]
-    exact mul_le_mul_of_nonneg_right (h_term_le n) (pow_nonneg hν.le n)
-  calc |l1Omega.toSeq b n| * |t|^n
-      ≤ |l1Omega.toSeq b n| * (M * (ν : ℝ)^n / ((n : ℝ) + 1)) :=
-        mul_le_mul_of_nonneg_left h_t_le hbn_nn
-    _ = M / ν * (|l1Omega.toSeq b n| * OmegaScaledReal.omegaWeight ν n) := by
-        unfold OmegaScaledReal.omegaWeight
-        rw [pow_succ]
-        field_simp
-        push_cast
-        ring
+  rw [h_t_pow_eq]
+  unfold OmegaScaledReal.omegaWeight
+  rw [pow_succ, mul_left_comm (M / ν) |l1Omega.toSeq b n|]
+  apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+  field_simp
+  simpa [Nat.cast_add, Nat.cast_one, mul_comm] using
+    h_geom_summable.le_tsum n (fun k _ => by positivity)
 
 /-- Absolute summability for `ℓ¹_ω` evaluation, used as a uniform bound on the disk. -/
 theorem l1Omega.summable_abs_eval (b : l1Omega ν) {t : ℝ} (ht : |t| < ν) :
