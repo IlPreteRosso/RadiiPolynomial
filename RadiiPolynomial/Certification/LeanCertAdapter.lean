@@ -37,26 +37,26 @@ namespace RadiiPolynomial
 
 /-- Per-term evaluator for column norm sums: computes `|col[k]| * ν^k / ν^j`
 as a dyadic interval. Used by `finmatrix_bound using` for per-column aggregation. -/
-def colNormTermEval (col : Array ℚ) (ν : ℚ) (j : Nat) (k : Nat)
+def colNormTermEval (col : Array ℚ) (ν : ℚ) (j : ℕ) (k : ℕ)
     (cfg : DyadicConfig) : IntervalDyadic :=
   IntervalDyadic.ofIntervalRat
     (IntervalRat.singleton (|col.getD k 0| * ν ^ k / ν ^ j)) cfg.precision
 
 /-- Correctness: the real column-norm term lies in the dyadic interval. -/
-theorem colNormTermEval_correct (col : Array ℚ) (ν : ℚ) (j : Nat)
-    (k : Nat) (cfg : DyadicConfig) (hprec : cfg.precision ≤ 0 := by norm_num) :
+theorem colNormTermEval_correct (col : Array ℚ) (ν : ℚ) (j : ℕ)
+    (k : ℕ) (cfg : DyadicConfig) (hprec : cfg.precision ≤ 0 := by norm_num) :
     (|(col.getD k 0 : ℝ)| * (ν : ℝ) ^ k / (ν : ℝ) ^ j : ℝ) ∈
       colNormTermEval col ν j k cfg := by
   simp only [colNormTermEval]
   exact_mod_cast IntervalDyadic.mem_ofIntervalRat (IntervalRat.mem_singleton _) cfg.precision hprec
 
 /-- Per-term evaluator for weighted l1 norm: computes `|arr[k]| * ν^k`. -/
-def weightedTermEval (arr : Array ℚ) (ν : ℚ) (k : Nat)
+def weightedTermEval (arr : Array ℚ) (ν : ℚ) (k : ℕ)
     (cfg : DyadicConfig) : IntervalDyadic :=
   IntervalDyadic.ofIntervalRat
     (IntervalRat.singleton (|arr.getD k 0| * ν ^ k)) cfg.precision
 
-theorem weightedTermEval_correct (arr : Array ℚ) (ν : ℚ) (k : Nat)
+theorem weightedTermEval_correct (arr : Array ℚ) (ν : ℚ) (k : ℕ)
     (cfg : DyadicConfig) (hprec : cfg.precision ≤ 0 := by norm_num)
     {f : ℕ → ℝ} (hf : f k = ((arr.getD k 0 : ℚ) : ℝ)) {ν_r : ℝ} (hν : ν_r = (ν : ℝ)) :
     (|f k| * ν_r ^ k : ℝ) ∈ weightedTermEval arr ν k cfg := by
@@ -434,7 +434,7 @@ lemma ScalarBlockDiagData.toScalarCLM_toSeq_eq_action {N : ℕ} {ν : PosReal}
 /-- Per-term evaluator for `‖A · v‖` norm sums.
 ℚ parameters for computable interval arithmetic. -/
 def scalarBlockDiagActionEval {N : ℕ} (matCols : Fin (N + 1) → Array ℚ) (vec : ℕ → ℚ)
-    (tailCoeff : ℚ) (ν : ℚ) (n : Nat) (cfg : DyadicConfig) : IntervalDyadic :=
+    (tailCoeff : ℚ) (ν : ℚ) (n : ℕ) (cfg : DyadicConfig) : IntervalDyadic :=
   let action : ℚ :=
     if n ≤ N then ∑ j : Fin (N + 1), (matCols j).getD n 0 * vec j
     else tailCoeff * vec n
@@ -449,7 +449,7 @@ theorem scalarBlockDiagActionEval_correct {N : ℕ}
     (hvec : ∀ n, vec n = (vec_q n : ℝ))
     (htail : tailCoeff = (tailCoeff_q : ℝ))
     (hν : ν = (ν_q : ℝ))
-    (n : Nat) (cfg : DyadicConfig)
+    (n : ℕ) (cfg : DyadicConfig)
     (hprec : cfg.precision ≤ 0 := by norm_num) :
     (|scalarBlockDiagAction matCols vec tailCoeff n| * ν ^ n : ℝ) ∈
       scalarBlockDiagActionEval matCols_q vec_q tailCoeff_q ν_q n cfg := by
