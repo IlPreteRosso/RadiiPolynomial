@@ -6,34 +6,18 @@ This is a Lean 4 formalization of radii polynomial methods for rigorous ODE solu
 
 ```
 RadiiPolynomial/
-  RadiiPolynomial.lean           -- root import (all source + production examples, builds all oleans)
+  ARCHITECTURE.md                -- module roles, public facades, and import rules
+  RadiiPolynomial.lean           -- root import (library + production examples)
   RadiiPolynomial/
-    source/
-      lpSpace/                   -- lpOneAlg (ℓ¹ Banach algebra), WeightedScalar, l1Weighted
-        CauchyProduct.lean       -- antidiagonal-sum Cauchy product formula
-        Eval.lean                -- l1Weighted.toPowerSeries, eval, eval_mul (Mertens)
-      BlockDiag/                 -- block-diagonal operators (toMatrix, system Neumann, injectivity)
-      IVP/                       -- equation-independent IVP infrastructure
-        Setup.lean               -- ivpCoeffs, ivpMap, fderiv_ivpMap_coeff_at, ivp_Z1/Y0/Z2_le
-        Theorem.lean             -- Thm 8.2.2: ivp_system_theorem (unused, kept for reference)
-        DFBlock.lean             -- ivp_hDF_block_nat: generic DF verification
-        StandardIVP.lean         -- StdIVPData bundle + existsUnique (calls 7.6.2 directly)
-        Bridge.lean              -- forward bridge (Lemma 8.1.4): solves_ODE_of_F_zero + PL uniqueness lift
-        AnalyticGlue.lean        -- IsAnalyticSolution, x_analytic, analytic_existsUnique on (-ν, ν)
-      Chebyshev/                 -- Chebyshev polynomial algebra + ChebyshevIVP
-      MvPolyBridge/              -- multivariate polynomial bridge + system Z2 norm bounds
-        CompPoly.lean            -- CompPoly AST; evalBanach (canonical) + vectorField interpretations
-      Tactic/                    -- auto_poly_fderiv, pderiv_simp, compPolyOf%, FinMatrixBound
-      Core.lean                  -- canonical bounds (Y0_norm, Z0_norm, Z1_norm, Z2_norm)
-      RadiiPolyGeneral.lean      -- general_radii_polynomial_theorem (Thm 7.6.2)
-      LeanCertEval.lean          -- ℚ evaluators + ℝ→ℚ norm bridges for certificates
-      WitnessSpec.lean, Z2Affine.lean
-    examples/
-      Example81/                 -- Scalar IVP x'=x(x-1), Taylor basis (L=1, N=10)
-      Example83/                 -- Lorenz IVP, Taylor basis (L=3, N=30)
-      Example77/                 -- parameterized zero-finding (section 7.7, scalar l1_nu)
-      Example245/                -- algebraic fixed point (section 2.4.5, scalar R)
-      Example1421/               -- Chebyshev IVP x'=x(x-1); excluded from root import until Julia-exported data lands
+    Algebra/                     -- convolution and polynomial representations
+    Analysis/                    -- weighted sequence spaces, evaluation, and calculus
+    Core/                        -- abstract theorem and canonical bounds
+    Operators/                   -- finite matrices and finite-plus-tail block operators
+    Certification/              -- witness reductions and the LeanCert adapter
+    Tactic/                      -- auto_poly_fderiv, pderiv_simp, compPolyOf%, finmatrix_bound
+    Applications/IVP/Taylor/     -- Taylor IVP operator, theorem, Jacobian, and analytic bridge
+    Applications/IVP/Chebyshev/  -- Chebyshev IVP operator and block-diagonal realization
+    Examples/                    -- grouped by problem family and discretization
 ```
 
 **Theorem hierarchy:**
@@ -45,17 +29,23 @@ RadiiPolynomial/
 
 **f-F bridge (formalized end-to-end, sorry-free):**
 The semantic bridge from the sequence-space zero F(a) = 0 back to the original equation:
-- `IVP/Bridge.lean` — forward bridge (book Lemma 8.1.4): `solves_ODE_of_F_zero` (F(a)=0 ⟹ t ↦ eval(a,t) solves the ODE), plus the Picard–Lindelöf uniqueness lift `analytic_solution_unique` (the RP trajectory bound supplies the Lipschitz radius)
-- `IVP/AnalyticGlue.lean` — packages both for any `StdIVPData`: `IsAnalyticSolution`, canonical solution `x_analytic`, `analytic_existsUnique` on (-ν, ν)
+- `Applications/IVP/Taylor/Trajectory.lean` — forward bridge (book Lemma 8.1.4):
+  `solves_ODE_of_F_zero` (F(a)=0 ⟹ t ↦ eval(a,t) solves the ODE), plus the
+  Picard–Lindelöf uniqueness lift `analytic_solution_unique` (the RP trajectory bound
+  supplies the Lipschitz radius)
+- `Applications/IVP/Taylor/Analytic.lean` — packages both for any `StdIVPData`:
+  `IsAnalyticSolution`, canonical solution `x_analytic`, and `analytic_existsUnique`
+  on (-ν, ν)
 - Example81/83 `Analytic.lean` instantiate `analytic_existsUnique`; Example77 `Analytic.lean` proves the pinning theorem `x_analytic_sq_eq` (eval(x̃,t)² = λ₀ + t via `eval_mul`/Mertens)
 
 **Algebra architecture:**
-- `lpOneAlg M E` (`LpOneAlg.lean`) — generic ℓ¹ Banach algebra with non-uniform fibers
+- `lpOneAlg M E` (`Analysis/SequenceSpace/WeightedL1/Algebra.lean`) — generic ℓ¹
+  Banach algebra with non-uniform fibers
 - `WeightedScalar w m` — parameterized fiber ℝ with norm `|x|·w(m)`
 - `l1Weighted ν := lpOneAlg ℕ (ScaledReal ν)` — Taylor power series
 - `l1Chebyshev ν := lpOneAlg ℤ (ScaledRealZ ν)` — Chebyshev bilateral series
 
-**The library (`source/`) should never import from examples.**
+**Reusable modules should never import from `Examples`. Follow `ARCHITECTURE.md`.**
 
 ## Build
 
