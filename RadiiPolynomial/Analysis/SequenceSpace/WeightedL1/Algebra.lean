@@ -217,6 +217,18 @@ theorem mulToRealSeq_add (f g : lpOneAlg M E) :
 theorem mulToRealSeq_zero : mulToRealSeq (0 : lpOneAlg M E) = 0 :=
   funext fun m => lpAlgRingData.toReal_zero m
 
+@[to_additive (dont_translate := E 𝕜) toRealSeq_neg]
+theorem mulToRealSeq_neg (f : lpOneAlg M E) :
+    mulToRealSeq (-f) = -(mulToRealSeq f) := by
+  funext m
+  show lpAlgRingData.toReal m ((-f).toLp m) = -(lpAlgRingData.toReal m (f.toLp m))
+  rw [toLp_neg, lp.coeFn_neg, Pi.neg_apply, lpAlgRingData.toReal_neg]
+
+@[to_additive (dont_translate := E 𝕜) toRealSeq_sub]
+theorem mulToRealSeq_sub (f g : lpOneAlg M E) :
+    mulToRealSeq (f - g) = mulToRealSeq f - mulToRealSeq g := by
+  rw [sub_eq_add_neg, mulToRealSeq_add, mulToRealSeq_neg, sub_eq_add_neg]
+
 /-- `ofReal` preserves negation (derived from toReal_neg + injectivity). -/
 private theorem ofReal_neg (m : M) (r : 𝕜) :
     lpAlgRingData.ofReal (E := E) m (-r) = -(lpAlgRingData.ofReal m r) := by
@@ -654,25 +666,261 @@ theorem lpOneAlg.toRealSeq_smul (r : 𝕜) (f : lpOneAlg M E) :
 
 end lpOneAlgSmul
 
-/-! ### CommRing, Algebra (separate section to avoid AddGroup/AddCommGroup diamond) -/
+/-! ### Singles, mode expansion, and column-norm bounds
 
-section lpOneAlgCommAlgebra
+Monoid-independent API (the index `M` needs no algebraic structure except where
+stated). Sequence-mentioning statements use the additive `toRealSeq` spelling,
+matching `toRealSeq_smul` above; both production index types (ℕ, ℤ) are additive.
+
+The column-norm bounds realize the ℓ¹ principle: out of a weighted ℓ¹ space, an
+operator's norm is controlled by the sup of its weighted column norms. Promoted
+from the Example 14.2.1 toolkit (2026-08-25). -/
+
+namespace lpOneAlg
+
+section Single
+
+variable {𝕜 : Type*} [NormedField 𝕜]
+variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+
+theorem norm_apply_le_norm (f : lpOneAlg M E) (m : M) : ‖f m‖ ≤ ‖f‖ :=
+  lp.norm_apply_le_norm one_ne_zero f.toLp m
+
+theorem isometry_mk : Isometry (mk : lp E 1 → lpOneAlg M E) :=
+  fun _ _ => rfl
+
+/-- The wrapper `lp E 1 → lpOneAlg M E` as an additive monoid hom. -/
+def mkAddHom : lp E 1 →+ lpOneAlg M E where
+  toFun := mk
+  map_zero' := rfl
+  map_add' _ _ := rfl
+
+variable [lpAlgRingData 𝕜 M E] [DecidableEq M]
+
+/-- The element with value `x` at index `j` and `0` elsewhere. -/
+def single (j : M) (x : 𝕜) : lpOneAlg M E :=
+  ⟨lp.single 1 j (lpAlgRingData.ofReal (E := E) j x)⟩
+
+theorem toRealSeq_single (j : M) (x : 𝕜) (k : M) :
+    toRealSeq (single (E := E) j x) k = if k = j then x else 0 := by
+  show lpAlgRingData.toReal k ((single (E := E) j x) k) = _
+  by_cases h : k = j
+  · subst h
+    show lpAlgRingData.toReal k
+      (Pi.single k (lpAlgRingData.ofReal (E := E) k x) k) = _
+    rw [Pi.single_eq_same, lpAlgRingData.toReal_ofReal, if_pos rfl]
+  · show lpAlgRingData.toReal k
+      (Pi.single j (lpAlgRingData.ofReal (E := E) j x) k) = _
+    rw [Pi.single_eq_of_ne h, lpAlgRingData.toReal_zero, if_neg h]
+
+theorem norm_single (j : M) (x : 𝕜) :
+    ‖(single (E := E) j x : lpOneAlg M E)‖
+      = ‖x‖ * ‖lpAlgRingData.ofReal (E := E) j (1 : 𝕜)‖ := by
+  show ‖lp.single 1 j (lpAlgRingData.ofReal (E := E) j x)‖ = _
+  rw [lp.norm_single (by norm_num), lpAlgRingData.norm_ofReal_eq]
+
+/-- Every element is the norm-convergent sum of its singles (transfer of
+`lp.hasSum_single` through the wrapper). -/
+theorem hasSum_single (h : lpOneAlg M E) :
+    HasSum (fun m : M => single (E := E) m (toRealSeq h m)) h := by
+  have h0 : HasSum (fun m : M => lp.single 1 m (h.toLp m)) h.toLp :=
+    lp.hasSum_single (by norm_num) h.toLp
+  have h1 := h0.map (mkAddHom (E := E)) (isometry_mk (E := E)).continuous
+  have heq : (⇑(mkAddHom (E := E)) ∘ fun m : M => lp.single 1 m (h.toLp m))
+      = fun m : M => single (E := E) m (toRealSeq h m) := by
+    funext m
+    show mk (lp.single 1 m (h.toLp m)) = single (E := E) m (toRealSeq h m)
+    unfold single
+    rw [show lpAlgRingData.ofReal (E := E) m (toRealSeq h m)
+      = h.toLp m from lpAlgRingData.ofReal_toReal m (h.toLp m)]
+  rw [heq] at h1
+  exact h1
+
+variable [∀ m, NormedSpace 𝕜 (E m)]
+
+/-- Mode expansion pushed through a continuous linear map. -/
+theorem hasSum_single_mapCLM {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
+    (W : lpOneAlg M E →L[𝕜] F) (h : lpOneAlg M E) :
+    HasSum (fun m : M => W (single m (toRealSeq h m))) (W h) :=
+  (hasSum_single h).mapL W
+
+variable [lpAlgSmulCompat 𝕜 M E]
+
+theorem single_smul (j : M) (x : 𝕜) :
+    single (E := E) j x = x • single j 1 := by
+  apply ext_toRealSeq
+  funext k
+  rw [show toRealSeq (x • single (E := E) j 1) k
+      = x * toRealSeq (single (E := E) j 1) k from
+    congr_fun (toRealSeq_smul x _) k]
+  rw [toRealSeq_single, toRealSeq_single]
+  split_ifs <;> ring
+
+end Single
+
+section EvalCLM
+
+variable {𝕜 : Type*} [NormedField 𝕜]
+variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+variable [∀ m, NormedSpace 𝕜 (E m)]
+
+/-- Coordinate evaluation as a continuous linear map (norm ≤ 1). -/
+def evalCLM (m : M) : lpOneAlg M E →L[𝕜] E m :=
+  LinearMap.mkContinuous
+    { toFun := fun f => f m
+      map_add' := fun f g => by
+        show ((f + g).toLp : ∀ k, E k) m = _
+        rw [toLp_add, lp.coeFn_add]
+        rfl
+      map_smul' := fun r f => by
+        show ((r • f).toLp : ∀ k, E k) m = _
+        rw [toLp_smul, lp.coeFn_smul]
+        rfl }
+    1 (fun f => by rw [one_mul]; exact norm_apply_le_norm f m)
+
+@[simp] theorem evalCLM_apply (m : M) (f : lpOneAlg M E) :
+    evalCLM (𝕜 := 𝕜) m f = f m := rfl
+
+end EvalCLM
+
+section ColumnNorm
+
+variable {𝕜 : Type*} [NormedField 𝕜]
+variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+variable [lpAlgRingData 𝕜 M E] [DecidableEq M]
+variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+
+/-- **Column-norm bound.** Out of a weighted ℓ¹ space, an operator norm is
+controlled by the weighted column norms: if `‖W (single m 1)‖ ≤ C · ω_m` for
+every `m` (with `ω_m = ‖ofReal m 1‖` the weight), then `‖W h‖ ≤ C · ‖h‖`. -/
+theorem norm_le_of_cols {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
+    (W : lpOneAlg M E →L[𝕜] F) {C : ℝ}
+    (hcol : ∀ m : M, ‖W (single m 1)‖
+      ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
+    (h : lpOneAlg M E) : ‖W h‖ ≤ C * ‖h‖ := by
+  have hexp := hasSum_single_mapCLM W h
+  have hterm : ∀ m : M, ‖W (single m (toRealSeq h m))‖
+      ≤ ‖toRealSeq h m‖ * (C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖) := by
+    intro m
+    rw [single_smul, map_smul, norm_smul]
+    exact mul_le_mul_of_nonneg_left (hcol m) (norm_nonneg _)
+  have hmaj : Summable (fun m : M =>
+      ‖toRealSeq h m‖ * (C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)) := by
+    refine ((summable_norm h).mul_left C).congr fun m => ?_
+    rw [norm_eq_abs_toReal_mul_weight h m]
+    ring
+  have hsumm : Summable (fun m : M => ‖W (single m (toRealSeq h m))‖) :=
+    Summable.of_nonneg_of_le (fun _ => norm_nonneg _) hterm hmaj
+  rw [← hexp.tsum_eq]
+  refine (norm_tsum_le_tsum_norm hsumm).trans ?_
+  refine (Summable.tsum_le_tsum hterm hsumm hmaj).trans (le_of_eq ?_)
+  rw [norm_eq_tsum, ← tsum_mul_left]
+  exact tsum_congr fun m => by rw [norm_eq_abs_toReal_mul_weight h m]; ring
+
+/-- **Finite-part column-norm bound.** A finite family of output coordinates
+`g : ι → M'` of `W h` is controlled by the same finite sums on the columns:
+if `∑_{n ∈ s} ‖(W (single m 1)) (g n)‖ ≤ ε · ω_m` for every `m`, then
+`∑_{n ∈ s} ‖(W h) (g n)‖ ≤ ε · ‖h‖`. -/
+theorem finsum_norm_le_of_cols {M' : Type*} {E' : M' → Type*}
+    [∀ n, NormedAddCommGroup (E' n)] [∀ n, NormedSpace 𝕜 (E' n)]
+    {ι : Type*} (W : lpOneAlg M E →L[𝕜] lpOneAlg M' E')
+    (s : Finset ι) (g : ι → M') {ε : ℝ}
+    (hcol : ∀ m : M, ∑ n ∈ s, ‖(W (single m 1)) (g n)‖
+      ≤ ε * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
+    (h : lpOneAlg M E) :
+    ∑ n ∈ s, ‖(W h) (g n)‖ ≤ ε * ‖h‖ := by
+  have hterm : ∀ (n : ι) (m : M),
+      ‖(W (single m (toRealSeq h m))) (g n)‖
+        = ‖toRealSeq h m‖ * ‖(W (single (E := E) m 1)) (g n)‖ := by
+    intro n m
+    rw [single_smul, map_smul]
+    show ‖((toRealSeq h m • W (single (E := E) m 1)).toLp : ∀ k, E' k) (g n)‖ = _
+    rw [toLp_smul, lp.coeFn_smul, Pi.smul_apply, norm_smul]
+  have hmaj : Summable (fun m : M =>
+      ‖toRealSeq h m‖ * (ε * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)) := by
+    refine ((summable_norm h).mul_left ε).congr fun m => ?_
+    rw [norm_eq_abs_toReal_mul_weight h m]
+    ring
+  have hsumm : ∀ n ∈ s, Summable
+      (fun m : M => ‖(W (single m (toRealSeq h m))) (g n)‖) := by
+    intro n hn
+    refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun m => ?_) hmaj
+    rw [hterm n m]
+    refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
+    exact (Finset.single_le_sum
+      (f := fun i => ‖(W (single (E := E) m 1)) (g i)‖)
+      (fun i _ => norm_nonneg _) hn).trans (hcol m)
+  have hfib : ∀ n : ι, HasSum
+      (fun m : M => (W (single m (toRealSeq h m))) (g n)) ((W h) (g n)) := fun n =>
+    (hasSum_single_mapCLM W h).mapL (evalCLM (𝕜 := 𝕜) (g n))
+  have hn_le : ∀ n ∈ s, ‖(W h) (g n)‖
+      ≤ ∑' m : M, ‖(W (single m (toRealSeq h m))) (g n)‖ := by
+    intro n hn
+    rw [← (hfib n).tsum_eq]
+    exact norm_tsum_le_tsum_norm (hsumm n hn)
+  refine (Finset.sum_le_sum hn_le).trans ?_
+  rw [← Summable.tsum_finsetSum fun n hn => hsumm n hn]
+  have hcol' : ∀ m : M, ∑ n ∈ s, ‖(W (single m (toRealSeq h m))) (g n)‖
+      ≤ ‖toRealSeq h m‖ * (ε * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖) := by
+    intro m
+    rw [Finset.sum_congr rfl fun n _ => hterm n m, ← Finset.mul_sum]
+    exact mul_le_mul_of_nonneg_left (hcol m) (norm_nonneg _)
+  refine (Summable.tsum_le_tsum hcol'
+    (summable_sum fun n hn => hsumm n hn) hmaj).trans (le_of_eq ?_)
+  rw [norm_eq_tsum, ← tsum_mul_left]
+  exact tsum_congr fun m => by rw [norm_eq_abs_toReal_mul_weight h m]; ring
+
+end ColumnNorm
+
+section ConvolutionEval
+
+variable {𝕜 : Type*} [NormedField 𝕜]
+variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+variable [lpAlgRingData 𝕜 M E]
+
+/-- The convolution product evaluated as a tsum over the second factor's index. -/
+@[to_additive (dont_translate := E 𝕜) toRealSeq_mul_tsum]
+theorem mulToRealSeq_mul_tsum [Group M] [lpOneMulAlgConvCompat 𝕜 M E]
+    (x y : lpOneAlg M E) (k : M) :
+    mulToRealSeq (x * y) k
+      = ∑' i : M, mulToRealSeq x (k / i) * mulToRealSeq y i := by
+  refine (congr_fun (mulToRealSeq_mul_fun x y) k).trans ?_
+  show (∑' p : DiscreteConvolution.mulFiber k,
+      mulToRealSeq x p.1.1 * mulToRealSeq y p.1.2) = _
+  exact ((DiscreteConvolution.mulFiberEquiv k).tsum_eq
+    fun p : DiscreteConvolution.mulFiber k =>
+      mulToRealSeq x p.1.1 * mulToRealSeq y p.1.2).symm
+
+/-- Convolution against a finitely-supported factor is a finite sum. -/
+@[to_additive (dont_translate := E 𝕜) toRealSeq_mul_eq_finsum]
+theorem mulToRealSeq_mul_eq_finsum [Group M] [lpOneMulAlgConvCompat 𝕜 M E]
+    (x y : lpOneAlg M E) (k : M) (s : Finset M)
+    (hy : ∀ i ∉ s, mulToRealSeq y i = 0) :
+    mulToRealSeq (x * y) k
+      = ∑ i ∈ s, mulToRealSeq x (k / i) * mulToRealSeq y i := by
+  rw [mulToRealSeq_mul_tsum]
+  exact tsum_eq_sum fun i hi => by rw [hy i hi, mul_zero]
+
+end ConvolutionEval
+
+end lpOneAlg
+
+/-! ### Algebra (any additive index monoid), then CommRing (commutative index)
+
+The two `Algebra.ofModule` laws slide the scalar through the coefficient
+field and never rearrange the convolution fibers, so `Algebra` and
+`NormedAlgebra` hold over any `[AddMonoid M]`. Only commutativity of the
+product (`f * g = g * f`) flips fibers `(i, j) ↦ (j, i)` and needs
+`[AddCommMonoid M]`. Sections kept separate from the Ring instances to avoid
+the AddGroup/AddCommGroup diamond. -/
+
+section lpOneAlgAlgebra
 
 variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} {E : M → Type*}
 variable [∀ m, NormedAddCommGroup (E m)]
-variable [AddCommMonoid M] [DecidableEq M]
+variable [AddMonoid M] [DecidableEq M]
 variable [lpAlgRingData 𝕜 M E] [lpOneAlgConvCompat 𝕜 M E]
-
-instance lpOneAlg.instCommRing : CommRing (lpOneAlg M E) where
-  mul_comm f g := by
-    apply lpOneAlg.ext_toRealSeq
-    simp only [lpOneAlg.toRealSeq_mul_fun]
-    exact DiscreteConvolution.addRingConvolution_comm _ _
-
-instance lpOneAlg.instNormedCommRing : NormedCommRing (lpOneAlg M E) where
-  mul_comm := lpOneAlg.instCommRing.mul_comm
-
 variable [∀ m, NormedSpace 𝕜 (E m)]
 variable [lpAlgSmulCompat 𝕜 M E]
 
@@ -691,6 +939,25 @@ instance lpOneAlg.instAlgebra : Algebra 𝕜 (lpOneAlg M E) :=
 
 instance lpOneAlg.instNormedAlgebra : NormedAlgebra 𝕜 (lpOneAlg M E) where
   norm_smul_le := lpOneAlg.instNormedSpaceBase.norm_smul_le
+
+end lpOneAlgAlgebra
+
+section lpOneAlgCommAlgebra
+
+variable {𝕜 : Type*} [NormedField 𝕜]
+variable {M : Type*} {E : M → Type*}
+variable [∀ m, NormedAddCommGroup (E m)]
+variable [AddCommMonoid M] [DecidableEq M]
+variable [lpAlgRingData 𝕜 M E] [lpOneAlgConvCompat 𝕜 M E]
+
+instance lpOneAlg.instCommRing : CommRing (lpOneAlg M E) where
+  mul_comm f g := by
+    apply lpOneAlg.ext_toRealSeq
+    simp only [lpOneAlg.toRealSeq_mul_fun]
+    exact DiscreteConvolution.addRingConvolution_comm _ _
+
+instance lpOneAlg.instNormedCommRing : NormedCommRing (lpOneAlg M E) where
+  mul_comm := lpOneAlg.instCommRing.mul_comm
 
 end lpOneAlgCommAlgebra
 

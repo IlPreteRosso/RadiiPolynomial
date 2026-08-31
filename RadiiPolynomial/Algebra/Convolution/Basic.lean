@@ -38,6 +38,18 @@ lemma mem_mulFiber [Monoid M] {x : M} {ab : M × M} :
     ab ∈ mulFiber x ↔ ab.1 * ab.2 = x := by
   unfold mulFiber; simp only [Set.mem_mulAntidiagonal, Set.mem_univ, true_and]
 
+/-- For a group index, the fiber of multiplication at `x` is parameterized by its
+second coordinate: `i ↦ (x / i, i)`. -/
+@[to_additive /-- For an additive group index, the fiber of addition at `x` is
+parameterized by its second coordinate: `i ↦ (x - i, i)`. -/]
+def mulFiberEquiv [Group M] (x : M) : M ≃ mulFiber x where
+  toFun i := ⟨(x / i, i), mem_mulFiber.mpr (div_mul_cancel x i)⟩
+  invFun p := p.1.2
+  left_inv _ := rfl
+  right_inv := fun ⟨⟨a, b⟩, hab⟩ =>
+    Subtype.ext (show (x / b, b) = (a, b) by
+      rw [div_eq_iff_eq_mul.mpr (mem_mulFiber.mp hab).symm])
+
 /-- The discrete convolution of `f` and `g` using bilinear map `L`:
 `(f ⋆[L] g) x = ∑' (a, b) : mulFiber x, L (f a) (g b)`. -/
 @[to_additive (dont_translate := S E E' F) addConvolution

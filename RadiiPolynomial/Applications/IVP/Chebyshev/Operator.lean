@@ -1,4 +1,5 @@
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Algebra
+import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion
 import Mathlib.Analysis.Calculus.FDeriv.Linear
 import Mathlib.Analysis.Calculus.FDeriv.Prod
 import Mathlib.Analysis.Calculus.FDeriv.Add
@@ -418,6 +419,130 @@ def embedWithPassThrough (seq : ℕ → ℝ) (base : l1Chebyshev ν) :
   fun k => match k with
   | (n : ℕ) => lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
   | Int.negSucc m => base (Int.negSucc m)
+
+/-! ### Fiber values, membership, and norms of the embeddings
+
+Promoted from Example 14.2.1 (2026-08-25). -/
+
+omit [Fact (1 ≤ (ν : ℝ))] in
+@[simp] lemma embedNatToInt_natCast (seq : ℕ → ℝ) (n : ℕ) :
+    embedNatToInt (ν := ν) seq (↑n : ℤ)
+      = lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n) := rfl
+
+omit [Fact (1 ≤ (ν : ℝ))] in
+@[simp] lemma embedNatToInt_negSucc (seq : ℕ → ℝ) (m : ℕ) :
+    embedNatToInt (ν := ν) seq (Int.negSucc m) = 0 := rfl
+
+omit [Fact (1 ≤ (ν : ℝ))] in
+@[simp] lemma embedWithPassThrough_natCast (seq : ℕ → ℝ) (base : l1Chebyshev ν)
+    (n : ℕ) : embedWithPassThrough seq base (↑n : ℤ)
+      = lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n) := rfl
+
+omit [Fact (1 ≤ (ν : ℝ))] in
+@[simp] lemma embedWithPassThrough_negSucc (seq : ℕ → ℝ) (base : l1Chebyshev ν)
+    (m : ℕ) : embedWithPassThrough seq base (Int.negSucc m)
+      = base (Int.negSucc m) := rfl
+
+omit [Fact (1 ≤ (ν : ℝ))] in
+/-- A finitely-supported `embedNatToInt` sequence is in ℓ¹. -/
+lemma embedNatToInt_memℓp_of_finSupp (seq : ℕ → ℝ) (N : ℕ)
+    (htail : ∀ n : ℕ, N < n → seq n = 0) :
+    Memℓp (embedNatToInt (ν := ν) seq : ∀ k : ℤ, ScaledRealZ ν k) 1 := by
+  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
+  simp only [ENNReal.toReal_one, Real.rpow_one]
+  apply Summable.of_nat_of_neg_add_one
+  · refine summable_of_ne_finset_zero (s := Finset.range (N + 1)) fun n hn => ?_
+    have hlt : N < n := by simp [Finset.mem_range] at hn; omega
+    show ‖embedNatToInt (ν := ν) seq (↑n : ℤ)‖ = 0
+    simp [htail n hlt, lpAlgRingData.ofReal_zero]
+  · have h0 : (fun n : ℕ => ‖embedNatToInt (ν := ν) seq (-(↑n + 1 : ℤ))‖)
+        = fun _ => (0 : ℝ) := by
+      ext n
+      have h : -(↑n + 1 : ℤ) = Int.negSucc n := by omega
+      rw [h]
+      simp
+    rw [h0]
+    exact summable_zero
+
+/-- Norm of a finitely-supported `embedNatToInt` element as a finite-sum bound. -/
+lemma embedNatToInt_norm_le (seq : ℕ → ℝ) (N : ℕ)
+    (hmem : Memℓp (embedNatToInt (ν := ν) seq : ∀ k : ℤ, ScaledRealZ ν k) 1)
+    (htail : ∀ n : ℕ, N < n → seq n = 0) {B : ℝ}
+    (hfin : ∑ n : Fin (N + 1), |seq (n : ℕ)| * (ν : ℝ) ^ (n : ℕ) ≤ B) :
+    ‖(⟨⟨embedNatToInt seq, hmem⟩⟩ : l1Chebyshev ν)‖ ≤ B := by
+  rw [lpOneAlg.norm_eq_bilatFinSum (⟨⟨embedNatToInt seq, hmem⟩⟩ : l1Chebyshev ν) N
+    (fun n hn => by
+      show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)‖ = 0
+      rw [htail n hn, lpAlgRingData.ofReal_zero, norm_zero])
+    (fun n _ => by
+      show ‖(0 : ScaledRealZ ν (Int.negSucc n))‖ = 0
+      exact norm_zero)]
+  have hzero : (∑ n : Fin N,
+      ‖(⟨⟨embedNatToInt (ν := ν) seq, hmem⟩⟩ : l1Chebyshev ν)
+        (Int.negSucc (n : ℕ))‖) = 0 :=
+    Finset.sum_eq_zero fun n _ => by
+      show ‖(0 : ScaledRealZ ν (Int.negSucc (n : ℕ)))‖ = 0
+      exact norm_zero
+  rw [hzero, add_zero]
+  refine le_trans (le_of_eq ?_) hfin
+  refine Finset.sum_congr rfl fun n _ => ?_
+  show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑(n : ℕ)) (seq (n : ℕ))‖ = _
+  rw [ScaledRealZ.norm_lpAlgRingData_ofReal]
+  simp
+
+/-- Norm bound for an `embedWithPassThrough` element whose tail is the base:
+finite window bounded by `B`, negatives and tail each at most `‖base‖`. -/
+lemma embedWithPassThrough_norm_le (seq : ℕ → ℝ) (base : l1Chebyshev ν) (N : ℕ)
+    (hmem : Memℓp (embedWithPassThrough seq base : ∀ k : ℤ, ScaledRealZ ν k) 1)
+    {B : ℝ}
+    (hfin : ∑ n : Fin (N + 1), |seq (n : ℕ)| * (ν : ℝ) ^ (n : ℕ) ≤ B)
+    (htail : ∀ n : ℕ, N < n → seq n = l1Chebyshev.toSeq base (↑n : ℤ)) :
+    ‖(⟨⟨embedWithPassThrough seq base, hmem⟩⟩ : l1Chebyshev ν)‖
+      ≤ B + 2 * ‖base‖ := by
+  set g : ℤ → ℝ := fun k =>
+    ‖(⟨⟨embedWithPassThrough seq base, hmem⟩⟩ : l1Chebyshev ν) k‖
+    with hg_def
+  have hg_summ : Summable g :=
+    lpOneAlg.summable_norm
+      (⟨⟨embedWithPassThrough seq base, hmem⟩⟩ : l1Chebyshev ν)
+  have h_nat : Summable (fun n : ℕ => g ↑n) :=
+    hg_summ.comp_injective fun n m h => by simpa using h
+  have h_neg : Summable (fun n : ℕ => g (-(↑n + 1))) :=
+    hg_summ.comp_injective fun n m h => by simpa using h
+  have hg_natval : ∀ n : ℕ, g ↑n
+      = ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n : ℤ) (seq n)‖ := fun n => rfl
+  have hg_negval : ∀ n : ℕ, g (-(↑n + 1)) = ‖base (Int.negSucc n)‖ := by
+    intro n
+    show g (-(↑n + 1 : ℤ)) = _
+    rw [show -(↑n + 1 : ℤ) = Int.negSucc n from by omega]
+    rfl
+  have h_norm : ‖(⟨⟨embedWithPassThrough seq base, hmem⟩⟩
+      : l1Chebyshev ν)‖ = ∑' k : ℤ, g k :=
+    lpOneAlg.norm_eq_tsum _
+  have h_decomp : ∑' k : ℤ, g k = (∑' n : ℕ, g ↑n) + ∑' n : ℕ, g (-(↑n + 1)) :=
+    tsum_of_nat_of_neg_add_one h_nat h_neg
+  have hneg_le : (∑' n : ℕ, g (-(↑n + 1))) ≤ ‖base‖ := by
+    rw [tsum_congr hg_negval, lpOneAlg.norm_eq_tsum]
+    exact tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm base)
+      (fun _ => norm_nonneg _) fun n m h => by simpa using h
+  have h_split : ∑' n : ℕ, g ↑n
+      = (∑ i ∈ Finset.range (N + 1), g ↑i) + ∑' n : ℕ, g ↑(n + (N + 1)) :=
+    (h_nat.sum_add_tsum_nat_add (N + 1)).symm
+  have hfin_le : ∑ i ∈ Finset.range (N + 1), g ↑i ≤ B := by
+    refine le_trans (le_of_eq ?_) hfin
+    rw [← Fin.sum_univ_eq_sum_range (f := fun i => g ↑i)]
+    refine Finset.sum_congr rfl fun n _ => ?_
+    rw [hg_natval, ScaledRealZ.norm_lpAlgRingData_ofReal]
+    simp
+  have htail_le : (∑' n : ℕ, g ↑(n + (N + 1))) ≤ ‖base‖ := by
+    rw [tsum_congr (fun n : ℕ => show g ↑(n + (N + 1)) = ‖base (↑(n + (N + 1)) : ℤ)‖ by
+      rw [hg_natval, htail _ (by omega), ScaledRealZ.norm_lpAlgRingData_ofReal,
+        ← l1Chebyshev.norm_fiber])]
+    rw [lpOneAlg.norm_eq_tsum]
+    exact tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm base)
+      (fun _ => norm_nonneg _) fun n m h => by simpa using h
+  rw [h_norm, h_decomp, h_split]
+  linarith
 
 /-- The composed Chebyshev IVP map `G = A ∘ F : XCheb → XCheb`.
 Applies `A.action` to the ℕ-indexed `chebyshevIvpCoeffs`, then embeds
@@ -869,6 +994,74 @@ theorem chebyshev_system_theorem
     hr₀ hY₀ hZ₀ hZ₁
     (fun c hc => by simp only [ContinuousLinearMap.id_comp]; exact hZ₂ c hc)
     hG_diff h_radii (fun _ _ h => h)
+
+/-! ## Factorization through the U-basis
+
+`chebyshevShiftDiv` is not primitive: it factors exactly (every mode, including
+`k = 1`) through the T→U basis conversion and U-integration,
+
+  `chebyshevShiftDiv = -(uIntegrate ∘ chebyshevToU)`,
+
+which is the coefficient-level statement of `∫ T'_k dt`-inversion via
+`T_m = (U_m - U_{m-2})/2` and `∫ U_{k-1} = T_k/k`. The `1/(2k)` in `tailDiag`
+is the product of the conversion's `1/2` and the U-integration's `1/k`.
+
+This section lives here (not in `UConversion.lean`) because `chebyshevShiftDiv_seq`
+is private to this file. -/
+
+/-- **U-factorization of the Chebyshev integration tail**:
+`chebyshevShiftDiv c = -(uIntegrate (chebyshevToU c))`, exactly, mode by mode. -/
+theorem chebyshevShiftDiv_eq_neg_uIntegrate_chebyshevToU (c : l1Chebyshev ν) :
+    chebyshevShiftDiv c = -(uIntegrate (chebyshevToU c)) := by
+  apply lpOneAlg.ext_toRealSeq; funext k
+  have hneg : lpOneAlg.toRealSeq (-(uIntegrate (chebyshevToU c))) k =
+      -(lpOneAlg.toRealSeq (uIntegrate (chebyshevToU c)) k) := rfl
+  rw [chebyshevShiftDiv_toSeq, hneg]
+  cases k with
+  | ofNat n =>
+    cases n with
+    | zero =>
+      have h1 : chebyshevShiftDiv_seq c (Int.ofNat 0) = 0 := chebyshevShiftDiv_seq_zero c
+      have h2 : lpOneAlg.toRealSeq (uIntegrate (chebyshevToU c)) (Int.ofNat 0) = 0 :=
+        uIntegrate_toSeq_zero (chebyshevToU c)
+      rw [h1, h2, neg_zero]
+    | succ n =>
+      have h1 : chebyshevShiftDiv_seq c (Int.ofNat (n + 1)) =
+          (l1Chebyshev.toSeq c (↑(n + 1) + 1) - l1Chebyshev.toSeq c (↑(n + 1) - 1)) /
+            (2 * ((n + 1 : ℕ) : ℝ)) :=
+        chebyshevShiftDiv_seq_pos c (n + 1) (by omega)
+      have h2 : lpOneAlg.toRealSeq (uIntegrate (chebyshevToU c)) (Int.ofNat (n + 1)) =
+          l1Weighted.toSeq (chebyshevToU c) n / (↑n + 1) :=
+        uIntegrate_toSeq_succ (chebyshevToU c) n
+      rw [h1, h2, chebyshevToU_toSeq]
+      have e1 : ((↑(n + 1) : ℤ)) + 1 = (↑n : ℤ) + 2 := by omega
+      have e2 : ((↑(n + 1) : ℤ)) - 1 = (↑n : ℤ) := by omega
+      rw [e1, e2]
+      have hne : ((n : ℝ) + 1) ≠ 0 := by positivity
+      push_cast
+      field_simp
+      ring
+  | negSucc m =>
+    have h1 : chebyshevShiftDiv_seq c (Int.negSucc m) = 0 := chebyshevShiftDiv_seq_neg c m
+    have h2 : lpOneAlg.toRealSeq (uIntegrate (chebyshevToU c)) (Int.negSucc m) = 0 :=
+      uIntegrate_toSeq_negSucc (chebyshevToU c) m
+    rw [h1, h2, neg_zero]
+
+/-- Sharper norm bound from the U-factorization:
+`‖chebyshevShiftDiv c‖ ≤ (ν/2 + 1/(2ν))·‖c‖`, the product of `‖uIntegrate‖ ≤ ν`
+and `‖chebyshevToU‖ ≤ (1 + ν⁻²)/2`. Strictly sharper than the direct bound
+`chebyshevShiftDiv_norm_le` (`≤ ν·‖c‖`), which it recovers since `1/(2ν) ≤ ν/2`
+for `ν ≥ 1`. -/
+theorem chebyshevShiftDiv_norm_le' (c : l1Chebyshev ν) :
+    ‖chebyshevShiftDiv c‖ ≤ ((ν : ℝ) / 2 + 1 / (2 * ν)) * ‖c‖ := by
+  rw [chebyshevShiftDiv_eq_neg_uIntegrate_chebyshevToU, norm_neg]
+  refine (uIntegrate_norm_le (chebyshevToU c)).trans ?_
+  have h1 : (ν : ℝ) * ‖chebyshevToU c‖ ≤
+      (ν : ℝ) * ((1 + ((ν : ℝ) ^ 2)⁻¹) / 2 * ‖c‖) :=
+    mul_le_mul_of_nonneg_left (chebyshevToU_norm_le_sharp c) ν.2.le
+  refine h1.trans (le_of_eq ?_)
+  have hν : (ν : ℝ) ≠ 0 := ν.2.ne'
+  field_simp
 
 end ChebyshevIVP
 

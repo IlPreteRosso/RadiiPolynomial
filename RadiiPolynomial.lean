@@ -40,7 +40,3 @@ import RadiiPolynomial.Applications.IVP.Chebyshev
 -- Examples
 import RadiiPolynomial.Examples
 
--- Pending Chebyshev example scaffold. Keep out of the default build until the
--- Julia-exported numerical data and certificate are present.
--- import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Numbers
--- import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Algebra

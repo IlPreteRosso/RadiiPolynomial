@@ -72,7 +72,7 @@ namespace l1Omega
 
 variable {ν : PosReal}
 
-instance : Fact (1 ≤ (1 : ℝ≥0∞)) := ⟨le_rfl⟩
+-- instance : Fact (1 ≤ (1 : ℝ≥0∞)) := ⟨le_rfl⟩
 
 -- UniformSpace and CompleteSpace are inherited from lp's NormedAddCommGroup.
 

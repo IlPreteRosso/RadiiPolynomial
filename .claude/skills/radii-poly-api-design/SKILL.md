@@ -1,92 +1,153 @@
 ---
 name: radii-poly-api-design
-description: Design philosophy for the RadiiPolynomial Lean formalization project. Guides API design through the cycle of reference-book → examples → friction → generalization → abstraction. Use when starting a new formalization task, refactoring existing proofs, or extending the library to new mathematical domains.
+description: Design and refactor the RadiiPolynomial Lean API while preserving its mathematical layering, reusable-module boundaries, and compiling examples. Use for new formalizations, API extraction, proof cleanup, module moves, typeclass design, polynomial evaluation bridges, IVP or Chebyshev infrastructure, and certificate integration.
 ---
 
 # RadiiPolynomial API Design
 
-Design and extend the RadiiPolynomial Lean library by following the friction-driven generalization cycle. The goal: a single `general_radii_polynomial_theorem` that handles arbitrary Banach-space zero-finding, with domain-specific infrastructure (IVP, BVP, Chebyshev) as thin layers on top.
+Treat the tracked repository copy of this skill as canonical. Keep any Codex mirror
+byte-identical to it.
 
-## Philosophy
+## Establish Live Context
 
-### 1. Start from the reference book
+- Work in the nested Git repository at `RadiiPolynomial/RadiiPolynomial`.
+- Read `ARCHITECTURE.md` before changing module boundaries or imports.
+- Inspect the current Git state and preserve unrelated work. Do not commit or push unless asked.
+- Search the live project with `rg` before introducing declarations or files.
+- Check the pinned Mathlib dependency for an existing result before rebuilding it locally.
+- Consult `docs/reference_book/` for the mathematical theorem, Banach space, operator,
+  and bounds when extending the formalization.
+- Treat old handoffs and memory as design history; verify paths and declarations against the
+  current checkout.
 
-The reference book (`docs/reference_book/`) is the source of truth. Before implementing anything:
-- Read the relevant chapter (use `pdftotext` or the Read tool on PDFs)
-- Identify the theorem statement, the Banach space, the operator, and the bounds (Y0, Z0, Z1, Z2)
-- Understand what's equation-specific vs structurally generic
+## Design From Mathematical Layers
 
-### 2. Check what's available before writing anything
+Keep the dependency direction documented in `ARCHITECTURE.md`:
 
-Before creating new files or definitions:
-- Search the existing codebase (`Grep`, `Glob`) for related lemmas
-- Check Mathlib for relevant theory (normed rings, lp spaces, convolution, MVT)
-- If a result exists, USE IT — even if the interface isn't perfect, adapt rather than rebuild
-
-### 3. Build examples first, then extract the API
-
-The design cycle:
+```text
+Algebra + Analysis
+        |
+        v
+Core + reusable Operators
+        |
+        v
+Applications
+        |
+        v
+Examples + Certificates
 ```
-Example (with friction) → Generic lemma → Abstract API → Apply to more examples
+
+`Certification` and `Tactic` are adapter layers. Reusable mathematical modules never import
+`Examples`; applications never import their concrete examples.
+
+At public application boundaries, prefer the facade modules listed in `ARCHITECTURE.md`.
+Inside the library, import the narrow module that owns the declaration.
+
+## Use Friction Carefully
+
+Use this cycle:
+
+```text
+Concrete example -> repeated friction -> generic lemma -> abstract API -> second consumer
 ```
 
-- **Start with a concrete example** (e.g., scalar IVP x'=x(x-1))
-- **Notice friction**: where does the proof require manual unfolding, fin_cases + nlinarith, or 80-line chain rule boilerplate?
-- **Extract the pattern**: if the same proof structure repeats, it should be a library lemma
-- **Generalize**: parameterize over the equation-specific data (phi_spec, numerical arrays, etc.)
-- **Validate**: apply the API to a second example (e.g., Lorenz system) — if it eliminates boilerplate, the API is right
+- Classify every obligation as equation-specific, representation-specific, or structural.
+- Keep finite numeric cleanup and one-off case analysis in the example or certificate.
+- Promote a lemma only when it expresses reusable mathematics or removes repeated structural
+  plumbing.
+- Do not add ad hoc example-specific lemmas to a reusable API merely to shorten one proof.
+- Prefer the weakest coherent assumptions. Parameterize a generic proof by the witness that
+  varies between constructions instead of duplicating the proof or strengthening typeclasses.
+- Preserve public declaration names and compatibility aliases when the mathematics has not
+  changed; module imports may evolve with the architecture.
 
-### 4. Friction IS the signal
+Proof ugliness is evidence, not proof, of a missing abstraction. First search Mathlib and the
+project, then determine whether the friction recurs across consumers.
 
-When a proof is ugly, DON'T push through with `show`/`change`/`conv`. Instead:
-- Ask: "Is there a lemma that would make this one line?"
-- Ask: "Does this pattern repeat across examples?"
-- Ask: "Can the hypothesis be weakened or the conclusion strengthened?"
+## Preserve Core Boundaries
 
-Examples of friction → API improvements from this project:
-- `fin_cases l` + `nlinarith` for Dphi norms → `ivp_Dphi_norm_le`, `norm_fderiv_diff_evalInBanach_of_const_second_pderiv`
-- 80-line manual chain rule proof → `ivp_hDF_block_nat` (single `native_decide`)
-- Per-example `approxInverse`/`abar`/`G` boilerplate → `StdIVPData` bundle
-- `simp` can't reduce `pderiv` after `fin_cases` → `pderiv_simp` tactic
+- Keep `general_radii_polynomial_theorem` in `RadiiPolynomial.Core` as the basis-independent
+  anchor. Application layers should reduce their work to its bounds and hypotheses.
+- Keep `CompPoly` as the computable certificate representation and `MvPolynomial` as the
+  semantic algebraic representation.
+- Keep `CompPoly.evalBanach` as the public completed evaluator. Treat lower construction stages
+  such as `evalAlg` as implementation bridges unless a genuine consumer requires them.
+- Use the `evalBanach`/`toMvPoly` bridge and the universal property of `MvPolynomial` for
+  equational statements such as substitution and composition.
+- For regularity statements, induct at the most algebraic suitable layer, normally
+  `MvPolynomial.induction_on`, rather than over the larger `CompPoly` syntax.
+- Keep power-series evaluation and termwise differentiation in separate modules.
+- Keep `SystemBlockDiagData.composedApprox` as shared Taylor/Chebyshev operator
+  infrastructure; retain `IVP.ivpComposedApprox` only as a compatibility name.
+- Keep the external LeanCert package as a dependency. Put only project-specific bridges in
+  `Certification/LeanCertAdapter.lean`; never copy LeanCert into this repository.
 
-### 5. Prefer `native_decide` and `simp` over manual proofs
+## Typeclasses And Mathlib Alignment
 
-Numerical verification should be automated:
-- Rational arithmetic (Q matrix entries, coefficient bounds) → `native_decide`
-- Polynomial pderiv computation → `pderiv_simp`
-- Finite matrix norm bounds → `finmatrix_bound`
-- Weighted sum bounds → `finsum_bound`
+- Separate assumptions by mathematical strength, as with `SubMulWeightBase` and
+  `SubMulWeight`.
+- Use `lpOneAlgConvCompat` to hide alternative convolution-summability constructions behind
+  one ring instance. The current paths are weight multiplication and finite antidiagonals.
+- Extract shared proofs by passing summability or finiteness witnesses explicitly.
+- Define multiplicative declarations first and generate additive analogues with
+  `@[to_additive]` when the translation is mathematically faithful.
+- Protect nontranslated fiber and scalar parameters with `dont_translate` as needed.
+- Do not force ring instances through `to_additive` when multiplication names conflict; state
+  those instances explicitly.
+- Follow the pinned Mathlib discrete-convolution API for names, assumptions, and docstrings.
 
-If a verification step can't be automated, that's a sign the API needs a computable bridge lemma (e.g., `pderiv_ofNat`, `norm_evalInBanach_C`).
+## Polynomial And Certificate Automation
 
-### 6. Separate concerns: data, algebra, certificate
+Prefer computation over handwritten finite proofs:
 
-Each example has three layers:
-- **Numbers.lean**: Pure Q data (auto-generated from Julia). No proofs, no imports beyond `Mathlib.Data.Rat.Defs`
-- **Algebra.lean**: Equation-specific structure (phi, Dphi, fderiv proofs, Q bridges). Imports library + Numbers
-- **Certificate.lean**: Numerical verification (Y0, Z0, Z1, Z2 bounds, radii polynomial). Imports Algebra
+- Use `native_decide` for rational and finite decidable identities.
+- Use `pderiv_simp` for `MvPolynomial.pderiv` normalization.
+- Use `finmatrix_bound` for finite weighted matrix bounds.
+- Use `compPolyOf%` to reify supported polynomial lambdas.
+- Use `auto_poly_fderiv` for supported polynomial Frechet derivatives.
 
-Reusable modules under `Algebra`, `Analysis`, `Core`, `Operators`, `Certification`,
-`Applications`, and `Tactic` should never import from `Examples`.
+If automation cannot cross a representation boundary, add a reusable correctness bridge at
+the owning layer. Do not expose internal representations merely to make a certificate reduce.
 
-### 7. The abstract theorem is the anchor
+## Current API Landmarks
 
-`general_radii_polynomial_theorem` (Thm 7.6.2) is basis-independent and equation-independent. Everything else — IVP setup, Chebyshev algebra, block-diagonal operators — is infrastructure to APPLY this theorem to specific problems. When designing new infrastructure, always check: does this layer reduce to providing the four bounds (Y0, Z0, Z1, Z2) to the abstract theorem?
+- Abstract theorem and bounds: `RadiiPolynomial/Core/`.
+- Polynomial semantics and syntax: `RadiiPolynomial/Algebra/Polynomial/MvPolynomial/` and
+  `RadiiPolynomial/Algebra/Polynomial/CompPoly/`.
+- Weighted sequence algebras: `RadiiPolynomial/Analysis/SequenceSpace/`.
+- Matrix and finite-plus-tail operators: `RadiiPolynomial/Operators/`.
+- Taylor IVP infrastructure: `RadiiPolynomial/Applications/IVP/Taylor/`.
+- Chebyshev IVP infrastructure: `RadiiPolynomial/Applications/IVP/Chebyshev/`.
+- Certificate adapters: `RadiiPolynomial/Certification/`.
+- Automation: `RadiiPolynomial/Tactic/`.
+- Concrete applications: `RadiiPolynomial/Examples/`.
 
-## Process for a new formalization task
+Important live patterns include `StdIVPData`, `StdChebIVPData`, `BlockDiagLift`,
+`ivp_hDF_block_nat`, `CompPoly.toSeq_evalBanach`, and
+`StdIVPData.composedApprox_eq_fderiv_G_fin_of_compPoly`.
 
-1. **Read the book chapter** — identify theorem, Banach space, operator structure
-2. **Search existing code** — what infrastructure already exists? What Mathlib lemmas apply?
-3. **Write the example** — Numbers + Algebra + Certificate, accepting friction
-4. **Identify friction** — what's boilerplate? What's manual that should be automatic?
-5. **Extract API** — generic lemmas, bundles, tactics
-6. **Apply to second example** — validates the API eliminates the friction
-7. **Clean up** — remove dead code, check for duplication
+## Example Layers
 
-## Key design patterns
+Use the layers that apply to the problem:
 
-- **`StdIVPData` bundle**: numerical arrays in, auto-derived constructions out
-- **`pderiv_simp [phi_spec]`**: `dsimp` (match reduction) + `simp` (pderiv rules) + `ring`/`norm_cast`
-- **`D2` Hessian table**: system-level second-pderiv coefficients, verified by `pderiv_simp`
-- **`ivp_hDF_block_nat`**: Fin-bounded `native_decide` for Jacobian verification
-- **`norm_fderiv_diff_evalInBanach_of_const_second_pderiv`**: Z2 from polynomial structure
+- `Numbers.lean`: imported numerical data, without mathematical proof plumbing.
+- `Algebra.lean`: equation-specific maps, symbolic derivatives, and representation bridges.
+- `Certificate.lean`: verified bounds and the radii-polynomial application.
+- `Analytic.lean`: function-space interpretation and analytic existence or uniqueness.
+
+Not every example needs every layer. Use `f` and `F` consistently for the vector field and
+operator; avoid introducing alternate names without a mathematical distinction.
+
+## Verification
+
+After changing reusable modules or imports:
+
+1. Run focused checks while iterating.
+2. Run `lake build` from the nested repository.
+3. Confirm every production example imported by `RadiiPolynomial.Examples` compiles.
+4. Until Example 14.2.1 has exported numerical data and a certificate, also run
+   `lake build RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Algebra`.
+5. Reject new `sorry` or `admit`, forbidden upward imports, and project-local warnings.
+
+The final acceptance criterion is mathematical layering plus compilation of all current
+examples after any import-path updates.

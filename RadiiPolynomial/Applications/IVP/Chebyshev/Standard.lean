@@ -145,13 +145,12 @@ lemma abar_memℓp (l : Fin L) :
     have hlt : N < n := by simp [Finset.mem_range] at hn; omega
     show ‖(show ∀ k : ℤ, ScaledRealZ ν k from
       ChebyshevIVP.embedNatToInt (d.abar_seq l)) (↑n : ℤ)‖ = 0
-    simp [ChebyshevIVP.embedNatToInt, d.abar_seq_support l n hlt,
-      lpAlgRingData.ofReal_zero, norm_zero]
+    simp [d.abar_seq_support l n hlt, lpAlgRingData.ofReal_zero, norm_zero]
   · have : (fun n : ℕ => ‖(show ∀ k : ℤ, ScaledRealZ ν k from
         ChebyshevIVP.embedNatToInt (d.abar_seq l)) (-(↑n + 1 : ℤ))‖) =
         fun _ => (0 : ℝ) := by
       ext n; have h : -(↑n + 1 : ℤ) = Int.negSucc n := by omega
-      rw [h]; simp [ChebyshevIVP.embedNatToInt]
+      rw [h]; simp
     rw [this]; exact summable_zero
 
 /-- Approximate solution as XCheb (ℤ-indexed, zeros on negatives and beyond N). -/

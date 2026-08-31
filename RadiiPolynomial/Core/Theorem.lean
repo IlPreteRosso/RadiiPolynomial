@@ -705,3 +705,63 @@ theorem simple_radii_polynomial_theorem_EtoF
     hA_inj
 
 end SimpleRadiiPolynomialTheorem
+
+
+
+section SplitMonotonicity
+/-!
+## Split monotonicity of the radii polynomial
+
+Acceptance `p(r₀) < 0` is NOT preserved by loosening bound values: at
+`r = 1, Y₀ = Z₀ = Z₁ = 0.1, Z₂ = 0` the polynomial is `-0.7`, but loosening
+`Z₀` to `0.9` flips it to `+0.1`. So "looser-than-valid is valid" is false as
+a rule about acceptance. The two directions that do hold:
+
+* `generalRadiiPolynomial_anti_bounds` — acceptance under tightening: at a
+  fixed radius, componentwise smaller bound values keep the polynomial
+  negative.
+* `general_radii_polynomial_theorem_of_le` — sound-bound weakening composed
+  with the abstract theorem: the four norm hypotheses may be verified against
+  exact values while the radii inequality is checked at componentwise larger
+  (e.g. dyadic outer-rounded) values.
+
+Together these give "the dyadic check suffices" without the false converse.
+-/
+
+/-- Acceptance under tightening: componentwise smaller bound values preserve
+    negativity of the general radii polynomial at a fixed radius. -/
+lemma generalRadiiPolynomial_anti_bounds
+    {Y₀ Y₀' Z₀ Z₀' Z₁ Z₁' : ℝ} {Z₂ Z₂' : ℝ → ℝ} {r : ℝ}
+    (hr : 0 < r)
+    (hY : Y₀' ≤ Y₀) (hZ₀ : Z₀' ≤ Z₀) (hZ₁ : Z₁' ≤ Z₁) (hZ₂ : Z₂' r ≤ Z₂ r)
+    (h : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r < 0) :
+    generalRadiiPolynomial Y₀' Z₀' Z₁' Z₂' r < 0 := by
+  unfold generalRadiiPolynomial at h ⊢
+  nlinarith [mul_le_mul_of_nonneg_right hZ₂ (sq_nonneg r),
+    mul_le_mul_of_nonneg_right hZ₀ hr.le,
+    mul_le_mul_of_nonneg_right hZ₁ hr.le]
+
+omit [CompleteSpace F] in
+/-- Sound-bound weakening composed with the abstract theorem: certify through
+    any componentwise larger bound values at which the polynomial inequality
+    is checked. -/
+theorem general_radii_polynomial_theorem_of_le
+  {f : E → F} {xBar : E} {A : F →L[ℝ] E} {A_dagger : E →L[ℝ] F}
+  {Y₀ Y₀' Z₀ Z₀' Z₁ Z₁' : ℝ} {Z₂ Z₂' : ℝ → ℝ} {r₀ : ℝ}
+  (hr₀ : 0 < r₀)
+  (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀) (hY : Y₀ ≤ Y₀')
+  (h_Z₀ : ‖I_E - A.comp A_dagger‖ ≤ Z₀) (hZ₀ : Z₀ ≤ Z₀')
+  (h_Z₁ : ‖A.comp (A_dagger - fderiv ℝ f xBar)‖ ≤ Z₁) (hZ₁ : Z₁ ≤ Z₁')
+  (h_Z₂ : ∀ c ∈ Metric.closedBall xBar r₀,
+    ‖A.comp (fderiv ℝ f c - fderiv ℝ f xBar)‖ ≤ Z₂ r₀ * r₀)
+  (hZ₂ : Z₂ r₀ ≤ Z₂' r₀)
+  (hf_diff : Differentiable ℝ f)
+  (h_radii : generalRadiiPolynomial Y₀' Z₀' Z₁' Z₂' r₀ < 0)
+  (hA_inj : Function.Injective A) :
+  ∃! xTilde ∈ Metric.closedBall xBar r₀, f xTilde = 0 :=
+  general_radii_polynomial_theorem hr₀ (h_Y₀.trans hY) (h_Z₀.trans hZ₀)
+    (h_Z₁.trans hZ₁)
+    (fun c hc => (h_Z₂ c hc).trans (mul_le_mul_of_nonneg_right hZ₂ hr₀.le))
+    hf_diff h_radii hA_inj
+
+end SplitMonotonicity

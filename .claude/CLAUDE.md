@@ -101,6 +101,15 @@ Do not put ad hoc example-specific facts into the library API. If the fact only 
 
 For `Fin 1`, use `Subsingleton.elim l 0; subst` instead of `fin_cases l` to avoid `(fun i => i) {0, ...}` pattern mismatch.
 
+### Finset.Icc on ℤ is noncomputable
+
+`Finset.Icc (a b : ℤ)` picks up `Int.instConditionallyCompleteLinearOrder` and is
+noncomputable — any ℚ mirror folded over it breaks `native_decide` / `finsum_bound`
+compilation. Index computable bilateral folds by `Finset.range` plus an explicit
+shift (`i = j − N`), and bridge to the analytic side with
+`Finset.image (fun j => (j : ℤ) − N) (Finset.range (2*N + 1))` + `Finset.sum_image`.
+(Bitten in the Example1421 Y₀ fold, 2026-08-25.)
+
 ## Design decisions
 
 ### IVP codomain: raw N -> R, not typed omega space
