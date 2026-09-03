@@ -204,6 +204,66 @@ lemma ivp_Z₁_le
     _ ≤ (ν : ℝ) / ((N : ℝ) + 1) * (K * ‖h‖) := mul_le_mul_of_nonneg_left (hDφ h l) hν
     _ ≤ Z₁ * ‖h‖ := by nlinarith [norm_nonneg h]
 
+/-- Generic Z₁ per-component bound, exact-column variant (tightening B).
+Same finite/tail decomposition as `Z₁_component_le`, but the tail is bounded by
+a caller-supplied per-component tail-tsum estimate `hDtail` — e.g. the exact
+weighted column-sup certified through `shiftDivN_leftMul_tail_le_of_cols` —
+in place of the `shiftDivN_tailTsum_le_div` recipe `ν/(N+1) · ‖Dφ h l‖`. -/
+private lemma Z₁_component_le_exact
+    (composedApprox : SystemBlockDiagData L N)
+    (G : XL1 ν L → XL1 ν L) (ā : XL1 ν L)
+    (Dφ : XL1 ν L → Fin L → l1Weighted ν)
+    (hfin : ∀ h : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, n ≤ N →
+      l1Weighted.toSeq (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) n = 0)
+    (htail : ∀ h : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, N < n →
+      l1Weighted.toSeq (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) n =
+        l1Weighted.toSeq (shiftDivN_CLM (Dφ h l)) n)
+    {C : ℝ}
+    (hDtail : ∀ h : XL1 ν L, ∀ l : Fin L,
+      ∑' n, |l1Weighted.toSeq (shiftDivN (Dφ h l)) (n + (N + 1))| *
+        (ν : ℝ) ^ (n + (N + 1)) ≤ C * ‖h‖)
+    (h : XL1 ν L) (l : Fin L) :
+    ‖((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l‖ ≤ C * ‖h‖ := by
+  rw [l1Weighted.norm_eq_tailTsum_of_fin_zero _ (N + 1)
+    (fun n hn => hfin h l n (by omega))]
+  have htail' : ∀ n, |l1Weighted.toSeq
+      (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) (n + (N + 1))| =
+      |l1Weighted.toSeq (shiftDivN_CLM (Dφ h l)) (n + (N + 1))| :=
+    fun n => congrArg (|·|) (htail h l (n + (N + 1)) (by omega))
+  simp_rw [htail', shiftDivN_CLM_apply]
+  exact hDtail h l
+
+/-- **Generic Z₁ bound, exact-column variant**:
+`‖composedApprox.toCLM - fderiv G ā‖ ≤ Z₁` from a per-component tail-tsum
+bound. Mirror of `ivp_Z₁_le` in which the recipe hypotheses `hK`/`hDφ`/`hZ₁`
+are replaced by:
+- `hDtail`: per-component `tailTsum N (shiftDivN (Dφ h l)) ≤ C * ‖h‖`
+  (instances discharge it through `shiftDivN_leftMul_tail_le_of_cols` after a
+  structural rewrite of `Dφ` as a left multiplication);
+- `hZ₁`: `C ≤ Z₁`.
+`hfin`/`htail` are exactly as in `ivp_Z₁_le`. -/
+lemma ivp_Z₁_le_exact
+    (composedApprox : SystemBlockDiagData L N)
+    (G : XL1 ν L → XL1 ν L) (ā : XL1 ν L)
+    (Dφ : XL1 ν L → Fin L → l1Weighted ν)
+    (hfin : ∀ h : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, n ≤ N →
+      l1Weighted.toSeq (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) n = 0)
+    (htail : ∀ h : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, N < n →
+      l1Weighted.toSeq (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) n =
+        l1Weighted.toSeq (shiftDivN_CLM (Dφ h l)) n)
+    {C : ℝ} (hC : 0 ≤ C)
+    (hDtail : ∀ h : XL1 ν L, ∀ l : Fin L,
+      ∑' n, |l1Weighted.toSeq (shiftDivN (Dφ h l)) (n + (N + 1))| *
+        (ν : ℝ) ^ (n + (N + 1)) ≤ C * ‖h‖)
+    {Z₁ : ℝ} (hZ₁ : C ≤ Z₁) :
+    ‖composedApprox.toCLM (ν := ν) - fderiv ℝ G ā‖ ≤ Z₁ := by
+  apply ContinuousLinearMap.opNorm_le_bound _ (hC.trans hZ₁)
+  intro h
+  refine (pi_norm_le_iff_of_nonneg (mul_nonneg (hC.trans hZ₁)
+    (norm_nonneg _))).mpr fun l => ?_
+  refine (Z₁_component_le_exact composedApprox G ā Dφ hfin htail hDtail h l).trans ?_
+  exact mul_le_mul_of_nonneg_right hZ₁ (norm_nonneg h)
+
 /-! ## 6. Generic Y₀ Bound
 
 The Y₀ bound `‖G(ā)‖ ≤ C` reduces to:

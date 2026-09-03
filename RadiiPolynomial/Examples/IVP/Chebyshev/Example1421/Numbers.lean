@@ -423,6 +423,11 @@ def K_bound : ℚ := 512/100
 /-- Z₁ bound: eps + ν/(N+1)·K = 0.0035 + (2/41)·5.12 ≤ 0.2533. -/
 def Z₁_bound : ℚ := 2533/10000
 
+/-- Semi-major Z₁ bound: eps + (ν⁻¹+ν)/(2(N+1))·K = 0.0035 + (1.25/41)·5.12 ≤ 0.16.
+Same obligations as `Z₁_bound`, sharper tail factor
+(`chebyshev_Z₁_le_semiMajor`); additive, does not replace `Z₁_bound`. -/
+def Z₁_semiMajor_bound : ℚ := 16/100
+
 /-- Z₂ bound: 8·‖Λ₂‖ with ‖Λ₂‖ ≤ 1.648 (block + shiftDiv tail). -/
 def Z₂_bound : ℚ := 14
 

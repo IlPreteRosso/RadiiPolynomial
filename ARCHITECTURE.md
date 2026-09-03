@@ -24,7 +24,7 @@ layers, but the mathematical layers must not depend on them.
 | --- | --- |
 | `Algebra/Convolution` | Discrete convolution, ring convolution, and Cauchy products |
 | `Algebra/Polynomial` | Semantic `MvPolynomial` bridges and computable `CompPoly` syntax |
-| `Analysis/SequenceSpace/WeightedL1` | Generic weighted `l1` sequence algebras |
+| `Analysis/SequenceSpace/WeightedL1` | Generic weighted `l1` sequence algebras and their universal-property API (`liftCLM`, atom extensionality) |
 | `Analysis/SequenceSpace/Geometric` | Geometric weights, Taylor coefficient spaces, differentiation, and evaluation |
 | `Analysis/SequenceSpace/Chebyshev` | Bilateral Chebyshev weights and sequence algebra |
 | `Core` | Abstract Newton map, radii polynomial, canonical bounds, and reusable bounds |

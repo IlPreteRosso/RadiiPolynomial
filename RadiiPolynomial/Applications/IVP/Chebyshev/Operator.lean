@@ -645,13 +645,15 @@ than the global `≤ ν · ‖c‖`. Used for Z₁ bounds.
 Analogous to `shiftDivN_tailTsum_le_div` in
 `Analysis/SequenceSpace/Geometric/Omega.lean`. -/
 
-/-- Per-element tight bound: `‖shift(c)(k)‖ ≤ 1/(2k) · (‖c(k+1)‖ + ν · ‖c(k-1)‖)` for k ≥ 1.
+/-- Per-element tight bound:
+`‖shift(c)(k)‖ ≤ 1/(2k) · (ν⁻¹ · ‖c(k+1)‖ + ν · ‖c(k-1)‖)` for k ≥ 1.
 The key improvement over `chebyshevShiftDiv_fiber_le` is the `1/(2k)` factor instead of `1/2`,
-giving a tail-dependent estimate that tightens as modes grow. -/
+giving a tail-dependent estimate that tightens as modes grow. The `ν⁻¹` weight on the
+`c(k+1)` term is exact (`|c_{k+1}| ν^k = ν⁻¹ · |c_{k+1}| ν^{k+1}`, needs only `0 < ν`). -/
 private lemma chebyshevShiftDiv_elem_tight_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 < k) :
     ‖(chebyshevShiftDiv c) (↑k : ℤ)‖ ≤
     1 / (2 * (k : ℝ)) *
-      (‖c ((↑k : ℤ) + 1)‖ + (ν : ℝ) * ‖c ((↑k : ℤ) + (-1))‖) := by
+      ((ν : ℝ)⁻¹ * ‖c ((↑k : ℤ) + 1)‖ + (ν : ℝ) * ‖c ((↑k : ℤ) + (-1))‖) := by
   -- Same norm unfolding as chebyshevShiftDiv_fiber_le
   show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑k) (chebyshevShiftDiv_seq c ↑k)‖ ≤ _
   rw [chebyshevShiftDiv_seq_pos c k (by omega)]
@@ -669,10 +671,12 @@ private lemma chebyshevShiftDiv_elem_tight_le (c : l1Chebyshev ν) (k : ℕ) (hk
   set b := |lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))|
   have ha : 0 ≤ a := abs_nonneg _
   have hb : 0 ≤ b := abs_nonneg _
-  have hν0 : (0 : ℝ) < ν := ν.2
-  have hν1 : (1 : ℝ) ≤ ν := Fact.out
+  have hν0 : (0 : ℝ) < (ν : ℝ) := ν.2
+  have hνne : (ν : ℝ) ≠ 0 := hν0.ne'
   have hpk : (0 : ℝ) ≤ (ν : ℝ) ^ k := pow_nonneg hν0.le k
-  have hvk : (ν : ℝ) ^ k ≤ (ν : ℝ) ^ (k + 1) := pow_le_pow_right₀ hν1 (by omega)
+  -- Exact identity: a * ν^k = ν⁻¹ * (a * ν^{k+1}); replaces the former ν^k ≤ ν^{k+1} relaxation
+  have hainv : (ν : ℝ)⁻¹ * (a * (ν : ℝ) ^ (k + 1)) = a * (ν : ℝ) ^ k := by
+    linear_combination a * (ν : ℝ) ^ k * mul_inv_cancel₀ hνne
   have heq_pow : (ν : ℝ) * (ν : ℝ) ^ (k - 1) = (ν : ℝ) ^ k := by
     rw [mul_comm, ← pow_succ]; congr 1; omega
   have htri : |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) -
@@ -681,42 +685,50 @@ private lemma chebyshevShiftDiv_elem_tight_le (c : l1Chebyshev ν) (k : ℕ) (hk
       (lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1)))
     simp only [Real.norm_eq_abs] at this; exact this
   have h2k : (0 : ℝ) < 2 * (k : ℝ) := by positivity
-  -- Numerator bound: |x-y| * ν^k ≤ a * ν^{k+1} + b * ν^k = a * ν^{k+1} + ν * (b * ν^{k-1})
+  -- Numerator bound: |x-y| * ν^k ≤ (a+b) * ν^k = ν⁻¹ * (a * ν^{k+1}) + ν * (b * ν^{k-1})
   have h_num : |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| *
-      (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 1) + (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1)) := by
-    have h1 : (a + b) * (ν : ℝ) ^ k ≤ a * (ν : ℝ) ^ (k + 1) + b * (ν : ℝ) ^ k := by
-      have := mul_le_mul_of_nonneg_left hvk ha
-      linarith [this, mul_add a b ((ν:ℝ)^k)]
+      (ν : ℝ) ^ k ≤ (ν : ℝ)⁻¹ * (a * (ν : ℝ) ^ (k + 1)) + (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1)) := by
     have hbν : (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1)) = b * (ν : ℝ) ^ k := by
       linear_combination b * heq_pow
-    linarith [mul_le_mul_of_nonneg_right htri hpk, hbν]
+    linarith [mul_le_mul_of_nonneg_right htri hpk, mul_add a b ((ν:ℝ)^k),
+      add_mul a b ((ν:ℝ)^k), hainv, hbν]
   -- Factor 1/(2k) from both sides via calc
   calc |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| /
         (2 * (k : ℝ)) * (ν : ℝ) ^ k
       = |lpOneAlg.toRealSeq c ((↑k : ℤ) + 1) - lpOneAlg.toRealSeq c ((↑k : ℤ) + (-1))| *
           (ν : ℝ) ^ k / (2 * (k : ℝ)) := div_mul_eq_mul_div _ _ _
-    _ ≤ (a * (ν : ℝ) ^ (k + 1) + (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1))) / (2 * (k : ℝ)) :=
+    _ ≤ ((ν : ℝ)⁻¹ * (a * (ν : ℝ) ^ (k + 1)) + (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1))) /
+          (2 * (k : ℝ)) :=
         div_le_div_of_nonneg_right h_num h2k.le
-    _ = 1 / (2 * (k : ℝ)) * (a * (ν : ℝ) ^ (k + 1) + (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1))) :=
+    _ = 1 / (2 * (k : ℝ)) *
+          ((ν : ℝ)⁻¹ * (a * (ν : ℝ) ^ (k + 1)) + (ν : ℝ) * (b * (ν : ℝ) ^ (k - 1))) :=
         by ring
 
-/-- Tight tail tsum bound: `∑' n, ‖chebyshevShiftDiv(c)(n+N+1)‖ ≤ ν/(N+1) · ‖c‖`.
-Tighter than `chebyshevShiftDiv_norm_le` (`≤ ν · ‖c‖`) because `1/(2k) ≤ 1/(2(N+1))`
-on tail modes `k ≥ N+1`. Used for IVP Z₁ tail error bounds.
+/-- **Semi-major tail tsum bound**:
+`∑' n, ‖chebyshevShiftDiv(c)(n+N+1)‖ ≤ (ν⁻¹ + ν)/(2(N+1)) · ‖c‖`.
 
-Proof chain: per-element tight → tighten 1/(2k) ≤ 1/(2(N+1)) → sum →
-factor → subseries ≤ ‖c‖ → (1+ν)/(2(N+1)) ≤ ν/(N+1). -/
-lemma chebyshevShiftDiv_tailTsum_le_div (c : l1Chebyshev ν) (N : ℕ) :
+The prefactor `(ν⁻¹ + ν)/2` is the semi-major axis of the Bernstein ellipse `E_ν`:
+the bound equals `semiMajor ν / (N + 1)`; `semiMajor` itself deliberately stays in
+`tmp/cross_geometry_arrow` — the library states the literal `((ν:ℝ)⁻¹ + ν)/2`.
+Needs only `0 < ν` beyond what `chebyshevShiftDiv` itself requires; the relaxations
+`chebyshevShiftDiv_tailTsum_le_half` ((1+ν)/(2(N+1))) and
+`chebyshevShiftDiv_tailTsum_le_div` (ν/(N+1)) are corollaries under `1 ≤ ν`.
+
+Proof chain: per-element tight (exact ν⁻¹/ν weights) → tighten 1/(2k) ≤ 1/(2(N+1))
+→ sum → factor → subseries ≤ ‖c‖. -/
+lemma chebyshevShiftDiv_tailTsum_le_semiMajor_div (c : l1Chebyshev ν) (N : ℕ) :
     ∑' n, ‖(chebyshevShiftDiv c) (↑(n + (N + 1)) : ℤ)‖ ≤
-      (ν : ℝ) / ((N : ℝ) + 1) * ‖c‖ := by
+      ((ν : ℝ)⁻¹ + (ν : ℝ)) / (2 * ((N : ℝ) + 1)) * ‖c‖ := by
+  have hν0 : (0 : ℝ) < (ν : ℝ) := ν.2
+  have hνinv : (0 : ℝ) ≤ (ν : ℝ)⁻¹ := (inv_pos.mpr hν0).le
   -- Per-element: tighten 1/(2(n+N+1)) ≤ 1/(2(N+1))
   have hper : ∀ n : ℕ, ‖(chebyshevShiftDiv c) (↑(n + (N + 1)) : ℤ)‖ ≤
       1 / (2 * ((N : ℝ) + 1)) *
-        (‖c ((↑(n + (N + 1)) : ℤ) + 1)‖ +
+        ((ν : ℝ)⁻¹ * ‖c ((↑(n + (N + 1)) : ℤ) + 1)‖ +
           (ν : ℝ) * ‖c ((↑(n + (N + 1)) : ℤ) + (-1))‖) := by
     intro n
     refine (chebyshevShiftDiv_elem_tight_le c (n + (N + 1)) (by omega)).trans ?_
-    apply mul_le_mul_of_nonneg_right _ (add_nonneg (norm_nonneg _)
+    apply mul_le_mul_of_nonneg_right _ (add_nonneg (mul_nonneg hνinv (norm_nonneg _))
       (mul_nonneg ν.2.le (norm_nonneg _)))
     exact one_div_le_one_div_of_le (by positivity) (by exact_mod_cast (show
       2 * (N + 1) ≤ 2 * (n + (N + 1)) by omega))
@@ -724,41 +736,65 @@ lemma chebyshevShiftDiv_tailTsum_le_div (c : l1Chebyshev ν) (N : ℕ) :
   have hsumm : Summable (fun n : ℕ =>
       ‖(chebyshevShiftDiv c) (↑(n + (N + 1)) : ℤ)‖) :=
     (lpOneAlg.summable_norm (chebyshevShiftDiv c)).comp_injective (fun n m h => by omega)
-  have h1 : Summable (fun n : ℕ => ‖c ((↑(n + (N + 1)) : ℤ) + 1)‖) :=
-    (lpOneAlg.summable_norm c).comp_injective (fun n m h => by omega)
+  have h1 : Summable (fun n : ℕ => (ν : ℝ)⁻¹ * ‖c ((↑(n + (N + 1)) : ℤ) + 1)‖) :=
+    ((lpOneAlg.summable_norm c).comp_injective (fun n m h => by omega)).mul_left _
   have h2 : Summable (fun n : ℕ => (ν : ℝ) * ‖c ((↑(n + (N + 1)) : ℤ) + (-1))‖) := by
     exact ((lpOneAlg.summable_norm c).comp_injective
       (fun n m h => by omega)).mul_left _
   calc ∑' n, ‖(chebyshevShiftDiv c) (↑(n + (N + 1)) : ℤ)‖
       ≤ ∑' n, (1 / (2 * ((N : ℝ) + 1)) *
-        (‖c ((↑(n + (N + 1)) : ℤ) + 1)‖ +
+        ((ν : ℝ)⁻¹ * ‖c ((↑(n + (N + 1)) : ℤ) + 1)‖ +
           (ν : ℝ) * ‖c ((↑(n + (N + 1)) : ℤ) + (-1))‖)) :=
         hsumm.tsum_le_tsum hper ((h1.add h2).mul_left _)
     _ = 1 / (2 * ((N : ℝ) + 1)) *
-        ∑' n, (‖c ((↑(n + (N + 1)) : ℤ) + 1)‖ +
+        ∑' n, ((ν : ℝ)⁻¹ * ‖c ((↑(n + (N + 1)) : ℤ) + 1)‖ +
           (ν : ℝ) * ‖c ((↑(n + (N + 1)) : ℤ) + (-1))‖) := tsum_mul_left
     _ = 1 / (2 * ((N : ℝ) + 1)) *
-        ((∑' n, ‖c ((↑(n + (N + 1)) : ℤ) + 1)‖) +
+        ((ν : ℝ)⁻¹ * (∑' n, ‖c ((↑(n + (N + 1)) : ℤ) + 1)‖) +
           (ν : ℝ) * ∑' n, ‖c ((↑(n + (N + 1)) : ℤ) + (-1))‖) := by
-        congr 1; rw [← tsum_mul_left]; exact h1.tsum_add h2
-    _ ≤ 1 / (2 * ((N : ℝ) + 1)) * (‖c‖ + (ν : ℝ) * ‖c‖) := by
+        congr 1; rw [← tsum_mul_left, ← tsum_mul_left]; exact h1.tsum_add h2
+    _ ≤ 1 / (2 * ((N : ℝ) + 1)) * ((ν : ℝ)⁻¹ * ‖c‖ + (ν : ℝ) * ‖c‖) := by
         apply mul_le_mul_of_nonneg_left _ (by positivity)
         apply add_le_add
-        · rw [lpOneAlg.norm_eq_tsum c]
+        · apply mul_le_mul_of_nonneg_left _ hνinv
+          rw [lpOneAlg.norm_eq_tsum c]
           exact tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm c)
             (fun _ => norm_nonneg _) (fun n m h => by omega)
         · apply mul_le_mul_of_nonneg_left _ ν.2.le
           rw [lpOneAlg.norm_eq_tsum c]
           exact tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm c)
             (fun _ => norm_nonneg _) (fun n m h => by omega)
-    _ = (1 + (ν : ℝ)) / (2 * ((N : ℝ) + 1)) * ‖c‖ := by ring
-    _ ≤ (ν : ℝ) / ((N : ℝ) + 1) * ‖c‖ := by
-        apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
-        rw [div_le_div_iff₀ (by positivity : (0:ℝ) < 2 * ((N:ℝ) + 1))
-          (by positivity : (0:ℝ) < (N:ℝ) + 1)]
-        have hν : (1:ℝ) ≤ ν := Fact.out
-        have hN : (0:ℝ) ≤ (N:ℝ) + 1 := by positivity
-        nlinarith [mul_le_mul_of_nonneg_right hν hN]
+    _ = ((ν : ℝ)⁻¹ + (ν : ℝ)) / (2 * ((N : ℝ) + 1)) * ‖c‖ := by ring
+
+/-- Tail tsum bound, half form: `∑' n, ‖chebyshevShiftDiv(c)(n+N+1)‖ ≤ (1+ν)/(2(N+1)) · ‖c‖`.
+Corollary of `chebyshevShiftDiv_tailTsum_le_semiMajor_div` via `ν⁻¹ ≤ 1` (from `1 ≤ ν`). -/
+lemma chebyshevShiftDiv_tailTsum_le_half (c : l1Chebyshev ν) (N : ℕ) :
+    ∑' n, ‖(chebyshevShiftDiv c) (↑(n + (N + 1)) : ℤ)‖ ≤
+      (1 + (ν : ℝ)) / (2 * ((N : ℝ) + 1)) * ‖c‖ := by
+  refine (chebyshevShiftDiv_tailTsum_le_semiMajor_div c N).trans ?_
+  apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+  have h2N : (0 : ℝ) < 2 * ((N : ℝ) + 1) := by positivity
+  rw [div_le_div_iff₀ h2N h2N]
+  have hν1 : (1 : ℝ) ≤ (ν : ℝ) := Fact.out
+  have hinv : (ν : ℝ)⁻¹ ≤ 1 := inv_le_one_of_one_le₀ hν1
+  exact mul_le_mul_of_nonneg_right (by linarith) h2N.le
+
+/-- Tight tail tsum bound: `∑' n, ‖chebyshevShiftDiv(c)(n+N+1)‖ ≤ ν/(N+1) · ‖c‖`.
+Tighter than `chebyshevShiftDiv_norm_le` (`≤ ν · ‖c‖`) because `1/(2k) ≤ 1/(2(N+1))`
+on tail modes `k ≥ N+1`. Used for IVP Z₁ tail error bounds.
+
+Corollary of `chebyshevShiftDiv_tailTsum_le_half` via `(1+ν)/(2(N+1)) ≤ ν/(N+1)`
+(i.e. `1 ≤ ν`); the sharpest form is `chebyshevShiftDiv_tailTsum_le_semiMajor_div`. -/
+lemma chebyshevShiftDiv_tailTsum_le_div (c : l1Chebyshev ν) (N : ℕ) :
+    ∑' n, ‖(chebyshevShiftDiv c) (↑(n + (N + 1)) : ℤ)‖ ≤
+      (ν : ℝ) / ((N : ℝ) + 1) * ‖c‖ := by
+  refine (chebyshevShiftDiv_tailTsum_le_half c N).trans ?_
+  apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+  rw [div_le_div_iff₀ (by positivity : (0:ℝ) < 2 * ((N:ℝ) + 1))
+    (by positivity : (0:ℝ) < (N:ℝ) + 1)]
+  have hν : (1:ℝ) ≤ ν := Fact.out
+  have hN : (0:ℝ) ≤ (N:ℝ) + 1 := by positivity
+  nlinarith [mul_le_mul_of_nonneg_right hν hN]
 
 /-! ## Norm Splitting for l1Chebyshev
 
@@ -874,6 +910,38 @@ lemma chebyshev_Z₁_component_le_relaxed (d w : l1Chebyshev ν) (N : ℕ)
   · exact (tsum_congr fun n => htail (n + (N + 1)) (by omega)) ▸
       chebyshevShiftDiv_tailTsum_le_div w N
 
+/-- **Semi-major** relaxed Chebyshev Z₁ per-component bound.
+Same hypotheses as `chebyshev_Z₁_component_le_relaxed`, with the sharper tail factor
+`(ν⁻¹ + ν)/(2(N+1))` from `chebyshevShiftDiv_tailTsum_le_semiMajor_div`
+(= `semiMajor ν / (N+1)`) in place of `ν/(N+1)`.
+
+Result: `‖d‖ ≤ ε + (ν⁻¹ + ν)/(2(N+1)) · ‖w‖`. -/
+lemma chebyshev_Z₁_component_le_semiMajor (d w : l1Chebyshev ν) (N : ℕ)
+    (hneg : ∀ m : ℕ, d (Int.negSucc m) = 0)
+    {ε : ℝ}
+    (hfin_le : ∑ k : Fin (N + 1), ‖d (↑(k : ℕ) : ℤ)‖ ≤ ε)
+    (htail : ∀ m : ℕ, N < m →
+      ‖d (↑m : ℤ)‖ = ‖(chebyshevShiftDiv w) (↑m : ℤ)‖) :
+    ‖d‖ ≤ ε + ((ν : ℝ)⁻¹ + (ν : ℝ)) / (2 * ((N : ℝ) + 1)) * ‖w‖ := by
+  -- set f to avoid subtype elaboration blowup on tsum operations
+  set f : ℤ → ℝ := fun k => ‖d k‖ with hf_def
+  have hf_summ : Summable f := lpOneAlg.summable_norm d
+  have h_nat : Summable (fun n : ℕ => f ↑n) :=
+    hf_summ.comp_injective (fun n m h => by omega)
+  have h_neg : Summable (fun n : ℕ => f (-(↑n + 1))) :=
+    hf_summ.comp_injective (fun n m h => by omega)
+  -- Decompose ℤ = ℕ₊ + ℕ₋, neg part = 0, split ℕ into [0,N] + [N+1,∞)
+  rw [lpOneAlg.norm_eq_tsum d, tsum_of_nat_of_neg_add_one h_nat h_neg]
+  rw [show (fun n : ℕ => f (-(↑n + 1))) = fun _ => (0 : ℝ) from
+    funext (fun n => norm_eq_zero.mpr (by
+      show d (-(↑n + 1 : ℤ)) = 0
+      rw [show -(↑n + 1 : ℤ) = Int.negSucc n from by omega, hneg]))]
+  rw [tsum_zero, add_zero, (h_nat.sum_add_tsum_nat_add (N + 1)).symm]
+  refine add_le_add ?_ ?_
+  · rw [← Fin.sum_univ_eq_sum_range (f := fun n => f ↑n)]; exact hfin_le
+  · exact (tsum_congr fun n => htail (n + (N + 1)) (by omega)) ▸
+      chebyshevShiftDiv_tailTsum_le_semiMajor_div w N
+
 /-! ## Chebyshev Z₁ Operator Norm Bound
 
 Assembles per-component Z₁ bounds into `‖composedApprox - fderiv G ā‖ ≤ Z₁`.
@@ -954,6 +1022,49 @@ lemma chebyshev_Z₁_le_relaxed
   refine (pi_norm_le_iff_of_nonneg (mul_nonneg
     (le_trans (add_nonneg hε (mul_nonneg hν hK)) hZ₁) (norm_nonneg _))).mpr fun l => ?_
   refine ((chebyshev_Z₁_component_le_relaxed _ _ N (hneg h l) (hfin_le h l)
+    (htail h l)).trans (add_le_add le_rfl (mul_le_mul_of_nonneg_left (hDφ h l) hν))).trans ?_
+  have h1 := mul_le_mul_of_nonneg_right hZ₁ (norm_nonneg h)
+  nlinarith [h1]
+
+omit [NeZero L] in
+/-- **Semi-major relaxed Chebyshev Z₁ bound**: `chebyshev_Z₁_le_relaxed` with the
+sharper tail factor `(ν⁻¹ + ν)/(2(N+1))` (= `semiMajor ν / (N+1)`) in place of `ν/(N+1)`.
+
+All hypotheses except the total bound `hZ₁` are identical to `chebyshev_Z₁_le_relaxed`,
+so existing certificate obligations can be reused verbatim.
+
+Total: `Z₁ ≤ ε + (ν⁻¹ + ν)/(2(N+1)) · K`. -/
+lemma chebyshev_Z₁_le_semiMajor
+    (N : ℕ) (composedApprox : XCheb ν L →L[ℝ] XCheb ν L)
+    (G : XCheb ν L → XCheb ν L) (ā : XCheb ν L)
+    (Dφ : XCheb ν L → Fin L → l1Chebyshev ν)
+    -- Negative: difference is zero (from pass-through)
+    (hneg : ∀ h : XCheb ν L, ∀ l : Fin L, ∀ m : ℕ,
+      ((composedApprox - fderiv ℝ G ā) h l) (Int.negSucc m) = 0)
+    -- Finite: per-component bound
+    {ε : ℝ} (hε : 0 ≤ ε)
+    (hfin_le : ∀ h : XCheb ν L, ∀ l : Fin L,
+      ∑ k : Fin (N + 1),
+        ‖((composedApprox - fderiv ℝ G ā) h l) (↑(k : ℕ) : ℤ)‖ ≤ ε * ‖h‖)
+    -- Tail: norm matches chebyshevShiftDiv(Dφ)
+    (htail : ∀ h : XCheb ν L, ∀ l : Fin L, ∀ m : ℕ, N < m →
+      ‖((composedApprox - fderiv ℝ G ā) h l) (↑m : ℤ)‖ =
+        ‖(chebyshevShiftDiv (Dφ h l)) (↑m : ℤ)‖)
+    -- Dφ norm bound
+    {K : ℝ} (hK : 0 ≤ K)
+    (hDφ : ∀ h : XCheb ν L, ∀ l : Fin L, ‖Dφ h l‖ ≤ K * ‖h‖)
+    -- Total bound
+    {Z₁ : ℝ} (hZ₁ : ε + ((ν : ℝ)⁻¹ + (ν : ℝ)) / (2 * ((N : ℝ) + 1)) * K ≤ Z₁) :
+    ‖composedApprox - fderiv ℝ G ā‖ ≤ Z₁ := by
+  have hν0 : (0 : ℝ) < (ν : ℝ) := ν.2
+  have hν : (0 : ℝ) ≤ ((ν : ℝ)⁻¹ + (ν : ℝ)) / (2 * ((N : ℝ) + 1)) :=
+    div_nonneg (add_nonneg (inv_pos.mpr hν0).le hν0.le) (by positivity)
+  apply ContinuousLinearMap.opNorm_le_bound _
+    (le_trans (add_nonneg hε (mul_nonneg hν hK)) hZ₁)
+  intro h
+  refine (pi_norm_le_iff_of_nonneg (mul_nonneg
+    (le_trans (add_nonneg hε (mul_nonneg hν hK)) hZ₁) (norm_nonneg _))).mpr fun l => ?_
+  refine ((chebyshev_Z₁_component_le_semiMajor _ _ N (hneg h l) (hfin_le h l)
     (htail h l)).trans (add_le_add le_rfl (mul_le_mul_of_nonneg_left (hDφ h l) hν))).trans ?_
   have h1 := mul_le_mul_of_nonneg_right hZ₁ (norm_nonneg h)
   nlinarith [h1]

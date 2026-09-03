@@ -1,4 +1,5 @@
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.UniversalProperty
 import Mathlib.Analysis.SpecificLimits.Normed
 import Mathlib.Topology.Algebra.InfiniteSum.Real
 
@@ -407,6 +408,157 @@ noncomputable def shiftDivN_CLM : l1Weighted ν →L[ℝ] l1Weighted ν :=
 
 @[simp] lemma shiftDivN_CLM_apply (b : l1Weighted ν) :
     shiftDivN_CLM b = shiftDivN b := rfl
+
+/-! ### Exact weighted column data of the Z₁ tail operator (tightening B)
+
+The Z₁ tail operator `T_N(b) := π_{>N} ∘ shiftDivN ∘ leftMul b` is a continuous
+linear map out of `l1Weighted ν`, so by the lift API
+(`lpOneAlg.eq_liftCLM_of_cols`) it is determined by — and its norm is exactly
+the weighted sup of — its columns at the basis vectors `single M 1`. The next
+lemmas package this: a per-column tail bound `C · ν^M` transports to the
+operator bound `C · ‖h‖` (`shiftDivN_leftMul_tail_le_of_cols`), and above the
+cutoff the columns are antitone (`shiftDivN_leftMul_tail_col_antitone`), so a
+certificate only has to check the finite range `M ≤ N`. Hygiene: `ν : PosReal`
+only. -/
+
+/-- Coefficients of `b * single M 1`: the Cauchy product against a monomial is
+the `M`-fold right shift, `(b · δ_M)_k = b_{k-M}` for `M ≤ k`, else `0`. -/
+lemma l1Weighted.toSeq_mul_single (b : l1Weighted ν) (M k : ℕ) :
+    l1Weighted.toSeq (b * l1Weighted.single M 1) k =
+      if M ≤ k then l1Weighted.toSeq b (k - M) else 0 := by
+  rw [l1Weighted.toSeq_mul, CauchyProduct.apply_range]
+  simp only [l1Weighted.single_toSeq]
+  by_cases hM : M ≤ k
+  · rw [if_pos hM, Finset.sum_eq_single M
+      (fun j _ hne => by rw [if_neg hne, mul_zero])
+      (fun hM' => absurd (Finset.mem_range.mpr (by omega)) hM')]
+    rw [if_pos rfl, mul_one]
+  · rw [if_neg hM]
+    refine Finset.sum_eq_zero fun j hj => ?_
+    rw [if_neg (by have := Finset.mem_range.mp hj; omega), mul_zero]
+
+/-- The norm of the tail projection is the tail of the weighted norm series. -/
+lemma l1Weighted.norm_tailProj_eq_tailTsum (N : ℕ) (x : l1Weighted ν) :
+    ‖l1Weighted.tailProj N x‖ =
+      ∑' n, |l1Weighted.toSeq x (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) := by
+  rw [l1Weighted.norm_eq_tailTsum_of_fin_zero (l1Weighted.tailProj N x) (N + 1)
+    (fun n hn => by rw [l1Weighted.coeff_tailProj, if_neg (by omega)])]
+  exact tsum_congr fun n => by
+    rw [l1Weighted.coeff_tailProj, if_pos (by omega)]
+
+/-- Fiber-norm bridge for the geometric carrier: the `lpAlgRingData` weight at
+index `n` is `ν^n`. -/
+private lemma scaledReal_norm_ofReal (ν : PosReal) (n : ℕ) (x : ℝ) :
+    ‖lpAlgRingData.ofReal (E := ScaledReal ν) n x‖ = |x| * (ν : ℝ) ^ n :=
+  WeightedScalar.norm_ofReal x
+
+/-- The geometric `single` IS the generic `lpOneAlg.single`. -/
+private lemma l1Weighted_single_eq (ν : PosReal) (n : ℕ) (x : ℝ) :
+    l1Weighted.single (ν := ν) n x = lpOneAlg.single n x := by
+  apply lpOneAlg.ext_toRealSeq
+  funext m
+  rw [lpOneAlg.toRealSeq_single]
+  show l1Weighted.toSeq (l1Weighted.single (ν := ν) n x) m = _
+  rw [l1Weighted.single_toSeq]
+
+/-- **Column completeness for the Z₁ tail operator** (tightening B). If every
+column of `π_{>N} ∘ shiftDivN ∘ leftMul b` at a basis vector `single M 1` has
+tail mass at most `C · ν^M`, then on every `h` the tail mass is at most
+`C · ‖h‖`. This is the completeness rule of the linear lift
+(`lpOneAlg.eq_liftCLM_of_cols` + `norm_liftCLM_apply_le`) applied to the tail
+operator realized as the CLM `tailProj_CLM N ∘L shiftDivN_CLM ∘L leftMul b`.
+Compare `shiftDivN_tailTsum_le_div`, the `ν/(N+1) · ‖b‖` recipe this
+sharpens. -/
+lemma shiftDivN_leftMul_tail_le_of_cols (b : l1Weighted ν) (N : ℕ) {C : ℝ}
+    (hcol : ∀ M : ℕ,
+      ∑' n, |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single M 1)) (n + (N + 1))| *
+        (ν : ℝ) ^ (n + (N + 1)) ≤ C * (ν : ℝ) ^ M) :
+    ∀ h : l1Weighted ν,
+      ∑' n, |l1Weighted.toSeq (shiftDivN (b * h)) (n + (N + 1))| *
+        (ν : ℝ) ^ (n + (N + 1)) ≤ C * ‖h‖ := by
+  intro h
+  -- The tail operator as a CLM out of the sequence space.
+  have hnormW : ∀ x : l1Weighted ν,
+      ‖((l1Weighted.tailProj_CLM N).comp
+        (shiftDivN_CLM.comp (l1Weighted.leftMul b))) x‖ =
+        ∑' n, |l1Weighted.toSeq (shiftDivN (b * x)) (n + (N + 1))| *
+          (ν : ℝ) ^ (n + (N + 1)) :=
+    fun x => l1Weighted.norm_tailProj_eq_tailTsum N (shiftDivN (b * x))
+  have hv : ∀ m : ℕ,
+      ‖((l1Weighted.tailProj_CLM N).comp
+        (shiftDivN_CLM.comp (l1Weighted.leftMul b))) (lpOneAlg.single m 1)‖ ≤
+        C * ‖lpAlgRingData.ofReal (E := ScaledReal ν) m (1 : ℝ)‖ := by
+    intro m
+    rw [scaledReal_norm_ofReal, abs_one, one_mul, ← l1Weighted_single_eq, hnormW]
+    exact hcol m
+  have hlift := lpOneAlg.eq_liftCLM_of_cols
+    ((l1Weighted.tailProj_CLM N).comp (shiftDivN_CLM.comp (l1Weighted.leftMul b))) hv
+  have hle := lpOneAlg.norm_liftCLM_apply_le _ C hv h
+  rw [hlift] at hle
+  rw [← hnormW h]
+  exact hle
+
+/-- **Column antitonicity above the cutoff** (tightening B). For `N ≤ M`, the
+weighted column tail mass of the Z₁ tail operator at basis index `M + 1` is at
+most `ν` times the one at `M`. Stated in the un-normalized form
+`tailTsum (M+1) ≤ ν · tailTsum M` — i.e. `col (M+1) ≤ col M` after dividing by
+`ν^{M+1}` — which is the form the ℚ bridge
+(`Certification/ColumnTailBound.lean`) consumes: it reduces the `∀ M` column
+hypothesis of `shiftDivN_leftMul_tail_le_of_cols` to the finite range `M ≤ N`.
+The inequality is termwise (`1/(m+1) ≤ 1/m` on tail modes), so no support
+hypothesis on `b` is needed. -/
+lemma shiftDivN_leftMul_tail_col_antitone (b : l1Weighted ν) {N M : ℕ}
+    (hNM : N ≤ M) :
+    ∑' n, |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single (M + 1) 1)) (n + (N + 1))| *
+        (ν : ℝ) ^ (n + (N + 1)) ≤
+      (ν : ℝ) * ∑' n, |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single M 1)) (n + (N + 1))| *
+        (ν : ℝ) ^ (n + (N + 1)) := by
+  -- Coefficient shift: `(b · δ_{M+1})_{j+1} = (b · δ_M)_j`.
+  have hshift : ∀ j : ℕ,
+      l1Weighted.toSeq (b * l1Weighted.single (M + 1) 1) (j + 1) =
+        l1Weighted.toSeq (b * l1Weighted.single M 1) j := by
+    intro j
+    rw [l1Weighted.toSeq_mul_single, l1Weighted.toSeq_mul_single]
+    by_cases hj : M ≤ j
+    · rw [if_pos (by omega : M + 1 ≤ j + 1), if_pos hj]
+      congr 1
+      omega
+    · rw [if_neg (by omega : ¬ M + 1 ≤ j + 1), if_neg hj]
+  have hsumm1 := (summable_nat_add_iff (k := N + 1)).mpr
+    (l1Weighted.summable_weighted (shiftDivN (b * l1Weighted.single (M + 1) 1)))
+  have hsumm0 := (summable_nat_add_iff (k := N + 1)).mpr
+    (l1Weighted.summable_weighted (shiftDivN (b * l1Weighted.single M 1)))
+  -- Split off the head mode `N + 1`; it vanishes because `M + 1 > N`.
+  rw [hsumm1.tsum_eq_zero_add]
+  have hhead : |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single (M + 1) 1)) (0 + (N + 1))| *
+      (ν : ℝ) ^ (0 + (N + 1)) = 0 := by
+    rw [zero_add, shiftDivN_succ_mode, l1Weighted.toSeq_mul_single,
+      if_neg (by omega : ¬ M + 1 ≤ N)]
+    simp
+  rw [hhead, zero_add]
+  -- Termwise: mode `m+1` of the shifted column against mode `m` of the original.
+  have hterm : ∀ n : ℕ,
+      |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single (M + 1) 1)) (n + 1 + (N + 1))| *
+        (ν : ℝ) ^ (n + 1 + (N + 1)) ≤
+      (ν : ℝ) * (|l1Weighted.toSeq (shiftDivN (b * l1Weighted.single M 1)) (n + (N + 1))| *
+        (ν : ℝ) ^ (n + (N + 1))) := by
+    intro n
+    have e1 : n + 1 + (N + 1) = n + (N + 1) + 1 := by omega
+    have e2 : n + (N + 1) = n + N + 1 := by omega
+    rw [e1, e2, shiftDivN_succ_mode, shiftDivN_succ_mode, hshift]
+    rw [abs_div, abs_div,
+      abs_of_nonneg (show (0 : ℝ) ≤ (↑(n + N + 1 + 1) : ℝ) from Nat.cast_nonneg _),
+      abs_of_nonneg (show (0 : ℝ) ≤ (↑(n + N + 1) : ℝ) from Nat.cast_nonneg _),
+      pow_succ]
+    have hmono : |l1Weighted.toSeq (b * l1Weighted.single M 1) (n + N)| / (↑(n + N + 1 + 1) : ℝ) ≤
+        |l1Weighted.toSeq (b * l1Weighted.single M 1) (n + N)| / (↑(n + N + 1) : ℝ) :=
+      div_le_div_of_nonneg_left (abs_nonneg _)
+        (by exact_mod_cast Nat.succ_pos (n + N))
+        (by exact_mod_cast (by omega : n + N + 1 ≤ n + N + 1 + 1))
+    refine le_trans (le_of_eq (by ring)) (mul_le_mul_of_nonneg_left
+      (mul_le_mul_of_nonneg_right hmono (pow_nonneg ν.2.le _)) ν.2.le)
+  refine (((summable_nat_add_iff (k := 1)).mpr hsumm1).tsum_le_tsum hterm
+    (hsumm0.mul_left _)).trans (le_of_eq tsum_mul_left)
 
 end ShiftDivN
 

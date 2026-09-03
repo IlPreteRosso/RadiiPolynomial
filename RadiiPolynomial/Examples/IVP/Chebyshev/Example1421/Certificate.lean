@@ -365,7 +365,7 @@ private def SnormQ : ℚ :=
   (∑ n ∈ Finset.range (N + 1), |qbar n| * ν_q ^ n)
     + ∑ n ∈ Finset.range N, |qbar (n + 1)| * ν_q ^ (n + 1)
 
-private lemma Sabar_norm_le (l : Fin L) : ‖S (ābar l)‖ ≤ ((39/50 : ℚ) : ℝ) := by
+lemma Sabar_norm_le (l : Fin L) : ‖S (ābar l)‖ ≤ ((39/50 : ℚ) : ℝ) := by
   have hbilat := lpOneAlg.norm_eq_bilatFinSum (S (ābar l)) N
     (fun n hn => by
       rw [l1Chebyshev.norm_fiber, Sabar_toSeq,
@@ -851,6 +851,18 @@ lemma Z₁_le :
     (by norm_num [K_bound]) Z₁_hDφ ?_
   rw [show ((ν_val : ℝ)) = 2 from rfl]
   norm_num [eps_bound, K_bound, Z₁_bound, N]
+
+/-- **Semi-major Z₁ bound**: `‖composedApprox − DG(ā)‖ ≤ ε + (ν⁻¹+ν)/(2(N+1))·K ≤ 0.16`,
+via `chebyshev_Z₁_le_semiMajor` with the same four obligations as `Z₁_le`
+(0.0035 + (1.25/41)·5.12 = 0.1596…). Additive: `Z₁_le` and `Z₁_bound` are unchanged. -/
+theorem Z₁_le_semiMajor :
+    ‖data.composedApproxCLM - fderiv ℝ (data.G phi p₀) ābar‖
+      ≤ ((Z₁_semiMajor_bound : ℚ) : ℝ) := by
+  refine chebyshev_Z₁_le_semiMajor N data.composedApproxCLM (data.G phi p₀) ābar
+    (fun h l => Dphi ābar h l) Z₁_hneg (by norm_num [eps_bound]) Z₁_hfin Z₁_htail
+    (by norm_num [K_bound]) Z₁_hDφ ?_
+  rw [show ((ν_val : ℝ)) = 2 from rfl]
+  norm_num [eps_bound, K_bound, Z₁_semiMajor_bound, N]
 
 /-! ## Z₂ — Lipschitz bound on DG via the sharp ‖TC‖ ≤ 7/4
 

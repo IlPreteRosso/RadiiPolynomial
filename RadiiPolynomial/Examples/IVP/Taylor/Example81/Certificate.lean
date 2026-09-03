@@ -175,6 +175,81 @@ lemma Z₁_le_cert :
     (by unfold Z₁_bound ν_q N; norm_num) Df_norm_le
     (by simp only [ν_val_eq_q]; norm_num [Z₁_bound, ν_q, N])
 
+/-! ## Exact Z₁ column-sup bound (tightening B, additive)
+
+The production `Z₁_le_cert` above certifies the recipe value
+`Z₁_bound = ν/(N+1) · ‖2ā₀ − 1‖ = 396482/7983360 ≈ 0.0496636`. The exact
+weighted column-sup of the Z₁ tail operator is strictly smaller; the lemmas
+below certify it through `ivp_Z₁_le_exact` + the ℚ column bridge
+(`Certification/ColumnTailBound.lean`). Production `Z₁_le_cert`/`Z₁_bound`
+are untouched. -/
+
+/-- Structural rewrite: the derivative component `Df h l` is left
+multiplication of `h 0` by the element `b = 2•ā₀ − 1`. -/
+private lemma Df_eq_leftMul (h : XL1 ν_val L) (l : Fin L) :
+    Df h l = (2 • data.abar 0 - (1 : l1Weighted ν_val)) * h 0 := by
+  show 2 • (data.abar 0 * h 0) - h 0 = _
+  ring
+
+/-- Exact column-sup value of the Z₁ tail operator (tightening B): the maximum
+over `M ∈ [0..N]` of the exact ℚ column tail masses
+`colTailQ two_abar_sub_one_Q ν_q N M 10`, attained at `M = 9`:
+`1/22 + 1/312 + 1/3600 + 1/40320 + 31/13789440 = 482763031/9859449600
+≈ 0.0489645` (exact ℚ computation, 2026-09-02; columns above `N` are covered
+by `shiftDivN_leftMul_tail_col_antitone`). Strictly below the recipe
+`Z₁_bound = 396482/7983360 ≈ 0.0496636` (ratio ≈ 0.986). -/
+def Z₁_exact_bound : ℚ := 482763031 / 9859449600
+
+/-- **Exact Z₁ bound** (tightening B): same LHS as `Z₁_le_cert`, with the
+recipe `ν/(N+1) · ‖2ā₀ − 1‖` replaced by the exact weighted column-sup,
+certified by one `native_decide` over the finite column range `M ≤ N`. -/
+theorem Z₁_le_exact :
+    Z₁_norm (data.G f x₀) data.abar (ContinuousLinearMap.id ℝ (XL1 ν_val L))
+      (data.composedApprox.toCLM (ν := ν_val)) ≤ ((Z₁_exact_bound : ℚ) : ℝ) := by
+  show ‖(ContinuousLinearMap.id ℝ _).comp
+    (data.composedApprox.toCLM (ν := ν_val) -
+      fderiv ℝ (data.G f x₀) data.abar)‖ ≤ _
+  rw [ContinuousLinearMap.id_comp]
+  have hfin : ∀ h : XL1 ν_val L, ∀ l : Fin L, ∀ n : ℕ, n ≤ N →
+      l1Weighted.toSeq (((data.composedApprox.toCLM (ν := ν_val) -
+        fderiv ℝ (data.G f x₀) data.abar) h) l) n = 0 :=
+    fun h l n hn => by
+      simp only [sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq, sub_eq_zero]
+      exact composedApprox_eq_fderiv_G_fin h l n hn
+  have htail : ∀ h : XL1 ν_val L, ∀ l : Fin L, ∀ n : ℕ, N < n →
+      l1Weighted.toSeq (((data.composedApprox.toCLM (ν := ν_val) -
+        fderiv ℝ (data.G f x₀) data.abar) h) l) n =
+        l1Weighted.toSeq (shiftDivN_CLM (Df h l)) n :=
+    fun h l n hn => by
+      have hc := data.composedApprox_toCLM_tail h l n hn
+      have hf := fderiv_G_scalar_tail h l n hn
+      simp only [sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq]
+      show toCoeff (ν := ν_val) (data.composedApprox.toCLM (ν := ν_val) h) l n -
+          toCoeff (ν := ν_val) ((fderiv ℝ (data.G f x₀) data.abar) h) l n = _
+      rw [hc, hf]; simp [toCoeff]
+  have hC : (0 : ℝ) ≤ ((Z₁_exact_bound : ℚ) : ℝ) := by
+    norm_num [Z₁_exact_bound]
+  -- Exact ℚ column check on the finite range M ≤ N (one native_decide),
+  -- extended to all M by the antitone lemma.
+  have hcols := shiftDivN_leftMul_tail_cols_le_of_Q
+    (2 • data.abar 0 - (1 : l1Weighted ν_val)) two_abar_sub_one_Q ν_q 10 N
+    (C := Z₁_exact_bound)
+    two_abar_sub_one_toSeq
+    (fun k hk => by
+      simp [Array.getD, show ¬(k < two_abar_sub_one_Q.size) from by
+        simp [two_abar_sub_one_Q]; omega])
+    ν_val_eq_q
+    (by native_decide)
+  have hDtail : ∀ h : XL1 ν_val L, ∀ l : Fin L,
+      ∑' n, |l1Weighted.toSeq (shiftDivN (Df h l)) (n + (N + 1))| *
+        (ν_val : ℝ) ^ (n + (N + 1)) ≤ ((Z₁_exact_bound : ℚ) : ℝ) * ‖h‖ := by
+    intro h l
+    rw [Df_eq_leftMul h l]
+    refine (shiftDivN_leftMul_tail_le_of_cols _ N hcols (h 0)).trans ?_
+    exact mul_le_mul_of_nonneg_left (norm_le_pi_norm h 0) hC
+  exact IVP.ivp_Z₁_le_exact data.composedApprox (data.G f x₀) data.abar Df
+    hfin htail hC hDtail le_rfl
+
 /-! ## Z₂ bound -/
 
 private lemma Df_diff_norm_le (c : XL1 ν_val L) (h : XL1 ν_val L) (l : Fin L) :

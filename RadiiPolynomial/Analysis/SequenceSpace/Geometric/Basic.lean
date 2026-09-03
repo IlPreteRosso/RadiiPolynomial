@@ -601,8 +601,13 @@ noncomputable abbrev leftMul (a : l1Weighted ν) : l1Weighted ν →L[ℝ] l1Wei
 
 @[simp] lemma leftMul_apply (a h : l1Weighted ν) : leftMul a h = a * h := rfl
 
+/-- The operator norm of left multiplication is exact: the supremum is attained in the
+limit toward `e₀` since `‖(1 : l1Weighted ν)‖ = 1`. -/
+lemma norm_leftMul (a : l1Weighted ν) : ‖leftMul a‖ = ‖a‖ :=
+  ContinuousLinearMap.opNorm_mul_apply ℝ (l1Weighted ν) a
+
 lemma norm_leftMul_le (a : l1Weighted ν) : ‖leftMul a‖ ≤ ‖a‖ :=
-  ContinuousLinearMap.opNorm_mul_apply_le _ _ a
+  (norm_leftMul a).le
 
 lemma leftMul_add (a b : l1Weighted ν) :
     leftMul (a + b) = leftMul a + leftMul b :=
