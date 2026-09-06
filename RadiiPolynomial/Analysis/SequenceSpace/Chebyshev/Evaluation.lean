@@ -11,9 +11,9 @@ A stored element `a : l1Chebyshev ν` is read as the function of book (14.9),
 
   `u_a(t) = a₀ + 2 ∑_{k ≥ 1} a_k T_k(t)`,
 
-through the modes `k ≥ 0` only (`l1Chebyshev.eval`). The book gives no
-convergence lemma for this series, no evaluation bound (the Chebyshev analogue
-of Prop. 8.1.3) and no multiplicativity; here they are:
+through the indices `k ≥ 0` only (`l1Chebyshev.eval`). This file proves
+convergence, evaluation bounds, and multiplicativity for the weighted
+sequence-space representation:
 
 * `summable_eval` — absolute convergence on `|t| ≤ 1` from `|T_k(t)| ≤ 1` and
   `Σ|a_k| ≤ Σ|a_k| ν^k < ∞` (this is where `1 ≤ ν` enters);
@@ -25,8 +25,8 @@ of Prop. 8.1.3) and no multiplicativity; here they are:
   (`a₋ₖ = aₖ`) the bilateral Laurent character of `Chebyshev/UnitLift.lean` on
   the unit circle is the T-series, `∑_{k ∈ ℤ} aₖ e^{ikθ} = u_a(cos θ)`
   (book Thm 14.1.3 p. 325); multiplicativity `eval_mul_of_isSymmetric` is then
-  `map_mul` of the character transported by the dictionary — no Cauchy product
-  is expanded anywhere in this file.
+  `map_mul` of the character transported by the dictionary, without expanding
+  the Cauchy product in that proof.
 
 Also here: the symmetric elements are closed under `0`, `1`, `+`, `-`, `•`
 and `*` (`l1Chebyshev.IsSymmetric.mul` reindexes the convolution by `k ↦ -k`).

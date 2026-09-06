@@ -9,6 +9,7 @@ import RadiiPolynomial.Algebra.Convolution
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev
+import RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry
 import RadiiPolynomial.Analysis.Norm.FiniteSum
 
 -- Core theory
@@ -39,4 +40,3 @@ import RadiiPolynomial.Applications.IVP.Chebyshev
 
 -- Examples
 import RadiiPolynomial.Examples
-

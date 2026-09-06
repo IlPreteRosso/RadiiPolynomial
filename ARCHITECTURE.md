@@ -25,14 +25,16 @@ layers, but the mathematical layers must not depend on them.
 | `Algebra/Convolution` | Discrete convolution, ring convolution, and Cauchy products |
 | `Algebra/Polynomial` | Semantic `MvPolynomial` bridges and computable `CompPoly` syntax |
 | `Analysis/SequenceSpace/WeightedL1` | Generic weighted `l1` sequence algebras and their universal-property API (`liftCLM`, atom extensionality) |
-| `Analysis/SequenceSpace/Geometric` | Geometric weights, Taylor coefficient spaces, differentiation, and evaluation |
-| `Analysis/SequenceSpace/Chebyshev` | Bilateral Chebyshev weights and sequence algebra |
+| `Analysis/SequenceSpace/Geometric` | Taylor coefficient algebras, differentiation, evaluation, analytic extensionality, and radius restriction |
+| `Analysis/SequenceSpace/Chebyshev` | Bilateral storage, the flip-fixed physical algebra, evaluation, and analytic extensionality |
+| `Analysis/SequenceSpace/CrossGeometry` | Bounded maps between coefficient geometries and their evaluation and differentiation naturality |
 | `Core` | Abstract Newton map, radii polynomial, canonical bounds, and reusable bounds |
 | `Operators/Matrix` | Finite weighted matrices and their continuous-linear realizations |
 | `Operators/BlockDiagonal` | Finite-plus-tail operators, lifts, composition, and scalar specialization |
 | `Certification` | RadiiPolynomial witness reductions and adapters to external LeanCert |
 | `Applications/IVP/Taylor` | Taylor-coefficient IVP operator, Jacobian, theorem, and analytic bridge |
 | `Applications/IVP/Chebyshev` | Chebyshev-coefficient IVP operator and block-diagonal realization |
+| `Applications/IVP/Boundary.lean` | Shared split-boundary and anchored-primitive mechanism for IVP realizations |
 | `Examples` | End-to-end mathematical applications and numerical certificates |
 
 The external LeanCert library remains a Lake dependency. `Certification/LeanCertAdapter.lean`
@@ -59,6 +61,7 @@ Use the facade modules at application boundaries:
 - `RadiiPolynomial.Analysis.SequenceSpace.WeightedL1`
 - `RadiiPolynomial.Analysis.SequenceSpace.Geometric`
 - `RadiiPolynomial.Analysis.SequenceSpace.Chebyshev`
+- `RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry`
 - `RadiiPolynomial.Core`
 - `RadiiPolynomial.Operators.Matrix`
 - `RadiiPolynomial.Operators.BlockDiagonal`

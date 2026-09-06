@@ -36,10 +36,11 @@ the unit circle `z = exp(iθ)`, symmetric coefficient sequences evaluate to
 real numbers (`l1Chebyshev.evalLaurentC_eq_re_of_isSymmetric`,
 `evalLaurentC_symmetrize_eq_re`) — reality is exactly what is proved here, and
 nothing more. Rewriting that real value as the cosine series
-`a₀ + 2∑ₖ aₖ cos kθ` is G3.5 item 1, not in this file: it needs the ℤ→ℕ tsum
-split. NOTE the plan's earlier identity
+`a₀ + 2∑ₖ aₖ cos kθ` uses the ℤ→ℕ tsum split in
+`l1Chebyshev.evalLaurentC_circle_eq_eval`, proved in `Chebyshev/Evaluation.lean`.
+The identity
 `evalLaurent z (symmetrize a) = re (evalLaurent z a)` is FALSE, because
-`symmetrize` is the `|k|`-fold (`Bordered.lean:620`), not `(a + reflect a) / 2`.
+`symmetrize` is the `|k|`-fold, not `(a + reflect a) / 2`.
 
 Hygiene: `[Fact (1 ≤ (ν : ℝ))]` is exactly where the ring structure of the
 bilateral carrier demands it (the bilateral weight `ν^|k|` is submultiplicative
@@ -504,10 +505,10 @@ theorem evalLaurentC_eq_re_of_isSymmetric (hz1 : ‖z‖ = 1) (a : l1Chebyshev �
 is what this lemma proves: the value equals the complex cast of its own real
 part.
 
-The cosine-series identity is G3.5 item 1 (needs the ℤ→ℕ tsum split); NOTE the
-plan's earlier identity `evalLaurent z (symmetrize a) = re (evalLaurent z a)`
-is FALSE because `symmetrize` is the `|k|`-fold (`Bordered.lean:620`), not
-`(a + reflect a) / 2`. -/
+The cosine-series identity is `l1Chebyshev.evalLaurentC_circle_eq_eval` in
+`Chebyshev/Evaluation.lean`. In contrast,
+`evalLaurent z (symmetrize a) = re (evalLaurent z a)` is false because
+`symmetrize` is the `|k|`-fold, not `(a + reflect a) / 2`. -/
 theorem evalLaurentC_symmetrize_eq_re (θ : ℝ) (a : l1Chebyshev ν) :
     evalLaurentC ν (exp (θ * I)) (evalLaurentC_circle ν θ) (symmetrize a)
       = ((evalLaurentC ν (exp (θ * I)) (evalLaurentC_circle ν θ) (symmetrize a)).re : ℂ) :=

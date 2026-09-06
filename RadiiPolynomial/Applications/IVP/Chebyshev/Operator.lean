@@ -708,8 +708,9 @@ private lemma chebyshevShiftDiv_elem_tight_le (c : l1Chebyshev ν) (k : ℕ) (hk
 `∑' n, ‖chebyshevShiftDiv(c)(n+N+1)‖ ≤ (ν⁻¹ + ν)/(2(N+1)) · ‖c‖`.
 
 The prefactor `(ν⁻¹ + ν)/2` is the semi-major axis of the Bernstein ellipse `E_ν`:
-the bound equals `semiMajor ν / (N + 1)`; `semiMajor` itself deliberately stays in
-`tmp/cross_geometry_arrow` — the library states the literal `((ν:ℝ)⁻¹ + ν)/2`.
+the bound equals `CrossGeometry.semiMajor ν / (N + 1)` (production since 2026-09-03,
+`Analysis/SequenceSpace/CrossGeometry/Joukowski.lean`); this file states the literal
+`((ν:ℝ)⁻¹ + ν)/2` because it does not import that module.
 Needs only `0 < ν` beyond what `chebyshevShiftDiv` itself requires; the relaxations
 `chebyshevShiftDiv_tailTsum_le_half` ((1+ν)/(2(N+1))) and
 `chebyshevShiftDiv_tailTsum_le_div` (ν/(N+1)) are corollaries under `1 ≤ ν`.

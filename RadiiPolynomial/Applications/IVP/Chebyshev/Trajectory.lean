@@ -1,5 +1,5 @@
 import RadiiPolynomial.Applications.IVP.Chebyshev.Operator
-import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Evaluation
+import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.EvaluationBounds
 import Mathlib.Analysis.ODE.ExistUnique
 import Mathlib.Analysis.Calculus.Deriv.Prod
 import Mathlib.Analysis.Calculus.Deriv.Polynomial
@@ -34,6 +34,8 @@ series termwise, so its zeros are read back the same way — the **integral-equa
   `ODE_solution_unique_of_mem_Icc_right`, the initial time being the endpoint `-1`);
 * `eval_traj_in_closedBall` — the trajectory radius `2‖a‖` (the factor 2 is the storage
   convention: `‖symmetrize a‖ ≤ 2‖a‖`).
+* `eval_traj_in_closedBall_of_two_le` — at weights `ν ≥ 2`, evaluation is contractive
+  already on the production storage carrier, so the trajectory radius improves to `‖a‖`.
 
 The nonlinearity enters only through the hypothesis `hφ : u_{φ(a)_l}(t) = f(u(t))_l` on
 `[-1, 1]`, which a concrete example discharges with `eval_mul_of_isSymmetric` and friends.
@@ -400,6 +402,18 @@ lemma eval_traj_in_closedBall (a : XCheb ν L) {t : ℝ} (ht : t ∈ Icc (-1 : �
   show |l1Chebyshev.eval (a l) t| ≤ 2 * ‖a‖
   exact (l1Chebyshev.abs_eval_le_two_mul_norm (a l) (abs_le.mpr ht)).trans
     (by linarith [norm_le_pi_norm a l])
+
+/-- At weights `ν ≥ 2`, the trajectory of `a` stays in the closed ball of radius
+`‖a‖` on `[-1, 1]`.  The production storage evaluation is contractive at these
+weights, so no factor `2` is needed. -/
+lemma eval_traj_in_closedBall_of_two_le (hν : (2 : ℝ) ≤ (ν : ℝ))
+    (a : XCheb ν L) {t : ℝ} (ht : t ∈ Icc (-1 : ℝ) 1) :
+    (fun l => l1Chebyshev.eval (a l) t) ∈ Metric.closedBall (0 : Fin L → ℝ) ‖a‖ := by
+  rw [Metric.mem_closedBall, dist_zero_right, pi_norm_le_iff_of_nonneg (norm_nonneg a)]
+  intro l
+  show |l1Chebyshev.eval (a l) t| ≤ ‖a‖
+  exact (l1Chebyshev.abs_eval_le_norm_of_two_le hν (a l) (abs_le.mpr ht)).trans
+    (norm_le_pi_norm a l)
 
 end Bridge
 

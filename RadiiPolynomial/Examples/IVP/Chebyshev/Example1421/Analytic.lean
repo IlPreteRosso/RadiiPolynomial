@@ -23,13 +23,15 @@ Two per-example obligations, and both are short:
 * `f_lipschitzOnWith` — `u ↦ u² − u` is `(2R+1)`-Lipschitz on `closedBall 0 R`, from the
   factorisation `u² − u − (v² − v) = (u − v)(u + v − 1)`.
 
-Two radii are recorded. `main_solution_existsUnique` uses the symbolic
-`R_traj = 2(‖ā‖ + r₀)` and therefore rests on **exactly** the axioms of
-`main_existsUnique` (mirroring `Example81/Analytic.lean`, which uses `‖ā‖ + r₀`).
-`main_solution_existsUnique_radius_two` restates it at the round radius `R = 2` with
-`K = 5`; it needs the extra exact-ℚ fold `abar_norm_le : ‖ā‖ ≤ 39/50` (so
-`2(‖ā‖ + r₀) = 1.560002 ≤ 2`) and therefore carries one additional `native_decide`
-axiom of its own.
+The weight is `ν = 2`, where evaluation is contractive on the production storage
+carrier. The existing `main_solution_existsUnique` and `R_traj = 2(‖ā‖ + r₀)`
+remain unchanged. The new `main_solution_existsUnique_contractive` uses
+`R_traj_contractive = ‖ā‖ + r₀`, and `main_solution_existsUnique_radius_one`
+records the sharper round radius `R = 1` with `K = 3`. The radius-`2`, `K = 5`
+statement is retained unchanged.
+The bound `abar_norm_le : ‖ā‖ ≤ 39/50` reuses the certificate's `Sabar_norm_le`
+through a structural norm comparison, giving `R_traj_contractive ≤ 0.780001 ≤ 1`
+without an additional `native_decide` fact.
 
 No analyticity is claimed — see `Applications/IVP/Chebyshev/Analytic.lean`.
 -/
@@ -94,9 +96,15 @@ lemma f_lipschitzOnWith {R : ℝ} {K : NNReal} (hK : 2 * R + 1 ≤ (K : ℝ)) :
 
 /-! ## 3. The main theorem -/
 
-/-- The certified trajectory radius `2(‖ā‖ + r₀)` (numerically `≈ 1.560002`; the factor `2`
-is the storage convention `u_a = a₀ + 2∑ a_k T_k`). -/
+private lemma two_le_ν_val : (2 : ℝ) ≤ (ν_val : ℝ) := by
+  rw [show ((ν_val : ℝ)) = 2 from rfl]
+
+/-- The original certified trajectory radius `2(‖ā‖ + r₀)`. -/
 abbrev R_traj : ℝ := 2 * (‖ābar‖ + ((r_minus : ℚ) : ℝ))
+
+/-- The improved trajectory radius `‖ā‖ + r₀`. At the example's weight `ν = 2`,
+evaluation is contractive despite the doubled positive-mode storage convention. -/
+abbrev R_traj_contractive : ℝ := ‖ābar‖ + ((r_minus : ℚ) : ℝ)
 
 /-- The finite defect block is a strict contraction (`Z₀ = 10⁻¹⁶ < 1`): the injectivity
 input of the F-zero bridge. -/
@@ -123,14 +131,27 @@ theorem main_solution_existsUnique :
       (by rw [Real.coe_toNNReal']; exact le_max_left _ _))
     le_rfl
 
-/-! ## 4. The same statement at the round radius `R = 2`
+/-- **Contractive function-space radius.** At `ν = 2`, the same certified zero
+produces a solution in the smaller trajectory ball of radius `‖ā‖ + r₀`. -/
+theorem main_solution_existsUnique_contractive :
+    ∃ g : ℝ → Fin L → ℝ, ChebyshevIVP.IsSolution f p₀ R_traj_contractive g ∧
+      ∀ g' : ℝ → Fin L → ℝ, ChebyshevIVP.IsSolution f p₀ R_traj_contractive g' →
+        Set.EqOn g' g (Icc (-1 : ℝ) 1) :=
+  data.solution_existsUnique_of_two_le phi p₀ f two_le_ν_val hφ_eval defect_norm_lt_one G_diff
+    (by norm_num [r_minus]) Y₀_le Z₀_le Z₁_le Z₂_le radii_neg
+    (f_lipschitzOnWith (K := Real.toNNReal (2 * R_traj_contractive + 1))
+      (by rw [Real.coe_toNNReal']; exact le_max_left _ _))
+    le_rfl
+
+/-! ## 4. Round trajectory radii
 
 `‖ā‖ ≤ ‖S(ā)‖ ≤ 39/50`: the second inequality is the certificate's own exact-ℚ bound
-`Sabar_norm_le`, the first holds because `ā` is stored on the modes `0..N` only
-(`l1Chebyshev.norm_le_norm_symmetrize_of_neg_eq_zero`). So `R_traj = 2(‖ā‖ + 10⁻⁶) ≤ 2`
-with NO axiom beyond `main_existsUnique`'s. -/
+`Sabar_norm_le`, the first holds because `ā` is stored on the indices `0..N` only
+(`l1Chebyshev.norm_le_norm_symmetrize_of_neg_eq_zero`). Hence
+`R_traj_contractive = ‖ā‖ + 10⁻⁶ ≤ 1`, while the original `R_traj` remains at most `2`.
+All statements have the same axioms as `main_existsUnique`. -/
 
-/-- The stored candidate has no negative modes (`embedNatToInt`). -/
+/-- The stored candidate vanishes at negative indices (`embedNatToInt`). -/
 private lemma abar_toSeq_neg (l : Fin L) (n : ℕ) :
     l1Chebyshev.toSeq (ābar l) (-((n : ℤ) + 1)) = 0 := by
   show lpAlgRingData.toReal (-((n : ℤ) + 1))
@@ -143,19 +164,35 @@ private lemma abar_norm_component_le (l : Fin L) : ‖ābar l‖ ≤ ((39/50 : �
   (l1Chebyshev.norm_le_norm_symmetrize_of_neg_eq_zero (ābar l) (abar_toSeq_neg l)).trans
     (Sabar_norm_le l)
 
-/-- `‖ā‖ ≤ 39/50` — the numerical candidate's norm, in exact ℚ. -/
+/-- `39/50` is a certified rational upper bound for the stored candidate's norm. -/
 lemma abar_norm_le : ‖ābar‖ ≤ ((39/50 : ℚ) : ℝ) :=
   (pi_norm_le_iff_of_nonneg (by norm_num)).mpr abar_norm_component_le
 
-lemma R_traj_le_two : R_traj ≤ 2 := by
+lemma R_traj_contractive_le_one : R_traj_contractive ≤ 1 := by
   have h := abar_norm_le
   rw [show ((39/50 : ℚ) : ℝ) = 39/50 from by norm_num] at h
   have hr : ((r_minus : ℚ) : ℝ) = 1/1000000 := by norm_num [r_minus]
-  simp only [R_traj, hr]
+  simp only [R_traj_contractive, hr]
   linarith
 
-/-- **Example 14.2.1 at radius `2`.** Same statement as `main_solution_existsUnique`, with
-the round trajectory bound `R = 2` and Lipschitz constant `K = 5`. -/
+lemma R_traj_le_two : R_traj ≤ 2 := by
+  have h := R_traj_contractive_le_one
+  change 2 * R_traj_contractive ≤ 2
+  linarith
+
+/-- **Example 14.2.1 at radius `1`.** The contractive evaluation bound at `ν = 2`
+halves the previous round trajectory ball and lowers the Lipschitz constant to `K = 3`. -/
+theorem main_solution_existsUnique_radius_one :
+    ∃ g : ℝ → Fin L → ℝ, ChebyshevIVP.IsSolution f p₀ 1 g ∧
+      ∀ g' : ℝ → Fin L → ℝ, ChebyshevIVP.IsSolution f p₀ 1 g' →
+        Set.EqOn g' g (Icc (-1 : ℝ) 1) :=
+  data.solution_existsUnique_of_two_le phi p₀ f two_le_ν_val hφ_eval defect_norm_lt_one G_diff
+    (by norm_num [r_minus]) Y₀_le Z₀_le Z₁_le Z₂_le radii_neg
+    (f_lipschitzOnWith (R := 1) (K := 3) (by norm_num))
+    R_traj_contractive_le_one
+
+/-- **Compatibility at radius `2`.** The former round trajectory statement is
+preserved with its original symbolic radius and proof path. -/
 theorem main_solution_existsUnique_radius_two :
     ∃ g : ℝ → Fin L → ℝ, ChebyshevIVP.IsSolution f p₀ 2 g ∧
       ∀ g' : ℝ → Fin L → ℝ, ChebyshevIVP.IsSolution f p₀ 2 g' →
