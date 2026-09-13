@@ -1,6 +1,6 @@
 import RadiiPolynomial.Core.Transport
 import RadiiPolynomial.Core.AffineZ2
-import RadiiPolynomial.Examples.PowerSeries.Example77.Algebra
+import RadiiPolynomial.Tactic.AutoPolyFDeriv
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered
 
 /-!
@@ -35,23 +35,39 @@ instance : Fact ((1:ℝ) ≤ (ν₂ : ℝ)) := ⟨by rw [show ((ν₂ : ℝ)) = 
 
 def c : l1Weighted ν₂ := (5/9 : ℝ) • 1
 def xBar : l1Weighted ν₂ := (3/4 : ℝ) • 1
-def f : l1Weighted ν₂ → l1Weighted ν₂ := Example77.F_sub_const c
+/-- The toy's zero-finding map, written out rather than imported: `Examples` modules
+do not import one another. -/
+def f : l1Weighted ν₂ → l1Weighted ν₂ := fun a => a * a - c
 def A : l1Weighted ν₂ →L[ℝ] l1Weighted ν₂ := (2/3 : ℝ) • ContinuousLinearMap.id ℝ _
 def Adag : l1Weighted ν₂ →L[ℝ] l1Weighted ν₂ := (3/2 : ℝ) • ContinuousLinearMap.id ℝ _
 
 lemma leftMul_one : leftMul (1 : l1Weighted ν₂) = ContinuousLinearMap.id ℝ _ := by
   ext1 x; simp
 
+lemma hasFDerivAt_f (a : l1Weighted ν₂) : HasFDerivAt f ((2 : ℝ) • leftMul a) a := by
+  have hpow : HasFDerivAt (fun x : l1Weighted ν₂ => x ^ 2) ((2 : ℝ) • leftMul a) a := by
+    auto_hasFDerivAt
+  have hf : f = fun x : l1Weighted ν₂ => x ^ 2 - c := by
+    funext x; show x * x - c = x ^ 2 - c; rw [pow_two]
+  rw [hf]
+  exact hpow.sub_const c
+
+lemma fderiv_f (a : l1Weighted ν₂) : fderiv ℝ f a = (2 : ℝ) • leftMul a :=
+  (hasFDerivAt_f a).fderiv
+
+/-- The fderiv is affine in `leftMul` with `α = 2, K = 0`: the hypothesis of
+`Z₂_ball_bound_of_affine_leftMul`. -/
+lemma fderiv_f_affine : ∀ x, fderiv ℝ f x = (2 : ℝ) • leftMul x + 0 :=
+  fun x => by rw [fderiv_f, add_zero]
+
 lemma fderiv_at_xBar :
     fderiv ℝ f xBar = (3/2 : ℝ) • ContinuousLinearMap.id ℝ (l1Weighted ν₂) := by
-  rw [show f = Example77.F_sub_const c from rfl, Example77.fderiv_F_sub_const,
-    show xBar = (3/4 : ℝ) • 1 from rfl, leftMul_smul, leftMul_one, smul_smul]
+  rw [fderiv_f, show xBar = (3/4 : ℝ) • 1 from rfl, leftMul_smul, leftMul_one, smul_smul]
   norm_num
 
 lemma f_xBar : f xBar = (1/144 : ℝ) • 1 := by
-  show Example77.sq xBar - c = _
-  rw [show Example77.sq xBar = xBar * xBar from rfl,
-    show xBar = (3/4 : ℝ) • 1 from rfl, show c = (5/9 : ℝ) • 1 from rfl,
+  show xBar * xBar - c = _
+  rw [show xBar = (3/4 : ℝ) • 1 from rfl, show c = (5/9 : ℝ) • 1 from rfl,
     smul_mul_assoc, mul_smul_comm, one_mul, smul_smul, ← sub_smul]
   norm_num
 
@@ -84,13 +100,13 @@ lemma hZ₂ (r : ℝ) (hr : 0 ≤ r) : ∀ c' ∈ Metric.closedBall xBar r,
   intro c' hc'
   have h : ‖A.comp (fderiv ℝ f c' - fderiv ℝ f xBar)‖ ≤ |(2 : ℝ)| * ‖A‖ * r :=
     RadiiPolynomial.Z₂_ball_bound_of_affine_leftMul
-      (Example77.fderiv_F_sub_const_affine c) A xBar c' hc'
+      fderiv_f_affine A xBar c' hc'
   rw [show |(2 : ℝ)| = 2 from by norm_num] at h
   have hmul : ‖A‖ * r ≤ (2/3 : ℝ) * r := mul_le_mul_of_nonneg_right hAnorm hr
   show ‖A.comp (fderiv ℝ f c' - fderiv ℝ f xBar)‖ ≤ (4/3 : ℝ) * r
   linarith [h, hmul]
 
-lemma hdiff : Differentiable ℝ f := Example77.differentiable_F_sub_const c
+lemma hdiff : Differentiable ℝ f := fun a => (hasFDerivAt_f a).differentiableAt
 
 lemma hAinj : Function.Injective A := by
   intro x y h

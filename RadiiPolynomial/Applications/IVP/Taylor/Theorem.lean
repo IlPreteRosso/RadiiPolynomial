@@ -37,7 +37,7 @@ TODO (unify with `SystemBlockDiagData.Z₀_le_of_tailCancel`): this lemma
 exists as a sibling because A† for IVPs has unbounded tail (`Λ_n = n`)
 and cannot be a `SystemBlockDiagData L N` against the single weight `ν`.
 We therefore take `A_dag : BlockDiagOp L N` and bound the composed
-operator `ivpComposedApprox A A_dag htail_cancel` (which IS a
+operator `A.composedApprox A_dag htail_cancel` (which IS a
 `SystemBlockDiagData` thanks to tail cancellation producing zero tail).
 A future two-weight `SystemBlockDiagData ν₁ ν₂` mapping
 `XL1 ν₁ L → XL1 ν₂ L` with a `ν₂`-tail bound would let A† live as
@@ -52,10 +52,10 @@ lemma ivp_Z₀_le
       A.tailDiag l n * A_dag.tailDiag l n = 1)
     {Z₀ : ℝ} (hZ₀ : finiteBlockMatrixNorm ν (defectOfBlockDiagOp A A_dag).finBlock ≤ Z₀) :
     Z₀_norm (ContinuousLinearMap.id ℝ (XL1 ν L))
-      ((ivpComposedApprox A A_dag htail_cancel).toCLM (ν := ν)) ≤ Z₀ := by
+      ((A.composedApprox A_dag htail_cancel).toCLM (ν := ν)) ≤ Z₀ := by
   show ‖ContinuousLinearMap.id ℝ _ -
-    (ivpComposedApprox A A_dag htail_cancel).toCLM (ν := ν)‖ ≤ _
-  rw [ivpComposedApprox_defect_eq]
+    (A.composedApprox A_dag htail_cancel).toCLM (ν := ν)‖ ≤ _
+  rw [A.composedApprox_defect_eq]
   exact ((defectOfBlockDiagOp A A_dag).norm_toCLM_le (ν := ν)).trans
     (by simp [defectOfBlockDiagOp, add_zero]; exact hZ₀)
 
@@ -67,7 +67,7 @@ This is the generic version of Example83's `composedApprox_eq_fderiv_G_fin`.
 The key hypothesis `hDF_block` connects the fderiv of `ivpCoeffs` (i.e., the Jacobian
 of the IVP map) to the `A_dag.finBlock` action. This is equation-specific because
 `A_dag` encodes the numerical Jacobian data. -/
-lemma ivpComposedApprox_eq_fderiv_fin
+lemma composedApprox_eq_fderiv_fin
     (A : SystemBlockDiagData L N) (A_dag : BlockDiagOp L N)
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (htail_cancel : ∀ l : Fin L, ∀ n, N < n →
@@ -83,7 +83,7 @@ lemma ivpComposedApprox_eq_fderiv_fin
         ∑ m : Fin L, (A_dag.finBlock j m).mulVec
           (fun p => toCoeff (ν := ν) h m ↑p) k)
     (h : XL1 ν L) (l : Fin L) (n : ℕ) (hn : n ≤ N) :
-    toCoeff (ν := ν) ((ivpComposedApprox A A_dag htail_cancel).toCLM (ν := ν) h) l n =
+    toCoeff (ν := ν) ((A.composedApprox A_dag htail_cancel).toCLM (ν := ν) h) l n =
       toCoeff (ν := ν) ((fderiv ℝ (ivpMap A φ x₀ hmem) ā) h) l n := by
   rw [SystemBlockDiagData.toCoeff_toCLM]
   -- Goal: action(toCoeff h) l n = toCoeff(fderiv G ā h) l n
@@ -96,8 +96,8 @@ lemma ivpComposedApprox_eq_fderiv_fin
     (fun j k => differentiable_ivpCoeffs φ x₀ hφ j ↑k) l n hn ā h]
   set n' : Fin (N + 1) := ⟨n, Nat.lt_succ_of_le hn⟩
   rw [SystemBlockDiagData.action_fin_eq_sum_mulVec
-    (ivpComposedApprox A A_dag htail_cancel) _ l n']
-  simp only [ivpComposedApprox, SystemBlockDiagData.composedApprox]
+    (A.composedApprox A_dag htail_cancel) _ l n']
+  simp only [SystemBlockDiagData.composedApprox]
   have hassoc := congr_fun (blockFinite_mulVec_assoc A.finBlock A_dag.finBlock
     (fun j k => toCoeff (ν := ν) h j ↑k) l) n'
   conv_lhs => rw [show (∑ x, (∑ m, A.finBlock l m * A_dag.finBlock m x).mulVec
@@ -178,7 +178,7 @@ theorem ivp_system_theorem
       ivpMap A φ x₀ (ivpMap_mem_of_tailDiag_inv A φ x₀ htail_diag_inv) xTilde = 0 := by
   set hmem := ivpMap_mem_of_tailDiag_inv A φ x₀ htail_diag_inv
   set G := ivpMap A φ x₀ hmem
-  set CA := ivpComposedApprox A A_dag htail_cancel
+  set CA := A.composedApprox A_dag htail_cancel
   have hG_diff : Differentiable ℝ G :=
     differentiable_ivpMap A φ x₀ htail_diag_inv hmem hφ_diff
   -- Assemble bounds
@@ -191,7 +191,7 @@ theorem ivp_system_theorem
   have h_Z₁ := ivp_Z₁_le CA G ā (fun h l => (fderiv ℝ (fun a => φ a l) ā) h)
     (fun h l n hn => by
       rw [sub_seq]
-      have := ivpComposedApprox_eq_fderiv_fin A A_dag φ x₀ htail_cancel
+      have := composedApprox_eq_fderiv_fin A A_dag φ x₀ htail_cancel
         htail_diag_inv hmem hφ_diff ā hDF_block h l n hn
       simp only [toCoeff] at this; linarith)
     (fun h l n hn => by
@@ -199,7 +199,7 @@ theorem ivp_system_theorem
       have h1 : l1Weighted.toSeq (CA.toCLM (ν := ν) h l) n =
           l1Weighted.toSeq (h l) n := by
         show toCoeff (ν := ν) (CA.toCLM (ν := ν) h) l n = toCoeff h l n
-        exact ivpComposedApprox_toCLM_tail A A_dag htail_cancel h l n hn
+        exact A.composedApprox_toCLM_tail A_dag htail_cancel h l n hn
       rw [h1, fderiv_ivpMap_tail A φ x₀ htail_diag_inv hmem hφ_diff ā h l n hn,
         fderiv_ivpTail φ hφ_diff ā h l]
       simp only [l1Weighted.sub_toSeq]; ring)
@@ -208,8 +208,8 @@ theorem ivp_system_theorem
       ‖(ContinuousLinearMap.id ℝ (XL1 ν L)).comp
         (fderiv ℝ G c - fderiv ℝ G ā)‖ ≤ (fun _ => Z₂_val) r₀ * r₀ := by
     intro c hc; simp only [ContinuousLinearMap.id_comp]
-    exact ivp_Z₂_le A φ x₀ hmem ā hG_diff hφ_diff
-      active hzero hC hDφ_diff hZ₂_nn hZ₂ c hc
+    exact ivp_Z₂_le A φ x₀ hmem ā hG_diff hφ_diff c hc
+      active (fun h j hj => hzero c h j hj) hC (fun h l => hDφ_diff c h l) hZ₂_nn hZ₂
   -- Apply the abstract theorem
   exact general_radii_polynomial_theorem (A := ContinuousLinearMap.id ℝ _)
     (A_dagger := CA.toCLM (ν := ν))

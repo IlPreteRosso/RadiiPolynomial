@@ -1,6 +1,7 @@
 import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Certification.LeanCertAdapter
 import RadiiPolynomial.Tactic.AutoPolyFDeriv
+import RadiiPolynomial.Tactic.MakeCompPoly
 import RadiiPolynomial.Algebra.Polynomial
 import RadiiPolynomial.Examples.IVP.Taylor.Example81.Numbers
 
@@ -53,6 +54,11 @@ def x₀_q : Fin L → ℚ | _ => 1 / 2
 open MvPolyBridge (CompPoly) in
 def f_cpoly : Fin L → CompPoly L
   | _ => .X 0 * .X 0 - .X 0
+
+/-- The literal syntax is what `compPolyOf%` reifies the nonlinearity's own lambda to:
+the certificate-level witness that the elaborator and the hand-written AST agree. -/
+theorem f_cpoly_reified :
+    f_cpoly 0 = compPolyOf% (fun u : Fin L → ℝ => u 0 * u 0 - u 0) := rfl
 
 def f (a : Fin L → l1Weighted ν_val) (l : Fin L) : l1Weighted ν_val :=
   (f_cpoly l).evalBanach a
@@ -116,14 +122,6 @@ lemma composedApprox_eq_fderiv_G_fin (h : XL1 ν_val L) (l : Fin L) (n : ℕ) (h
   data.composedApprox_eq_fderiv_G_fin_of_compPoly f_cpoly x₀ hDF_nat h l n hn
 
 /-! ## 6. ℚ Bridges -/
-
-/-- Coefficient bridge: real `toSeq (f ā) n` equals the ℚ-arithmetic
-`(f_cpoly 0).evalCoeff (·, abar_0) n`, cast to ℝ. -/
-lemma f_bridge (n : ℕ) :
-    l1Weighted.toSeq (f data.abar 0) n =
-      ((f_cpoly 0).evalCoeff (fun _ => abar_0) n : ℝ) := by
-  exact (f_cpoly 0).toSeq_evalBanach data.abar (fun _ => abar_0)
-    (fun l n => data.abar_toSeq_eq l n) n
 
 /-- ℚ mirror of `F(ābar)` — the IVP Taylor recurrence run in exact ℚ
 arithmetic. The nonlinear term is `(f_cpoly 0).evalCoeff` rather than a
@@ -222,14 +220,5 @@ lemma two_abar_sub_one_support (n : ℕ) (hn : N < n) :
   rw [two_abar_sub_one_toSeq]
   simp [Array.getD, show ¬(n < two_abar_sub_one_Q.size) from by
     simp [two_abar_sub_one_Q, N] at hn ⊢; omega]
-
-/-! ## 8. Fderiv infrastructure (via StdIVPData) -/
-
-lemma fderiv_G_scalar_tail (h : XL1 ν_val L) (l : Fin L) (n : ℕ) (hn : N < n) :
-    toCoeff (ν := ν_val) ((fderiv ℝ (data.G f x₀) data.abar h)) l n =
-      toCoeff (ν := ν_val) h l n -
-        toCoeff (ν := ν_val) (fun l => shiftDivN_CLM (Df h l)) l n :=
-  data.fderiv_G_tail f x₀ differentiable_f_component
-    Df Df_eq_fderiv h l n hn
 
 end Example81

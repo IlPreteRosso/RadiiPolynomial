@@ -92,7 +92,7 @@ instance : Sub (CompPoly L) := ⟨.sub⟩
 instance : Mul (CompPoly L) := ⟨.mul⟩
 instance : Neg (CompPoly L) := ⟨.neg⟩
 
-/-- Evaluate a computable polynomial in rational coefficient sequences. -/
+/-- Evaluate a computable polynomial in rational Taylor coefficient sequences. -/
 def evalCoeffSeq : CompPoly L → (Fin L → ℕ → ℚ) → ℕ → ℚ
   | .C r, _, n => if n = 0 then r else 0
   | .X i, seqs, n => seqs i n
@@ -257,6 +257,25 @@ theorem evalBanach_eq_evalAlg {R : Type*} [CommRing R] [Algebra ℝ R]
       rw [Algebra.smul_def]
       congr 1
       exact (IsScalarTower.algebraMap_apply ℚ ℝ R r).symm
+
+section AlgebraHom
+
+variable {R B : Type*} [CommRing R] [Algebra ℝ R]
+  [CommRing B] [Algebra ℝ B]
+
+/-- Polynomial interpretation commutes with a real algebra homomorphism. -/
+theorem map_evalBanach (f : R →ₐ[ℝ] B) (p : CompPoly L) (a : Fin L → R) :
+    f (p.evalBanach a) = p.evalBanach (fun i => f (a i)) := by
+  let : Algebra ℚ R := ((algebraMap ℝ R).comp (algebraMap ℚ ℝ)).toAlgebra
+  let : IsScalarTower ℚ ℝ R := IsScalarTower.of_algebraMap_eq' rfl
+  let : Algebra ℚ B := ((algebraMap ℝ B).comp (algebraMap ℚ ℝ)).toAlgebra
+  let : IsScalarTower ℚ ℝ B := IsScalarTower.of_algebraMap_eq' rfl
+  rw [p.evalBanach_eq_evalAlg, p.evalAlg_eq_aeval]
+  change (f.restrictScalars ℚ) (MvPolynomial.aeval a p.toMvPoly) = _
+  rw [MvPolynomial.comp_aeval_apply, p.evalBanach_eq_evalAlg, p.evalAlg_eq_aeval]
+  rfl
+
+end AlgebraHom
 
 end CompPoly
 

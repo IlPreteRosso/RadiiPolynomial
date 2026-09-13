@@ -1,5 +1,7 @@
 import RadiiPolynomial.Applications.IVP.Taylor.Operator
+import RadiiPolynomial.Applications.IVP.VectorField
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.WeightedL1
+import RadiiPolynomial.Algebra.Polynomial.CompPoly.Bounds
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.EvaluationDerivative
 import Mathlib.Analysis.ODE.ExistUnique
 import Mathlib.Analysis.ODE.Gronwall
@@ -48,12 +50,6 @@ namespace IVP
 
 variable {ν : PosReal} {L : ℕ}
 
-/-- The polynomial vector field `f : ℝ^L → ℝ^L` derived from a CompPoly representation.
-This is the original ODE right-hand side recovered from its symbolic encoding. -/
-noncomputable def vectorField (φ_cpoly : Fin L → CompPoly L) (x : Fin L → ℝ) (l : Fin L) :
-    ℝ :=
-  (φ_cpoly l).evalBanach x
-
 /-- The Banach-algebra interpretation of the same CompPoly: arithmetic on Taylor
 coefficient sequences with Cauchy product for multiplication. This is `φ` in the
 Setup-IVP notation. -/
@@ -62,8 +58,9 @@ noncomputable def banachField (φ_cpoly : Fin L → CompPoly L) (a : XL1 ν L) (
   (φ_cpoly l).evalBanach a
 
 /-- The vector field `vectorField φ_cpoly : ℝ^L → ℝ^L` is `C^∞` at every point.
-Polynomial maps are smooth; this feeds into Picard-Lindelöf via Mathlib's
-`ContDiffOn.exists_lipschitzOnWith` for the function-space uniqueness lift. -/
+Polynomial maps are smooth; smoothness is what the analytic-solution side needs, while
+the Lipschitz constant for Picard-Lindelöf is read off the syntax
+(`lipschitzOnWith_vectorField_closedBall`). -/
 theorem contDiff_vectorField (φ_cpoly : Fin L → CompPoly L) (l : Fin L) :
     ContDiff ℝ ⊤ (fun x : Fin L → ℝ => vectorField φ_cpoly x l) :=
   MvPolyBridge.contDiff_evalBanach (φ_cpoly l)
@@ -84,14 +81,24 @@ theorem differentiable_vectorField_pi (φ_cpoly : Fin L → CompPoly L) :
   differentiable_pi.mpr (differentiable_vectorField φ_cpoly)
 
 /-- On any closed ball in `ℝ^L`, the polynomial vector field is Lipschitz with some
-constant. Existence form — the explicit constant comes from `ContDiffOn.exists_lipschitzOnWith`,
-applied to the smooth function on the (compact, convex) closed ball. -/
+constant. Existence form via `ContDiffOn.exists_lipschitzOnWith` on the (compact, convex)
+closed ball — the fallback for non-polynomial fields; the polynomial route is the explicit
+`lipschitzOnWith_vectorField_closedBall` below. -/
 theorem exists_lipschitz_vectorField_closedBall
     (φ_cpoly : Fin L → CompPoly L) (R : ℝ) :
     ∃ K : NNReal, LipschitzOnWith K (fun x : Fin L → ℝ => vectorField φ_cpoly x)
                   (Metric.closedBall (0 : Fin L → ℝ) R) :=
   (contDiff_vectorField_pi φ_cpoly).contDiffOn.exists_lipschitzOnWith
     (by decide) (convex_closedBall _ _) (isCompact_closedBall _ _)
+
+/-- Explicit form: the Lipschitz constant on the closed ball is read off the polynomial
+syntax (`CompPoly.lipschitzBound`), so a certificate can state it as a number; this is the
+constant `analytic_solution_unique` uses. -/
+theorem lipschitzOnWith_vectorField_closedBall (φ_cpoly : Fin L → CompPoly L) (R : ℝ)
+    {K : NNReal} (hK : ∀ l, (φ_cpoly l).lipschitzBound (fun _ => R) ≤ (K : ℝ)) :
+    LipschitzOnWith K (fun x : Fin L → ℝ => vectorField φ_cpoly x)
+      (Metric.closedBall (0 : Fin L → ℝ) R) :=
+  CompPoly.lipschitzOnWith_evalBanach_pi φ_cpoly R hK
 
 /-- **Forward bridge** (book Lemma 8.1.4, forward direction).
 
@@ -155,17 +162,16 @@ coefficient sequence `a` with `F(a) = 0`, the analytic function `t ↦ eval(a ·
 is the unique solution to the IVP `ẋ = f(x), x(0) = x₀` on `(-ν, ν)` among solutions
 whose trajectory stays in the closed ball of radius `R`.
 
-Where the Lipschitz constant comes from: the polynomial vector field is `C^∞`
-(`contDiff_vectorField_pi`), so on the compact convex `closedBall 0 R` it is Lipschitz
-with *some* constant — extracted by Mathlib's `ContDiffOn.exists_lipschitzOnWith`
-(itself proved via the Mean Value Inequality). The user only supplies the radius `R`,
-typically `‖ā‖_ν + r₀` from the radii polynomial output (so that both `eval(a, ·)` and
-the candidate solution `g` provably stay inside).
+Where the Lipschitz constant comes from: on `closedBall 0 R` the polynomial vector field
+is Lipschitz with the explicit syntactic constant `Σ_l |lipschitzBound (φ_cpoly l) R|`
+(`lipschitzOnWith_vectorField_closedBall`, no compactness or mean-value argument). The
+user only supplies the radius `R`, typically `‖ā‖_ν + r₀` from the radii polynomial output
+(so that both `eval(a, ·)` and the candidate solution `g` provably stay inside).
 
 The proof composes:
 - `solves_ODE_of_F_zero` (forward bridge): `eval(a, ·)` is a solution.
 - `hasDerivAt_pi`: assemble per-component derivatives into a Pi-type derivative.
-- `exists_lipschitz_vectorField_closedBall`: extract Lipschitz K on the closed ball.
+- `lipschitzOnWith_vectorField_closedBall`: the syntactic Lipschitz K on the closed ball.
 - `ODE_solution_unique_of_mem_Ioo` (Mathlib's Picard-Lindelöf via Grönwall): two
   solutions on the same Lipschitz domain agree if they agree at one point. -/
 theorem analytic_solution_unique
@@ -184,8 +190,15 @@ theorem analytic_solution_unique
       (Set.Ioo (-(ν : ℝ)) ν) := by
   have hν : (0 : ℝ) < ν := ν.2
   have h_zero_mem : (0 : ℝ) ∈ Set.Ioo (-(ν : ℝ)) ν := ⟨by linarith, hν⟩
-  -- Lipschitz constant on the closed ball, from ContDiff + compactness + convexity
-  obtain ⟨K, hLip⟩ := exists_lipschitz_vectorField_closedBall φ_cpoly R
+  -- Lipschitz constant on the closed ball, read off the polynomial syntax
+  obtain ⟨K, hLip⟩ : ∃ K : NNReal, LipschitzOnWith K (fun x : Fin L → ℝ => vectorField φ_cpoly x)
+      (Metric.closedBall (0 : Fin L → ℝ) R) :=
+    ⟨Real.toNNReal (∑ l, |(φ_cpoly l).lipschitzBound (fun _ => R)|),
+      lipschitzOnWith_vectorField_closedBall φ_cpoly R fun l => by
+        rw [Real.coe_toNNReal']
+        exact le_max_of_le_left ((le_abs_self _).trans
+          (Finset.single_le_sum (f := fun j => |(φ_cpoly j).lipschitzBound (fun _ => R)|)
+            (fun j _ => abs_nonneg _) (Finset.mem_univ l)))⟩
   -- Forward bridge: eval(a, ·) is a solution
   have h_eval_solves : ∀ t ∈ Set.Ioo (-(ν : ℝ)) ν,
       HasDerivAt (fun s => fun l => l1Weighted.eval (a l) s)

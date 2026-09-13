@@ -1,3 +1,4 @@
+import RadiiPolynomial.Applications.IVP.VectorField
 import RadiiPolynomial.Applications.IVP.Taylor.Operator
 import RadiiPolynomial.Applications.IVP.Taylor.Theorem
 import RadiiPolynomial.Applications.IVP.Taylor.Jacobian
@@ -8,5 +9,8 @@ import RadiiPolynomial.Applications.IVP.Taylor.Boundary
 /-! Public algebraic and certificate-facing API for Taylor-coefficient IVPs.
 
 Import `RadiiPolynomial.Applications.IVP.Taylor.Analytic` separately for the
-function-space existence and uniqueness endpoint.
+function-space existence and uniqueness endpoint,
+`RadiiPolynomial.Applications.IVP.Taylor.Analyticity` for real analyticity of the
+canonical trajectory, and `RadiiPolynomial.Applications.IVP.Taylor.ComplexTime`
+for its complex-time trajectory.
 -/

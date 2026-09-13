@@ -4,13 +4,17 @@ import RadiiPolynomial.Tactic.AutoPolyFDeriv
 /-!
 # Example 2.4.5 — Algebra
 
-Reusable 1D infrastructure for f(x) = x² - c via `smulCLM` (scalar CLMs),
-Fréchet derivative lemmas, the Z₂ bound pattern, and the `existsUnique` skeleton.
+One-dimensional infrastructure for f(x) = x² - c: `smulCLM` (scalar CLMs), the
+Fréchet derivative lemmas, and the Z₂ bound pattern. Everything lives in
+`namespace Example245`; the single consumer is `Example245/Certificate.lean`,
+which calls `general_radii_polynomial_theorem` directly.
 -/
 
 open scoped Topology BigOperators
 open Metric Set Filter ContinuousLinearMap
 open RadiiPolynomial
+
+namespace Example245
 
 /-! ## One-Dimensional Continuous Linear Maps
 
@@ -49,9 +53,6 @@ lemma smulCLM_injective {a : ℝ} (ha : a ≠ 0) : Function.Injective (smulCLM a
 
 /-! ## Fréchet Derivatives for x² - c -/
 
-lemma fderiv_sq (x : ℝ) : fderiv ℝ (fun y => y ^ 2) x = smulCLM (2 * x) := by
-  auto_poly_fderiv
-
 lemma fderiv_sq_sub_const (x : ℝ) (c : ℝ) :
     fderiv ℝ (fun y => y ^ 2 - c) x = smulCLM (2 * x) := by
   auto_poly_fderiv
@@ -72,24 +73,5 @@ lemma Z₂_bound_sq_sub_const (A_val xBar const : ℝ) {c r : ℝ}
   rw [this, abs_mul, abs_mul, abs_of_pos (by positivity : (2 : ℝ) > 0)]
   rw [mem_closedBall, Real.dist_eq] at hc
   exact mul_le_mul_of_nonneg_left hc (by positivity)
-
-/-! ## existsUnique skeleton -/
-
-namespace Example245
-
-/-- Generic existence/uniqueness for 1D x²-c via `general_radii_polynomial_theorem`.
-Uses canonical norms `Y₀_norm`, `Z₀_norm`, `Z₁_norm`, `Z₂_norm` from Core.lean. -/
-theorem existsUnique (f : ℝ → ℝ) (xBar : ℝ) (A A_dagger : ℝ →L[ℝ] ℝ)
-    {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
-    (hr₀ : 0 < r₀)
-    (hY₀ : Y₀_norm f xBar A ≤ Y₀)
-    (hZ₀ : Z₀_norm A A_dagger ≤ Z₀)
-    (hZ₁ : Z₁_norm f xBar A A_dagger ≤ Z₁)
-    (hZ₂ : ∀ c ∈ closedBall xBar r₀, Z₂_norm f xBar A c ≤ Z₂ r₀ * r₀)
-    (hf_diff : Differentiable ℝ f)
-    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0)
-    (h_inj : Function.Injective A) :
-    ∃! xTilde ∈ closedBall xBar r₀, f xTilde = 0 :=
-  general_radii_polynomial_theorem hr₀ hY₀ hZ₀ hZ₁ hZ₂ hf_diff h_radii h_inj
 
 end Example245

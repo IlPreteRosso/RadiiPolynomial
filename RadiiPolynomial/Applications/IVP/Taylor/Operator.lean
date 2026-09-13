@@ -441,18 +441,20 @@ lemma ivp_Z₂_le
     (ā : XL1 ν L)
     (hG_diff : Differentiable ℝ (ivpMap A φ x₀ hmem))
     (hφ : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
+    {r : ℝ} (c : XL1 ν L) (hc : c ∈ Metric.closedBall ā r)
     (active : Finset (Fin L))
-    (hzero : ∀ (c : XL1 ν L) (h : XL1 ν L) (j : Fin L), j ∉ active →
+    -- Both derivative hypotheses are needed only at the point `c` of the conclusion, so a
+    -- caller may bound the Lipschitz constant on the ball rather than on the whole space.
+    (hzero : ∀ (h : XL1 ν L) (j : Fin L), j ∉ active →
       (fderiv ℝ (fun x => φ x j) c - fderiv ℝ (fun x => φ x j) ā) h = 0)
     {C : ℝ} (hC : 0 ≤ C)
-    (hDφ_diff : ∀ (c : XL1 ν L) (h : XL1 ν L) (l : Fin L),
+    (hDφ_diff : ∀ (h : XL1 ν L) (l : Fin L),
       ‖(fderiv ℝ (fun x => φ x l) c - fderiv ℝ (fun x => φ x l) ā) h‖ ≤
         C * ‖c - ā‖ * ‖h‖)
     {Z₂_val : ℝ} (hZ₂_nn : 0 ≤ Z₂_val)
     (hcomp_le : ∀ l : Fin L,
       C * (ν : ℝ) * ((∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
-        if l ∈ active then A.tailBound else 0) ≤ Z₂_val)
-    {r : ℝ} (c : XL1 ν L) (hc : c ∈ Metric.closedBall ā r) :
+        if l ∈ active then A.tailBound else 0) ≤ Z₂_val) :
     ‖fderiv ℝ (ivpMap A φ x₀ hmem) c - fderiv ℝ (ivpMap A φ x₀ hmem) ā‖ ≤ Z₂_val * r := by
   set G := ivpMap A φ x₀ hmem
   suffices h : ‖fderiv ℝ G c - fderiv ℝ G ā‖ ≤ Z₂_val * ‖c - ā‖ from
@@ -507,12 +509,12 @@ lemma ivp_Z₂_le
     show (fderiv ℝ G c h') l - (fderiv ℝ G ā h') l = _; exact l1Weighted.ext hseq]
   have hw_zero : ∀ j, j ∉ active → w j = 0 := fun j hj => l1Weighted.ext fun k => by
     show (if k = 0 then (0 : ℝ) else _) = 0
-    simp only [hzero c h' j hj, l1Weighted.zero_toSeq, neg_zero, ite_self]
+    simp only [hzero h' j hj, l1Weighted.zero_toSeq, neg_zero, ite_self]
   have hw_norm : ‖w‖ ≤ C * (ν : ℝ) * ‖c - ā‖ * ‖h'‖ :=
     (pi_norm_le_iff_of_nonneg (mul_nonneg (mul_nonneg
       (mul_nonneg hC (PosReal.coe_nonneg _)) (norm_nonneg _)) (norm_nonneg _))).mpr fun j =>
       (l1Weighted.norm_mk_shift_neg_le _ (hmem_w j)).trans
-        (mul_le_mul_of_nonneg_left (hDφ_diff c h' j) (PosReal.coe_nonneg _)) |>.trans_eq (by ring)
+        (mul_le_mul_of_nonneg_left (hDφ_diff h' j) (PosReal.coe_nonneg _)) |>.trans_eq (by ring)
   -- Assembly
   set R := (∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
     if l ∈ active then A.tailBound else 0

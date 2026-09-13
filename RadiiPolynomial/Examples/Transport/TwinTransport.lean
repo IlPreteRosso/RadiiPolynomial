@@ -6,7 +6,7 @@ import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Certificate
 
 The real instance: Example 14.2.1 — the book's Chebyshev twin of Example 8.1
 (logistic IVP, ν = 2, N = 40, margin 74.7%) — is a complete machine-checked
-certificate (`Example1421.Cert.main_existsUnique`), and its native margin
+certificate (`Example1421.Cert.main_theorem`), and its native margin
 clears the bordered↔U budget (κ−1)/κ = 5/8 at κ = 8/3.
 
 `twin_transports` packages the payoff: for EVERY transport equivalence `u`
@@ -28,7 +28,7 @@ theorem twin_transports {E' F' : Type*}
     [NormedAddCommGroup E'] [NormedSpace ℝ E'] [CompleteSpace E']
     [NormedAddCommGroup F'] [NormedSpace ℝ F']
     (u : XCheb ν_val L ≃L[ℝ] E') (w : XCheb ν_val L ≃L[ℝ] F')
-    {f' : E' → F'} (hsquare : ∀ x, f' (u x) = w (data.G phi p₀ x))
+    {f' : E' → F'} (hsquare : ∀ x, f' (u x) = w (data.G (banachField f_cpoly) p₀ x))
     {α β : ℝ}
     (hα : ‖(u : XCheb ν_val L →L[ℝ] E')‖ ≤ α)
     (hβ : ‖(u.symm : E' →L[ℝ] XCheb ν_val L)‖ ≤ β)
@@ -48,7 +48,7 @@ theorem twin_transports {E' F' : Type*}
     (A_dagger := data.composedApproxCLM)
     ?_ ?_ ?_ ?_ G_diff ?_ (fun _ _ h => h)
   · show ‖ContinuousLinearMap.id ℝ (XCheb ν_val L)
-      (data.G phi p₀ (ChebyshevIVP.StdChebIVPData.abar data))‖ ≤ _
+      (data.G (banachField f_cpoly) p₀ (ChebyshevIVP.StdChebIVPData.abar data))‖ ≤ _
     rw [ContinuousLinearMap.id_apply]
     exact Y₀_le
   · rw [ContinuousLinearMap.id_comp]
@@ -96,9 +96,11 @@ theorem twin_scalar_certificate :
     ∃! xTilde ∈ Metric.closedBall
         (finOneCollapse (ChebyshevIVP.StdChebIVPData.abar data))
         (((r_minus : ℚ) : ℝ) / 1),
-      (fun v => finOneCollapse (data.G phi p₀ (finOneCollapse.symm v))) xTilde = 0 :=
+      (fun v => finOneCollapse (data.G (banachField f_cpoly) p₀ (finOneCollapse.symm v)))
+        xTilde = 0 :=
   twin_transports finOneCollapse finOneCollapse
-    (f' := fun v => finOneCollapse (data.G phi p₀ (finOneCollapse.symm v)))
+    (f' := fun v =>
+      finOneCollapse (data.G (banachField f_cpoly) p₀ (finOneCollapse.symm v)))
     (fun x => by rw [ContinuousLinearEquiv.symm_apply_apply])
     norm_collapse_le norm_collapse_symm_le one_pos (by norm_num)
 

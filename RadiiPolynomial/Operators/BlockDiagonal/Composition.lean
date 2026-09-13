@@ -68,39 +68,4 @@ end SystemBlockDiagData
 
 end RadiiPolynomial
 
-/-! Compatibility names for the existing Taylor IVP API. -/
-
-namespace IVP
-
-open RadiiPolynomial
-
-variable {ν : PosReal} {L N : ℕ} [NeZero L]
-
-abbrev ivpComposedApprox
-    (A : SystemBlockDiagData L N) (B : BlockDiagOp L N)
-    (htailCancel : ∀ l : Fin L, ∀ n, N < n →
-      A.tailDiag l n * B.tailDiag l n = 1) :
-    SystemBlockDiagData L N :=
-  A.composedApprox B htailCancel
-
-lemma ivpComposedApprox_defect_eq
-    (A : SystemBlockDiagData L N) (B : BlockDiagOp L N)
-    (htailCancel : ∀ l : Fin L, ∀ n, N < n →
-      A.tailDiag l n * B.tailDiag l n = 1) :
-    ContinuousLinearMap.id ℝ (XL1 ν L) -
-      (ivpComposedApprox A B htailCancel).toCLM (ν := ν) =
-    (defectOfBlockDiagOp A B).toCLM (ν := ν) :=
-  A.composedApprox_defect_eq B htailCancel
-
-lemma ivpComposedApprox_toCLM_tail
-    (A : SystemBlockDiagData L N) (B : BlockDiagOp L N)
-    (htailCancel : ∀ l : Fin L, ∀ n, N < n →
-      A.tailDiag l n * B.tailDiag l n = 1)
-    (h : XL1 ν L) (l : Fin L) (n : ℕ) (hn : N < n) :
-    toCoeff (ν := ν) ((ivpComposedApprox A B htailCancel).toCLM (ν := ν) h) l n =
-      toCoeff (ν := ν) h l n :=
-  A.composedApprox_toCLM_tail B htailCancel h l n hn
-
-end IVP
-
 end

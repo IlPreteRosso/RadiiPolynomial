@@ -1,4 +1,4 @@
-import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Lambda
+import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Algebra
 import RadiiPolynomial.Certification
 import RadiiPolynomial.Tactic.FinMatrixBound
 
@@ -6,12 +6,14 @@ import RadiiPolynomial.Tactic.FinMatrixBound
 # Example 14.2.1 — Certificate (complete)
 
 Full machine-checked verification of the Chebyshev logistic twin at ν = 2,
-N = 40 (`main_existsUnique`). All four bounds:
+N = 40 (`main_theorem`). All four bounds:
 
 - `Y₀_le` — ‖G(ā)‖ ≤ 10⁻²¹: support ⊆ modes 0..2N+2, the exact-ℚ folded
   convolution `FQ` mirrors F(ā) row by row, `finsum_bound` at 100 bits;
-- `Z₀_le` — the 41×41 block defect ‖I − A·DF‖ ≤ 10⁻¹⁶ by a single
-  `native_decide` in exact ℚ (dyadic entries, denominators 2⁹⁰/2¹²⁰);
+- `Z₀_finBlockNorm_le` — the 41×41 block defect ‖I − A·DF‖ ≤ 10⁻¹⁶ by a single
+  `native_decide` in exact ℚ (dyadic entries, denominators 2⁹⁰/2¹²⁰); this
+  finite-block form is the `Z₀` input of `main_theorem` (the operator form
+  `Z₀_le` is derived from it and kept as the public statement);
 - `Z₁_le` — ε + ν/(N+1)·K ≤ 0.2533 via `chebyshev_Z₁_le_relaxed`: negatives
   pass through, the tail is −shiftDiv(Dφ h), and the ε-leakage (7/2000) is
   certified column-by-column in exact ℚ (`DcolQ`/`colNormQ` + the
@@ -19,10 +21,10 @@ N = 40 (`main_existsUnique`). All four bounds:
   exactly against the stored Jacobian, the leaked Dφ couplings N < m ≤ 2N+2
   peak at ≈ 0.0034, and beyond 2N+2 only row 0's alternating functional
   survives; K = 5.12 from `‖S(ā)‖ ≤ 39/50` (native_decide);
-- `Z₂_le` — 14·r₀ from DG(c) − DG(ā) = TC∘(DΦ(c) − DΦ(ā)), the difference of
-  derivatives being `h ↦ 2·S((c−ā)ₗ)·S(hₗ)` (≤ 8‖c−ā‖‖h‖), and the sharp
-  full-column bound ‖TC‖ ≤ 7/4 (block columns exact in ℚ ≤ 279/164, tail
-  tsum ≤ ν/(N+1) = 2/41);
+- `Z₂_le` — 14·r₀ through the library socket `Z₂_le_of_compPoly_max`: the
+  derivative's Lipschitz constant `8 = 2·derivativeLipschitzBound (X² − X)` read
+  off the syntax, and the sharp full-column bound ‖TC‖ ≤ 7/4 (block columns exact
+  in ℚ ≤ 279/164, tail tsum ≤ ν/(N+1) = 2/41);
 
 plus `radii_neg` (the radii polynomial at r = 10⁻⁶) and
 `margin_clears_gate` — the native margin (≈ 74.7%) clears the bordered↔U
@@ -63,7 +65,7 @@ private lemma defectBlockCol_correct (l j : Fin L) (i k : Fin (N + 1)) :
 /-! ## ℚ mirror of F(ā)
 
 The folded convolution of the stored dyadic coefficients, run in exact ℚ.
-`FQ` mirrors `chebyshevIvpCoeffs phi p₀ ā` row by row (bridge: `F_abar_eq`). -/
+`FQ` mirrors `chebyshevIvpCoeffs (banachField f_cpoly) p₀ ā` row by row (bridge: `F_abar_eq`). -/
 
 /-- Stored coefficient, zero-extended beyond the array. -/
 def qbar (k : ℕ) : ℚ := abar_0.getD k 0
@@ -81,10 +83,10 @@ def foldQ (m : ℕ) : ℚ :=
   ∑ j ∈ Finset.range (2 * N + 1),
     qbar ((m : ℤ) - ((j : ℤ) - N)).natAbs * qbar ((j : ℤ) - N).natAbs
 
-/-- ℚ mirror of `toSeq (phi ā) m` for `m ≥ 0`. -/
+/-- ℚ mirror of `toSeq ((banachField f_cpoly) ā) m` for `m ≥ 0`. -/
 def phiQ (m : ℕ) : ℚ := foldQ m - qbar m
 
-/-- ℚ mirror of `chebyshevIvpCoeffs phi p₀ ā`. -/
+/-- ℚ mirror of `chebyshevIvpCoeffs (banachField f_cpoly) p₀ ā`. -/
 def FQ : ℕ → ℚ
   | 0 => 1/2 - qbar 0 - 2 * ∑ j ∈ Finset.range N, (-1 : ℚ) ^ (j + 1) * qbar (j + 1)
   | (k + 1) => 2 * ((k : ℚ) + 1) * qbar (k + 1) + phiQ (k + 2) - phiQ k
@@ -111,69 +113,47 @@ private lemma abar_toSeq_nat (l : Fin L) (k : ℕ) :
   data.abar_toSeq_eq l k
 
 private lemma Sabar_toSeq (l : Fin L) (i : ℤ) :
-    l1Chebyshev.toSeq (S (ChebyshevIVP.StdChebIVPData.abar data l)) i
+    l1Chebyshev.toSeq (l1Chebyshev.symmetrize_CLM (ChebyshevIVP.StdChebIVPData.abar data l)) i
       = (qbar i.natAbs : ℝ) := by
-  rw [S_apply, Ssym_toSeq, abar_toSeq_nat]
+  rw [l1Chebyshev.symmetrize_CLM_apply, l1Chebyshev.symmetrize_toSeq, abar_toSeq_nat]
 
-/-- The index window `{j − N : j ∈ range (2N+1)}`, as a computable stand-in
-for `Icc (−N) N`. -/
-private def suppWindow : Finset ℤ :=
-  Finset.image (fun j : ℕ => (j : ℤ) - N) (Finset.range (2 * N + 1))
+/-- The generic Laurent interpreter equals the existing exact rational fold. -/
+private lemma computed_phi_eq (l : Fin L) (n : ℕ) :
+    (f_cpoly l).evalChebCoeff data.abar_Q (n : ℤ) = phiQ n := by
+  have hs (i : Fin L) (k : ℤ) (hk : N < k.natAbs) :
+      (data.abar_Q i).getD k.natAbs 0 = 0 := qbar_eq_zero hk
+  have h := (f_cpoly l).evalLaurentCoeffSeq_eq_of_support
+    (fun _ => N + 1) (fun _ => N) (fun _ k => qbar k.natAbs)
+    (fun i k hk => hs i k (by omega)) hs (n : ℤ)
+  change (f_cpoly l).evalLaurentCoeffSeq (fun _ => N + 1)
+    (fun _ k => qbar k.natAbs) (n : ℤ) = _
+  rw [h]
+  change (∑ k ∈ MvPolyBridge.CompPoly.laurentModes N,
+      qbar ((n : ℤ) - k).natAbs * qbar k.natAbs) - qbar (n : ℤ).natAbs = _
+  rw [Int.natAbs_natCast, MvPolyBridge.CompPoly.laurentModes,
+    Finset.sum_image (fun x _ y _ hxy => by omega)]
+  rfl
 
-private lemma Sabar_support (l : Fin L) (i : ℤ) (hi : i ∉ suppWindow) :
-    l1Chebyshev.toSeq (S (ChebyshevIVP.StdChebIVPData.abar data l)) i = 0 := by
-  have hNz : ((N : ℤ)) = 40 := rfl
-  have hNn : N = 40 := rfl
-  rw [Sabar_toSeq, qbar_eq_zero (show N < i.natAbs from by
-    by_contra habs
-    exact hi (Finset.mem_image.mpr ⟨(i + N).toNat,
-      Finset.mem_range.mpr (by omega), by omega⟩))]
-  norm_num
-
-private lemma phi_abar_toSeq_nat (l : Fin L) (n : ℕ) :
-    l1Chebyshev.toSeq (phi (ChebyshevIVP.StdChebIVPData.abar data) l) (↑n : ℤ)
-      = (phiQ n : ℝ) := by
-  show l1Chebyshev.toSeq (S (ChebyshevIVP.StdChebIVPData.abar data l)
-    * S (ChebyshevIVP.StdChebIVPData.abar data l)
-    - S (ChebyshevIVP.StdChebIVPData.abar data l)) (↑n : ℤ) = _
-  rw [l1Chebyshev.toSeq_sub,
-    l1Chebyshev.toSeq_mul_eq_finsum _ _ (↑n : ℤ) suppWindow (Sabar_support l),
-    Sabar_toSeq]
-  rw [show suppWindow
-      = Finset.image (fun j : ℕ => (j : ℤ) - N) (Finset.range (2 * N + 1)) from rfl]
-  rw [Finset.sum_image (fun x _ y _ h => by omega)]
-  rw [Finset.sum_congr rfl fun j _ => by rw [Sabar_toSeq, Sabar_toSeq]]
-  rw [phiQ, foldQ]
-  push_cast
-  simp
-
-/-- The hvec bridge: the real F(ā) rows are the ℚ mirror, cast. -/
-private lemma F_abar_eq (l : Fin L) (n : ℕ) :
-    chebyshevIvpCoeffs phi p₀ (ChebyshevIVP.StdChebIVPData.abar data) l n = (FQ n : ℝ) := by
+/-- Exact agreement with the polynomial residual at every mode. -/
+lemma computed_residual_eq (l : Fin L) (n : ℕ) :
+    compPolyIvpCoeffsQ f_cpoly data.abar_Q (fun _ => 1 / 2) l n = FQ n := by
   cases n with
   | zero =>
-    show p₀ l - l1Chebyshev.toSeq (ChebyshevIVP.StdChebIVPData.abar data l) 0
-        - 2 * ∑' (j : ℕ), (-1 : ℝ) ^ (j + 1)
-          * l1Chebyshev.toSeq (ChebyshevIVP.StdChebIVPData.abar data l) (↑(j + 1) : ℤ) = _
-    rw [tsum_eq_sum (s := Finset.range N) (fun j hj => by
-      rw [abar_toSeq_nat, qbar_eq_zero (by simp [Finset.mem_range] at hj; omega)]
-      norm_num)]
-    rw [show (0 : ℤ) = ((0 : ℕ) : ℤ) from rfl, abar_toSeq_nat]
-    rw [Finset.sum_congr rfl fun j _ => by rw [abar_toSeq_nat]]
-    show 1/2 - _ - _ = _
-    rw [show FQ 0 = 1/2 - qbar 0
-      - 2 * ∑ j ∈ Finset.range N, (-1 : ℚ) ^ (j + 1) * qbar (j + 1) from rfl]
-    push_cast
-    ring
-  | succ k =>
-    show 2 * ((k : ℝ) + 1)
-        * l1Chebyshev.toSeq (ChebyshevIVP.StdChebIVPData.abar data l) (↑(k + 1) : ℤ)
-        + l1Chebyshev.toSeq (phi (ChebyshevIVP.StdChebIVPData.abar data) l) (↑(k + 2) : ℤ)
-        - l1Chebyshev.toSeq (phi (ChebyshevIVP.StdChebIVPData.abar data) l) (↑k : ℤ) = _
-    rw [abar_toSeq_nat, phi_abar_toSeq_nat, phi_abar_toSeq_nat]
-    rw [show FQ (k + 1) = 2 * ((k : ℚ) + 1) * qbar (k + 1) + phiQ (k + 2) - phiQ k from rfl]
-    push_cast
-    ring
+      change 1 / 2 - qbar 0 - 2 *
+        ∑ j ∈ Finset.range (N + 1), (-1 : ℚ) ^ (j + 1) * qbar (j + 1) = _
+      rw [Finset.sum_range_succ, qbar_eq_zero (k := N + 1) (by omega), mul_zero, add_zero]
+      rfl
+  | succ n =>
+      simp only [compPolyIvpCoeffsQ, computed_phi_eq]
+      rfl
+
+/-- The real residual bridge is supplied by the polynomial adapter. -/
+private lemma F_abar_eq (l : Fin L) (n : ℕ) :
+    chebyshevIvpCoeffs (banachField f_cpoly) p₀ (ChebyshevIVP.StdChebIVPData.abar data) l n = (FQ n : ℝ) := by
+  rw [← computed_residual_eq l n]
+  convert data.ivpCoeffs_abar_eq_cast_of_compPoly f_cpoly (fun _ => 1 / 2) l n using 1
+  norm_num [p₀]
+  rfl
 
 /-! ## Y₀ — defect of the approximate solution -/
 
@@ -186,10 +166,10 @@ private def Y₀_eval (l : Fin L) :=
 private lemma Y₀_eval_correct (l : Fin L) (n : ℕ) (cfg : LeanCert.DyadicConfig)
     (hprec : cfg.precision ≤ 0) :
     (|data.approxInverse.action
-        (chebyshevIvpCoeffs phi p₀ (ChebyshevIVP.StdChebIVPData.abar data)) l n|
+        (chebyshevIvpCoeffs (banachField f_cpoly) p₀ (ChebyshevIVP.StdChebIVPData.abar data)) l n|
       * (ν_val : ℝ) ^ n : ℝ) ∈ Y₀_eval l n cfg :=
   systemBlockDiagActionEval_correct data.approxInverse
-    (chebyshevIvpCoeffs phi p₀ (ChebyshevIVP.StdChebIVPData.abar data))
+    (chebyshevIvpCoeffs (banachField f_cpoly) p₀ (ChebyshevIVP.StdChebIVPData.abar data))
     (fun _l n => FQ n) ABlockCols (fun _l n => 1 / (2 * (n : ℚ))) ν_q
     (fun l j k i => data.A_finBlock_eq l j i k)
     (fun l n => F_abar_eq l n)
@@ -202,23 +182,23 @@ private lemma Y₀_eval_correct (l : Fin L) (n : ℕ) (cfg : LeanCert.DyadicConf
 /-- Y₀ obligation: `‖G(ā)‖ ≤ 10⁻²¹`. The support of `G(ā)` is contained in
 modes `0..2N+2`; the finite sum is certified against the exact-ℚ fold. -/
 lemma Y₀_le :
-    ‖data.G phi p₀ (ChebyshevIVP.StdChebIVPData.abar data)‖ ≤ (Y₀_bound : ℝ) := by
+    ‖data.G (banachField f_cpoly) p₀ (ChebyshevIVP.StdChebIVPData.abar data)‖ ≤ (Y₀_bound : ℝ) := by
   have hb : (0 : ℝ) ≤ (Y₀_bound : ℝ) := by norm_num [Y₀_bound]
   refine (pi_norm_le_iff_of_nonneg hb).mpr fun l => ?_
   rw [ChebyshevIVP.lpOneAlg.norm_eq_natFinSum_of_finSupp
-    (data.G phi p₀ (ChebyshevIVP.StdChebIVPData.abar data) l) (2 * N + 2)
+    (data.G (banachField f_cpoly) p₀ (ChebyshevIVP.StdChebIVPData.abar data) l) (2 * N + 2)
     (fun m => rfl)
     (fun n hn => by
       show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν_val) (↑n)
         (data.approxInverse.action
-          (chebyshevIvpCoeffs phi p₀ (ChebyshevIVP.StdChebIVPData.abar data)) l n)‖ = 0
+          (chebyshevIvpCoeffs (banachField f_cpoly) p₀ (ChebyshevIVP.StdChebIVPData.abar data)) l n)‖ = 0
       rw [SystemBlockDiagData.action_tail _ _ _ _ (show N < n from by omega),
         F_abar_eq, FQ_eq_zero (show 2 * N + 1 < n from by omega)]
       simp [lpAlgRingData.ofReal_zero])]
   rw [Finset.sum_congr rfl fun (n : Fin (2 * N + 2 + 1)) _ => show
-      ‖(data.G phi p₀ (ChebyshevIVP.StdChebIVPData.abar data) l) (↑(n : ℕ) : ℤ)‖
+      ‖(data.G (banachField f_cpoly) p₀ (ChebyshevIVP.StdChebIVPData.abar data) l) (↑(n : ℕ) : ℤ)‖
         = |data.approxInverse.action
-            (chebyshevIvpCoeffs phi p₀ (ChebyshevIVP.StdChebIVPData.abar data)) l (n : ℕ)|
+            (chebyshevIvpCoeffs (banachField f_cpoly) p₀ (ChebyshevIVP.StdChebIVPData.abar data)) l (n : ℕ)|
           * (ν_val : ℝ) ^ (n : ℕ) from by
     show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν_val) (↑(n : ℕ)) _‖ = _
     rw [ScaledRealZ.norm_lpAlgRingData_ofReal]
@@ -250,7 +230,8 @@ lemma Z₀_le :
   cancel exactly (the stored Jacobian IS the derivative), `N < m ≤ 2N+2`
   are the leaked Dφ couplings (worst ≈ 0.0034), `m > 2N+2` leaves only the
   row-0 alternating functional (geometric decay);
-- `K` from `norm_Dphi_le` with `‖S(ā)‖ ≤ 39/50` (native_decide).
+- `K` is the syntactic constant `derivativeBound (X² − X)` at the certified radius
+  `‖S(ā)‖ ≤ 39/50` (`derivativeBound_eq_K_bound`, exact ℚ), through `Dphi_eq_derivative`.
 -/
 
 local notation "ābar" => ChebyshevIVP.StdChebIVPData.abar data
@@ -266,10 +247,10 @@ private lemma ι_eq (h : XCheb ν_val L) : ι (h 0) = h :=
 /-- The Z₁ operator, collapsed to a scalar-component CLM. -/
 private def Trow : l1Chebyshev ν_val →L[ℝ] l1Chebyshev ν_val :=
   (ContinuousLinearMap.proj 0).comp
-    (((data.composedApproxCLM - fderiv ℝ (data.G phi p₀) ābar)).comp ι)
+    (((data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar)).comp ι)
 
 private lemma Trow_eq (h : XCheb ν_val L) (l : Fin L) :
-    ((data.composedApproxCLM - fderiv ℝ (data.G phi p₀) ābar) h) l = Trow (h l) := by
+    ((data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar) h) l = Trow (h l) := by
   rw [Subsingleton.elim l 0]
   conv_lhs => rw [← ι_eq h]
   rfl
@@ -311,13 +292,14 @@ private lemma composed_toSeq_neg (h : XCheb ν_val L) (l : Fin L) (m : ℕ) :
 
 /-- The derivative side, unfolded through the Λ-decomposition. -/
 private lemma fderiv_toSeq (h : XCheb ν_val L) (l : Fin L) (k : ℤ) :
-    l1Chebyshev.toSeq ((fderiv ℝ (data.G phi p₀) ābar h) l) k
+    l1Chebyshev.toSeq ((fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar h) l) k
       = l1Chebyshev.toSeq (data.TAfun h l) k
         + (l1Chebyshev.toSeq (data.TCblockFun (fun j => Dphi ābar h j) l) k
           + l1Chebyshev.toSeq (TCtailElem N (Dphi ābar h l)) k) := by
-  rw [fderiv_G]
-  show l1Chebyshev.toSeq (data.TA h l + data.TC (DPhiCLM ābar h) l) k = _
-  rw [DPhiCLM_apply]
+  rw [data.fderiv_G_of_compPoly f_cpoly p₀]
+  show l1Chebyshev.toSeq (data.TA h l + data.TC (compPolyDerivative f_cpoly ābar h) l) k = _
+  rw [show compPolyDerivative f_cpoly ābar h = fun j => Dphi ābar h j from
+    funext (compPolyDerivative_apply_eq_Dphi ābar h)]
   show l1Chebyshev.toSeq (data.TAfun h l
     + (data.TCblockFun (fun j => Dphi ābar h j) l + TCtailElem N (Dphi ābar h l))) k = _
   rw [l1Chebyshev.toSeq_add, l1Chebyshev.toSeq_add]
@@ -325,13 +307,13 @@ private lemma fderiv_toSeq (h : XCheb ν_val L) (l : Fin L) (k : ℤ) :
 /-! ### hneg: negatives pass through on both sides -/
 
 private lemma Z₁_hneg (h : XCheb ν_val L) (l : Fin L) (m : ℕ) :
-    (((data.composedApproxCLM - fderiv ℝ (data.G phi p₀) ābar) h) l) (Int.negSucc m)
+    (((data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar) h) l) (Int.negSucc m)
       = 0 := by
   refine fiber_eq_zero _ ?_
   show l1Chebyshev.toSeq
-    ((data.composedApproxCLM h - fderiv ℝ (data.G phi p₀) ābar h) l) (Int.negSucc m) = 0
+    ((data.composedApproxCLM h - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar h) l) (Int.negSucc m) = 0
   show l1Chebyshev.toSeq
-    (data.composedApproxCLM h l - (fderiv ℝ (data.G phi p₀) ābar h) l) (Int.negSucc m) = 0
+    (data.composedApproxCLM h l - (fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar h) l) (Int.negSucc m) = 0
   rw [l1Chebyshev.toSeq_sub, composed_toSeq_neg, fderiv_toSeq]
   rw [show l1Chebyshev.toSeq (data.TAfun h l) (Int.negSucc m)
       = l1Chebyshev.toSeq (h l) (Int.negSucc m) from data.TAfun_toSeq_neg h l m,
@@ -341,13 +323,13 @@ private lemma Z₁_hneg (h : XCheb ν_val L) (l : Fin L) (m : ℕ) :
 /-! ### htail: the difference is −shiftDiv(Dφ h) beyond mode N -/
 
 private lemma Z₁_htail (h : XCheb ν_val L) (l : Fin L) (m : ℕ) (hm : N < m) :
-    ‖(((data.composedApproxCLM - fderiv ℝ (data.G phi p₀) ābar) h) l) (↑m : ℤ)‖
+    ‖(((data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar) h) l) (↑m : ℤ)‖
       = ‖(chebyshevShiftDiv (Dphi ābar h l)) (↑m : ℤ)‖ := by
   have hval : l1Chebyshev.toSeq
-      (((data.composedApproxCLM - fderiv ℝ (data.G phi p₀) ābar) h) l) (↑m : ℤ)
+      (((data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar) h) l) (↑m : ℤ)
       = -(l1Chebyshev.toSeq (chebyshevShiftDiv (Dphi ābar h l)) (↑m : ℤ)) := by
     show l1Chebyshev.toSeq
-      (data.composedApproxCLM h l - (fderiv ℝ (data.G phi p₀) ābar h) l) (↑m : ℤ) = _
+      (data.composedApproxCLM h l - (fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar h) l) (↑m : ℤ) = _
     rw [l1Chebyshev.toSeq_sub, composed_toSeq_nat, fderiv_toSeq]
     rw [show (defectOfBlockDiagOp data.approxInverse data.approxDeriv).actionFinite
         (toCoeffCheb h) l m = 0 from SystemBlockDiagData.actionFinite_tail _ _ _ _ hm]
@@ -365,8 +347,8 @@ private def SnormQ : ℚ :=
   (∑ n ∈ Finset.range (N + 1), |qbar n| * ν_q ^ n)
     + ∑ n ∈ Finset.range N, |qbar (n + 1)| * ν_q ^ (n + 1)
 
-lemma Sabar_norm_le (l : Fin L) : ‖S (ābar l)‖ ≤ ((39/50 : ℚ) : ℝ) := by
-  have hbilat := lpOneAlg.norm_eq_bilatFinSum (S (ābar l)) N
+lemma Sabar_norm_le (l : Fin L) : ‖l1Chebyshev.symmetrize_CLM (ābar l)‖ ≤ ((39/50 : ℚ) : ℝ) := by
+  have hbilat := lpOneAlg.norm_eq_bilatFinSum (l1Chebyshev.symmetrize_CLM (ābar l)) N
     (fun n hn => by
       rw [l1Chebyshev.norm_fiber, Sabar_toSeq,
         qbar_eq_zero (show N < ((n : ℕ) : ℤ).natAbs from by simpa using hn)]
@@ -378,13 +360,13 @@ lemma Sabar_norm_le (l : Fin L) : ‖S (ābar l)‖ ≤ ((39/50 : ℚ) : ℝ) :=
           omega)]
       norm_num)
   rw [hbilat]
-  have hterm1 : ∀ n : Fin (N + 1), ‖(S (ābar l)) (↑(n : ℕ) : ℤ)‖
+  have hterm1 : ∀ n : Fin (N + 1), ‖(l1Chebyshev.symmetrize_CLM (ābar l)) (↑(n : ℕ) : ℤ)‖
       = ((|qbar (n : ℕ)| * ν_q ^ (n : ℕ) : ℚ) : ℝ) := by
     intro n
     rw [l1Chebyshev.norm_fiber, Sabar_toSeq, ν_val_eq_q]
     push_cast
     simp
-  have hterm2 : ∀ n : Fin N, ‖(S (ābar l)) (Int.negSucc (n : ℕ))‖
+  have hterm2 : ∀ n : Fin N, ‖(l1Chebyshev.symmetrize_CLM (ābar l)) (Int.negSucc (n : ℕ))‖
       = ((|qbar ((n : ℕ) + 1)| * ν_q ^ ((n : ℕ) + 1) : ℚ) : ℝ) := by
     intro n
     rw [l1Chebyshev.norm_fiber, Sabar_toSeq, ν_val_eq_q]
@@ -403,18 +385,22 @@ lemma Sabar_norm_le (l : Fin L) : ‖S (ābar l)‖ ≤ ((39/50 : ℚ) : ℝ) :=
   rw [hcast]
   exact_mod_cast (show SnormQ ≤ 39/50 from by native_decide)
 
+/-- `K_bound = 2·(2·39/50 + 1)` is the syntactic derivative constant of `X² − X` at the
+certified radius `‖S(ā)‖ ≤ 39/50`, evaluated in exact rational arithmetic. -/
+private lemma derivativeBound_eq_K_bound :
+    MvPolyBridge.CompPoly.Chebyshev.derivativeBound (f_cpoly 0)
+      (fun _ : Fin L => (39/50 : ℚ)) = K_bound := by
+  simp [MvPolyBridge.CompPoly.Chebyshev.derivativeBound, f_cpoly]
+  norm_num [K_bound]
+
 private lemma Z₁_hDφ (h : XCheb ν_val L) (l : Fin L) :
     ‖Dphi ābar h l‖ ≤ ((K_bound : ℚ) : ℝ) * ‖h‖ := by
-  refine (norm_Dphi_le ābar h l).trans ?_
-  have hS := Sabar_norm_le l
-  have h2 : (2 * ‖S (ābar l)‖ + 1) * (2 * ‖h‖)
-      ≤ (2 * ((39/50 : ℚ) : ℝ) + 1) * (2 * ‖h‖) := by
-    have : (0 : ℝ) ≤ 2 * ‖h‖ := by positivity
-    nlinarith
-  refine h2.trans (le_of_eq ?_)
-  rw [show ((K_bound : ℚ) : ℝ) = (2 * ((39/50 : ℚ) : ℝ) + 1) * 2 from by
-    norm_num [K_bound]]
-  ring
+  rw [Dphi_eq_derivative]
+  refine (MvPolyBridge.CompPoly.Chebyshev.norm_derivative_apply_le (f_cpoly l) ābar
+    (fun _ => ((39/50 : ℚ) : ℝ)) (fun i => Sabar_norm_le i) h).trans (le_of_eq ?_)
+  have hl : l = 0 := Subsingleton.elim _ _
+  subst hl
+  rw [← derivativeBound_eq_K_bound, MvPolyBridge.CompPoly.Chebyshev.derivativeBound_ratCast]
 
 /-! ### hfin_le: the ε-leakage, column by column in exact ℚ -/
 
@@ -532,184 +518,83 @@ private lemma defect_actionFinite_single_gt {mn : ℕ} (hmn : N < mn) (n : ℕ) 
     have := k.isLt
     omega), mul_zero]
 
-private lemma FAseq_single (mn k : ℕ) :
-    FAseq (ν := ν_val) (l1Chebyshev.single ((mn : ℕ) : ℤ) 1) k = (FAcolQ mn k : ℝ) := by
-  cases k with
-  | zero =>
-    rw [show FAseq (ν := ν_val) (l1Chebyshev.single ((mn : ℕ) : ℤ) 1) 0
-        = -(l1Chebyshev.toSeq (l1Chebyshev.single ((mn : ℕ) : ℤ) 1) 0)
-          - 2 * ∑' j : ℕ, (-1 : ℝ) ^ (j + 1)
-            * l1Chebyshev.toSeq (l1Chebyshev.single ((mn : ℕ) : ℤ) 1) (↑(j + 1) : ℤ) from rfl]
-    cases mn with
-    | zero =>
-      have h0 : l1Chebyshev.toSeq (l1Chebyshev.single (ν := ν_val) ((0 : ℕ) : ℤ) 1) 0 = 1 := by
-        rw [l1Chebyshev.toSeq_single, if_pos (by norm_num)]
-      have hz : ∀ j : ℕ, (-1 : ℝ) ^ (j + 1)
-          * l1Chebyshev.toSeq (l1Chebyshev.single (ν := ν_val) ((0 : ℕ) : ℤ) 1)
-              (↑(j + 1) : ℤ) = 0 := by
-        intro j
-        rw [l1Chebyshev.toSeq_single, if_neg (fun hc => by omega)]
-        ring
-      rw [h0, tsum_congr hz, tsum_zero]
-      rw [show FAcolQ 0 0 = -1 from rfl]
-      norm_num
-    | succ m' =>
-      have h0 : l1Chebyshev.toSeq (l1Chebyshev.single (ν := ν_val) ((m' + 1 : ℕ) : ℤ) 1)
-          0 = 0 := by
-        rw [l1Chebyshev.toSeq_single, if_neg (fun hc => by omega)]
-      have htsum : ∑' j : ℕ, (-1 : ℝ) ^ (j + 1)
-          * l1Chebyshev.toSeq (l1Chebyshev.single (ν := ν_val) ((m' + 1 : ℕ) : ℤ) 1)
-              (↑(j + 1) : ℤ)
-          = (-1 : ℝ) ^ (m' + 1) := by
-        rw [tsum_eq_single m' (fun j hj => by
-          rw [l1Chebyshev.toSeq_single, if_neg (fun hc => hj (by omega))]
-          ring)]
-        rw [l1Chebyshev.toSeq_single, if_pos rfl, mul_one]
-      rw [h0, htsum]
-      rw [show FAcolQ (m' + 1) 0
-          = if m' + 1 = 0 then -1 else -2 * (-1 : ℚ) ^ (m' + 1) from rfl,
-        if_neg (Nat.succ_ne_zero m')]
-      push_cast
-      ring
-  | succ k' =>
-    rw [show FAseq (ν := ν_val) (l1Chebyshev.single ((mn : ℕ) : ℤ) 1) (k' + 1)
-        = 2 * ((k' : ℝ) + 1)
-          * l1Chebyshev.toSeq (l1Chebyshev.single ((mn : ℕ) : ℤ) 1) (↑(k' + 1) : ℤ) from rfl]
-    rw [l1Chebyshev.toSeq_single]
-    rw [show FAcolQ mn (k' + 1)
-        = if k' + 1 = mn then 2 * ((k' : ℚ) + 1) else 0 from rfl]
-    by_cases h : k' + 1 = mn
-    · rw [if_pos (by exact_mod_cast h), if_pos h]
-      push_cast
-      ring
-    · rw [if_neg (fun hc => h (by exact_mod_cast hc)), if_neg h]
-      push_cast
-      ring
-
 private lemma S_single_toSeq (mn : ℕ) (i : ℤ) :
-    l1Chebyshev.toSeq (S (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) i
+    l1Chebyshev.toSeq
+      (l1Chebyshev.symmetrize_CLM (l1Chebyshev.single (ν := ν_val) ((mn : ℕ) : ℤ) 1)) i
       = if i.natAbs = mn then 1 else 0 := by
-  rw [S_apply, Ssym_toSeq, l1Chebyshev.toSeq_single]
+  rw [l1Chebyshev.symmetrize_CLM_apply, l1Chebyshev.symmetrize_toSeq, l1Chebyshev.toSeq_single]
   by_cases h : i.natAbs = mn
   · rw [if_pos (by exact_mod_cast h), if_pos h]
   · rw [if_neg (fun hc => h (by exact_mod_cast hc)), if_neg h]
 
 private lemma conv_single_toSeq (mn j : ℕ) :
-    l1Chebyshev.toSeq (S (ābar 0) * S (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) (↑j : ℤ)
+    l1Chebyshev.toSeq (l1Chebyshev.symmetrize_CLM (ābar 0) * l1Chebyshev.symmetrize_CLM (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) (↑j : ℤ)
       = (if mn = 0 then (qbar j : ℝ)
          else (qbar ((j : ℤ) - mn).natAbs : ℝ) + (qbar (j + mn) : ℝ)) := by
-  cases mn with
-  | zero =>
-    rw [l1Chebyshev.toSeq_mul_eq_finsum _ _ _ ({(0 : ℤ)} : Finset ℤ) (fun i hi => by
-      rw [S_single_toSeq, if_neg (fun hc => hi (by
-        simp only [Finset.mem_singleton]
-        omega))])]
-    rw [Finset.sum_singleton, S_single_toSeq,
-      if_pos (show ((0 : ℤ)).natAbs = 0 from rfl), mul_one, Sabar_toSeq,
-      if_pos (rfl : (0 : ℕ) = 0)]
-    congr 1
-  | succ m' =>
-    rw [l1Chebyshev.toSeq_mul_eq_finsum _ _ _
-      ({((m' + 1 : ℕ) : ℤ), -((m' + 1 : ℕ) : ℤ)} : Finset ℤ) (fun i hi => by
-      rw [S_single_toSeq, if_neg (fun hc => hi (by
-        simp only [Finset.mem_insert, Finset.mem_singleton]
-        omega))])]
-    rw [Finset.sum_pair (by omega)]
-    rw [S_single_toSeq, if_pos (show (((m' + 1 : ℕ) : ℤ)).natAbs = m' + 1 from by omega),
-      S_single_toSeq, if_pos (show (-((m' + 1 : ℕ) : ℤ)).natAbs = m' + 1 from by omega),
-      mul_one, mul_one, Sabar_toSeq, Sabar_toSeq]
-    rw [if_neg (Nat.succ_ne_zero m')]
-    congr 2
+  change l1Chebyshev.toSeq (l1Chebyshev.symmetrize_CLM (ābar 0) * l1Chebyshev.symmetrize
+    (l1Chebyshev.single (mn : ℤ) 1)) (j : ℤ) = _
+  rw [l1Chebyshev.mul_symmetrize_single_toSeq]
+  simp only [Sabar_toSeq, Int.natAbs_natCast, ← Nat.cast_add]
 
 private lemma Dphi_single_toSeq (mn j : ℕ) :
     l1Chebyshev.toSeq (Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) 0) (↑j : ℤ)
       = (wQ mn j : ℝ) := by
-  show l1Chebyshev.toSeq ((2 : ℝ) • (S (ābar 0) * S (l1Chebyshev.single ((mn : ℕ) : ℤ) 1))
-      - S (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) (↑j : ℤ) = _
+  show l1Chebyshev.toSeq ((2 : ℝ) • (l1Chebyshev.symmetrize_CLM (ābar 0) * l1Chebyshev.symmetrize_CLM (l1Chebyshev.single ((mn : ℕ) : ℤ) 1))
+      - l1Chebyshev.symmetrize_CLM (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) (↑j : ℤ) = _
   rw [l1Chebyshev.toSeq_sub, l1Chebyshev.toSeq_smul, conv_single_toSeq, S_single_toSeq]
   rw [show ((↑j : ℤ)).natAbs = j from by omega]
   rw [wQ]
   push_cast [apply_ite (fun q : ℚ => (q : ℝ))]
   ring
 
-private lemma FCseq_Dphi_single (mn k : ℕ) :
-    FCseq (Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) 0) k = (FCcolQ mn k : ℝ) := by
-  cases k with
-  | zero =>
-    rw [show FCseq (Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) 0) 0 = 0 from rfl,
-      show FCcolQ mn 0 = 0 from rfl]
-    norm_num
-  | succ k' =>
-    rw [show FCseq (Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) 0) (k' + 1)
-        = l1Chebyshev.toSeq (Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) 0)
-            (↑(k' + 2) : ℤ)
-          - l1Chebyshev.toSeq (Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) 0)
-            (↑k' : ℤ) from rfl]
-    rw [Dphi_single_toSeq, Dphi_single_toSeq,
-      show FCcolQ mn (k' + 1) = wQ mn (k' + 2) - wQ mn k' from rfl]
-    push_cast
-    ring
+private lemma single_eq_ι (mn : ℕ) :
+    Pi.single (0 : Fin L) (l1Chebyshev.single (ν := ν_val) (mn : ℤ) 1) =
+      ι (l1Chebyshev.single (mn : ℤ) 1) := by
+  funext l
+  have hl : l = 0 := Subsingleton.elim _ _
+  subst l
+  simp [ι]
 
-/-- The full analytic column bridge at block rows. -/
+/-- The symbolic derivative reproduces the local rational coupling formula at every mode. -/
+private lemma compPolyDphiQ_eq (mn j : ℕ) :
+    compPolyDphiQ (f_cpoly 0) 0 data.abar_Q mn (j : ℤ) = wQ mn j := by
+  have h := compPoly_derivative_single_toSeq_eq_cast (f_cpoly 0)
+    ābar data.abar_Q data.abar_toSeq_eq 0 mn (j : ℤ)
+  change l1Chebyshev.toSeq (compPolyDerivative f_cpoly ābar
+    (Pi.single 0 (l1Chebyshev.single (mn : ℤ) 1)) 0) (j : ℤ) = _ at h
+  rw [compPolyDerivative_apply_eq_Dphi, single_eq_ι, Dphi_single_toSeq] at h
+  exact_mod_cast h.symm
+
+private lemma compPolyDFQ_eq (mn row : ℕ) :
+    compPolyDFQ f_cpoly data.abar_Q 0 0 row mn = FAcolQ mn row + FCcolQ mn row := by
+  cases row with
+  | zero => simp [compPolyDFQ, FAcolQ, FCcolQ]
+  | succ row =>
+      simp only [compPolyDFQ, true_and, compPolyDphiQ_eq, FAcolQ, FCcolQ]
+      ring
+
+/-- The full column bridge uses the polynomial API for every nonnegative input mode,
+including modes beyond the stored Jacobian block. -/
 private lemma Trow_single_toSeq (mn : ℕ) (n : ℕ) (hn : n ≤ N) :
     l1Chebyshev.toSeq (Trow (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) (↑n : ℤ)
       = (DcolQ mn ⟨n, by omega⟩ : ℝ) := by
-  show l1Chebyshev.toSeq
-    (((data.composedApproxCLM - fderiv ℝ (data.G phi p₀) ābar)
-      (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1))) 0) (↑n : ℤ) = _
-  show l1Chebyshev.toSeq
-    (data.composedApproxCLM (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) 0
-      - (fderiv ℝ (data.G phi p₀) ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1))) 0)
-    (↑n : ℤ) = _
-  rw [l1Chebyshev.toSeq_sub, composed_toSeq_nat, fderiv_toSeq]
-  -- the four pieces
-  rw [show l1Chebyshev.toSeq (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1) 0) (↑n : ℤ)
-      = (if n = mn then (1 : ℝ) else 0) from by
-    show l1Chebyshev.toSeq (l1Chebyshev.single ((mn : ℕ) : ℤ) 1) (↑n : ℤ) = _
-    rw [l1Chebyshev.toSeq_single]
-    by_cases h : n = mn
-    · rw [if_pos (by exact_mod_cast h), if_pos h]
-    · rw [if_neg (fun hc => h (by exact_mod_cast hc)), if_neg h]]
-  rw [data.TAfun_toSeq_nat, SystemBlockDiagData.action_finite _ _ _ _ hn, Fin.sum_univ_one]
-  rw [data.TCblockFun_toSeq_nat]
-  rw [show data.TCblockSeq (fun j => Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) j) 0 n
-      = ∑ k : Fin (N + 1),
-          data.approxInverse.finBlock 0 0 ⟨n, Nat.lt_succ_of_le hn⟩ k
-            * FCseq (Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) 0) (k : ℕ) from by
-    show data.approxInverse.actionFinite
-      (fun j => FCseq (Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) j)) 0 n = _
-    rw [SystemBlockDiagData.actionFinite_finite _ _ _ _ hn, Fin.sum_univ_one]]
-  rw [TCtailElem_toSeq_nat, if_neg (not_lt.mpr hn), add_zero]
-  have hA : ∀ k : Fin (N + 1),
-      data.approxInverse.finBlock 0 0 ⟨n, Nat.lt_succ_of_le hn⟩ k
-        = ((AQ n (k : ℕ) : ℚ) : ℝ) := fun k =>
-    data.A_finBlock_eq 0 0 ⟨n, Nat.lt_succ_of_le hn⟩ k
-  have hFA : ∀ k : Fin (N + 1),
-      FAseq (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1) 0) (k : ℕ)
-        = ((FAcolQ mn (k : ℕ) : ℚ) : ℝ) := fun k => FAseq_single mn (k : ℕ)
-  have hFC : ∀ k : Fin (N + 1),
-      FCseq (Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) 0) (k : ℕ)
-        = ((FCcolQ mn (k : ℕ) : ℚ) : ℝ) := fun k => FCseq_Dphi_single mn (k : ℕ)
-  have hsumFA : (∑ k : Fin (N + 1),
-      data.approxInverse.finBlock 0 0 ⟨n, Nat.lt_succ_of_le hn⟩ k
-        * FAseq (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1) 0) (k : ℕ))
-      = ∑ k : Fin (N + 1), ((AQ n (k : ℕ) : ℚ) : ℝ) * ((FAcolQ mn (k : ℕ) : ℚ) : ℝ) :=
-    Finset.sum_congr rfl fun k _ => by rw [hA k, hFA k]
-  have hsumFC : (∑ k : Fin (N + 1),
-      data.approxInverse.finBlock 0 0 ⟨n, Nat.lt_succ_of_le hn⟩ k
-        * FCseq (Dphi ābar (ι (l1Chebyshev.single ((mn : ℕ) : ℤ) 1)) 0) (k : ℕ))
-      = ∑ k : Fin (N + 1), ((AQ n (k : ℕ) : ℚ) : ℝ) * ((FCcolQ mn (k : ℕ) : ℚ) : ℝ) :=
-    Finset.sum_congr rfl fun k _ => by rw [hA k, hFC k]
-  rw [hsumFA, hsumFC]
-  -- assemble against DcolQ
+  change l1Chebyshev.toSeq
+    (data.composedApproxCLM (ι (l1Chebyshev.single (mn : ℤ) 1)) 0 -
+      fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar (ι (l1Chebyshev.single (mn : ℤ) 1)) 0) (n : ℤ) = _
+  rw [l1Chebyshev.toSeq_sub, composed_toSeq_nat]
+  have hder := data.fderiv_G_single_fin_eq_cast_of_compPoly f_cpoly p₀ 0 0
+    ⟨n, by omega⟩ mn
+  rw [single_eq_ι] at hder
+  change l1Chebyshev.toSeq (fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar
+    (ι (l1Chebyshev.single (mn : ℤ) 1)) 0) (n : ℤ) = _ at hder
+  rw [hder]
+  simp only [Fin.sum_univ_one, compPolyDFQ_eq]
+  rw [show l1Chebyshev.toSeq (ι (l1Chebyshev.single (mn : ℤ) 1) 0) (n : ℤ) =
+      if n = mn then 1 else 0 from toCoeff_single mn 0 n]
+  change _ - _ - ((∑ k : Fin (N + 1),
+      AQ n k * (FAcolQ mn k + FCcolQ mn k) : ℚ) : ℝ) = _
   rw [DcolQ]
   push_cast [apply_dite (fun q : ℚ => (q : ℝ)), apply_ite (fun q : ℚ => (q : ℝ))]
-  rw [show (∑ k : Fin (N + 1),
-      ((AQ n (k : ℕ) : ℝ)) * ((FAcolQ mn (k : ℕ) : ℝ) + (FCcolQ mn (k : ℕ) : ℝ)))
-      = (∑ k : Fin (N + 1), (AQ n (k : ℕ) : ℝ) * (FAcolQ mn (k : ℕ) : ℝ))
-        + ∑ k : Fin (N + 1), (AQ n (k : ℕ) : ℝ) * (FCcolQ mn (k : ℕ) : ℝ) from by
-    rw [← Finset.sum_add_distrib]
-    exact Finset.sum_congr rfl fun k _ => by ring]
   by_cases hmn : mn ≤ N
   · rw [defect_actionFinite_single_le hmn n hn, dif_pos hmn]
   · rw [defect_actionFinite_single_gt (by omega) n hn, dif_neg hmn]
@@ -722,16 +607,16 @@ private lemma toSeq_zeroE (k : ℤ) : l1Chebyshev.toSeq (0 : l1Chebyshev ν_val)
 /-- Negative columns vanish: the nonlinearity reads only non-negative modes. -/
 private lemma Trow_negSucc_toSeq (m' : ℕ) (n : ℕ) (hn : n ≤ N) :
     l1Chebyshev.toSeq (Trow (l1Chebyshev.single (Int.negSucc m') 1)) (↑n : ℤ) = 0 := by
-  have hSe : S (l1Chebyshev.single (ν := ν_val) (Int.negSucc m') 1) = 0 := by
+  have hSe : l1Chebyshev.symmetrize_CLM (l1Chebyshev.single (ν := ν_val) (Int.negSucc m') 1) = 0 := by
     apply lpOneAlg.ext_toRealSeq
     funext i
-    show l1Chebyshev.toSeq (S (l1Chebyshev.single (Int.negSucc m') 1)) i
+    show l1Chebyshev.toSeq (l1Chebyshev.symmetrize_CLM (l1Chebyshev.single (Int.negSucc m') 1)) i
       = lpOneAlg.toRealSeq (0 : l1Chebyshev ν_val) i
-    rw [S_apply, Ssym_toSeq, l1Chebyshev.toSeq_single, if_neg (fun hc => by omega)]
+    rw [l1Chebyshev.symmetrize_CLM_apply, l1Chebyshev.symmetrize_toSeq, l1Chebyshev.toSeq_single, if_neg (fun hc => by omega)]
     exact (toSeq_zeroE i).symm
   have hDzero : Dphi ābar (ι (l1Chebyshev.single (Int.negSucc m') 1)) 0 = 0 := by
-    show (2 : ℝ) • (S (ābar 0) * S (l1Chebyshev.single (Int.negSucc m') 1))
-      - S (l1Chebyshev.single (Int.negSucc m') 1) = 0
+    show (2 : ℝ) • (l1Chebyshev.symmetrize_CLM (ābar 0) * l1Chebyshev.symmetrize_CLM (l1Chebyshev.single (Int.negSucc m') 1))
+      - l1Chebyshev.symmetrize_CLM (l1Chebyshev.single (Int.negSucc m') 1) = 0
     rw [hSe, mul_zero, smul_zero, sub_zero]
   have hFC : ∀ k : ℕ,
       FCseq (Dphi ābar (ι (l1Chebyshev.single (Int.negSucc m') 1)) 0) k = 0 := by
@@ -764,7 +649,7 @@ private lemma Trow_negSucc_toSeq (m' : ℕ) (n : ℕ) (hn : n ≤ N) :
       ring
   show l1Chebyshev.toSeq
     (data.composedApproxCLM (ι (l1Chebyshev.single (Int.negSucc m') 1)) 0
-      - (fderiv ℝ (data.G phi p₀) ābar (ι (l1Chebyshev.single (Int.negSucc m') 1))) 0)
+      - (fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar (ι (l1Chebyshev.single (Int.negSucc m') 1))) 0)
     (↑n : ℤ) = 0
   rw [l1Chebyshev.toSeq_sub, composed_toSeq_nat, fderiv_toSeq]
   rw [show l1Chebyshev.toSeq (ι (l1Chebyshev.single (Int.negSucc m') 1) 0) (↑n : ℤ) = 0 from by
@@ -836,7 +721,7 @@ private lemma Trow_col_le (m : ℤ) :
 
 private lemma Z₁_hfin (h : XCheb ν_val L) (l : Fin L) :
     ∑ k : Fin (N + 1),
-        ‖(((data.composedApproxCLM - fderiv ℝ (data.G phi p₀) ābar) h) l)
+        ‖(((data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar) h) l)
           (↑(k : ℕ) : ℤ)‖
       ≤ ((eps_bound : ℚ) : ℝ) * ‖h‖ := by
   rw [Trow_eq h l]
@@ -845,8 +730,8 @@ private lemma Z₁_hfin (h : XCheb ν_val L) (l : Fin L) :
 
 /-- **Z₁ obligation**: `‖composedApprox − DG(ā)‖ ≤ Z₁ = ε + ν/(N+1)·K`. -/
 lemma Z₁_le :
-    ‖data.composedApproxCLM - fderiv ℝ (data.G phi p₀) ābar‖ ≤ ((Z₁_bound : ℚ) : ℝ) := by
-  refine chebyshev_Z₁_le_relaxed N data.composedApproxCLM (data.G phi p₀) ābar
+    ‖data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar‖ ≤ ((Z₁_bound : ℚ) : ℝ) := by
+  refine chebyshev_Z₁_le_relaxed N data.composedApproxCLM (data.G (banachField f_cpoly) p₀) ābar
     (fun h l => Dphi ābar h l) Z₁_hneg (by norm_num [eps_bound]) Z₁_hfin Z₁_htail
     (by norm_num [K_bound]) Z₁_hDφ ?_
   rw [show ((ν_val : ℝ)) = 2 from rfl]
@@ -856,9 +741,9 @@ lemma Z₁_le :
 via `chebyshev_Z₁_le_semiMajor` with the same four obligations as `Z₁_le`
 (0.0035 + (1.25/41)·5.12 = 0.1596…). Additive: `Z₁_le` and `Z₁_bound` are unchanged. -/
 theorem Z₁_le_semiMajor :
-    ‖data.composedApproxCLM - fderiv ℝ (data.G phi p₀) ābar‖
+    ‖data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar‖
       ≤ ((Z₁_semiMajor_bound : ℚ) : ℝ) := by
-  refine chebyshev_Z₁_le_semiMajor N data.composedApproxCLM (data.G phi p₀) ābar
+  refine chebyshev_Z₁_le_semiMajor N data.composedApproxCLM (data.G (banachField f_cpoly) p₀) ābar
     (fun h l => Dphi ābar h l) Z₁_hneg (by norm_num [eps_bound]) Z₁_hfin Z₁_htail
     (by norm_num [K_bound]) Z₁_hDφ ?_
   rw [show ((ν_val : ℝ)) = 2 from rfl]
@@ -1101,54 +986,22 @@ private lemma TC_norm_le (w : XCheb ν_val L) : ‖data.TC w‖ ≤ (7/4 : ℝ) 
   exact (l1Chebyshev.norm_le_of_cols TCall TCall_col_le (w 0)).trans
     (mul_le_mul_of_nonneg_left (norm_le_pi_norm w 0) (by norm_num))
 
-/-- **Z₂ obligation**: the Lipschitz bound on DG over the certificate ball. -/
+/-- **Z₂ obligation**: the Lipschitz bound on DG over the certificate ball, from the
+`Z₂` socket: `‖TC‖ ≤ 7/4` (`TC_norm_le`) times the syntactic derivative Lipschitz
+constant `8 = 2 · derivativeLipschitzBound (X² − X)` (`2 · lipschitzBound (2X − 1) = 4`,
+direction symmetrized); no ball is needed since `2X − 1` is affine. -/
 lemma Z₂_le : ∀ c ∈ Metric.closedBall ābar ((r_minus : ℚ) : ℝ),
-    ‖fderiv ℝ (data.G phi p₀) c - fderiv ℝ (data.G phi p₀) ābar‖
+    ‖fderiv ℝ (data.G (banachField f_cpoly) p₀) c
+        - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar‖
       ≤ ((Z₂_bound : ℚ) : ℝ) * ((r_minus : ℚ) : ℝ) := by
   intro c hc
-  have hcball : ‖c - ābar‖ ≤ ((r_minus : ℚ) : ℝ) := by
-    rw [← dist_eq_norm]
-    exact Metric.mem_closedBall.mp hc
-  rw [fderiv_G, fderiv_G]
-  have hdiff : (data.TA + data.TC.comp (DPhiCLM c)) - (data.TA + data.TC.comp (DPhiCLM ābar))
-      = data.TC.comp (DPhiCLM c - DPhiCLM ābar) := by
-    rw [ContinuousLinearMap.comp_sub]
-    abel
-  rw [hdiff]
-  have hrnn : (0 : ℝ) ≤ ((r_minus : ℚ) : ℝ) := by norm_num [r_minus]
-  refine ContinuousLinearMap.opNorm_le_bound _
-    (mul_nonneg (by norm_num [Z₂_bound]) hrnn) fun h => ?_
-  show ‖data.TC ((DPhiCLM c - DPhiCLM ābar) h)‖ ≤ _
-  have hw : ∀ l : Fin L, ((DPhiCLM c - DPhiCLM ābar) h) l
-      = (2 : ℝ) • (S ((c - ābar) l) * S (h l)) := by
-    intro l
-    show DPhiCLM c h l - DPhiCLM ābar h l = _
-    rw [show DPhiCLM c h l = Dphi c h l from congr_fun (DPhiCLM_apply c h) l,
-      show DPhiCLM ābar h l = Dphi ābar h l from congr_fun (DPhiCLM_apply ābar h) l]
-    show ((2 : ℝ) • (S (c l) * S (h l)) - S (h l))
-      - ((2 : ℝ) • (S (ābar l) * S (h l)) - S (h l)) = _
-    rw [sub_sub_sub_cancel_right, ← smul_sub, ← sub_mul, ← map_sub]
-    rfl
-  have hwnorm : ‖(DPhiCLM c - DPhiCLM ābar) h‖
-      ≤ 8 * ‖c - ābar‖ * ‖h‖ := by
-    refine (pi_norm_le_iff_of_nonneg (by positivity)).mpr fun l => ?_
-    rw [hw l, norm_smul, Real.norm_ofNat]
-    refine le_trans (mul_le_mul_of_nonneg_left (norm_mul_le _ _) (by norm_num)) ?_
-    have h1 : ‖S ((c - ābar) l)‖ ≤ 2 * ‖c - ābar‖ :=
-      (norm_Ssym_le _).trans (by
-        have := norm_le_pi_norm (c - ābar) l
-        linarith)
-    have h2 : ‖S (h l)‖ ≤ 2 * ‖h‖ :=
-      (norm_Ssym_le _).trans (by
-        have := norm_le_pi_norm h l
-        linarith)
-    nlinarith [norm_nonneg (S ((c - ābar) l)), norm_nonneg (S (h l)),
-      norm_nonneg (c - ābar), norm_nonneg h]
-  refine le_trans (TC_norm_le _) ?_
-  refine le_trans (mul_le_mul_of_nonneg_left hwnorm (by norm_num)) ?_
-  rw [show ((Z₂_bound : ℚ) : ℝ) = 14 from by norm_num [Z₂_bound]]
-  nlinarith [norm_nonneg h, hcball, hrnn, mul_le_mul_of_nonneg_right hcball
-    (norm_nonneg h)]
+  rw [show ((Z₂_bound : ℚ) : ℝ) = (7/4 : ℝ) * 8 from by norm_num [Z₂_bound]]
+  exact data.Z₂_le_of_compPoly_max f_cpoly p₀ (by norm_num) (by norm_num [r_minus])
+    TC_norm_le (fun c _ l => by
+      have hl : l = 0 := Subsingleton.elim _ _
+      subst hl
+      simp [MvPolyBridge.CompPoly.Chebyshev.derivativeLipschitzBound, f_cpoly]
+      norm_num) c hc
 
 /-- The radii polynomial is negative at the certified radius r = 10⁻⁶. -/
 lemma radii_neg :
@@ -1171,10 +1024,11 @@ lemma margin_clears_gate :
 /-- **Example 14.2.1**: the composed Chebyshev map for `u̇ = u(u−1)`, `u(−1) = ½`
 has a unique zero within `10⁻⁶` of the numerical Chebyshev candidate, at
 `ν = 2`, `N = 40`. The book's own twin of Example 8.1, machine-checked. -/
-theorem main_existsUnique :
+theorem main_theorem :
     ∃! xTilde ∈ Metric.closedBall (ChebyshevIVP.StdChebIVPData.abar data)
         ((r_minus : ℚ) : ℝ),
-      data.G phi p₀ xTilde = 0 :=
-  data.existsUnique phi p₀ G_diff (by norm_num [r_minus]) Y₀_le Z₀_le Z₁_le Z₂_le radii_neg
+      data.G (banachField f_cpoly) p₀ xTilde = 0 :=
+  data.existsUnique_of_compPoly f_cpoly p₀ (by norm_num [r_minus])
+    Y₀_le Z₀_finBlockNorm_le Z₁_le Z₂_le radii_neg
 
 end Example1421.Cert

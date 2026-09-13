@@ -50,10 +50,6 @@ lemma sq_eq_fun : (sq : l1Weighted ν → l1Weighted ν) = fun x => x ^ 2 := fun
 
 def F_sub_const (c : l1Weighted ν) (a : l1Weighted ν) : l1Weighted ν := sq a - c
 
-lemma F_sub_const_eq_fun (c : l1Weighted ν) :
-    (F_sub_const c : l1Weighted ν → l1Weighted ν) = fun x => x ^ 2 - c :=
-  funext (fun a => by simp [F_sub_const, sq_eq_pow])
-
 /-! ### Fréchet derivative (via `auto_poly_fderiv`)
 
 Pattern: `rw` unfolds the named def, then `auto_poly_fderiv` computes + normalizes
@@ -62,13 +58,6 @@ Pattern: `rw` unfolds the named def, then `auto_poly_fderiv` computes + normaliz
 theorem hasFDerivAt_sq (a : l1Weighted ν) :
     HasFDerivAt sq ((2 : ℝ) • leftMul a) a := by
   rw [sq_eq_fun]; auto_hasFDerivAt
-
-theorem fderiv_sq (a : l1Weighted ν) :
-    fderiv ℝ sq a = (2 : ℝ) • leftMul a :=
-  (hasFDerivAt_sq a).fderiv
-
-theorem differentiable_sq : Differentiable ℝ (sq : l1Weighted ν → l1Weighted ν) :=
-  fun a => (hasFDerivAt_sq a).differentiableAt
 
 theorem hasFDerivAt_F_sub_const (c a : l1Weighted ν) :
     HasFDerivAt (F_sub_const c) ((2 : ℝ) • leftMul a) a :=
@@ -105,8 +94,6 @@ def c (lam0 : ℝ) : l1Weighted ν := l1Weighted.mk (paramSeq lam0) (paramSeq_me
 
 /-- The zero-finding map F(a) = a*a - c(lam0). -/
 def F (lam0 : ℝ) (a : l1Weighted ν) : l1Weighted ν := F_sub_const (c lam0) a
-
-lemma F_eq (lam0 : ℝ) (a : l1Weighted ν) : F lam0 a = sq a - c lam0 := rfl
 
 /-- Sequence-level formula for F(a): CauchyProduct(a,a) - paramSeq(λ₀).
 Bridges the abstract `F` to computable form for certificates. -/
@@ -199,18 +186,6 @@ lemma approxInverse_tailDiag_ne_zero {N : ℕ} (sol : ApproxSolution N)
     or_self, not_false_eq_true]
 
 /-! ## 4. Structural Bound Reductions -/
-
-/-! ### Z₀: reduces to finWeightedMatrixNorm of defect matrix -/
-
-/-- Z₀ bound via tail cancellation. -/
-lemma Z₀_structural {N : ℕ} (sol : ApproxSolution N)
-    (A_mat : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
-    Z₀_norm ((approxInverse sol A_mat).toScalarCLM (ν := ν))
-      ((approxDeriv sol).toScalarCLM (ν := ν)) ≤
-    FiniteWeightedNorm.finWeightedMatrixNorm ν
-      (1 - (approxInverse sol A_mat).finBlock0 * (approxDeriv sol).finBlock0) :=
-  ScalarBlockDiagData.Z₀_le_finWeightedMatrixNorm_of_tailCancel
-    (ν := ν) _ _ (tailCancel sol A_mat)
 
 /-! ### Z₁: A†-DF kills finite modes, norm bounded by shifted convolution -/
 

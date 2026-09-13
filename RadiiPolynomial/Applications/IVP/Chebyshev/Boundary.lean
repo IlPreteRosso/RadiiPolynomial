@@ -18,9 +18,9 @@ generic boundary-kernel projection.
 
 open scoped BigOperators
 
-noncomputable section
+open RadiiPolynomial
 
-namespace RadiiPolynomial
+noncomputable section
 
 namespace IVP
 
@@ -155,5 +155,3 @@ theorem eval_chebyshevAnchoredPrimitive (c : l1Chebyshev ν) {t : ℝ}
   rw [integral_eval c ht]
 
 end IVP
-
-end RadiiPolynomial

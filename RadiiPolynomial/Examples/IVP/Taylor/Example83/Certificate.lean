@@ -109,134 +109,66 @@ lemma Y₀_le :
 
 /-! ## Z₁ bound -/
 
+/-- The Z₁ operator constant is the syntactic `CompPoly.derivativeBound` of the Lorenz
+polynomial at the certified radii `(20, 26, 11)` of `ā`: per component `2σ`, `ρ + 1 + 20 + 11`,
+`β + 20 + 26`, all `≤ Z₁_bound·(N+1)/ν = 62` — the same numbers the former hand proof produced
+term by term. -/
 private lemma Df_norm_le (h : XL1 ν_val L) (l : Fin L) :
     ‖Df h l‖ ≤ (Z₁_bound * ((N : ℚ) + 1) / ν_q) * ‖h‖ := by
-  have hpi : ∀ i : Fin L, ‖h i‖ ≤ ‖h‖ := fun i => norm_le_pi_norm h i
-  have hmul : ∀ (a b : l1Weighted ν_val), ‖a * b‖ ≤ ‖a‖ * ‖b‖ := norm_mul_le
-  have hC : (0 : ℝ) ≤ (Z₁_bound * ((N : ℚ) + 1) / ν_q : ℚ) := by unfold Z₁_bound ν_q N; norm_num
-  fin_cases l
-  · show ‖σ_val • (h 1 - h 0)‖ ≤ _
-    have h1 : ‖σ_val • (h 1 - h 0)‖ ≤ |σ_val| * (‖h 1‖ + ‖h 0‖) :=
-      (le_of_eq (norm_smul σ_val _)).trans
-        (mul_le_mul_of_nonneg_left (norm_sub_le _ _) (abs_nonneg _))
-    have h2 : |σ_val| * (‖h 1‖ + ‖h 0‖) ≤ 2 * |σ_val| * ‖h‖ :=
-      (mul_le_mul_of_nonneg_left (add_le_add (hpi 1) (hpi 0)) (abs_nonneg _)).trans
-        (by ring_nf; rfl)
-    exact (h1.trans h2).trans (by
-      unfold σ_val Z₁_bound ν_q N; push_cast; nlinarith [norm_nonneg h])
-  · show ‖ρ_val • h 0 - h 1 - (data.abar 0 * h 2 + h 0 * data.abar 2)‖ ≤ _
-    have h1 : ‖ρ_val • h 0 - h 1 - (data.abar 0 * h 2 + h 0 * data.abar 2)‖ ≤
-        |ρ_val| * ‖h‖ + ‖h‖ + ‖data.abar 0‖ * ‖h‖ + ‖data.abar 2‖ * ‖h‖ := by
-      have := norm_sub_le (ρ_val • h 0 - h 1) (data.abar 0 * h 2 + h 0 * data.abar 2)
-      have := norm_sub_le (ρ_val • h 0) (h 1)
-      have := norm_add_le (data.abar 0 * h 2) (h 0 * data.abar 2)
-      have := (norm_smul ρ_val (h 0)).symm ▸ mul_le_mul_of_nonneg_left (hpi 0) (abs_nonneg ρ_val)
-      nlinarith [hpi 1, hmul (data.abar 0) (h 2), hmul (h 0) (data.abar 2),
-        hpi 2, hpi 0, norm_nonneg (data.abar 0), norm_nonneg (data.abar 2)]
-    exact h1.trans (by
-      have h4 : |ρ_val| = ρ_val := abs_of_nonneg (by unfold ρ_val; positivity)
-      rw [h4]; unfold ρ_val Z₁_bound ν_q N; push_cast
-      nlinarith [abar_norm_0_le, abar_norm_2_le, norm_nonneg h])
-  · show ‖-(β_val • h 2) + (data.abar 0 * h 1 + h 0 * data.abar 1)‖ ≤ _
-    have h1 : ‖-(β_val • h 2) + (data.abar 0 * h 1 + h 0 * data.abar 1)‖ ≤
-        |β_val| * ‖h‖ + ‖data.abar 0‖ * ‖h‖ + ‖data.abar 1‖ * ‖h‖ := by
-      have := norm_add_le (-(β_val • h 2)) (data.abar 0 * h 1 + h 0 * data.abar 1)
-      have := norm_add_le (data.abar 0 * h 1) (h 0 * data.abar 1)
-      have := (norm_neg (β_val • h 2)).symm ▸ (norm_smul β_val (h 2)).symm ▸
-        mul_le_mul_of_nonneg_left (hpi 2) (abs_nonneg β_val)
-      nlinarith [hmul (data.abar 0) (h 1), hmul (h 0) (data.abar 1),
-        hpi 1, hpi 0, norm_nonneg (data.abar 0), norm_nonneg (data.abar 1)]
-    exact h1.trans (by
-      have h4 : |β_val| = β_val := abs_of_nonneg (by unfold β_val; positivity)
-      rw [h4]; unfold β_val Z₁_bound ν_q N; push_cast
-      nlinarith [abar_norm_0_le, abar_norm_1_le, norm_nonneg h])
+  rw [Df_eq_fderiv]
+  refine IVP.ivp_Dφ_norm_le_of_compPoly f f_cpoly data.abar (fun _ _ => rfl)
+    (fun i => ((![20, 26, 11] : Fin L → ℚ) i : ℝ)) ?_ ?_ h l
+  · intro i
+    fin_cases i
+    · show ‖data.abar 0‖ ≤ ((![20, 26, 11] : Fin L → ℚ) 0 : ℝ)
+      simpa using abar_norm_0_le
+    · show ‖data.abar 1‖ ≤ ((![20, 26, 11] : Fin L → ℚ) 1 : ℝ)
+      simpa using abar_norm_1_le
+    · show ‖data.abar 2‖ ≤ ((![20, 26, 11] : Fin L → ℚ) 2 : ℝ)
+      simpa using abar_norm_2_le
+  · intro l
+    fin_cases l <;>
+      simp [MvPolyBridge.CompPoly.derivativeBound, f_cpoly, Fin.sum_univ_three] <;>
+      norm_num [σ_q, ρ_q_val, β_q, Z₁_bound, ν_q, N]
 
+/-- **Z₁ obligation** through the `Z₁` face: the finite Jacobian check
+(`composedApprox_eq_fderiv_G_fin`), the derivative map `Df` and its syntactic bound
+`Df_norm_le`. -/
 lemma Z₁_le_cert :
     Z₁_norm (data.G f x₀) data.abar (ContinuousLinearMap.id ℝ (XL1 ν_val L))
-      (data.composedApprox.toCLM (ν := ν_val)) ≤ (Z₁_bound : ℝ) := by
-  show ‖(ContinuousLinearMap.id ℝ _).comp
-    (data.composedApprox.toCLM (ν := ν_val) -
-      fderiv ℝ (data.G f x₀) data.abar)‖ ≤ _
-  rw [ContinuousLinearMap.id_comp]
-  have hfin : ∀ h : XL1 ν_val L, ∀ l : Fin L, ∀ n : ℕ, n ≤ N →
-      l1Weighted.toSeq (((data.composedApprox.toCLM (ν := ν_val) -
-        fderiv ℝ (data.G f x₀) data.abar) h) l) n = 0 :=
-    fun h l n hn => by
-      simp only [sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq, sub_eq_zero]
-      exact composedApprox_eq_fderiv_G_fin h l n hn
-  have htail : ∀ h : XL1 ν_val L, ∀ l : Fin L, ∀ n : ℕ, N < n →
-      l1Weighted.toSeq (((data.composedApprox.toCLM (ν := ν_val) -
-        fderiv ℝ (data.G f x₀) data.abar) h) l) n =
-        l1Weighted.toSeq (shiftDivN_CLM (Df h l)) n :=
-    fun h l n hn => by
-      have hc := data.composedApprox_toCLM_tail h l n hn
-      have hf := fderiv_G_lorenz_tail h l n hn
-      simp only [sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq]
-      show toCoeff (ν := ν_val) (data.composedApprox.toCLM (ν := ν_val) h) l n -
-          toCoeff (ν := ν_val) ((fderiv ℝ (data.G f x₀) data.abar) h) l n = _
-      rw [hc, hf]; simp [toCoeff]
-  exact IVP.ivp_Z₁_le data.composedApprox (data.G f x₀) data.abar Df hfin htail
+      (data.composedApprox.toCLM (ν := ν_val)) ≤ (Z₁_bound : ℝ) :=
+  data.Z₁_le_of_compPoly f_cpoly x₀ composedApprox_eq_fderiv_G_fin Df Df_eq_fderiv
     (by unfold Z₁_bound ν_q N; norm_num) Df_norm_le
     (by simp only [ν_val_eq_q]; unfold Z₁_bound ν_q N; push_cast; ring_nf; rfl)
 
 /-! ## Z₂ bound -/
 
-/-- System-level second pderiv Hessian table for Lorenz. -/
-private def D₂_lorenz (l i j : Fin L) : ℚ :=
-  if l = 1 ∧ ((i = 0 ∧ j = 2) ∨ (i = 2 ∧ j = 0)) then -1
-  else if l = 2 ∧ ((i = 0 ∧ j = 1) ∨ (i = 1 ∧ j = 0)) then 1
-  else 0
-
-private lemma hD₂_lorenz : ∀ (l i j : Fin L),
-    MvPolynomial.pderiv j (MvPolynomial.pderiv i (f_spec l)) =
-      MvPolynomial.C (D₂_lorenz l i j) := by
-  intro l i j
-  unfold f_spec
-  fin_cases l <;> fin_cases i <;> fin_cases j <;>
-    rw [← MvPolyBridge.CompPoly.pderiv_pderiv_toMvPoly] <;>
-    simp (config := { decide := true }) [f_cpoly, D₂_lorenz]
-
-private lemma Df_diff_norm_le (c : XL1 ν_val L) (h : XL1 ν_val L) (l : Fin L) :
-    ‖((fderiv ℝ (fun x => f x l) c -
-      fderiv ℝ (fun x => f x l) data.abar)) h‖ ≤ 2 * ‖c - data.abar‖ * ‖h‖ := by
-  simp_rw [show ∀ x, f x l = MvPolyBridge.evalInBanach (f_spec l) x
-    from fun x => f_eq_spec x l]
-  exact MvPolyBridge.norm_fderiv_diff_system_of_const_second_pderiv f_spec c data.abar
-    D₂_lorenz hD₂_lorenz
-    (fun l => by
-      fin_cases l <;>
-        simp (config := { decide := true }) [D₂_lorenz, Fin.sum_univ_three, L] <;>
-        norm_num)
-    h l
-
+/-- **Z₂ obligation** through the `Z₂` socket: the first Lorenz equation is linear, so its
+syntactic derivative Lipschitz constant is `0` and it is inactive; the other two are
+bilinear with constant `2`, radius-free since the system has degree `≤ 2`. The exact-ℚ
+block-norm check of the preconditioner restricted to the active rows is the one
+`native_decide`. -/
 lemma Z₂_le_cert (c : XL1 ν_val L)
     (hc : c ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ)) :
     Z₂_norm (data.G f x₀) data.abar
       (ContinuousLinearMap.id ℝ (XL1 ν_val L)) c ≤
-      (Z₂_bound : ℝ) * (r_minus : ℝ) := by
-  show ‖(ContinuousLinearMap.id ℝ _).comp
-    (fderiv ℝ (data.G f x₀) c -
-      fderiv ℝ (data.G f x₀) data.abar)‖ ≤ _
-  rw [ContinuousLinearMap.id_comp]
-  exact IVP.ivp_Z₂_le data.approxInverse f x₀
-    (IVP.ivpMap_mem_of_tailDiag_inv _ _ _ data.htail_diag_inv) data.abar
-    (data.differentiable_G f x₀ differentiable_f_component)
-    (fun l => differentiable_f_component l)
-    ({1, 2} : Finset (Fin L))
-    -- hzero: inactive component (l=0) has zero fderiv diff — derived from D₂
-    (fun c h j hj => by
-      have : j = 0 := by fin_cases j <;> simp_all (config := { decide := true })
-      subst this
-      simp_rw [show ∀ x, f x 0 = MvPolyBridge.evalInBanach (f_spec 0) x
-        from fun x => f_eq_spec x 0]
-      exact MvPolyBridge.fderiv_diff_zero_of_D₂_zero f_spec c data.abar
-        D₂_lorenz hD₂_lorenz 0 (fun i j => by fin_cases i <;> fin_cases j <;> rfl) h)
-    (by norm_num : (0 : ℝ) ≤ 2) Df_diff_norm_le
-    (by unfold Z₂_bound; positivity)
+      (Z₂_bound : ℝ) * (r_minus : ℝ) :=
+  data.Z₂_le_of_compPoly f_cpoly x₀ {1, 2}
     (fun l => Z₂_blockNorm_component_le data.approxInverse ABlockCols ν_q
       (IVP.StdIVPData.approxInverse_tailBound_q (N := N)) {1, 2}
       (fun l j k i => data.A_finBlock_eq l j i k) ν_val_eq_q
       data.approxInverse_tailBound_eq (by native_decide) l)
+    (by unfold r_minus; positivity)
+    (fun j hj _ _ => by
+      have : j = 0 := by fin_cases j <;> simp_all (config := { decide := true })
+      subst this
+      simp (config := { decide := true })
+        [MvPolyBridge.CompPoly.derivativeLipschitzBound, f_cpoly, Fin.sum_univ_three])
+    (fun _ _ l => by
+      fin_cases l <;>
+        simp (config := { decide := true })
+          [MvPolyBridge.CompPoly.derivativeLipschitzBound, f_cpoly, Fin.sum_univ_three] <;>
+        norm_num)
     c hc
 
 /-! ## Radii polynomial -/
@@ -255,28 +187,25 @@ lemma radii_neg :
 
 /-! ## Main theorem -/
 
+/-- **Theorem 8.3** (Lorenz IVP): a unique zero of the composed IVP map `G = A ∘ F`
+near the approximate solution `ābar`.
+
+The coefficient nonlinearity and its differentiability witness are read off the
+polynomial system `f_cpoly` by `IVP.StdIVPData.existsUnique_of_compPoly`; the example
+supplies the initial condition, the radius and the four bounds. -/
 theorem main_theorem :
     ∃! xTilde ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ),
       data.G f x₀ xTilde = 0 :=
-  data.existsUnique f x₀ differentiable_f_component
-    (by unfold r_minus; positivity)
-    (Y₀_le.trans (by unfold Y₀_bound; exact_mod_cast le_refl _))
-    (data.Z₀_le Z₀_finBlockNorm_le)
-    (Z₁_le_cert.trans (by unfold Z₁_bound; exact_mod_cast le_refl _))
-    (fun c hc => Z₂_le_cert c hc)
-    radii_neg
+  data.existsUnique_of_compPoly f_cpoly x₀ (by unfold r_minus; positivity)
+    Y₀_le Z₀_finBlockNorm_le Z₁_le_cert Z₂_le_cert radii_neg
 
 /-- Source-residual form of `main_theorem`: the unique validated point solves the
-unpreconditioned IVP Taylor coefficient equations. -/
+unpreconditioned IVP Taylor coefficient equations. `Z₀` enters in the finite-block
+form the certificate proves. -/
 theorem ivp_main_theorem :
     ∃! xTilde ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ),
       ∀ l n, IVP.ivpCoeffs f x₀ xTilde l n = 0 :=
-  data.existsUnique_ivpCoeffs f x₀ differentiable_f_component
-    (by unfold r_minus; positivity)
-    (Y₀_le.trans (by unfold Y₀_bound; exact_mod_cast le_refl _))
-    Z₀_finBlockNorm_le
-    (Z₁_le_cert.trans (by unfold Z₁_bound; exact_mod_cast le_refl _))
-    (fun c hc => Z₂_le_cert c hc)
-    radii_neg
+  data.existsUnique_ivpCoeffs_of_compPoly f_cpoly x₀ (by unfold r_minus; positivity)
+    Y₀_le Z₀_finBlockNorm_le Z₁_le_cert Z₂_le_cert radii_neg
 
 end Example83.Cert

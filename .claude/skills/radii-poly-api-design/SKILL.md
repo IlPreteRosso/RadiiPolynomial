@@ -5,67 +5,46 @@ description: Design and refactor the RadiiPolynomial Lean API while preserving i
 
 # RadiiPolynomial API Design
 
-Treat the tracked repository copy of this skill as canonical. Keep any Codex mirror
-byte-identical to it.
+Treat the tracked repository copy of this skill as canonical. Keep installed Codex and
+Claude mirrors byte-identical to it.
 
 ## Establish Live Context
 
-- Work in the nested Git repository at `RadiiPolynomial/RadiiPolynomial`.
-- Read `ARCHITECTURE.md` before changing module boundaries or imports.
-- Inspect the current Git state and preserve unrelated work. Do not commit or push unless asked.
-- Search the live project with `rg` before introducing declarations or files.
-- Check the pinned Mathlib dependency for an existing result before rebuilding it locally.
-- Consult `docs/reference_book/` for the mathematical theorem, Banach space, operator,
-  and bounds when extending the formalization.
-- Treat old handoffs and memory as design history; verify paths and declarations against the
-  current checkout.
+- Work in the nested Git/Lake checkout. Read its `ARCHITECTURE.md` for current
+  module boundaries, import rules, and public facades; avoid duplicating that inventory here.
+- Read the curated project-memory index identified by `AGENTS.md`, then only relevant notes.
+  Verify dated status and declaration names against the live source and pinned Mathlib.
+- Inspect Git state and preserve concurrent edits. Keep feasibility investigations in the
+  agreed ignored `tmp/` folder until concrete consumers justify promotion within the user's scope.
+- Search existing APIs before adding declarations. Consult `docs/reference_book/` when extending
+  a book theorem or certificate. Do not commit or push unless asked.
 
-## Design From Mathematical Layers
+## Universal Properties Specify the API
 
-Keep the dependency direction documented in `ARCHITECTURE.md`:
-
-```text
-Algebra + Analysis
-        |
-        v
-Core + reusable Operators
-        |
-        v
-Applications
-        |
-        v
-Examples + Certificates
-```
-
-`Certification` and `Tactic` are adapter layers. Reusable mathematical modules never import
-`Examples`; applications never import their concrete examples.
-
-At public application boundaries, prefer the facade modules listed in `ARCHITECTURE.md`.
-Inside the library, import the narrow module that owns the declaration.
+- For a universal construction, expose the induced arrow, its computation on generators,
+  and extensionality on generators. Include the converse identifying every eligible arrow
+  with its lift; a constructor alone does not express the full specification.
+- Let the determining data set the parameters and assumptions: indices, weights, fibers,
+  scalars, and targets remain general where the proof permits. Pass varying bounds or
+  summability witnesses explicitly rather than strengthening typeclasses.
+- Use universal properties at design time and ordinary algebra/linear maps at proof time.
+  Do not introduce categorical packaging when the existing lift/ext API expresses the result.
+- Reuse the weighted `l1` lift and column-bound APIs for operators, and algebra lifts for
+  multiplicative evaluation. Pointwise bounds can require weaker assumptions than operator norms.
 
 ## Use Friction Carefully
 
-Use this cycle:
-
-```text
-Concrete example -> repeated friction -> generic lemma -> abstract API -> second consumer
-```
-
-- Classify every obligation as equation-specific, representation-specific, or structural.
-- Keep finite numeric cleanup and one-off case analysis in the example or certificate.
-- Promote a lemma only when it expresses reusable mathematics or removes repeated structural
-  plumbing.
-- Do not add ad hoc example-specific lemmas to a reusable API merely to shorten one proof.
-- Prefer the weakest coherent assumptions. Parameterize a generic proof by the witness that
-  varies between constructions instead of duplicating the proof or strengthening typeclasses.
-- Preserve public declaration names and compatibility aliases when the mathematics has not
-  changed; module imports may evolve with the architecture.
-
-Proof ugliness is evidence, not proof, of a missing abstraction. First search Mathlib and the
-project, then determine whether the friction recurs across consumers.
+Work from a concrete consumer through repeated friction to a reusable bridge and a second
+consumer. Classify obligations as equation-specific, representation-specific, or structural.
+Keep incidental finite/numeric cleanup in examples; extract reusable mathematics at its owning
+layer. Proof ugliness alone does not justify an abstraction. Preserve public interfaces
+by default; record authorized renames and retirements in `RENAMES.md`.
 
 ## Preserve Core Boundaries
 
+- Follow `Algebra/Analysis → Core/Operators → Applications → Examples`.
+  `Certification` and `Tactic` are adapter layers; reusable modules never import `Examples`.
+  Use facades at application boundaries and narrow owning imports inside the library.
 - Keep `general_radii_polynomial_theorem` in `RadiiPolynomial.Core` as the basis-independent
   anchor. Application layers should reduce their work to its bounds and hypotheses.
 - Keep `CompPoly` as the computable certificate representation and `MvPolynomial` as the
@@ -77,77 +56,91 @@ project, then determine whether the friction recurs across consumers.
 - For regularity statements, induct at the most algebraic suitable layer, normally
   `MvPolynomial.induction_on`, rather than over the larger `CompPoly` syntax.
 - Keep power-series evaluation and termwise differentiation in separate modules.
-- Keep `SystemBlockDiagData.composedApprox` as shared Taylor/Chebyshev operator
-  infrastructure; retain `IVP.ivpComposedApprox` only as a compatibility name.
+- Keep Taylor and Chebyshev as sibling discretizations. Raw IVP residual coefficients
+  remain raw sequences; the preconditioned map `G` is the Banach self-map. Do not invent a
+  bounded approximate-inverse map on the unrestricted raw codomain.
+- Distinguish bilateral Chebyshev storage from its flip-fixed physical algebra.
+  With nonnegative storage, polynomial evaluation uses the symmetric extension `S(a)`
+  and differentiation uses `S(h)`, where `(S(a))_k = a_|k|`.
+  Chebyshev evaluation is multiplicative on the physical algebra, not arbitrary bilateral data.
+- Reuse the generic `CompPoly` AST and semantic evaluator across geometries. Its Nat Cauchy
+  coefficient interpreter is Taylor-specific; finite Laurent computation needs support evidence,
+  since high Chebyshev modes can contribute to low output modes.
+- Use `SystemBlockDiagData.composedApprox` as shared Taylor/Chebyshev operator
+  infrastructure. The former `IVP.ivpComposedApprox` compatibility alias is retired.
+- Reuse the Chebyshev `G = constG + TA(a) + TC(φ(a))` decomposition and derivative bridge.
+  Use the shared split-boundary mechanism for return to the IVP.
+- Residual correction belongs to `Certification/Residual`: a residual norm bound below one
+  gives the matching one-sided inverse, including in noncommutative rings. Finite-support completeness
+  does not by itself provide rational candidates or an effective search. Spectral
+  classification is separate from these certificate consumers.
+- Spectrum modules specialize `Gelfand.pointwiseTopology` through local instances;
+  do not install a global topology on the character types.
 - Keep the external LeanCert package as a dependency. Put only project-specific bridges in
   `Certification/LeanCertAdapter.lean`; never copy LeanCert into this repository.
 
 ## Typeclasses And Mathlib Alignment
 
-- Separate assumptions by mathematical strength, as with `SubMulWeightBase` and
-  `SubMulWeight`.
-- Use `lpOneAlgConvCompat` to hide alternative convolution-summability constructions behind
-  one ring instance. The current paths are weight multiplication and finite antidiagonals.
-- Extract shared proofs by passing summability or finiteness witnesses explicitly.
-- Define multiplicative declarations first and generate additive analogues with
-  `@[to_additive]` when the translation is mathematically faithful.
-- Protect nontranslated fiber and scalar parameters with `dont_translate` as needed.
-- Do not force ring instances through `to_additive` when multiplication names conflict; state
-  those instances explicitly.
-- Follow the pinned Mathlib discrete-convolution API for names, assumptions, and docstrings.
+Separate assumptions by mathematical strength (`SubMulWeightBase` versus `SubMulWeight`).
+Use `lpOneAlgConvCompat` for alternative convolution-summability witnesses behind one ring
+instance. Follow pinned Mathlib conventions; use `@[to_additive]` for faithful translations,
+protecting fiber/scalar parameters with `dont_translate` where needed.
 
 ## Polynomial And Certificate Automation
 
-Prefer computation over handwritten finite proofs:
-
-- Use `native_decide` for rational and finite decidable identities.
-- Use `pderiv_simp` for `MvPolynomial.pderiv` normalization.
-- Use `finmatrix_bound` for finite weighted matrix bounds.
-- Use `compPolyOf%` to reify supported polynomial lambdas.
-- Use `auto_poly_fderiv` for supported polynomial Frechet derivatives.
+Use the existing `compPolyOf%`, `pderiv_simp`, and `auto_poly_fderiv` where supported;
+use `native_decide` for exact finite identities and `finmatrix_bound` for weighted matrix bounds.
+The current polynomial IVPs keep literal `f_cpoly` definitions. Examples 8.1 and 14.2.1
+use `f_cpoly_reified` as a `rfl` witness for the elaborator, outside the certificate's
+dependency path.
 
 If automation cannot cross a representation boundary, add a reusable correctness bridge at
 the owning layer. Do not expose internal representations merely to make a certificate reduce.
 
-## Current API Landmarks
+Use `CompPoly.normBound`, `lipschitzBound`, and `derivativeBound` and their Taylor/Chebyshev
+faces for syntax-derived constants. These proofs follow the computable syntax; semantic
+calculus still belongs at the `MvPolynomial` layer. The constants use triangle inequalities:
+keep exact-arithmetic bounds when evaluated coefficients cancel, as in Example 8.1's Z₁.
+Radius-independent second-derivative bounds concern syntactically quadratic expressions;
+algebraic cancellation to a quadratic polynomial does not make its syntactic bound quadratic.
 
-- Abstract theorem and bounds: `RadiiPolynomial/Core/`.
-- Polynomial semantics and syntax: `RadiiPolynomial/Algebra/Polynomial/MvPolynomial/` and
-  `RadiiPolynomial/Algebra/Polynomial/CompPoly/`.
-- Weighted sequence algebras: `RadiiPolynomial/Analysis/SequenceSpace/`.
-- Matrix and finite-plus-tail operators: `RadiiPolynomial/Operators/`.
-- Taylor IVP infrastructure: `RadiiPolynomial/Applications/IVP/Taylor/`.
-- Chebyshev IVP infrastructure: `RadiiPolynomial/Applications/IVP/Chebyshev/`.
-- Certificate adapters: `RadiiPolynomial/Certification/`.
-- Automation: `RadiiPolynomial/Tactic/`.
-- Concrete applications: `RadiiPolynomial/Examples/`.
-
-Important live patterns include `StdIVPData`, `StdChebIVPData`, `BlockDiagLift`,
-`ivp_hDF_block_nat`, `CompPoly.toSeq_evalBanach`, and
-`StdIVPData.composedApprox_eq_fderiv_G_fin_of_compPoly`.
+Reuse the Taylor `StdIVPData.Z₁_le_of_compPoly` / `Z₂_le_of_compPoly` and Chebyshev
+`StdChebIVPData.Z₂_le_of_compPoly_max` faces. Per-example derivative or operator norm bounds
+remain inputs where needed. Chebyshev still needs its full Z₁ column/leakage calculation and
+a bound on `TC`; `norm_compPolyDerivative_le` bounds the nonlinearity's derivative, not Z₁.
 
 ## Example Layers
 
-Use the layers that apply to the problem:
+For polynomial IVPs use `Numbers → Algebra → Certificate → Analytic → Analyticity`
+where applicable: data, equation-specific structure, bounds, function-space existence and
+uniqueness, then proved analyticity. Keep complex-time results in their own layer.
+Examples 7.7 and 2.4.5 have their own problem-specific routes; do not force them into the
+polynomial IVP interface. Claim analyticity only when the theorem proves it.
 
-- `Numbers.lean`: imported numerical data, without mathematical proof plumbing.
-- `Algebra.lean`: equation-specific maps, symbolic derivatives, and representation bridges.
-- `Certificate.lean`: verified bounds and the radii-polynomial application.
-- `Analytic.lean`: function-space interpretation and analytic existence or uniqueness.
+Supply `f_cpoly`, the initial condition, numerical data and certificate bounds. Use
+`StdIVPData.existsUnique_of_compPoly` / `StdChebIVPData.existsUnique_of_compPoly` for
+coefficient zeros, Taylor's `analytic_existsUnique_of_compPoly_of_radii`, and Chebyshev's
+`solution_existsUnique_of_compPoly` or its contractive/analytic variants for function-space
+results. Coefficient faces derive differentiability; function-space faces also derive
+evaluation compatibility and the vector-field Lipschitz witness. The radii-based faces
+derive the defect bound below one.
 
-Not every example needs every layer. Use `f` and `F` consistently for the vector field and
-operator; avoid introducing alternate names without a mathematical distinction.
+Both geometries use `IVP.vectorField f_cpoly` for the real vector field and their respective
+`banachField f_cpoly` for the coefficient nonlinearity. Retain per-example aliases and
+explicit derivative formulas when certificate consumers need them, as in the Taylor examples.
+Use `x₀` for Taylor initial data at time zero and `p₀` for Chebyshev initial data at
+time minus one. Keep the numerical pipeline radius `r_minus` distinct from theorem
+parameter `r₀`.
+Use `f` for the vector field and `F` for the coefficient operator in new interfaces.
 
 ## Verification
 
-After changing reusable modules or imports:
+Check focused targets while iterating; after changing reusable production modules or imports,
+run `lake build` from the nested checkout, including all production examples. Reject new
+`sorry`/`admit`, forbidden upward imports, and project-local warnings.
+When rewiring certificates, compare final theorem axiom sets; a separate finite audit
+does not enter a theorem's trust surface merely because its module is imported.
 
-1. Run focused checks while iterating.
-2. Run `lake build` from the nested repository.
-3. Confirm every production example imported by `RadiiPolynomial.Examples` compiles.
-4. Until Example 14.2.1 has exported numerical data and a certificate, also run
-   `lake build RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Algebra`.
-5. Reject new `sorry` or `admit`, forbidden upward imports, and project-local warnings.
-
-The final acceptance criterion is mathematical layering plus compilation of all current
-examples after any import-path updates.
+For isolated experiments, compile their dependency chain and audit theorem axioms; distinguish
+experimental conclusions from production results. Documentation-only edits need their own
+validation, not a Lean rebuild.

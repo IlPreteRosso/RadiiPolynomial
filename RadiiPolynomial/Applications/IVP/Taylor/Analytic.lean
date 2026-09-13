@@ -1,8 +1,9 @@
 import RadiiPolynomial.Applications.IVP.Taylor.Trajectory
 import RadiiPolynomial.Applications.IVP.Taylor.Standard
+import RadiiPolynomial.Applications.IVP.Taylor.Polynomial
 
 /-!
-# Generic glue: from StdIVPData certificate to analytic existence/uniqueness
+# Taylor solution faces: from a `StdIVPData` certificate to the analytic solution
 
 Combines `StdIVPData.ivpCoeffs_zero_of_G_zero` (sequence-space F-zero bridge)
 with `analytic_solution_unique` (function-space uniqueness via Picard-Lindelöf)
@@ -24,8 +25,16 @@ to give the full existence + uniqueness statement on `(-ν, ν)`.
   ("∃ unique modulo `Set.EqOn (Ioo)`" — strict `∃!` over `ℝ → Fin L → ℝ`
   doesn't hold because candidates can differ outside the interval).
 
-Per-example `Analytic.lean` files become thin: only `Z₀_bound < 1` and the
-φ ↔ `banachField φ_cpoly` bridge are per-example.
+Three tiers of faces. The four theorems above take an arbitrary coefficient
+nonlinearity `φ` with a bridge to `banachField φ_cpoly` and the contraction
+`Z₀ < 1`. The `_of_compPoly` faces fix `φ := banachField φ_cpoly`. The
+`_of_compPoly_of_radii` faces additionally take the four certified bounds and the
+radii-polynomial inequality in place of `Z₀ < 1`, deriving it by
+`defect_finBlockNorm_lt_one_of_radii`, and choose the zero themselves where no
+named zero is wanted. A per-example `Analytic.lean` therefore states nothing
+structural: it names its zero (`main_theorem.exists.choose`) when it wants the
+canonical solution `x_analytic` as an object, and passes the same five facts its
+`main_theorem` already consumed.
 -/
 
 open Set Metric RadiiPolynomial MvPolyBridge
@@ -230,5 +239,199 @@ theorem analytic_existsUnique
       xTilde hxTilde_ball hG,
     fun v hv => d.analytic_eq_canonical φ x₀ φ_cpoly h_phi_eq h_defect_lt_one
       xTilde hxTilde_ball hG v hv⟩
+
+/-! ## Certificate faces
+
+The four predicate-based theorems above accept any coefficient nonlinearity `φ` that
+agrees with `banachField φ_cpoly`. When the certificate is written from the syntax alone,
+`φ` *is* `banachField φ_cpoly` and the bridge hypothesis is `rfl`; these specializations
+drop both from the call, which is what makes the per-example `Analytic.lean` files
+carry no structural obligation at all. -/
+
+/-- `x_analytic_isAnalyticSolution` with the coefficient nonlinearity taken from the
+syntax. -/
+theorem x_analytic_isAnalyticSolution_of_compPoly
+    (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
+    (h_defect_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
+    {r₀ : ℝ}
+    (xTilde : XL1 ν L)
+    (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
+    (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0) :
+    IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      (‖(d.abar : XL1 ν L)‖ + r₀) (IVP.x_analytic xTilde) :=
+  d.x_analytic_isAnalyticSolution (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
+    h_defect_lt_one xTilde hxTilde_ball hG
+
+/-- `analytic_eq_canonical` with the coefficient nonlinearity taken from the syntax. -/
+theorem analytic_eq_canonical_of_compPoly
+    (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
+    (h_defect_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
+    {r₀ : ℝ}
+    (xTilde : XL1 ν L)
+    (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
+    (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0)
+    (g : ℝ → Fin L → ℝ)
+    (hg : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      (‖(d.abar : XL1 ν L)‖ + r₀) g) :
+    Set.EqOn g (IVP.x_analytic xTilde) (Set.Ioo (-(ν : ℝ)) ν) :=
+  d.analytic_eq_canonical (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
+    h_defect_lt_one xTilde hxTilde_ball hG g hg
+
+/-- `analytic_unique` with the coefficient nonlinearity taken from the syntax. -/
+theorem analytic_unique_of_compPoly
+    (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
+    (h_defect_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
+    {r₀ : ℝ}
+    (xTilde : XL1 ν L)
+    (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
+    (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0)
+    (g₁ g₂ : ℝ → Fin L → ℝ)
+    (h₁ : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      (‖(d.abar : XL1 ν L)‖ + r₀) g₁)
+    (h₂ : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      (‖(d.abar : XL1 ν L)‖ + r₀) g₂) :
+    Set.EqOn g₁ g₂ (Set.Ioo (-(ν : ℝ)) ν) :=
+  d.analytic_unique (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
+    h_defect_lt_one xTilde hxTilde_ball hG g₁ g₂ h₁ h₂
+
+/-- `analytic_existsUnique` with the coefficient nonlinearity taken from the syntax:
+the whole function-space endpoint from one polynomial system, a certified zero, and the
+finite-defect contraction. -/
+theorem analytic_existsUnique_of_compPoly
+    (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
+    (h_defect_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
+    {r₀ : ℝ}
+    (xTilde : XL1 ν L)
+    (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
+    (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0) :
+    ∃ u : ℝ → Fin L → ℝ,
+      IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+        (‖(d.abar : XL1 ν L)‖ + r₀) u ∧
+      ∀ v : ℝ → Fin L → ℝ,
+        IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+          (‖(d.abar : XL1 ν L)‖ + r₀) v →
+        Set.EqOn v u (Set.Ioo (-(ν : ℝ)) ν) :=
+  d.analytic_existsUnique (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
+    h_defect_lt_one xTilde hxTilde_ball hG
+
+/-! ### From the four bounds
+
+Same hypothesis list as `StdIVPData.existsUnique_of_compPoly`; the contraction `Z₀ < 1`
+is `defect_finBlockNorm_lt_one_of_radii`. The first two faces keep a named zero (a
+certificate that exhibits `x_analytic` as an object needs one); the last two choose it. -/
+
+/-- `x_analytic_isAnalyticSolution_of_compPoly` with `Z₀ < 1` read off the bounds. -/
+theorem x_analytic_isAnalyticSolution_of_compPoly_of_radii
+    (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
+    {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
+    (hr₀ : 0 < r₀)
+    (hY₀ : Y₀_norm (d.G (banachField φ_cpoly) x₀) d.abar
+      (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ Y₀)
+    (hZ₀fin : finiteBlockMatrixNorm ν d.defect.finBlock ≤ Z₀)
+    (hZ₁ : Z₁_norm (d.G (banachField φ_cpoly) x₀) d.abar
+      (ContinuousLinearMap.id ℝ (XL1 ν L))
+      ((StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ Z₁)
+    (hZ₂ : ∀ c ∈ Metric.closedBall (d.abar : XL1 ν L) r₀,
+      Z₂_norm (d.G (banachField φ_cpoly) x₀) d.abar
+        (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤ Z₂ r₀ * r₀)
+    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0)
+    (xTilde : XL1 ν L)
+    (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
+    (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0) :
+    IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      (‖(d.abar : XL1 ν L)‖ + r₀) (IVP.x_analytic xTilde) :=
+  d.x_analytic_isAnalyticSolution_of_compPoly φ_cpoly x₀
+    (d.defect_finBlockNorm_lt_one_of_radii (banachField φ_cpoly) x₀
+      hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)
+    xTilde hxTilde_ball hG
+
+/-- `analytic_eq_canonical_of_compPoly` with `Z₀ < 1` read off the bounds. -/
+theorem analytic_eq_canonical_of_compPoly_of_radii
+    (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
+    {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
+    (hr₀ : 0 < r₀)
+    (hY₀ : Y₀_norm (d.G (banachField φ_cpoly) x₀) d.abar
+      (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ Y₀)
+    (hZ₀fin : finiteBlockMatrixNorm ν d.defect.finBlock ≤ Z₀)
+    (hZ₁ : Z₁_norm (d.G (banachField φ_cpoly) x₀) d.abar
+      (ContinuousLinearMap.id ℝ (XL1 ν L))
+      ((StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ Z₁)
+    (hZ₂ : ∀ c ∈ Metric.closedBall (d.abar : XL1 ν L) r₀,
+      Z₂_norm (d.G (banachField φ_cpoly) x₀) d.abar
+        (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤ Z₂ r₀ * r₀)
+    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0)
+    (xTilde : XL1 ν L)
+    (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
+    (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0)
+    (g : ℝ → Fin L → ℝ)
+    (hg : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      (‖(d.abar : XL1 ν L)‖ + r₀) g) :
+    Set.EqOn g (IVP.x_analytic xTilde) (Set.Ioo (-(ν : ℝ)) ν) :=
+  d.analytic_eq_canonical_of_compPoly φ_cpoly x₀
+    (d.defect_finBlockNorm_lt_one_of_radii (banachField φ_cpoly) x₀
+      hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)
+    xTilde hxTilde_ball hG g hg
+
+/-- `analytic_unique_of_compPoly` from the bounds alone: the zero is chosen by
+`existsUnique_of_compPoly`. -/
+theorem analytic_unique_of_compPoly_of_radii
+    (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
+    {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
+    (hr₀ : 0 < r₀)
+    (hY₀ : Y₀_norm (d.G (banachField φ_cpoly) x₀) d.abar
+      (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ Y₀)
+    (hZ₀fin : finiteBlockMatrixNorm ν d.defect.finBlock ≤ Z₀)
+    (hZ₁ : Z₁_norm (d.G (banachField φ_cpoly) x₀) d.abar
+      (ContinuousLinearMap.id ℝ (XL1 ν L))
+      ((StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ Z₁)
+    (hZ₂ : ∀ c ∈ Metric.closedBall (d.abar : XL1 ν L) r₀,
+      Z₂_norm (d.G (banachField φ_cpoly) x₀) d.abar
+        (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤ Z₂ r₀ * r₀)
+    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0)
+    (g₁ g₂ : ℝ → Fin L → ℝ)
+    (h₁ : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      (‖(d.abar : XL1 ν L)‖ + r₀) g₁)
+    (h₂ : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      (‖(d.abar : XL1 ν L)‖ + r₀) g₂) :
+    Set.EqOn g₁ g₂ (Set.Ioo (-(ν : ℝ)) ν) := by
+  obtain ⟨xTilde, hball, hG⟩ :=
+    (d.existsUnique_of_compPoly φ_cpoly x₀ hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii).exists
+  exact d.analytic_unique_of_compPoly φ_cpoly x₀
+    (d.defect_finBlockNorm_lt_one_of_radii (banachField φ_cpoly) x₀
+      hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)
+    xTilde hball hG g₁ g₂ h₁ h₂
+
+/-- **The Taylor function-space endpoint from the bounds alone**: existence and
+uniqueness on `(-ν, ν)` of the analytic solution with trajectory in
+`closedBall 0 (‖ā‖ + r₀)`, from one polynomial system, the initial condition, the four
+certified bounds and the radii-polynomial inequality. Taylor mirror of
+`ChebyshevIVP.StdChebIVPData.solution_existsUnique_of_compPoly`. -/
+theorem analytic_existsUnique_of_compPoly_of_radii
+    (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
+    {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
+    (hr₀ : 0 < r₀)
+    (hY₀ : Y₀_norm (d.G (banachField φ_cpoly) x₀) d.abar
+      (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ Y₀)
+    (hZ₀fin : finiteBlockMatrixNorm ν d.defect.finBlock ≤ Z₀)
+    (hZ₁ : Z₁_norm (d.G (banachField φ_cpoly) x₀) d.abar
+      (ContinuousLinearMap.id ℝ (XL1 ν L))
+      ((StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ Z₁)
+    (hZ₂ : ∀ c ∈ Metric.closedBall (d.abar : XL1 ν L) r₀,
+      Z₂_norm (d.G (banachField φ_cpoly) x₀) d.abar
+        (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤ Z₂ r₀ * r₀)
+    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0) :
+    ∃ u : ℝ → Fin L → ℝ,
+      IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+        (‖(d.abar : XL1 ν L)‖ + r₀) u ∧
+      ∀ v : ℝ → Fin L → ℝ,
+        IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+          (‖(d.abar : XL1 ν L)‖ + r₀) v →
+        Set.EqOn v u (Set.Ioo (-(ν : ℝ)) ν) := by
+  obtain ⟨xTilde, hball, hG⟩ :=
+    (d.existsUnique_of_compPoly φ_cpoly x₀ hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii).exists
+  exact d.analytic_existsUnique_of_compPoly φ_cpoly x₀
+    (d.defect_finBlockNorm_lt_one_of_radii (banachField φ_cpoly) x₀
+      hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)
+    xTilde hball hG
 
 end IVP.StdIVPData

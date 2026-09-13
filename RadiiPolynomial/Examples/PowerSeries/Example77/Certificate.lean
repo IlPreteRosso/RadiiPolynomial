@@ -26,35 +26,34 @@ def ā₀ : ℚ := 5774/10000
 def ā₁ : ℚ := 8660/10000
 def ā₂ : ℚ := -6495/10000
 def lam0 : ℚ := 1/3
-def ν : ℚ := 1/4
+def ν_q : ℚ := 1/4
 def r₀ : ℚ := 996/10000
 def A_diag : ℚ := 8660/10000
 def A_sub1 : ℚ := -12990/10000
 def A_sub2 : ℚ := 29240/10000
-def Y₀_bnd : ℚ := 9/500
-def Z₀_bnd : ℚ := 2/1000
-def Z₁_bnd : ℚ := 46/100
-def Z₂_bnd : ℚ := 28/10
+def Y₀_bound : ℚ := 9/500
+def Z₀_bound : ℚ := 2/1000
+def Z₁_bound : ℚ := 46/100
+def Z₂_bound : ℚ := 28/10
 
 -- -- Parameter set 2: λ₀ = 1/2
 -- def ā₀ : ℚ := 7071/10000
 -- def ā₁ : ℚ := 7071/10000
 -- def ā₂ : ℚ := -3536/10000
 -- def lam0 : ℚ := 1/2
--- def ν : ℚ := 1/4
 -- def r₀ : ℚ := 5/100
 -- def A_diag : ℚ := 7071/10000
 -- def A_sub1 : ℚ := -7071/10000
 -- def A_sub2 : ℚ := 10607/10000
--- def Y₀_bnd : ℚ := 7/1000
--- def Z₀_bnd : ℚ := 1/1000
--- def Z₁_bnd : ℚ := 3/10
--- def Z₂_bnd : ℚ := 2
+-- def Y₀_bound : ℚ := 7/1000
+-- def Z₀_bound : ℚ := 1/1000
+-- def Z₁_bound : ℚ := 3/10
+-- def Z₂_bound : ℚ := 2
 
 
 /-! ## Derived Definitions — identical for any input -/
 
-noncomputable def ν_val : PosReal := ⟨ν, by unfold ν; norm_num⟩
+noncomputable def ν_val : PosReal := ⟨ν_q, by unfold ν_q; norm_num⟩
 
 lemma r₀_pos : 0 < (r₀ : ℝ) := by unfold r₀; norm_num
 
@@ -91,8 +90,8 @@ private def A_tail_coeff : ℚ := 1 / (2 * ā₀)
 
 /-! ## Bridge Lemmas -/
 
-private lemma ν_val_eq_q : (ν_val : ℝ) = ((ν : ℚ) : ℝ) := by
-  show ν_val.1 = _; simp [ν_val, ν]
+private lemma ν_val_eq_q : (ν_val : ℝ) = ((ν_q : ℚ) : ℝ) := by
+  show ν_val.1 = _; simp [ν_val, ν_q]
 
 private def A_colR : Fin 3 → Array ℝ :=
   fun j => (A_colOf j).map (fun (x : ℚ) => (x : ℝ))
@@ -165,20 +164,20 @@ private lemma A_tailDiag_eq (n : ℕ) :
 
 /-! ### Y₀ -/
 
-private def Y₀_eval := scalarBlockDiagActionEval A_colOf F_ā_vec A_tail_coeff ν
+private def Y₀_eval := scalarBlockDiagActionEval A_colOf F_ā_vec A_tail_coeff ν_q
 
 lemma Y₀_le : Y₀_norm (F lam0) sol.toL1
-    (A_inv.toScalarCLM (ν := ν_val)) ≤ (Y₀_bnd : ℝ) := by
+    (A_inv.toScalarCLM (ν := ν_val)) ≤ (Y₀_bound : ℝ) := by
   show ‖A_inv.toScalarCLM (ν := ν_val)
     (F lam0 (sol.toL1 : l1Weighted ν_val))‖ ≤ _
   rw [l1Weighted.norm_eq_Icc_sum_of_support _ 4 AF_ā_support]
   simp_rw [ScalarBlockDiagData.toScalarCLM_toSeq_eq_action A_inv _
     A_colR F_ā_R A_tail_R A_col_bridge F_ā_toSeq_eq
     (fun n hn => A_tailDiag_eq n), ν_val_eq_q]
-  unfold Y₀_bnd
+  unfold Y₀_bound
   finsum_bound using Y₀_eval
     (fun k _ _ => scalarBlockDiagActionEval_correct A_colR F_ā_R A_tail_R _
-      A_colOf F_ā_vec A_tail_coeff ν
+      A_colOf F_ā_vec A_tail_coeff ν_q
       (fun j i => A_colR_eq j i)
       (fun n => rfl) rfl rfl k {})
 
@@ -210,14 +209,14 @@ private lemma defect_cols_bridge (j i : Fin 3) :
 private lemma defect_matrixNorm_le :
     FiniteWeightedNorm.finWeightedMatrixNorm ν_val
       (1 - (approxInverse sol A_mat).finBlock0 * (approxDeriv sol).finBlock0) ≤
-    (Z₀_bnd : ℝ) := by
+    (Z₀_bound : ℝ) := by
   -- Dyadic path (O(1) proof term, bounded precision):
   finmatrix_bound
-    (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_dyadic _ defect_cols ν (cfg := {})
+    (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_dyadic _ defect_cols ν_q (cfg := {})
       defect_cols_bridge ν_val_eq_q)
 
 lemma Z₀_le : Z₀_norm (A_inv.toScalarCLM (ν := ν_val))
-    (A_dag.toScalarCLM (ν := ν_val)) ≤ (Z₀_bnd : ℝ) :=
+    (A_dag.toScalarCLM (ν := ν_val)) ≤ (Z₀_bound : ℝ) :=
   (ScalarBlockDiagData.Z₀_le_finWeightedMatrixNorm_of_tailCancel (ν := ν_val) _ _
     (tailCancel sol A_mat)).trans defect_matrixNorm_le
 
@@ -225,7 +224,7 @@ lemma Z₀_le : Z₀_norm (A_inv.toScalarCLM (ν := ν_val))
 
 lemma Z₁_le : Z₁_norm (F lam0) sol.toL1
     (A_inv.toScalarCLM (ν := ν_val))
-    (A_dag.toScalarCLM (ν := ν_val)) ≤ (Z₁_bnd : ℝ) := by
+    (A_dag.toScalarCLM (ν := ν_val)) ≤ (Z₁_bound : ℝ) := by
   show ‖(A_inv.toScalarCLM (ν := ν_val)).comp
     ((A_dag.toScalarCLM (ν := ν_val)) -
       fderiv ℝ (F lam0) (sol.toL1 : l1Weighted ν_val))‖ ≤ _
@@ -235,11 +234,11 @@ lemma Z₁_le : Z₁_norm (F lam0) sol.toL1
     simp only [show Finset.Icc 1 2 = {1, 2} from by decide,
       Finset.sum_pair (by decide : (1 : ℕ) ≠ 2)]
     simp only [ApproxSolution.toSeq, sol, ā₀, ā₁, ā₂]
-    simp only [ν_val, PosReal.toReal, ν]; push_cast; norm_num
-  exact Z₁_le_via_eval sol A_mat lam0 (Z₁_bnd : ℝ)
+    simp only [ν_val, PosReal.toReal, ν_q]; push_cast; norm_num
+  exact Z₁_le_via_eval sol A_mat lam0 (Z₁_bound : ℝ)
     (by
       rw [h_shifted_sum]
-      unfold approxInverse ScalarBlockDiagData.ofParts sol ā₀ ā₁ ā₂ Z₁_bnd
+      unfold approxInverse ScalarBlockDiagData.ofParts sol ā₀ ā₁ ā₂ Z₁_bound
       leancert)
 
 /-! ### Z₂ -/
@@ -248,31 +247,31 @@ private lemma A_inv_tailBound_eq :
     A_inv.tailBound = ((|A_tail_coeff| : ℚ) : ℝ) := by
   unfold A_inv approxInverse ScalarBlockDiagData.ofParts A_tail_coeff sol ā₀; push_cast; ring
 
-lemma A_norm_le : 2 * ‖A_inv.toScalarCLM (ν := ν_val)‖ ≤ (Z₂_bnd : ℝ) := by
-  have h : ‖A_inv.toScalarCLM (ν := ν_val)‖ ≤ ((Z₂_bnd / 2 : ℚ) : ℝ) := by
+lemma A_norm_le : 2 * ‖A_inv.toScalarCLM (ν := ν_val)‖ ≤ (Z₂_bound : ℝ) := by
+  have h : ‖A_inv.toScalarCLM (ν := ν_val)‖ ≤ ((Z₂_bound / 2 : ℚ) : ℝ) := by
     finmatrix_bound
-      (norm_toScalarCLM_le_of_Q A_inv A_colOf ν |A_tail_coeff|
+      (norm_toScalarCLM_le_of_Q A_inv A_colOf ν_q |A_tail_coeff|
         A_col_bridge_q ν_val_eq_q A_inv_tailBound_eq)
   push_cast at h; linarith
 
 lemma Z₂_le (c_val : l1Weighted ν_val)
     (hc : c_val ∈ Metric.closedBall (sol.toL1 : l1Weighted ν_val) r₀) :
     Z₂_norm (F lam0) sol.toL1 (A_inv.toScalarCLM (ν := ν_val)) c_val ≤
-    (Z₂_bnd : ℝ) * r₀ :=
-  Z₂_ball_bound sol A_mat lam0 r₀ (Z₂_bnd : ℝ) A_norm_le c_val hc
+    (Z₂_bound : ℝ) * r₀ :=
+  Z₂_ball_bound sol A_mat lam0 r₀ (Z₂_bound : ℝ) A_norm_le c_val hc
 
 /-! ### Radii polynomial negativity -/
 
 private lemma radii_neg_icc :
     ∀ r ∈ Set.Icc (r₀ : ℝ) (r₀ : ℝ),
-    generalRadiiPolynomial (Y₀_bnd : ℝ) (Z₀_bnd : ℝ) (Z₁_bnd : ℝ)
-      (fun _ => (Z₂_bnd : ℝ)) r < 0 := by
-  unfold generalRadiiPolynomial r₀ Y₀_bnd Z₀_bnd Z₁_bnd Z₂_bnd
+    generalRadiiPolynomial (Y₀_bound : ℝ) (Z₀_bound : ℝ) (Z₁_bound : ℝ)
+      (fun _ => (Z₂_bound : ℝ)) r < 0 := by
+  unfold generalRadiiPolynomial r₀ Y₀_bound Z₀_bound Z₁_bound Z₂_bound
   leancert
 
 lemma radii_neg :
-    generalRadiiPolynomial (Y₀_bnd : ℝ) (Z₀_bnd : ℝ) (Z₁_bnd : ℝ)
-      (fun _ => (Z₂_bnd : ℝ)) (r₀ : ℝ) < 0 :=
+    generalRadiiPolynomial (Y₀_bound : ℝ) (Z₀_bound : ℝ) (Z₁_bound : ℝ)
+      (fun _ => (Z₂_bound : ℝ)) (r₀ : ℝ) < 0 :=
   radii_neg_icc (r₀ : ℝ) ⟨le_refl _, le_refl _⟩
 
 /-! ### Injectivity -/
@@ -281,7 +280,7 @@ lemma A_injective :
     Function.Injective (A_inv.toScalarCLM (ν := ν_val)) :=
   ScalarBlockDiagData.injective_toScalarCLM_of_finBlock_mul_close_to_one
     (approxInverse sol A_mat) (approxDeriv sol).finBlock0
-    (defect_matrixNorm_le.trans_lt (by unfold Z₀_bnd; norm_num))
+    (defect_matrixNorm_le.trans_lt (by unfold Z₀_bound; norm_num))
     (approxInverse_tailDiag_ne_zero sol A_mat)
 
 /-! ## Main Theorem -/

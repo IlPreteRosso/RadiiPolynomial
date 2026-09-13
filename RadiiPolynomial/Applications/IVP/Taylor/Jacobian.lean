@@ -1,5 +1,6 @@
 import RadiiPolynomial.Applications.IVP.Taylor.Operator
 import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.WeightedL1
+import RadiiPolynomial.Algebra.Polynomial.CompPoly.WeightedL1
 
 /-!
 # Generic DF Block Verification for IVP Systems
@@ -197,6 +198,9 @@ The user provides:
 - `Dφ_norms : Fin L → Fin L → ℝ` — upper bounds on `‖evalInBanach(pderiv m (spec l), ā)‖`
 - `hDφ_norms` — proofs of these bounds (e.g., via `finsum_bound`)
 - `K` — overall bound: `Σ_m Dφ_norms l m ≤ K` for each `l`
+
+`ivp_Dφ_norm_le_of_compPoly` discharges the sum from the polynomial syntax
+(`CompPoly.derivativeBound`) when the nonlinearity is given by a `CompPoly` system.
 -/
 lemma ivp_Dφ_norm_le
     (φ : XL1 ν L → Fin L → l1Weighted ν)
@@ -217,6 +221,24 @@ lemma ivp_Dφ_norm_le
     ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply]
   exact (norm_sum_mul_pi_le _ _).trans
     (mul_le_mul_of_nonneg_right (hDφ_le l) (norm_nonneg _))
+
+omit [NeZero L] in
+/-- **Syntactic Dφ operator norm bound.** For a `CompPoly` system the per-component sum
+`Σ_m ‖∂_m φ_l (ā)‖` is bounded by `CompPoly.derivativeBound (f l) R` whenever `‖ā i‖ ≤ R i`,
+so `K` can be read off the syntax and checked by `norm_num`/`native_decide`. -/
+lemma ivp_Dφ_norm_le_of_compPoly
+    (φ : XL1 ν L → Fin L → l1Weighted ν)
+    (f : Fin L → MvPolyBridge.CompPoly L)
+    (ā : XL1 ν L)
+    (hφ_eq : ∀ (a : XL1 ν L) (l : Fin L), φ a l = (f l).evalBanach a)
+    (R : Fin L → ℝ) (hā : ∀ i, ‖ā i‖ ≤ R i)
+    {K : ℝ} (hK : ∀ l, (f l).derivativeBound R ≤ K)
+    (h : XL1 ν L) (l : Fin L) :
+    ‖(fderiv ℝ (fun a => φ a l) ā) h‖ ≤ K * ‖h‖ :=
+  ivp_Dφ_norm_le φ (fun l => (f l).toMvPoly) ā
+    (fun a l => (hφ_eq a l).trans (MvPolyBridge.compPoly_evalBanach_eq_evalInBanach _ _))
+    (fun l => (MvPolyBridge.CompPoly.sum_norm_evalInBanach_pderiv_le (f l) ā R hā).trans (hK l))
+    h l
 
 /-! ## 5. Convenience: ivp_hDF_block_nat -/
 

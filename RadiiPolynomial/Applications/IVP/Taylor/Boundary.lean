@@ -10,9 +10,9 @@ Taylor coefficients are anchored at the expansion centre.  Evaluation at
 primitive normalized to vanish there.
 -/
 
-noncomputable section
+open RadiiPolynomial
 
-namespace RadiiPolynomial
+noncomputable section
 
 namespace IVP
 
@@ -126,5 +126,3 @@ theorem taylorAnchoredPrimitive_coe (a : l1Weighted ν) :
   simp
 
 end IVP
-
-end RadiiPolynomial

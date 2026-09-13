@@ -27,18 +27,28 @@ For an expression `e` in the bound variable `a : Fin L → R`:
 | `HMul.hMul e₁ e₂`          | `.mul ⟦e₁⟧ ⟦e₂⟧`      |
 | `Neg.neg e`                | `.neg ⟦e⟧`            |
 | `HSMul.hSMul r e`          | `.smul ⟪r⟫ ⟦e⟧`       |
+| constant `c` (no `a`)      | `.C ⟪c⟫`              |
 
-Scalar reification `⟪r⟫`: if `r : ℝ` whnf's to `Rat.cast q` for `q : ℚ`,
-emit `q`; if `r` whnf's to a `Nat` literal cast, emit `(n : ℚ)`. Otherwise
-throw — the user must bind ℚ-valued scalars explicitly via `(q : ℝ)` cast
-of a `(q : ℚ)` constant.
+A constant is any subterm not mentioning `a`: `algebraMap ℝ R r`, a numeric
+literal at type `R`, or a scalar shape listed under `⟪·⟫`. Its `evalBanach` is
+`algebraMap ℝ R (q : ℝ)`, which agrees with a numeric literal `(n : R)`
+propositionally (`map_natCast`/`map_ofNat`), not by `rfl`.
+
+Scalar reification `⟪r⟫` recognizes rational casts `Rat.cast q` for `q : ℚ`,
+natural-number casts and literals, and negation. Named definitions are unfolded
+as needed. Rational arithmetic should be written at type `ℚ` and cast explicitly,
+for example `((3 / 2 : ℚ) : ℝ)`.
 
 ## Validation
 
-The elaborator's output is a `CompPoly L` *value*, not a proof. Soundness
-holds by `rfl` per usage site, since `evalBanach`'s definition mirrors the
-constructors. Tests at the bottom validate against the hand-written ASTs of
-`φ_scalar_cpoly` (Example81) and `f_cpoly` (Example83).
+The elaborator's output is a `CompPoly L` *value*, not a proof. Equality with the
+expected literal AST can be checked by `rfl`. Agreement of `evalBanach` with the
+source lambda is a separate semantic check: arithmetic constructors unfold
+definitionally, while numeral constants may need cast lemmas such as `map_natCast`
+or `map_ofNat`. The reification is syntactic in the binder type `Fin L → R`,
+so it is geometry-free: the same lambda shape reifies over `ℝ`, `l1Weighted ν`
+(Taylor) and `l1Chebyshev ν` (Chebyshev); `Examples/Polynomial/Chebyshev.lean`
+checks the Chebyshev instance against a literal AST by `rfl`.
 -/
 
 open Lean Meta Elab Term
@@ -173,6 +183,16 @@ partial def reifyBody (aFVar : FVarId) (LExpr : Expr) (e : Expr) : MetaM Expr :=
       return mkApp3 (mkConst ``MvPolyBridge.CompPoly.smul) LExpr q p
     else throwError "reifyBody: malformed HSMul at {← ppExpr e}"
   | _ =>
+    if !e.containsFVar aFVar then
+      -- Constant: `algebraMap ℝ R r` (as `DFunLike.coe (algebraMap ℝ R) r`) or any scalar
+      -- shape `reifyRatScalar` accepts (`(q : ℝ)` casts, numeric literals at any type).
+      let q ← match e.getAppFnArgs with
+        | (``DFunLike.coe, args) =>
+          if args.size ≥ 6 && args[4]!.isAppOf ``algebraMap then reifyRatScalar args[5]!
+          else throwError "reifyBody: unrecognized constant at {← ppExpr e}"
+        | _ => reifyRatScalar e
+      return mkApp2 (mkConst ``MvPolyBridge.CompPoly.C) LExpr q
+    else
     -- Try `e = a i` (application of bound variable)
     match e with
     | .app f i =>
@@ -194,7 +214,9 @@ end RadiiPolynomial.MakeCompPoly
 /-- Reify a Lean lambda `fun (a : Fin L → R) => body` into a
 `MvPolyBridge.CompPoly L` term. -/
 elab "compPolyOf%" stx:term : term => do
-  let tmExpr ← elabTerm stx none
+  -- Pending instance metavariables can mention the binder even in a constant expression.
+  -- Resolve them before testing syntactic dependence in `reifyBody`.
+  let tmExpr ← elabTermAndSynthesize stx none
   Meta.lambdaTelescope tmExpr fun fvars body => do
     if fvars.size ≠ 1 then
       throwError "compPolyOf%: expected single binder `fun (a : Fin L → R) => …`, \

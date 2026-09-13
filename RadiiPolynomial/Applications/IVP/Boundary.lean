@@ -14,8 +14,6 @@ This file contains only the representation-independent linear mechanism.
 
 noncomputable section
 
-namespace RadiiPolynomial
-
 namespace IVP
 
 variable {𝕜 A B : Type*} [NontriviallyNormedField 𝕜]
@@ -110,5 +108,3 @@ theorem fiber_eq_translate_ker (d : SplitBoundary 𝕜 A B) (b : B) :
 end SplitBoundary
 
 end IVP
-
-end RadiiPolynomial

@@ -147,31 +147,12 @@ private lemma Df_norm_le (h : XL1 ν_val L) (l : Fin L) :
       (hf := two_abar_sub_one_toSeq k)
       (hν := ν_val_eq_q))
 
+/-- **Z₁ obligation** through the `Z₁` face: the finite Jacobian check
+(`composedApprox_eq_fderiv_G_fin`), the derivative map `Df` and its bound `Df_norm_le`. -/
 lemma Z₁_le_cert :
     Z₁_norm (data.G f x₀) data.abar (ContinuousLinearMap.id ℝ (XL1 ν_val L))
-      (data.composedApprox.toCLM (ν := ν_val)) ≤ (Z₁_bound : ℝ) := by
-  show ‖(ContinuousLinearMap.id ℝ _).comp
-    (data.composedApprox.toCLM (ν := ν_val) -
-      fderiv ℝ (data.G f x₀) data.abar)‖ ≤ _
-  rw [ContinuousLinearMap.id_comp]
-  have hfin : ∀ h : XL1 ν_val L, ∀ l : Fin L, ∀ n : ℕ, n ≤ N →
-      l1Weighted.toSeq (((data.composedApprox.toCLM (ν := ν_val) -
-        fderiv ℝ (data.G f x₀) data.abar) h) l) n = 0 :=
-    fun h l n hn => by
-      simp only [sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq, sub_eq_zero]
-      exact composedApprox_eq_fderiv_G_fin h l n hn
-  have htail : ∀ h : XL1 ν_val L, ∀ l : Fin L, ∀ n : ℕ, N < n →
-      l1Weighted.toSeq (((data.composedApprox.toCLM (ν := ν_val) -
-        fderiv ℝ (data.G f x₀) data.abar) h) l) n =
-        l1Weighted.toSeq (shiftDivN_CLM (Df h l)) n :=
-    fun h l n hn => by
-      have hc := data.composedApprox_toCLM_tail h l n hn
-      have hf := fderiv_G_scalar_tail h l n hn
-      simp only [sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq]
-      show toCoeff (ν := ν_val) (data.composedApprox.toCLM (ν := ν_val) h) l n -
-          toCoeff (ν := ν_val) ((fderiv ℝ (data.G f x₀) data.abar) h) l n = _
-      rw [hc, hf]; simp [toCoeff]
-  exact IVP.ivp_Z₁_le data.composedApprox (data.G f x₀) data.abar Df hfin htail
+      (data.composedApprox.toCLM (ν := ν_val)) ≤ (Z₁_bound : ℝ) :=
+  data.Z₁_le_of_compPoly f_cpoly x₀ composedApprox_eq_fderiv_G_fin Df Df_eq_fderiv
     (by unfold Z₁_bound ν_q N; norm_num) Df_norm_le
     (by simp only [ν_val_eq_q]; norm_num [Z₁_bound, ν_q, N])
 
@@ -206,27 +187,6 @@ certified by one `native_decide` over the finite column range `M ≤ N`. -/
 theorem Z₁_le_exact :
     Z₁_norm (data.G f x₀) data.abar (ContinuousLinearMap.id ℝ (XL1 ν_val L))
       (data.composedApprox.toCLM (ν := ν_val)) ≤ ((Z₁_exact_bound : ℚ) : ℝ) := by
-  show ‖(ContinuousLinearMap.id ℝ _).comp
-    (data.composedApprox.toCLM (ν := ν_val) -
-      fderiv ℝ (data.G f x₀) data.abar)‖ ≤ _
-  rw [ContinuousLinearMap.id_comp]
-  have hfin : ∀ h : XL1 ν_val L, ∀ l : Fin L, ∀ n : ℕ, n ≤ N →
-      l1Weighted.toSeq (((data.composedApprox.toCLM (ν := ν_val) -
-        fderiv ℝ (data.G f x₀) data.abar) h) l) n = 0 :=
-    fun h l n hn => by
-      simp only [sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq, sub_eq_zero]
-      exact composedApprox_eq_fderiv_G_fin h l n hn
-  have htail : ∀ h : XL1 ν_val L, ∀ l : Fin L, ∀ n : ℕ, N < n →
-      l1Weighted.toSeq (((data.composedApprox.toCLM (ν := ν_val) -
-        fderiv ℝ (data.G f x₀) data.abar) h) l) n =
-        l1Weighted.toSeq (shiftDivN_CLM (Df h l)) n :=
-    fun h l n hn => by
-      have hc := data.composedApprox_toCLM_tail h l n hn
-      have hf := fderiv_G_scalar_tail h l n hn
-      simp only [sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq]
-      show toCoeff (ν := ν_val) (data.composedApprox.toCLM (ν := ν_val) h) l n -
-          toCoeff (ν := ν_val) ((fderiv ℝ (data.G f x₀) data.abar) h) l n = _
-      rw [hc, hf]; simp [toCoeff]
   have hC : (0 : ℝ) ≤ ((Z₁_exact_bound : ℚ) : ℝ) := by
     norm_num [Z₁_exact_bound]
   -- Exact ℚ column check on the finite range M ≤ N (one native_decide),
@@ -247,53 +207,30 @@ theorem Z₁_le_exact :
     rw [Df_eq_leftMul h l]
     refine (shiftDivN_leftMul_tail_le_of_cols _ N hcols (h 0)).trans ?_
     exact mul_le_mul_of_nonneg_left (norm_le_pi_norm h 0) hC
-  exact IVP.ivp_Z₁_le_exact data.composedApprox (data.G f x₀) data.abar Df
-    hfin htail hC hDtail le_rfl
+  exact data.Z₁_le_exact_of_compPoly f_cpoly x₀ composedApprox_eq_fderiv_G_fin Df
+    Df_eq_fderiv hC hDtail le_rfl
 
 /-! ## Z₂ bound -/
 
-private lemma Df_diff_norm_le (c : XL1 ν_val L) (h : XL1 ν_val L) (l : Fin L) :
-    ‖((fderiv ℝ (fun x => f x l) c -
-      fderiv ℝ (fun x => f x l) data.abar)) h‖ ≤ 2 * ‖c - data.abar‖ * ‖h‖ := by
-  have hl : l = 0 := Subsingleton.elim l 0; subst hl
-  simp_rw [show ∀ x, f x 0 = MvPolyBridge.evalInBanach (f_spec 0) x
-    from fun x => f_eq_spec x 0]
-  exact MvPolyBridge.norm_fderiv_diff_evalInBanach_of_const_second_pderiv _ c data.abar h
-    (D₂ := fun _ _ => 2)
-    (by
-      intro i j
-      fin_cases i
-      fin_cases j
-      unfold f_spec
-      rw [← MvPolyBridge.CompPoly.pderiv_pderiv_toMvPoly]
-      simp [f_cpoly]
-      rw [MvPolynomial.C_ofNat_eq]
-      norm_num)
-    (by norm_num)
-
+/-- **Z₂ obligation** through the `Z₂` socket: the syntactic derivative Lipschitz
+constant of `X² − X` is `2 = lipschitzBound (2X − 1)`, radius-free since the system
+has degree `≤ 2`; the exact-ℚ block-norm check of the preconditioner is the one
+`native_decide`. -/
 lemma Z₂_le_cert (c : XL1 ν_val L)
     (hc : c ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ)) :
     Z₂_norm (data.G f x₀) data.abar
       (ContinuousLinearMap.id ℝ (XL1 ν_val L)) c ≤
-      (Z₂_bound : ℝ) * (r_minus : ℝ) := by
-  show ‖(ContinuousLinearMap.id ℝ _).comp
-    (fderiv ℝ (data.G f x₀) c -
-      fderiv ℝ (data.G f x₀) data.abar)‖ ≤ _
-  rw [ContinuousLinearMap.id_comp]
-  exact IVP.ivp_Z₂_le data.approxInverse f x₀
-    (IVP.ivpMap_mem_of_tailDiag_inv _ _ _ data.htail_diag_inv) data.abar
-    (data.differentiable_G f x₀ differentiable_f_component)
-    (fun l => differentiable_f_component l)
-    ({0} : Finset (Fin L))
-    (fun c h j hj => by
-      have : j = 0 := Subsingleton.elim j 0
-      subst this; simp at hj)
-    (by norm_num : (0 : ℝ) ≤ 2) Df_diff_norm_le
-    (by unfold Z₂_bound; positivity)
+      (Z₂_bound : ℝ) * (r_minus : ℝ) :=
+  data.Z₂_le_of_compPoly f_cpoly x₀ {0}
     (fun l => Z₂_blockNorm_component_le data.approxInverse ABlockCols ν_q
       (IVP.StdIVPData.approxInverse_tailBound_q (N := N)) {0}
       (fun l j k i => data.A_finBlock_eq l j i k) ν_val_eq_q
       data.approxInverse_tailBound_eq (by native_decide) l)
+    (by unfold r_minus; positivity)
+    (fun j hj => absurd (Finset.mem_singleton.mpr (Subsingleton.elim j 0)) hj)
+    (fun _ _ l => by
+      simp [MvPolyBridge.CompPoly.derivativeLipschitzBound, f_cpoly]
+      norm_num)
     c hc
 
 /-! ## Radii polynomial -/
@@ -314,29 +251,24 @@ lemma radii_neg :
 
 /-- **Theorem 8.1.7** (Scalar IVP): There exists a unique zero of the composed IVP map
 G = A ∘ F near the approximate solution ābar, proving existence and uniqueness
-of the ODE solution x(t) = Σ aₙtⁿ as a Taylor series on |t| < 1. -/
+of the ODE solution x(t) = Σ aₙtⁿ as a Taylor series on |t| < 1.
+
+The coefficient nonlinearity and its differentiability witness are read off the
+polynomial system `f_cpoly` by `IVP.StdIVPData.existsUnique_of_compPoly`; the example
+supplies the initial condition, the radius and the four bounds. -/
 theorem main_theorem :
     ∃! xTilde ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ),
       data.G f x₀ xTilde = 0 :=
-  data.existsUnique f x₀ differentiable_f_component
-    (by unfold r_minus; positivity)
-    (Y₀_le.trans (by unfold Y₀_bound; exact_mod_cast le_refl _))
-    (data.Z₀_le Z₀_finBlockNorm_le)
-    (Z₁_le_cert.trans (by unfold Z₁_bound; exact_mod_cast le_refl _))
-    (fun c hc => Z₂_le_cert c hc)
-    radii_neg
+  data.existsUnique_of_compPoly f_cpoly x₀ (by unfold r_minus; positivity)
+    Y₀_le Z₀_finBlockNorm_le Z₁_le_cert Z₂_le_cert radii_neg
 
 /-- Source-residual form of `main_theorem`: the unique validated point solves the
-unpreconditioned IVP Taylor coefficient equations. -/
+unpreconditioned IVP Taylor coefficient equations. `Z₀` enters in the finite-block
+form the certificate proves. -/
 theorem ivp_main_theorem :
     ∃! xTilde ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ),
       ∀ l n, IVP.ivpCoeffs f x₀ xTilde l n = 0 :=
-  data.existsUnique_ivpCoeffs f x₀ differentiable_f_component
-    (by unfold r_minus; positivity)
-    (Y₀_le.trans (by unfold Y₀_bound; exact_mod_cast le_refl _))
-    Z₀_finBlockNorm_le
-    (Z₁_le_cert.trans (by unfold Z₁_bound; exact_mod_cast le_refl _))
-    (fun c hc => Z₂_le_cert c hc)
-    radii_neg
+  data.existsUnique_ivpCoeffs_of_compPoly f_cpoly x₀ (by unfold r_minus; positivity)
+    Y₀_le Z₀_finBlockNorm_le Z₁_le_cert Z₂_le_cert radii_neg
 
 end Example81.Cert

@@ -1,5 +1,6 @@
 import RadiiPolynomial.Applications.IVP.Chebyshev.BlockDiagonal
 import RadiiPolynomial.Operators.BlockDiagonal.Composition
+import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Evaluation
 
 /-!
 # Standard Chebyshev IVP Data Bundle
@@ -18,11 +19,17 @@ Parallel to `IVP.StdIVPData` for Taylor IVP, with:
 - `tailCancel: 1/(2k) * 2k = 1`
 - `abar` embedded into `XCheb ν L` (ℤ-indexed) via `ChebyshevIVP.embedNatToInt`
 
-## Deferred to Example Level
+## Certificate faces
 
-The `composedApprox` as a CLM on `XCheb` (identity on negative modes + block action on
-non-negatives) requires a separate construction. The Z₀/Z₁ bounds and existence theorem
-are assembled at the example level using `chebyshev_system_theorem`.
+`composedApproxCLM` (§6: identity on negative modes, block action on non-negatives),
+`Z₀_le` (§7), `defect_finBlockNorm_lt_one_of_radii` and `existsUnique` (§8) are all derived
+here from the bundle. A certificate written from one polynomial system does not call them
+directly: it calls the faces of `Chebyshev/Polynomial.lean`
+(`StdChebIVPData.existsUnique_of_compPoly`, `Z₂_le_of_compPoly_max`) and of
+`Chebyshev/AnalyticPolynomial.lean` (`solution_existsUnique_of_compPoly`,
+`solution_existsUnique_of_two_le_of_compPoly`,
+`analytic_solution_existsUnique_of_two_le_of_compPoly`). The only bound still assembled at
+the example level is `Z₁` (componentwise, `chebyshev_Z₁_le_relaxed`).
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -164,6 +171,22 @@ lemma abar_toSeq_eq (l : Fin L) (k : ℕ) :
     (ChebyshevIVP.embedNatToInt (d.abar_seq l) (↑k : ℤ)) = _
   simp [ChebyshevIVP.embedNatToInt, lpAlgRingData.toReal_ofReal, d.abar_seq_eq_getD]
 
+/-- The stored candidate vanishes at negative indices (`embedNatToInt` is one-sided). -/
+lemma abar_toSeq_negSucc (l : Fin L) (n : ℕ) :
+    l1Chebyshev.toSeq (abar d l) (-((n : ℤ) + 1)) = 0 := by
+  show lpAlgRingData.toReal (-((n : ℤ) + 1))
+    (ChebyshevIVP.embedNatToInt (d.abar_seq l) (-((n : ℤ) + 1))) = _
+  rw [(Int.negSucc_eq n).symm]
+  simp [ChebyshevIVP.embedNatToInt, lpAlgRingData.toReal_zero]
+
+/-- `‖ā l‖ ≤ ‖S(ā l)‖`: the stored candidate lives on the indices `0..N`, so its norm is
+dominated by the norm of its symmetrization — the bridge from a certificate's exact-ℚ
+bound on `‖S(ā)‖` (the quantity the Chebyshev certificate evaluates) to the trajectory
+radius `‖ā‖ + r₀` of the solution faces. -/
+lemma norm_abar_le_norm_symmetrize (l : Fin L) :
+    ‖abar d l‖ ≤ ‖l1Chebyshev.symmetrize (abar d l)‖ :=
+  l1Chebyshev.norm_le_norm_symmetrize_of_neg_eq_zero _ (d.abar_toSeq_negSucc l)
+
 /-! ## 5. Composed Map G (needs φ, p) -/
 
 /-- The composed Chebyshev IVP map G = A ∘ F. -/
@@ -187,6 +210,32 @@ lemma Z₀_le {Z₀ : ℝ}
       ≤ Z₀) :
     ‖ContinuousLinearMap.id ℝ (XCheb ν L) - d.composedApproxCLM‖ ≤ Z₀ :=
   composedApproxCheb_Z₀ _ hZ₀
+
+/-- Radii-polynomial negativity makes the finite defect strictly smaller than one.
+Chebyshev mirror of `IVP.StdIVPData.defect_finBlockNorm_lt_one_of_radii`: it is the
+injectivity fact that returning from the preconditioned map `G` to the raw coefficient
+residual needs, and it is derived from the same four bounds the certificate already
+proves — in particular from the finite-block form of `Z₀`, so no separate
+`‖defect‖ < 1` obligation is stated at the example level. -/
+lemma defect_finBlockNorm_lt_one_of_radii
+    (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ)
+    {Y₀ Z₀ Z₁ Z₂_val r₀ : ℝ}
+    (hr₀ : 0 < r₀)
+    (hY₀ : ‖d.G φ p (abar d)‖ ≤ Y₀)
+    (hZ₀fin : finiteBlockMatrixNorm ν d.defect.finBlock ≤ Z₀)
+    (hZ₁ : ‖d.composedApproxCLM - fderiv ℝ (d.G φ p) (abar d)‖ ≤ Z₁)
+    (hZ₂ : ∀ c ∈ Metric.closedBall (abar d) r₀,
+      ‖fderiv ℝ (d.G φ p) c - fderiv ℝ (d.G φ p) (abar d)‖ ≤ Z₂_val * r₀)
+    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ (fun _ => Z₂_val) r₀ < 0) :
+    finiteBlockMatrixNorm ν d.defect.finBlock < 1 := by
+  have hY₀_nonneg : 0 ≤ Y₀ := (norm_nonneg _).trans hY₀
+  have hZ₁_nonneg : 0 ≤ Z₁ := (norm_nonneg _).trans hZ₁
+  have hZ₂r_nonneg : 0 ≤ Z₂_val * r₀ :=
+    (norm_nonneg _).trans (hZ₂ (abar d) (Metric.mem_closedBall_self hr₀.le))
+  have hZ_lt_one := general_radii_poly_neg_implies_Z_lt_one hY₀_nonneg hr₀ h_radii
+  unfold Z_bound_general at hZ_lt_one
+  have hZ₀_lt_one : Z₀ < 1 := by nlinarith
+  exact hZ₀fin.trans_lt hZ₀_lt_one
 
 /-! ## 8. Main Existence/Uniqueness -/
 

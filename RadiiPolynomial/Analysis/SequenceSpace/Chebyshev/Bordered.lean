@@ -724,6 +724,43 @@ lemma symmetrize_single_negSucc (m : ℕ) (x : ℝ) :
     = toSeq (0 : l1Chebyshev ν) k
   rw [symmetrize_toSeq, toSeq_single, toSeq_zero, if_neg (by omega)]
 
+private theorem symmetrize_single_toSeq (k : ℕ) (n : ℤ) :
+    l1Chebyshev.toSeq (l1Chebyshev.symmetrize
+      (l1Chebyshev.single (ν := ν) (k : ℤ) 1)) n =
+      if n.natAbs = k then 1 else 0 := by
+  rw [l1Chebyshev.symmetrize_toSeq, l1Chebyshev.toSeq_single]
+  by_cases h : n.natAbs = k
+  · rw [if_pos (by exact_mod_cast h), if_pos h]
+  · rw [if_neg (fun hc => h (by exact_mod_cast hc)), if_neg h]
+
+/-- The stored zero mode is single; a positive mode has both Laurent directions. -/
+theorem mul_symmetrize_single_toSeq [Fact (1 ≤ (ν : ℝ))] (c : l1Chebyshev ν) (k : ℕ) (n : ℤ) :
+    l1Chebyshev.toSeq
+      (c * l1Chebyshev.symmetrize (l1Chebyshev.single (k : ℤ) 1)) n =
+      if k = 0 then l1Chebyshev.toSeq c n
+      else l1Chebyshev.toSeq c (n - k) + l1Chebyshev.toSeq c (n + k) := by
+  cases k with
+  | zero =>
+      rw [l1Chebyshev.toSeq_mul_eq_finsum _ _ _ ({(0 : ℤ)} : Finset ℤ)
+        (fun i hi => by
+          rw [symmetrize_single_toSeq, if_neg (fun hc => hi (by
+            simp only [Finset.mem_singleton]
+            omega))])]
+      rw [Finset.sum_singleton, symmetrize_single_toSeq]
+      simp
+  | succ k =>
+      rw [l1Chebyshev.toSeq_mul_eq_finsum _ _ _
+        ({((k + 1 : ℕ) : ℤ), -((k + 1 : ℕ) : ℤ)} : Finset ℤ)
+        (fun i hi => by
+          rw [symmetrize_single_toSeq, if_neg (fun hc => hi (by
+            simp only [Finset.mem_insert, Finset.mem_singleton]
+            omega))])]
+      rw [Finset.sum_pair (by omega)]
+      rw [symmetrize_single_toSeq, if_pos (show (((k + 1 : ℕ) : ℤ)).natAbs = k + 1
+        from by omega), symmetrize_single_toSeq,
+        if_pos (show (-((k + 1 : ℕ) : ℤ)).natAbs = k + 1 from by omega)]
+      simp only [mul_one, Nat.succ_ne_zero, if_false, sub_neg_eq_add]
+
 /-- Restriction after symmetrization is the plain restriction. -/
 lemma nonnegRestrict_symmetrize (a : l1Chebyshev ν) :
     nonnegRestrict (symmetrize a) = nonnegRestrict a := by

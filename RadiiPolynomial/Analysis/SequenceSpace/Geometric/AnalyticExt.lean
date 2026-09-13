@@ -20,29 +20,32 @@ namespace l1Weighted
 
 variable {ν : PosReal}
 
-/-- The Taylor realization of a weighted coefficient sequence has its coefficient
-sequence as a formal multilinear power series at the expansion centre. -/
-theorem hasFPowerSeriesAt_eval (a : l1Weighted ν) :
-    HasFPowerSeriesAt (l1Weighted.eval a)
-      (FormalMultilinearSeries.ofScalars ℝ (l1Weighted.toSeq a)) 0 := by
+/-- The real power series of a coefficient sequence converges on the full weight ball
+(radius `ν`): the weighted-ℓ¹ domination is the only input. -/
+theorem hasFPowerSeriesOnBall_eval (a : l1Weighted ν) :
+    HasFPowerSeriesOnBall (l1Weighted.eval a)
+      (FormalMultilinearSeries.ofScalars ℝ (l1Weighted.toSeq a)) 0 (ν : ℝ≥0) := by
   let p : FormalMultilinearSeries ℝ ℝ ℝ :=
     FormalMultilinearSeries.ofScalars ℝ (l1Weighted.toSeq a)
   have hradius : ((ν : ℝ≥0) : ℝ≥0∞) ≤ p.radius := by
     apply p.le_radius_of_summable
     simpa only [p, FormalMultilinearSeries.ofScalars_norm, PosReal.coe_toNNReal,
       Real.norm_eq_abs] using l1Weighted.summable_weighted a
-  refine ⟨(ν : ℝ≥0), ?_⟩
-  refine
-    { r_le := hradius
-      r_pos := by exact_mod_cast ν.2
-      hasSum := ?_ }
+  refine { r_le := hradius, r_pos := by exact_mod_cast ν.2, hasSum := ?_ }
   intro y hy
   have hyν : |y| ≤ (ν : ℝ) := by
     rw [Metric.eball_coe, mem_ball_zero_iff] at hy
     simpa only [Real.norm_eq_abs, PosReal.coe_toNNReal] using hy.le
-  simp only [zero_add, FormalMultilinearSeries.ofScalars_apply_eq,
-    smul_eq_mul]
+  simp only [zero_add, FormalMultilinearSeries.ofScalars_apply_eq, smul_eq_mul]
   exact (l1Weighted.summable_eval a hyν).hasSum
+
+/-- The Taylor realization of a weighted coefficient sequence has its coefficient
+sequence as a formal multilinear power series at the expansion centre (the
+centred corollary of `hasFPowerSeriesOnBall_eval`). -/
+theorem hasFPowerSeriesAt_eval (a : l1Weighted ν) :
+    HasFPowerSeriesAt (l1Weighted.eval a)
+      (FormalMultilinearSeries.ofScalars ℝ (l1Weighted.toSeq a)) 0 :=
+  (hasFPowerSeriesOnBall_eval a).hasFPowerSeriesAt
 
 /-- Two Taylor coefficient sequences are equal when their analytic realizations
 agree in a neighbourhood of the expansion centre. -/

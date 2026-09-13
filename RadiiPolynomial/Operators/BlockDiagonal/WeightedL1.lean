@@ -670,7 +670,7 @@ omega-weighted space `ℓ¹_ω` (`ω_k = ν^{k+1}/(k+1)`); see
 `Analysis/SequenceSpace/Geometric/Omega.lean`. The current workaround is `IVP.ivp_Z₀_le`
 (`IVP/Theorem.lean`), which takes `A_dag : BlockDiagOp` (the looser
 structure permitting unbounded tail) and bounds the *composed*
-approximation `ivpComposedApprox A A_dag` instead of A_dag in
+approximation `A.composedApprox A_dag` instead of A_dag in
 isolation. A future two-weight `SystemBlockDiagData ν₁ ν₂` (mapping
 `XL1 ν₁ L → XL1 ν₂ L` with a `ν₂`-tail bound) would let A† live as
 `SystemBlockDiagData ν ω` and A as `SystemBlockDiagData ω ν`, making

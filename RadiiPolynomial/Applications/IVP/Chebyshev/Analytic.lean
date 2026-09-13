@@ -237,9 +237,11 @@ variable [NeZero L] [Fact (1 ≤ (ν : ℝ))] (d : StdChebIVPData ν L N)
 bounds. The `∃` paired with the universal clause is the "∃! modulo `Set.EqOn`" pattern of
 `IVP.StdIVPData.analytic_existsUnique`: candidates may differ outside `[-1, 1]`.
 
-`hφ` is the only equation-specific input beyond the certificate: it says the coefficient
-nonlinearity `φ` evaluates to the vector field `f` of the ODE, which on the Chebyshev side
-is `l1Chebyshev.eval_mul_of_isSymmetric` applied to the symmetrized element.
+`hφ` says that the coefficient nonlinearity `φ` evaluates to the ODE vector field `f`.
+When both interpret the same `CompPoly` system, `MvPolyBridge.CompPoly.Chebyshev.eval_eval`
+supplies this identity through the physical Chebyshev evaluation character. The theorem
+also accepts any other nonlinearity with this identity. The radii-polynomial bounds,
+Lipschitz bound, and trajectory-radius bound remain separate hypotheses.
 No analyticity is asserted — see the module docstring. -/
 theorem solution_existsUnique
     (hφ : ∀ (a : XCheb ν L) (l : Fin L) (t : ℝ), t ∈ Icc (-1 : ℝ) 1 →

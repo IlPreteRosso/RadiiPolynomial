@@ -1,8 +1,5 @@
 import RadiiPolynomial.Applications.IVP.Chebyshev
-import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered
-import RadiiPolynomial.Certification.LeanCertAdapter
-import RadiiPolynomial.Tactic.AutoPolyFDeriv
-import RadiiPolynomial.Algebra.Polynomial
+import RadiiPolynomial.Tactic.MakeCompPoly
 import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Numbers
 
 /-!
@@ -12,26 +9,29 @@ Scalar IVP with Chebyshev basis: u̇ = u(u-1), u(-1) = 1/2.
 Same ODE as Example 8.1 (Taylor) — the book's own twin pair — now verified on
 [-1,1] with Chebyshev expansion at ν = 2, N = 40.
 
-## The nonlinearity reads only non-negative modes
+## One polynomial, every interpretation
 
-The book's convolution (Eq. 14.10) is bilateral with the SYMMETRIC extension
-`ã_{-k} = ã_k` of the one-sided storage. On the bilateral carrier `XCheb` the
-correct φ is therefore NOT the plain ring product of the stored element (whose
-negative modes are zero, not symmetric): we first apply the symmetrization
-`S(h)_k = h_{|k|}` — which reads only non-negative modes — and then multiply:
+The example supplies the syntax `f_cpoly = X² − X` and nothing structural. The
+coefficient nonlinearity is the library's `ChebyshevIVP.banachField f_cpoly`: the
+book's convolution (Eq. 14.10) is bilateral with the SYMMETRIC extension
+`ã_{-k} = ã_k` of the one-sided storage, so each input is first symmetrized
+(`l1Chebyshev.symmetrize`, `S(h)_k = h_{|k|}`, `‖S‖ ≤ 2`) and then multiplied in the
+bilateral algebra: `φ(a) = S(a)·S(a) − S(a)`. Reading only non-negative modes is what
+keeps the Z₁ bound finite (the composed approximation is the identity on negative
+modes, so unsymmetrized derivative couplings would leak unpreconditioned); zeros of
+`G` have vanishing negative modes, where φ agrees with the book's Eq. 14.11.
 
-  `φ(a) = S(a) * S(a) - S(a)`,   `‖S‖ ≤ 2`.
+## The explicit derivative
 
-Reading only non-negative modes is also what keeps the Z₁ bound finite: the
-composed approximation acts as the identity on negative modes, so any
-derivative coupling from negative input modes would be entirely
-unpreconditioned (leakage ε ≈ 0.73, killing the certificate); with `S` those
-columns vanish and ε ≈ 0.0034. Zeros of G still have vanishing negative modes
-(pass-through), and on such elements φ agrees with the book's Eq. 14.11.
+`Dphi a h l = 2·S(aₗ)·S(hₗ) − S(hₗ)` is the example's own algebra: the Z₁ column
+computation of `Certificate.lean` unfolds it by `show`. `Dphi_eq_derivative` /
+`compPolyDerivative_apply_eq_Dphi` identify it with the adapter's symbolic derivative
+of `f_cpoly`; differentiability of the preconditioned map (`G_diff`) comes from the
+adapter, not from this formula.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
-open Metric Set Filter ContinuousLinearMap RadiiPolynomial ChebyshevIVP
+open Metric Set Filter RadiiPolynomial ChebyshevIVP MvPolyBridge
 
 noncomputable section
 
@@ -51,118 +51,52 @@ instance : Fact ((1 : ℝ) < (ν_val : ℝ)) := ⟨by rw [show ((ν_val : ℝ)) 
 lemma ν_val_eq_q : (ν_val : ℝ) = ((ν_q : ℚ) : ℝ) := by
   rw [show ((ν_val : ℝ)) = 2 from rfl]; norm_num
 
+/-- The weight is at least `2`: the hypothesis of the contractive (`_of_two_le_`) solution
+faces, which this example meets with equality. -/
+lemma two_le_ν_val : (2 : ℝ) ≤ (ν_val : ℝ) := by
+  rw [show ((ν_val : ℝ)) = 2 from rfl]
+
 /-- Initial value u(-1) = 1/2. -/
 def p₀ : Fin L → ℝ := fun _ => 1/2
 
-/-! ## 2. The symmetrization operator S
+/-! ## 2. The polynomial system and its explicit derivative -/
 
-`S(h)_k = h_{|k|}`: symmetric output, reads only non-negative input modes.
-The construction lives in the library (`l1Chebyshev.symmetrize`, promoted from
-this example 2026-08-25); `S`/`Ssym` remain as the example's local notation. -/
+/-- One polynomial supplies the function, coefficient, and rational certificate interpretations. -/
+def f_cpoly (l : Fin L) : CompPoly L := .X l * .X l - .X l
 
-/-- The symmetrized element (library `l1Chebyshev.symmetrize`). -/
-abbrev Ssym : l1Chebyshev ν_val → l1Chebyshev ν_val := l1Chebyshev.symmetrize
+/-- The literal syntax is what `compPolyOf%` reifies the nonlinearity's own lambda to:
+the certificate-level witness that the elaborator and the hand-written AST agree. -/
+theorem f_cpoly_reified :
+    f_cpoly 0 = compPolyOf% (fun u : Fin L → ℝ => u 0 * u 0 - u 0) := rfl
 
-/-- The symmetrization as a CLM, `‖S‖ ≤ 2` (library `l1Chebyshev.symmetrize_CLM`). -/
-abbrev S : l1Chebyshev ν_val →L[ℝ] l1Chebyshev ν_val := l1Chebyshev.symmetrize_CLM
+/-- The Dφ direction map used in the Z-bounds: `Dφ(a)(h)ₗ = 2·S(aₗ)·S(hₗ) − S(hₗ)`. -/
+def Dphi (a h : XCheb ν_val L) (l : Fin L) : l1Chebyshev ν_val :=
+  (2 : ℝ) • (l1Chebyshev.symmetrize_CLM (a l) * l1Chebyshev.symmetrize_CLM (h l))
+    - l1Chebyshev.symmetrize_CLM (h l)
 
-@[simp] lemma Ssym_toSeq (a : l1Chebyshev ν_val) (k : ℤ) :
-    l1Chebyshev.toSeq (Ssym a) k = l1Chebyshev.toSeq a (k.natAbs : ℤ) :=
-  l1Chebyshev.symmetrize_toSeq a k
+/-- The direction map is the adapter's derivative applied to the direction. -/
+lemma Dphi_eq_derivative (a h : XCheb ν_val L) (l : Fin L) :
+    Dphi a h l = CompPoly.Chebyshev.derivative (f_cpoly l) a h := by
+  rw [CompPoly.Chebyshev.derivative_apply, Fin.sum_univ_one]
+  have hl : l = 0 := Subsingleton.elim _ _
+  subst hl
+  symm
+  change CompPoly.Chebyshev.eval ((f_cpoly 0).pderiv 0) a * l1Chebyshev.symmetrize_CLM (h 0) =
+    (2 : ℝ) • (l1Chebyshev.symmetrize_CLM (a 0) * l1Chebyshev.symmetrize_CLM (h 0))
+      - l1Chebyshev.symmetrize_CLM (h 0)
+  simp only [CompPoly.Chebyshev.eval, f_cpoly, CompPoly.pderiv_sub_op,
+    CompPoly.pderiv_mul_op, CompPoly.pderiv.eq_2, ite_true]
+  change ((algebraMap ℝ _ ((1 : ℚ) : ℝ) * l1Chebyshev.symmetrize_CLM (a 0) +
+    l1Chebyshev.symmetrize_CLM (a 0) * algebraMap ℝ _ ((1 : ℚ) : ℝ) -
+    algebraMap ℝ _ ((1 : ℚ) : ℝ)) * l1Chebyshev.symmetrize_CLM (h 0)) = _
+  simp [two_smul, sub_mul, add_mul]
 
-@[simp] lemma S_apply (a : l1Chebyshev ν_val) : S a = Ssym a := rfl
+/-- The adapter's system derivative, read componentwise, is the explicit direction map. -/
+lemma compPolyDerivative_apply_eq_Dphi (a h : XCheb ν_val L) (l : Fin L) :
+    compPolyDerivative f_cpoly a h l = Dphi a h l :=
+  (Dphi_eq_derivative a h l).symm
 
-lemma norm_Ssym_le (a : l1Chebyshev ν_val) : ‖Ssym a‖ ≤ 2 * ‖a‖ :=
-  l1Chebyshev.symmetrize_norm_le a
-
-lemma norm_S_le : ‖(S : l1Chebyshev ν_val →L[ℝ] l1Chebyshev ν_val)‖ ≤ 2 :=
-  l1Chebyshev.symmetrize_CLM_norm_le
-
-/-! ## 3. The nonlinearity φ(a) = S(a)·S(a) − S(a) and its derivative -/
-
-/-- Coefficient-level nonlinearity: the folded (physical Chebyshev) version of
-u ↦ u² − u, implemented as the bilateral product of symmetrized inputs. -/
-def phi (a : XCheb ν_val L) (l : Fin L) : l1Chebyshev ν_val :=
-  S (a l) * S (a l) - S (a l)
-
-@[simp] lemma leftMul_apply' (a h : l1Chebyshev ν_val) :
-    l1Chebyshev.leftMul a h = a * h := rfl
-
-/-- Squaring on the Chebyshev algebra: derivative is `2•leftMul x`. -/
-lemma hasFDerivAt_sq_cheb (x : l1Chebyshev ν_val) :
-    HasFDerivAt (fun y : l1Chebyshev ν_val => y * y)
-      ((2 : ℝ) • l1Chebyshev.leftMul x) x := by
-  have h := (hasFDerivAt_id (𝕜 := ℝ) x).mul' (hasFDerivAt_id x)
-  have heq : (_root_.id x • ContinuousLinearMap.id ℝ (l1Chebyshev ν_val)
-      + MulOpposite.op (_root_.id x) • ContinuousLinearMap.id ℝ (l1Chebyshev ν_val))
-      = (2 : ℝ) • l1Chebyshev.leftMul x := by
-    ext1 h'
-    simp only [add_apply, smul_apply,
-      ContinuousLinearMap.id_apply, id_eq, smul_eq_mul, op_smul_eq_mul,
-      leftMul_apply']
-    rw [mul_comm h' x, two_smul]
-  rw [heq] at h
-  exact h
-
-/-- The scalar-map derivative of q(y) = y·y − y. -/
-lemma hasFDerivAt_q (x : l1Chebyshev ν_val) :
-    HasFDerivAt (fun y : l1Chebyshev ν_val => y * y - y)
-      ((2 : ℝ) • l1Chebyshev.leftMul x - ContinuousLinearMap.id ℝ _) x :=
-  (hasFDerivAt_sq_cheb x).sub (hasFDerivAt_id x)
-
-/-- Component projection composed with S. -/
-def SP (l : Fin L) : XCheb ν_val L →L[ℝ] l1Chebyshev ν_val :=
-  S.comp (ContinuousLinearMap.proj l)
-
-@[simp] lemma SP_apply (l : Fin L) (a : XCheb ν_val L) : SP l a = Ssym (a l) := rfl
-
-/-- Derivative of φ in the l-th component:
-`Dφ(a)h = 2·S(a l)·S(h l) − S(h l)`. -/
-lemma hasFDerivAt_phi (a : XCheb ν_val L) (l : Fin L) :
-    HasFDerivAt (fun x => phi x l)
-      (((2 : ℝ) • l1Chebyshev.leftMul (S (a l))
-        - ContinuousLinearMap.id ℝ _).comp (SP l)) a := by
-  have hq := hasFDerivAt_q (S (a l))
-  have hcomp := hq.comp a (SP l).hasFDerivAt
-  exact hcomp
-
-lemma differentiable_phi (l : Fin L) : Differentiable ℝ (fun x => phi x l) :=
-  fun a => (hasFDerivAt_phi a l).differentiableAt
-
-/-- The Dφ direction map used in Z-bounds: `Dφ(a)(h)ₗ = 2·S(aₗ)·S(hₗ) − S(hₗ)`. -/
-def Dphi (a : XCheb ν_val L) (h : XCheb ν_val L) (l : Fin L) : l1Chebyshev ν_val :=
-  (2 : ℝ) • (S (a l) * S (h l)) - S (h l)
-
-lemma fderiv_phi_apply (a h : XCheb ν_val L) (l : Fin L) :
-    fderiv ℝ (fun x => phi x l) a h = Dphi a h l := by
-  rw [(hasFDerivAt_phi a l).fderiv]
-  show (2 : ℝ) • l1Chebyshev.leftMul (S (a l)) (Ssym (h l))
-      - Ssym (h l) = _
-  simp [Dphi]
-
-/-- The K-bound: `‖Dφ(a)h‖ ≤ (2‖S(aₗ)‖ + 1)·2·‖h‖` componentwise. -/
-lemma norm_Dphi_le (a h : XCheb ν_val L) (l : Fin L) :
-    ‖Dphi a h l‖ ≤ (2 * ‖S (a l)‖ + 1) * (2 * ‖h‖) := by
-  have hSh : ‖S (h l)‖ ≤ 2 * ‖h‖ := by
-    refine le_trans (norm_Ssym_le (h l)) ?_
-    have : ‖h l‖ ≤ ‖h‖ := norm_le_pi_norm h l
-    linarith
-  have hmul : ‖S (a l) * S (h l)‖ ≤ ‖S (a l)‖ * ‖S (h l)‖ := norm_mul_le _ _
-  have h1 : ‖Dphi a h l‖ ≤ 2 * ‖S (a l) * S (h l)‖ + ‖S (h l)‖ := by
-    refine le_trans (norm_sub_le _ _) ?_
-    rw [norm_smul]
-    simp
-  have h2 : 2 * ‖S (a l) * S (h l)‖ + ‖S (h l)‖
-      ≤ 2 * (‖S (a l)‖ * ‖S (h l)‖) + ‖S (h l)‖ := by
-    nlinarith [norm_nonneg (S (h l))]
-  have h3 : 2 * (‖S (a l)‖ * ‖S (h l)‖) + ‖S (h l)‖
-      = (2 * ‖S (a l)‖ + 1) * ‖S (h l)‖ := by ring
-  have h4 : (2 * ‖S (a l)‖ + 1) * ‖S (h l)‖ ≤ (2 * ‖S (a l)‖ + 1) * (2 * ‖h‖) := by
-    have hpos : (0 : ℝ) ≤ 2 * ‖S (a l)‖ + 1 := by positivity
-    exact mul_le_mul_of_nonneg_left hSh hpos
-  linarith
-
-/-! ## 4. Data bundle -/
+/-! ## 3. Data bundle -/
 
 /-- The bundled numerical data for the standard Chebyshev IVP pipeline. -/
 def data : ChebyshevIVP.StdChebIVPData ν_val L N where
@@ -172,5 +106,43 @@ def data : ChebyshevIVP.StdChebIVPData ν_val L N where
   ν_q := ν_q
   hν := ν_val_eq_q
   habar_size := fun _ => by native_decide
+
+/-- Differentiability of the preconditioned map, from the syntax
+(consumed by `Examples/Transport/TwinTransport.lean`). -/
+lemma G_diff : Differentiable ℝ (data.G (banachField f_cpoly) p₀) :=
+  data.differentiable_G_of_compPoly f_cpoly p₀
+
+/-! ## 4. Audit witnesses
+
+The three theorems below are not consumed by the certificate: `Certificate.lean` checks
+the stored Jacobian through its own exact-ℚ folds (`Z₀_finBlockNorm_le`, the `Z₁` column
+computation). They are independent `native_decide` witnesses that the stored matrix
+`DF_col` is the one the polynomial generates, and the audit files under
+`tmp/proposal_experiments_2026_09_06/checks/cheb_comppoly_promotion_2026_09_12/`
+(`promoted_axioms.lean`) print their axioms. -/
+
+/-- Audit witness: every stored finite Jacobian column is generated by the shared
+polynomial (one `native_decide` over the 41 × 41 block). -/
+theorem computed_DF_columns : ∀ l m : Fin L, ∀ k : Fin (N + 1),
+    Array.ofFn (fun n : Fin (N + 1) =>
+      compPolyDFQ f_cpoly (fun _ => abar_0) l m n k) = DF_col l m k := by
+  native_decide
+
+/-- Audit witness, entrywise form of `computed_DF_columns`. -/
+theorem computed_DF_entries (l m : Fin L) (n k : Fin (N + 1)) :
+    compPolyDFQ f_cpoly data.abar_Q l m n k = (data.DF_col l m k).getD n 0 := by
+  have h := congrArg (fun a : Array ℚ => a.getD n 0) (computed_DF_columns l m k)
+  simpa [Array.getD, n.isLt, data] using h
+
+/-- Audit witness: the checked finite entries are the derivatives of the raw coefficient
+equations (`computed_DF_entries` composed with the adapter's
+`rawDerivative_single_eq_cast_of_compPoly`). -/
+theorem rawDerivative_single_eq_dataDF (l m : Fin L) (n k : Fin (N + 1)) :
+    FAseq ((Pi.single m (l1Chebyshev.single (ν := ν_val) (↑(k : ℕ) : ℤ) 1) :
+      XCheb ν_val L) l) n +
+      FCseq (compPolyDerivative f_cpoly data.abar
+        (Pi.single m (l1Chebyshev.single (↑(k : ℕ) : ℤ) 1)) l) n =
+      ((data.DF_col l m k).getD n 0 : ℝ) := by
+  rw [data.rawDerivative_single_eq_cast_of_compPoly, computed_DF_entries]
 
 end Example1421

@@ -204,6 +204,84 @@ lemma fderiv_G_tail (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L �
   congr 1; congr 1
   exact congrArg shiftDivN (hDφ h l).symm
 
+/-! ## 6'. Z₁ Bound (needs the finite Jacobian check and a derivative bound) -/
+
+/-- The finite/tail decomposition of `composedApprox − DG(ā)` that both `Z₁` recipes
+consume: finite modes vanish (the finite Jacobian check `hfin`, coefficient form) and
+tail modes are `shiftDivN (Dφ h l)` (`composedApprox_toCLM_tail` + `fderiv_G_tail`). -/
+private lemma composedApprox_sub_fderiv_G_toSeq
+    (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
+    (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
+    (hfin : ∀ (h : XL1 ν L) (l : Fin L) (n : ℕ), n ≤ N →
+      toCoeff (ν := ν) ((StdIVPData.composedApprox d).toCLM (ν := ν) h) l n =
+        toCoeff (ν := ν) ((fderiv ℝ (d.G φ x₀) d.abar) h) l n)
+    (Dφ : (Fin L → l1Weighted ν) → Fin L → l1Weighted ν)
+    (hDφ : ∀ h l, Dφ h l = (fderiv ℝ (fun a => φ a l) d.abar) h) :
+    (∀ (h : XL1 ν L) (l : Fin L) (n : ℕ), n ≤ N →
+      l1Weighted.toSeq ((((StdIVPData.composedApprox d).toCLM (ν := ν) -
+        fderiv ℝ (d.G φ x₀) d.abar) h) l) n = 0) ∧
+    (∀ (h : XL1 ν L) (l : Fin L) (n : ℕ), N < n →
+      l1Weighted.toSeq ((((StdIVPData.composedApprox d).toCLM (ν := ν) -
+        fderiv ℝ (d.G φ x₀) d.abar) h) l) n =
+        l1Weighted.toSeq (shiftDivN_CLM (Dφ h l)) n) := by
+  refine ⟨fun h l n hn => ?_, fun h l n hn => ?_⟩
+  · simp only [sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq,
+      sub_eq_zero]
+    exact hfin h l n hn
+  · have hc := d.composedApprox_toCLM_tail h l n hn
+    have hf := d.fderiv_G_tail φ x₀ hφ_diff Dφ hDφ h l n hn
+    simp only [sub_apply, Pi.sub_apply, l1Weighted.sub_toSeq]
+    show toCoeff (ν := ν) ((StdIVPData.composedApprox d).toCLM (ν := ν) h) l n -
+        toCoeff (ν := ν) ((fderiv ℝ (d.G φ x₀) d.abar) h) l n = _
+    rw [hc, hf]; simp [toCoeff]
+
+/-- **`Z₁` recipe bound** `ν/(N+1) · K ≤ Z₁` for a `StdIVPData` bundle: `IVP.ivp_Z₁_le`
+with the finite/tail plumbing discharged. The certificate supplies the finite Jacobian
+check `hfin` (coefficient form), its derivative map `Dφ` with the identification `hDφ`,
+and the per-component bound `‖Dφ h l‖ ≤ K ‖h‖`. -/
+theorem Z₁_le
+    (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
+    (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
+    (hfin : ∀ (h : XL1 ν L) (l : Fin L) (n : ℕ), n ≤ N →
+      toCoeff (ν := ν) ((StdIVPData.composedApprox d).toCLM (ν := ν) h) l n =
+        toCoeff (ν := ν) ((fderiv ℝ (d.G φ x₀) d.abar) h) l n)
+    (Dφ : (Fin L → l1Weighted ν) → Fin L → l1Weighted ν)
+    (hDφ : ∀ h l, Dφ h l = (fderiv ℝ (fun a => φ a l) d.abar) h)
+    {K : ℝ} (hK : 0 ≤ K)
+    (hDφ_norm : ∀ (h : XL1 ν L) (l : Fin L), ‖Dφ h l‖ ≤ K * ‖h‖)
+    {Z₁ : ℝ} (hZ₁ : (ν : ℝ) / ((N : ℝ) + 1) * K ≤ Z₁) :
+    Z₁_norm (d.G φ x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L))
+      ((StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ Z₁ := by
+  obtain ⟨h1, h2⟩ := d.composedApprox_sub_fderiv_G_toSeq φ x₀ hφ_diff hfin Dφ hDφ
+  show ‖(ContinuousLinearMap.id ℝ _).comp
+    ((StdIVPData.composedApprox d).toCLM (ν := ν) - fderiv ℝ (d.G φ x₀) d.abar)‖ ≤ _
+  rw [ContinuousLinearMap.id_comp]
+  exact ivp_Z₁_le (StdIVPData.composedApprox d) (d.G φ x₀) d.abar Dφ h1 h2 hK hDφ_norm hZ₁
+
+/-- **`Z₁` exact-column bound** for a `StdIVPData` bundle: `IVP.ivp_Z₁_le_exact` with the
+finite/tail plumbing discharged. Same inputs as `Z₁_le`, with the recipe `‖Dφ h l‖ ≤ K ‖h‖`
+replaced by the per-component tail-tsum bound `hDtail` (an exact weighted column-sup). -/
+theorem Z₁_le_exact
+    (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
+    (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
+    (hfin : ∀ (h : XL1 ν L) (l : Fin L) (n : ℕ), n ≤ N →
+      toCoeff (ν := ν) ((StdIVPData.composedApprox d).toCLM (ν := ν) h) l n =
+        toCoeff (ν := ν) ((fderiv ℝ (d.G φ x₀) d.abar) h) l n)
+    (Dφ : (Fin L → l1Weighted ν) → Fin L → l1Weighted ν)
+    (hDφ : ∀ h l, Dφ h l = (fderiv ℝ (fun a => φ a l) d.abar) h)
+    {C : ℝ} (hC : 0 ≤ C)
+    (hDtail : ∀ (h : XL1 ν L) (l : Fin L),
+      ∑' n, |l1Weighted.toSeq (shiftDivN (Dφ h l)) (n + (N + 1))| *
+        (ν : ℝ) ^ (n + (N + 1)) ≤ C * ‖h‖)
+    {Z₁ : ℝ} (hZ₁ : C ≤ Z₁) :
+    Z₁_norm (d.G φ x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L))
+      ((StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ Z₁ := by
+  obtain ⟨h1, h2⟩ := d.composedApprox_sub_fderiv_G_toSeq φ x₀ hφ_diff hfin Dφ hDφ
+  show ‖(ContinuousLinearMap.id ℝ _).comp
+    ((StdIVPData.composedApprox d).toCLM (ν := ν) - fderiv ℝ (d.G φ x₀) d.abar)‖ ≤ _
+  rw [ContinuousLinearMap.id_comp]
+  exact ivp_Z₁_le_exact (StdIVPData.composedApprox d) (d.G φ x₀) d.abar Dφ h1 h2 hC hDtail hZ₁
+
 end StdIVPData
 
 /-- composedApprox = fderiv(G) on finite modes (for StdIVPData). -/
@@ -223,7 +301,7 @@ lemma StdIVPData.composedApprox_eq_fderiv_G_fin
     (h : XL1 ν L) (l : Fin L) (n : ℕ) (hn : n ≤ N) :
     toCoeff (ν := ν) ((StdIVPData.composedApprox d).toCLM (ν := ν) h) l n =
       toCoeff (ν := ν) ((fderiv ℝ (d.G φ x₀) d.abar) h) l n :=
-  ivpComposedApprox_eq_fderiv_fin d.approxInverse d.approxDeriv φ x₀ d.tailCancel
+  composedApprox_eq_fderiv_fin d.approxInverse d.approxDeriv φ x₀ d.tailCancel
     d.htail_diag_inv _ hφ_diff d.abar
     (ivp_hDF_block_nat d.approxDeriv φ φ_spec x₀ d.abar
       hφ_eq hφ_diff Dφ_Q hDφ_Q

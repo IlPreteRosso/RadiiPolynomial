@@ -38,8 +38,10 @@ series termwise, so its zeros are read back the same way — the **integral-equa
   already on the production storage carrier, so the trajectory radius improves to `‖a‖`.
 
 The nonlinearity enters only through the hypothesis `hφ : u_{φ(a)_l}(t) = f(u(t))_l` on
-`[-1, 1]`, which a concrete example discharges with `eval_mul_of_isSymmetric` and friends.
-Mirrors `Applications/IVP/Taylor/Trajectory.lean`, which is untouched.
+`[-1, 1]`. For coefficient and function interpretations of the same `CompPoly` system,
+`MvPolyBridge.CompPoly.Chebyshev.eval_eval` supplies this identity through the physical
+Chebyshev evaluation character. Other nonlinearities can supply `hφ` directly.
+This mirrors `Applications/IVP/Taylor/Trajectory.lean`.
 -/
 
 open RadiiPolynomial Set Polynomial.Chebyshev

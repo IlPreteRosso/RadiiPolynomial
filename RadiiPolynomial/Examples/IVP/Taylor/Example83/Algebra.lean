@@ -156,26 +156,12 @@ lemma composedApprox_eq_fderiv_G_fin (h : XL1 ν_val L) (l : Fin L) (n : ℕ) (h
       toCoeff (ν := ν_val) ((fderiv ℝ (data.G f x₀) data.abar) h) l n :=
   data.composedApprox_eq_fderiv_G_fin_of_compPoly f_cpoly x₀ hDF_nat h l n hn
 
-/-! ## 6. Fderiv infrastructure (via StdIVPData) -/
-
-lemma fderiv_G_lorenz_tail (h : XL1 ν_val L) (l : Fin L) (n : ℕ) (hn : N < n) :
-    toCoeff (ν := ν_val) ((fderiv ℝ (data.G f x₀) data.abar h)) l n =
-      toCoeff (ν := ν_val) h l n -
-        toCoeff (ν := ν_val) (fun l => shiftDivN_CLM (Df h l)) l n :=
-  data.fderiv_G_tail f x₀ differentiable_f_component
-    Df Df_eq_fderiv h l n hn
-
 /-! ## 7. ℚ Bridges and Support Bounds -/
 
 def x₀_q : Fin L → ℚ | 0 => 1 | 1 => 0 | 2 => 0
 
 def F_Q (l : Fin L) (n : ℕ) : ℚ :=
   IVP.ivpCoeffsQ f_cpoly data.abar_Q x₀_q l n
-
-lemma f_bridge (l : Fin L) (n : ℕ) :
-    l1Weighted.toSeq (f data.abar l) n =
-      ((f_cpoly l).evalCoeff abar_Q n : ℝ) := by
-  exact (f_cpoly l).toSeq_evalBanach data.abar abar_Q data.abar_toSeq_eq n
 
 lemma F_bridge (l : Fin L) (n : ℕ) :
     F data.abar l n = (F_Q l n : ℝ) := by
