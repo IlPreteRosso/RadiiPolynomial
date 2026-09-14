@@ -1,0 +1,129 @@
+{
+ "skill": "agents-bus",
+ "version": 3,
+ "revision": 3,
+ "derived_at": "2026-09-14T02:34:09.629080+00:00",
+ "author": "claude ed032c52-c989-49a1-b2e4-9faec0a75155",
+ "reviewer": "codex 01a073a1-2fa4-7ae2-9f41-db3c42e23f84",
+ "release_manifest": {
+  "path": "/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/tmp/agents_bus/prototype/delegation_v1/RELEASE_MANIFEST_v2_3.json",
+  "sha256": "fd3f0cac29bd656f76c287d7cb0c0a4fcebedcffc1f0b2ba72b9cdfc7f1c62c9",
+  "parent": {
+   "path": "/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial/tmp/agents_bus/prototype/activation_v4/RELEASE_MANIFEST_v2_2.json",
+   "sha256": "2d0bc901a816537072d72da481dc1613a663b9935badfc394db897b959052634"
+  }
+ },
+ "design_sha256": "6162cbb3b2ec591d043768a7e090f75fa3fe0cdf4c3a2653cb502c867b72bca0",
+ "design_revision": 12,
+ "test_run": "delegation-20260913-a",
+ "agreements": {
+  "claude": "20260914T022529Z-claude-agree-delegation-release-b6b029f9",
+  "codex": "20260914T022447Z-codex-agree-delegation-release-b0d02056"
+ },
+ "receipts": {
+  "20260914T022529Z-claude-agree-delegation-release-b6b029f9": "20260914T022620Z-codex-received-delegation-agreement-05830fa1",
+  "20260914T022447Z-codex-agree-delegation-release-b0d02056": "20260914T022529Z-claude-receipt-codex-agreement-d3bb9a5b"
+ },
+ "gate": "prototype/delegation_v1/gate/GATE_RESULT.json ready:true (packet ACTUAL_AGREEMENT_PACKET.json 2999a643\u2026; codex BOTH_GATES_VERIFIED.json 77976282\u2026)",
+ "files": {
+  "SKILL.md": "953f36ff77096b11dab337d193cc195b37dd544179b1061471a9beecb763db4f",
+  "references/DESIGN_v1.md": "d45a48448da0efb63d0bcbdeefe00a2f1f5fe65eaa60847d531cac3b40293a41",
+  "references/DESIGN_v2.md": "6162cbb3b2ec591d043768a7e090f75fa3fe0cdf4c3a2653cb502c867b72bca0",
+  "references/RECOVERY.md": "de4dc90a0d2444d54a381ff1b0e2012b42da944d06f1098aa7c2c364e77273b4",
+  "references/TRIGGERS.md": "84776733126e990c2f49252025daf8b2e362d83f000f6a13dfd136f177d956d0",
+  "references/WORKER_ENVELOPE_TEMPLATE.md": "608f74a15049387018bcdc2dcfafab5e2a33291e0bd22bdf4d8b1dc5248d5c47",
+  "scripts/admin.py": "6fe6df804f23657c27fae921e2543b0780c4eeb6553b0e7f6c7c23dac64d3043",
+  "scripts/bootstrap.py": "fa12da1bffa3b129ee25baadf1fc46a1ebcd9561113299d3f40ba3487bbcd504",
+  "scripts/bus.py": "80e2ee05225441e17a6c72f492b7ca70cc689d421bed918ee3417a22f92f3a32",
+  "scripts/common.py": "90ef4199bd681171ea36cac799834976eb2a99c5691b9ed9c48d2ad837b8b3b8",
+  "scripts/delegate.py": "23af395805ad50e39082d10479551a4d964dc968f438ebba9a8e066841f71422",
+  "scripts/fake_worker.py": "75d795e8749b114391cd7bb9bae112104e042ddb3c19e4f4dc829ba283a56922",
+  "scripts/gate.py": "0a0299f147c5490bd8cab496a50d94262784a2c5b3b1f0cbd5b5ce9ad6217107",
+  "scripts/locking.py": "ea5f4fa3b4d5fe0055a98f6a0cdc55bfa5a4a4f14538db800c7c0702ef0aab94",
+  "scripts/participants.py": "be49938bc8da72e3f5fa63d88de2f2fe9e853ed0025fad4d06c3590af1d571af",
+  "scripts/test_admin.py": "0c2ec4a1843d624b4edc10aa519e03df0d1eb65fa61b8bf05f95e6bd1f41743e",
+  "scripts/test_bootstrap.py": "77ed308e1c2c2278b7c2ddda3ccfe1464e4ad19652b4ea38cec7b97710e156d2",
+  "scripts/test_common.py": "658eb785f5744a8bfb0f18710684fea81d7d0d986d4310e7578ff5ea7d6e50ac",
+  "scripts/test_delegate.py": "e14fa27c5b77712347b75b4db9032e8a6660d1fd582d10868f4dea78b73e013c",
+  "scripts/test_locking.py": "6745d3da570a7d7fe2213865379d15d93f4f356be23ae5391e6c262512043204",
+  "scripts/test_participants.py": "c2910be497a35a6b57f088c1b47b14c97b95ffd7d16850a917c8ba09300b3381",
+  "scripts/tests/test_bus.py": "149412e328ad72a9c0b61a623739ec252cbd323e5bf951cc36fe2b4f840a6377",
+  "scripts/tests/test_gate.py": "d35942c8eefb9a21d37d1dc8c24d89bb4247753519fc6fa8af50e54760b98625"
+ },
+ "expected_file_count_including_manifest": 24,
+ "mirrors": [
+  "/Users/ilpreterosso/.claude/skills/agents-bus",
+  "/Users/ilpreterosso/.agents/skills/agents-bus"
+ ],
+ "post_install_checks": [
+  "70 core tests from scripts directory",
+  "26 unchanged transport/gate tests from scripts/tests with scripts on PYTHONPATH",
+  "55 delegation adapter tests (scripts/test_delegate.py with the fake harness)",
+  "all 24 payload files identical across canonical and both mirrors"
+ ],
+ "legacy": "established pre-v2 buses keep their standalone protocol reference (this project: tmp/agents_bus/LEGACY_PROTOCOL_v2/); no migration",
+ "rule": "installed copies must be byte-identical to the canonical repository copy (MANIFEST.json compared across copies, self hash excluded); changing tested semantics or helper bytes reopens the release gate (SKILL.md \u00a79)",
+ "release": {
+  "kind": "helper-adding (delegation adapter v6; design rev 12)",
+  "summary": "Adds scripts/delegate.py (plan/publish/launch/bind/wait/verify/replay), scripts/test_delegate.py + scripts/fake_worker.py, references/WORKER_ENVELOPE_TEMPLATE.md; SKILL \u00a77 delegation row OPERATIVE for Claude \u2192 Codex only; DESIGN rev 12 (\u00a76.2 heading, \u00a76.7 run history, \u00a76.8 contract as implemented with the evidence vocabulary); RECOVERY F rewritten around delegate.py. Everything else byte-identical.",
+  "evidence_index_sha256": "357dc6c55bdf2c08f36b04db4378d5c3891ebd2bed5599402249c30b812b39ff",
+  "recovery_drill": "delegation-recovery-20260914-d",
+  "review_cycle": "codex reviews v1\u2013v6 (checks/delegation_review/), acceptance 20260914T015813Z-codex-delegation-v6-review-accepted-8ff6e81b, C handoff accepted 20260914T022447Z-codex-delegation-c-accepted-9b7bf8dd",
+  "agreements": {
+   "claude": "20260914T022529Z-claude-agree-delegation-release-b6b029f9",
+   "codex": "20260914T022447Z-codex-agree-delegation-release-b0d02056"
+  },
+  "receipts": {
+   "20260914T022529Z-claude-agree-delegation-release-b6b029f9": "20260914T022620Z-codex-received-delegation-agreement-05830fa1",
+   "20260914T022447Z-codex-agree-delegation-release-b0d02056": "20260914T022529Z-claude-receipt-codex-agreement-d3bb9a5b"
+  },
+  "user_authorization": {
+   "claude": "2026-09-14 'pasted, and go!' in the Claude session",
+   "codex": "2026-09-14 the user's direct P2 paste in the Codex task (P2_RELEASE_AUTHORIZATION_v3r3.json per the paste text)"
+  }
+ },
+ "amendment_history": [
+  {
+   "editorial_revision": 1,
+   "kind": "documentation-only",
+   "agreements": {
+    "claude": "20260913T202514Z-claude-agree-checkpoint-note-7e0b9f02",
+    "codex": "20260913T202418Z-codex-agree-checkpoint-note-c14f2aaa"
+   },
+   "receipts": {
+    "20260913T202514Z-claude-agree-checkpoint-note-7e0b9f02": "20260913T202623Z-codex-received-note-agreement-1636fc59",
+    "20260913T202418Z-codex-agree-checkpoint-note-c14f2aaa": "20260913T202514Z-claude-agree-checkpoint-note-7e0b9f02"
+   },
+   "gate": "revisions/c/checkpoint_note/GATE_PASSED.json ready:true",
+   "draft_sha256": "b7e81745ad16c7ec215767d2799df364ca7fee9a52352135f65ceea4c24b5bc9",
+   "release_manifest_sha256": "fda7c04c66174d18a471a984383bce17ebdb80a60ad1a4516ec229ca9d1edbfb"
+  },
+  {
+   "editorial_revision": 2,
+   "kind": "documentation-only (activation amendment)",
+   "summary": "Activation amendment (r7): SKILL \u00a77 rewritten (routes incl. verified app-heartbeat and cli-queue; delegation adapter deferred/not operative; registry rule; worker evidence rule), RECOVERY A.7 + B.1 + new F, references/DESIGN_v2.md rev 11 (\u00a76 \u2192 \u00a76.0\u20136.7 with the envelope-FILE digest rule and process-group scope). Everything else byte-identical.",
+   "agreements": {
+    "claude": "20260913T222945Z-claude-agree-activation-amendment-d66de5d2",
+    "codex": "20260913T222728Z-codex-agree-activation-amendment-3ceed83f"
+   },
+   "receipts": {
+    "20260913T222945Z-claude-agree-activation-amendment-d66de5d2": "20260913T223027Z-codex-received-activation-agreement-6e4c6997",
+    "20260913T222728Z-codex-agree-activation-amendment-3ceed83f": "20260913T222945Z-claude-agree-activation-amendment-d66de5d2"
+   },
+   "gate": "prototype/activation_v4/gate/GATE_RESULT.json ready:true",
+   "release_manifest_sha256": "2d0bc901a816537072d72da481dc1613a663b9935badfc394db897b959052634",
+   "recovery_drill": "activation-recovery-20260913-d",
+   "manifest_sha256_before_this_release": "f515380202b407a185d2b609339980374e1fc7e55662cd60839df7b5a390f02a"
+  }
+ ],
+ "prior_release_provenance": {
+  "universal_revision_c": {
+   "code_inputs_sha256": "9cb8c4fa6616e2c7938b02da0ed228d1c6a57d76c4de29fc4806e5132835a7e1",
+   "package_inventory_sha256": "cfac23ce00a6d469b7e6a381b630ae41caeedd7f47ad53915f8cf87afc04e0b1",
+   "text_approval_sha256": "1253f138245f4f329936705b667df3b81a8168cbb6cbce0237ab7add45eb8c07",
+   "test_run": "universal-v2-20260913-c",
+   "release_manifest_v2_1_sha256": "fda7c04c66174d18a471a984383bce17ebdb80a60ad1a4516ec229ca9d1edbfb",
+   "note": "provenance of the unchanged helpers, tests and original package text (universal v2 release, revision C); not current r7 metadata"
+  }
+ }
+}
