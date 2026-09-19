@@ -144,3 +144,54 @@ does not enter a theorem's trust surface merely because its module is imported.
 For isolated experiments, compile their dependency chain and audit theorem axioms; distinguish
 experimental conclusions from production results. Documentation-only edits need their own
 validation, not a Lean rebuild.
+
+## Escalation To Aristotle
+
+Aristotle (Harmonic's cloud prover, `aristotlelib` in `exterior/data_pipeline`) is a bounded
+worker for a single extra-hard `sorry`, not a default step. Use it only after the local ladder
+is exhausted: `exact?`/`aesop`/`polyrith`, then one Fable sorry-closing pass. Submit one
+lemma with its dependency chain, never a whole file. Three stages, each gated on the last.
+
+1. **Grind.** `source ~/.zshrc &&` before any command; the key is not loaded in tool shells,
+   and never dump the environment afterwards. Submit through
+   `generate_proofs.py aristotle --input <stmts.jsonl>` (async) or
+   `aristotle submit "<prompt>" --project-dir <dir>`; record the project id in the ledger.
+   Two things leave the machine: the whole `--project-dir` tree (tarred with no extension
+   filter, minus that directory's own `.gitignore`) and the prompt string itself. Library
+   source is fine in either. The reference-book PDFs under `docs/reference_book/` (tracked
+   in the nested checkout; listed in its `.gitignore` only to keep the client's walker out),
+   the rewrite-edition `.tex`, the `tmp/` experiment tree and any text derived from the book
+   are not, in the tree or in the prompt. So never pass the checkout root as `--project-dir`:
+   stage a scratch directory holding only `lakefile.toml`, `lean-toolchain`,
+   `RadiiPolynomial/`, `RadiiPolynomial.lean` and the statement file, the layout
+   `create_lean_project` in `generate_proofs.py` builds, and before submitting confirm that
+   `find <dir> -type f ! -name '*.lean' ! -name lakefile.toml ! -name lean-toolchain`
+   prints nothing. `book_to_proofs.py` puts book prose in the prompt by construction and is
+   gated behind `ARISTOTLE_ALLOW_BOOK_TEXT=1`; do not invoke it from this skill.
+   Aristotle resolves Mathlib on its side and runs its own toolchain (v4.28.0 as of
+   2026-09-19, against the library's v4.33.0; the CLI warns on submit), so a returned proof
+   is a candidate, not a result, until it compiles against the pinned toolchain in the nested
+   checkout. Expect renamed Mathlib lemmas and `simp` set drift across that gap. Collect
+   with `aristotle tasks <id>` (status) and `aristotle download <id> --destination <tar.gz>`.
+   The archive is Aristotle's copy of everything uploaded, possibly edited, plus its own
+   `lean-toolchain` and `lake-manifest.json`: take only the statement file out of it, diff
+   it against the one submitted, and accept only the proof-body hunk. Keep `aristotlelib`
+   current in the pipeline's `pyproject.toml`; a stale client 404s on the API.
+   Probe 2026-09-19: a Mathlib-only tsum lemma round-tripped in ~10 min and compiled on
+   v4.33.0 with standard axioms.
+2. **Trust surface.** Apply the Verification gate to the returned proof: rebuild,
+   `#print axioms` for the target and for every declaration the diff touched (Aristotle may
+   reach for `native_decide` or leave `sorryAx`), no upward imports, and a statement
+   byte-identical to the one submitted. Keep the returned statement file under the task's
+   `tmp/<task>/checks/` as provenance only, never the prompt or the uploaded tree. An
+   escalated proof is a cloud result: it does not enter the EI training data or count toward
+   the local prove rate unless its statement is first removed from the evaluation pool.
+3. **Golf.** Aristotle proofs are search-shaped: long `have` chains, redundant rewrites,
+   brute `nlinarith`/`simp` calls, and no use of the library's own API. Run the `lean-golfing`
+   skill on the accepted proof on the cheap tier (Sonnet; Opus if it stalls) with the bounded
+   goal: same statement, axiom set no larger, unfolding replaced by existing API lemmas, any
+   generic sublemma the proof surfaces extracted into the right module. Re-run the trust gate
+   after golfing, since golfing can pull in `decide` on large terms or `native_decide`.
+
+The golfed proof is what gets committed. If Aristotle had to reprove something the library
+should already offer, record it in the API insights ledger.
