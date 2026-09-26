@@ -187,19 +187,18 @@ derivative are derived from the polynomial system, the latter through the syntac
 Taylor side, hence no factor `2`).
 
 What a certificate supplies:
-* `active` and `hcomp_le` — the components whose derivative can move at all, and the
-  exact-ℚ block-norm check of the preconditioner restricted to them,
-  `Z₂_blockNorm_component_le … (by native_decide)`, in the shape `B · ν · (…) ≤ Z₂`;
-* `hinactive` — an inactive component has syntactic constant `0` (Lorenz: the linear first
-  equation);
-* `hB` — a bound `B` for the syntactic constant on the certificate ball. For the
-  syntactically quadratic presentations in Examples 8.1 and 8.3, the partials have
-  radius-independent syntactic Lipschitz bounds and `hB` reduces to `B = 2`
-  (`simp; norm_num`). Semantic degree `≤ 2` after cancellation does not ensure this.
-Nonnegativity of `B` and of `Z₂` is derived. The block-norm check comes first in the
-argument list so that its `native_decide` is the first postponed tactic block of the
-certificate lemma: `norm_num` consumes auxiliary declaration names, and the audited axiom
-name `<lemma>._native.native_decide.ax_1_1` must not move. -/
+* `active` and `hcomp_le` — the components whose derivative can move at all, and a bound of
+  the preconditioner's block norm restricted to them, in the shape `B · ν · (…) ≤ Z₂`;
+* `hinactive` — an inactive component has syntactic constant `0` (for instance a linear
+  component of the field);
+* `hB` — a bound `B` for the syntactic constant on the certificate ball. When every partial
+  derivative is syntactically affine, the syntactic Lipschitz bounds are radius-independent
+  and `B` is a number read off the syntax; semantic degree `≤ 2` after cancellation does not
+  ensure this. In general `B` is evaluated at the radii `‖āᵢ‖ + r₀`, where the syntactic
+  constant is monotone (`CompPoly.derivativeLipschitzBound_mono`).
+Nonnegativity of `B` and of `Z₂` is derived. The Taylor certification adapter
+(`Certification/IVP/Taylor.lean`, `IVP.StdIVPData.Z₂_le_of_Q`) computes `B`, `active` and the
+block-norm check from the syntax and the stored data in exact ℚ. -/
 theorem StdIVPData.Z₂_le_of_compPoly
     (d : StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
     (active : Finset (Fin L)) {B Z₂_val : ℝ}

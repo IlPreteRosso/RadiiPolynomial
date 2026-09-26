@@ -19,7 +19,7 @@ index set as the analytic tsum and the cast bridge is termwise).
 
 This file provides:
 * `colTailTermQ`, `colTailQ` — the computable ℚ mirrors (native_decide-friendly:
-  `Finset.range` folds, no `Finset.Icc` on ℤ);
+  `Finset.range` folds, no `Finset.Icc` on ℤ), and `colTailQ_nonneg`;
 * `shiftDivN_single_tailTsum_eq_colTailQ` — the exact tsum-to-ℚ-sum bridge;
 * `shiftDivN_leftMul_tail_cols_le_of_Q` — the certificate-facing reduction:
   a decidable check over the finite range `M ≤ N` (one `native_decide` in the
@@ -50,6 +50,15 @@ support-window sum `∑_{k = max(0, N−M)}^{d} |b_k| · ν^{k+M+1} / (k+M+1)`;
 `Finset.range (d + M + 2)` is a safe superset of the support of the terms. -/
 def colTailQ (bQ : Array ℚ) (ν_q : ℚ) (N M d : ℕ) : ℚ :=
   ∑ n ∈ Finset.range (d + M + 2), colTailTermQ bQ ν_q N M n
+
+/-- The ℚ column tail mass is nonnegative at a nonnegative weight. -/
+theorem colTailQ_nonneg (bQ : Array ℚ) {ν_q : ℚ} (hν : 0 ≤ ν_q) (N M d : ℕ) :
+    0 ≤ colTailQ bQ ν_q N M d :=
+  Finset.sum_nonneg fun n _ => by
+    unfold colTailTermQ
+    split_ifs
+    · exact div_nonneg (mul_nonneg (abs_nonneg _) (pow_nonneg hν _)) (by positivity)
+    · exact le_rfl
 
 /-- **Exact bridge**: for `b` with ℚ coefficient data `bQ` of support `≤ d`
 and rational weight, the analytic column tail mass at `single M 1` equals the

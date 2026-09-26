@@ -36,6 +36,7 @@ import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Applications.IVP.Taylor.Analytic
 import RadiiPolynomial.Applications.IVP.Taylor.Analyticity
 import RadiiPolynomial.Applications.IVP.Taylor.ComplexTime
+import RadiiPolynomial.Certification.IVP.Taylor
 
 -- Chebyshev IVP application
 import RadiiPolynomial.Applications.IVP.Chebyshev

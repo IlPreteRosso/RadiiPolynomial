@@ -19,13 +19,17 @@ The user only needs to provide equation-specific data (φ, x₀, bounds).
 ## Usage
 
 ```lean
--- In Algebra.lean:
+-- In the certificate's data module, with the stored arrays `A_col`, `DF_col`, `abar_Q`,
+-- a rational weight `ν_q`, its real realization `ν_val` with
+-- `ν_val_eq_q : (ν_val : ℝ) = ((ν_q : ℚ) : ℝ)`, and the shape proof
+-- `habar_size : ∀ l, (abar_Q l).size = N + 1`:
 def data : IVP.StdIVPData ν_val L N where
   A_col := A_col
   DF_col := DF_col
-  abar_Q := fun l => abar_l
-  ν_q := 1
+  abar_Q := abar_Q
+  ν_q := ν_q
   hν := ν_val_eq_q
+  habar_size := habar_size
 
 -- Then use: data.approxInverse, data.approxDeriv, data.tailCancel,
 --           data.htail_diag_inv, data.abar, data.abar_toSeq_eq, etc.

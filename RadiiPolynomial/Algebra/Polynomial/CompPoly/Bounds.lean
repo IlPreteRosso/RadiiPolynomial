@@ -173,6 +173,45 @@ theorem derivativeLipschitzBound_nonneg (p : CompPoly L) (R : Fin L → K)
 
 end Order
 
+/-- The syntactic norm bound is monotone in nonnegative radii. -/
+theorem normBound_mono (p : CompPoly L) {R S : Fin L → ℝ} (hR : ∀ i, 0 ≤ R i)
+    (hRS : ∀ i, R i ≤ S i) : p.normBound R ≤ p.normBound S := by
+  have hS : ∀ i, 0 ≤ S i := fun i => (hR i).trans (hRS i)
+  induction p with
+  | C r => exact le_rfl
+  | X i => exact hRS i
+  | add p q ihp ihq => exact add_le_add ihp ihq
+  | sub p q ihp ihq => exact add_le_add ihp ihq
+  | mul p q ihp ihq =>
+      exact mul_le_mul ihp ihq (CompPoly.normBound_nonneg q R hR)
+        (CompPoly.normBound_nonneg p S hS)
+  | neg p ih => exact ih
+  | smul r p ih => exact mul_le_mul_of_nonneg_left ih (Rat.cast_nonneg.mpr (abs_nonneg r))
+
+/-- The syntactic Lipschitz constant is monotone in nonnegative radii. -/
+theorem lipschitzBound_mono (p : CompPoly L) {R S : Fin L → ℝ} (hR : ∀ i, 0 ≤ R i)
+    (hRS : ∀ i, R i ≤ S i) : p.lipschitzBound R ≤ p.lipschitzBound S := by
+  have hS : ∀ i, 0 ≤ S i := fun i => (hR i).trans (hRS i)
+  induction p with
+  | C r => exact le_rfl
+  | X _ => exact le_rfl
+  | add p q ihp ihq => exact add_le_add ihp ihq
+  | sub p q ihp ihq => exact add_le_add ihp ihq
+  | mul p q ihp ihq =>
+      exact add_le_add
+        (mul_le_mul ihp (normBound_mono q hR hRS) (CompPoly.normBound_nonneg q R hR)
+          (CompPoly.lipschitzBound_nonneg p S hS))
+        (mul_le_mul (normBound_mono p hR hRS) ihq (CompPoly.lipschitzBound_nonneg q R hR)
+          (CompPoly.normBound_nonneg p S hS))
+  | neg p ih => exact ih
+  | smul r p ih => exact mul_le_mul_of_nonneg_left ih (Rat.cast_nonneg.mpr (abs_nonneg r))
+
+/-- The derivative Lipschitz constant is monotone in nonnegative radii. -/
+theorem derivativeLipschitzBound_mono (p : CompPoly L) {R S : Fin L → ℝ}
+    (hR : ∀ i, 0 ≤ R i) (hRS : ∀ i, R i ≤ S i) :
+    p.derivativeLipschitzBound R ≤ p.derivativeLipschitzBound S :=
+  Finset.sum_le_sum fun _ _ => lipschitzBound_mono _ hR hRS
+
 section SumMul
 
 variable {A ι : Type*} [NonUnitalSeminormedRing A] [Fintype ι]

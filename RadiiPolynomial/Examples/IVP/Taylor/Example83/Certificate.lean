@@ -1,12 +1,24 @@
 import RadiiPolynomial.Examples.IVP.Taylor.Example83.Algebra
 import RadiiPolynomial.Tactic.PDerivSimp
 import RadiiPolynomial.Certification
+import RadiiPolynomial.Certification.IVP.Taylor
 import RadiiPolynomial.Tactic.FinMatrixBound
 
 /-!
 # Example 8.3 — Certificate
 
 Computer-assisted proof for the Lorenz IVP. Uses `data : StdIVPData` from Algebra.lean.
+
+## Routes through the Taylor certification adapter
+
+`Z₀` and `Z₂` are read off the ν-free record `dataQ` of `data`
+(`Certification/IVP/Taylor.lean`), each by one `decide +kernel`: `Z₀` through the grid slot
+at grid denominator `10⁶⁰` (the exact-columns clause on these data is far heavier), `Z₂`
+through the active-block evaluator at the computed scale `ν_q · DLipBoundQ`. The first Lorenz
+equation is linear, so its syntactic derivative-Lipschitz constant is `0` and it is inactive;
+the other two are bilinear, with syntactically affine partials, so the constant is `2` at
+every radius and the computed active set is `{1, 2}`. `Z₁` keeps the recipe route
+(`Z₁_bound`).
 -/
 
 open scoped BigOperators Topology
@@ -18,32 +30,16 @@ namespace Example83.Cert
 
 /-! ## Z₀ -/
 
-private def defectBlockCols (l j : Fin L) (k : Fin (N + 1)) : Array ℚ :=
-  Array.ofFn fun (i : Fin (N + 1)) =>
-    blockDefectMatQ (fun l m k => A_col l m (k : ℕ)) (fun m j k => DF_col m j (k : ℕ)) l j i k
+/-- The ν-free record of `data` (`dataQ.toStdIVPData ν_val ν_val_eq_q = data` by `rfl`). -/
+private def dataQ : IVP.StdIVPDataQ L N :=
+  ⟨Example83.A_col, Example83.DF_col, Example83.abar_Q, ν_q, data.habar_size⟩
 
-private lemma Array.getD_ofFn_fin {n : ℕ} (f : Fin n → α) (i : Fin n) (d : α) :
-    (Array.ofFn f).getD (i : ℕ) d = f i := by
-  simp [Array.getD, Array.size_ofFn, i.isLt, Array.getElem_ofFn]
-
-private lemma defectBlockCol_correct (l j : Fin L) (i k : Fin (N + 1)) :
-    data.defect.finBlock l j i k = ((defectBlockCols l j k).getD (i : ℕ) 0 : ℝ) := by
-  rw [defectBlockCols, Array.getD_ofFn_fin]
-  have := blockDefectMatQ_correct
-    (fun l m => data.A_finBlock l m) (fun m j => data.DF_finBlock m j)
-    (fun l m (k : Fin (N + 1)) => A_col l m (k : ℕ))
-    (fun m j (k : Fin (N + 1)) => DF_col m j (k : ℕ))
-    (fun l m j i => by simp [IVP.StdIVPData.A_finBlock, data])
-    (fun m j k i => by simp [IVP.StdIVPData.DF_finBlock, data])
-    l j i k
-  show ((if l = j then 1 else 0) - ∑ m, data.A_finBlock l m * data.DF_finBlock m j) i k = _
-  exact this
+/-- The `Z₀` clause at the grid slot, grid denominator `10⁶⁰`. -/
+private theorem z0_grid10 : dataQ.ChecksZ₀By .grid (10 ^ 60) Z₀_bound := by decide +kernel
 
 lemma Z₀_finBlockNorm_le :
-    finiteBlockMatrixNorm ν_val data.defect.finBlock ≤ (Z₀_bound : ℝ) := by
-  finmatrix_bound
-    (finiteBlockMatrixNorm_le_of_Q_le _ defectBlockCols ν_q
-      (fun l j k i => defectBlockCol_correct l j i k) ν_val_eq_q)
+    finiteBlockMatrixNorm ν_val data.defect.finBlock ≤ (Z₀_bound : ℝ) :=
+  dataQ.defectZBy_sound ν_val_eq_q .grid (10 ^ 60) z0_grid10
 
 /-! ## ‖A‖ bound -/
 
@@ -143,33 +139,22 @@ lemma Z₁_le_cert :
 
 /-! ## Z₂ bound -/
 
-/-- **Z₂ obligation** through the `Z₂` socket: the first Lorenz equation is linear, so its
-syntactic derivative Lipschitz constant is `0` and it is inactive; the other two are
-bilinear with constant `2`, radius-free since the system has degree `≤ 2`. The exact-ℚ
-block-norm check of the preconditioner restricted to the active rows is the one
-`native_decide`. -/
+/-- The certificate radius is nonnegative. -/
+private theorem hr₀ : (0 : ℚ) ≤ r_minus := by decide +kernel
+
+/-- The `Z₂` clause at the certificate radius. -/
+private theorem z2 : dataQ.ChecksZ₂ f_cpoly r_minus Z₂_bound := by decide +kernel
+
+/-- **Z₂ obligation** through the `Z₂` clause of the Taylor adapter: the active-block evaluator
+at the computed scale `ν_q · DLipBoundQ` and the computed active set (the first Lorenz equation
+is linear, hence inactive; the other two are bilinear with constant `2`), one
+`decide +kernel` (`z2`). -/
 lemma Z₂_le_cert (c : XL1 ν_val L)
     (hc : c ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ)) :
     Z₂_norm (data.G f x₀) data.abar
       (ContinuousLinearMap.id ℝ (XL1 ν_val L)) c ≤
       (Z₂_bound : ℝ) * (r_minus : ℝ) :=
-  data.Z₂_le_of_compPoly f_cpoly x₀ {1, 2}
-    (fun l => Z₂_blockNorm_component_le data.approxInverse ABlockCols ν_q
-      (IVP.StdIVPData.approxInverse_tailBound_q (N := N)) {1, 2}
-      (fun l j k i => data.A_finBlock_eq l j i k) ν_val_eq_q
-      data.approxInverse_tailBound_eq (by native_decide) l)
-    (by unfold r_minus; positivity)
-    (fun j hj _ _ => by
-      have : j = 0 := by fin_cases j <;> simp_all (config := { decide := true })
-      subst this
-      simp (config := { decide := true })
-        [MvPolyBridge.CompPoly.derivativeLipschitzBound, f_cpoly, Fin.sum_univ_three])
-    (fun _ _ l => by
-      fin_cases l <;>
-        simp (config := { decide := true })
-          [MvPolyBridge.CompPoly.derivativeLipschitzBound, f_cpoly, Fin.sum_univ_three] <;>
-        norm_num)
-    c hc
+  dataQ.Z₂_sound ν_val_eq_q f_cpoly x₀ hr₀ z2 c hc
 
 /-! ## Radii polynomial -/
 
