@@ -3,5 +3,6 @@ import RadiiPolynomial.Certification.LeanCertAdapter
 import RadiiPolynomial.Certification.ColumnTailBound
 import RadiiPolynomial.Certification.Residual
 import RadiiPolynomial.Certification.Residual.FiniteSupport
+import RadiiPolynomial.Certification.RadiiPolynomialQ
 
 /-! RadiiPolynomial-specific witness reductions and adapters to the external LeanCert library. -/

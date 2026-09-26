@@ -257,3 +257,205 @@ theorem gateQ_sound {Y₀ Z₀ Z₁ Z₂ r₀ α β : ℚ}
   push_cast at hR
   simp only [generalRadiiPolynomial]
   linarith [hR]
+
+/-! ## Pulled-back norms and isometric transport
+
+Engine-level transport along continuous linear equivalences and isometries (namespace
+`RadiiPolynomial`; any normed spaces, local hypotheses only):
+* `hasFDerivAt_conj` / `fderiv_conj_apply` — a map read through continuous linear equivalences
+  on both sides has the conjugated derivative;
+* `Z₂_transport` / `Z₂_transport_lip` — a carrier bound `‖DF z − DF x̄‖ ≤ Z` on a ball, read on
+  the other side through `e` against a pulled-back norm `W y = ‖e.symm y‖` (a weighted norm carried
+  as a plain function) and an operator bound `W (A y) ≤ Anorm · W y`;
+* `rp_transport_local` — the local general radii polynomial theorem in pointwise form through a
+  pulled-back norm onto a finite-dimensional space;
+* `existsUnique_zero_transport(_linear)` — a unique zero in a closed ball transports along an
+  isometric equivalence.
+-/
+
+namespace RadiiPolynomial
+
+section PulledBackNorms
+
+variable {E E' F F' : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+  [NormedAddCommGroup E'] [NormedSpace ℝ E'] [NormedAddCommGroup F] [NormedSpace ℝ F]
+  [NormedAddCommGroup F'] [NormedSpace ℝ F']
+
+/-- **Derivative transport.** A map read through continuous linear equivalences on both sides
+has the conjugated derivative. -/
+theorem hasFDerivAt_conj (e : E ≃L[ℝ] E') (e' : F ≃L[ℝ] F') {g : E → F} {D : E →L[ℝ] F}
+    {x : E'} (hg : HasFDerivAt g D (e.symm x)) :
+    HasFDerivAt (e' ∘ g ∘ e.symm) ((e' : F →L[ℝ] F').comp (D.comp (e.symm : E' →L[ℝ] E))) x :=
+  e'.hasFDerivAt.comp x (hg.comp x e.symm.hasFDerivAt)
+
+/-- Pointwise form of `hasFDerivAt_conj`. -/
+theorem fderiv_conj_apply (e : E ≃L[ℝ] E') (e' : F ≃L[ℝ] F') {g : E → F} {D : E →L[ℝ] F}
+    {x : E'} (hg : HasFDerivAt g D (e.symm x)) (h : E') :
+    fderiv ℝ (e' ∘ g ∘ e.symm) x h = e' (D (e.symm h)) := by
+  rw [(hasFDerivAt_conj e e' hg).fderiv]
+  rfl
+
+/-- **`Z₂` transport, local centred form.** A carrier bound `‖DF z − DF x̄‖ ≤ Z` for `z` in the
+ball `‖z − x̄‖ ≤ r` only (with `HasFDerivAt` only there), read on `E'` through `e`, against a
+pulled-back norm `W y = ‖e.symm y‖` and an operator bound `W (A y) ≤ Anorm · W y`. No global
+quantifier: `0 ≤ Z` is read off the hypothesis at `c` itself, and a negative `Anorm` forces
+`W h = 0` through `hA`. -/
+theorem Z₂_transport (e : E ≃L[ℝ] E') {W : E' → ℝ} (hW : ∀ y, W y = ‖e.symm y‖)
+    {F₀ : E → E} {DF : E → E →L[ℝ] E} {r : ℝ} {xBar : E'}
+    (hF : ∀ z, ‖z - e.symm xBar‖ ≤ r → HasFDerivAt F₀ (DF z) z) {Z : ℝ}
+    (hZ : ∀ z, ‖z - e.symm xBar‖ ≤ r → ‖DF z - DF (e.symm xBar)‖ ≤ Z) (A : E' →L[ℝ] E')
+    {Anorm : ℝ} (hA : ∀ y, W (A y) ≤ Anorm * W y) {c : E'} (hc : W (c - xBar) ≤ r) (h : E') :
+    W (A ((fderiv ℝ (e ∘ F₀ ∘ e.symm) c - fderiv ℝ (e ∘ F₀ ∘ e.symm) xBar) h)) ≤
+      Anorm * Z * W h := by
+  have hd : ‖e.symm c - e.symm xBar‖ ≤ r := by rw [← map_sub, ← hW]; exact hc
+  have h0 : ‖e.symm xBar - e.symm xBar‖ ≤ r := by
+    rw [sub_self, norm_zero]; exact (norm_nonneg _).trans hd
+  set v := (fderiv ℝ (e ∘ F₀ ∘ e.symm) c - fderiv ℝ (e ∘ F₀ ∘ e.symm) xBar) h with hv_def
+  have hv : W v = ‖(DF (e.symm c) - DF (e.symm xBar)) (e.symm h)‖ := by
+    rw [hW, hv_def, sub_apply, fderiv_conj_apply e e (hF _ hd),
+      fderiv_conj_apply e e (hF _ h0), ← map_sub, ContinuousLinearEquiv.symm_apply_apply,
+      sub_apply]
+  have hZc := hZ _ hd
+  have hWv : W v ≤ Z * W h := by
+    rw [hv, hW h]
+    exact ((DF _ - DF _).le_opNorm _).trans (mul_le_mul_of_nonneg_right hZc (norm_nonneg _))
+  have hW0 : ∀ y, 0 ≤ W y := fun y => (hW y).symm ▸ norm_nonneg _
+  rcases le_or_gt 0 Anorm with hA0 | hA0
+  · rw [mul_assoc]
+    exact (hA v).trans (mul_le_mul_of_nonneg_left hWv hA0)
+  · have hh : W h = 0 := le_antisymm (by nlinarith [hA h, hW0 (A h), hW0 h]) (hW0 h)
+    rw [hh, mul_zero]
+    nlinarith [hA v, hW0 v, hW0 (A v)]
+
+/-- **`Z₂` transport, local Lipschitz shape.** `‖DF z − DF x̄‖ ≤ K ‖z − x̄‖` on the ball only,
+with an explicit `0 ≤ K`. -/
+theorem Z₂_transport_lip (e : E ≃L[ℝ] E') {W : E' → ℝ} (hW : ∀ y, W y = ‖e.symm y‖)
+    {F₀ : E → E} {DF : E → E →L[ℝ] E} {r : ℝ} {xBar : E'}
+    (hF : ∀ z, ‖z - e.symm xBar‖ ≤ r → HasFDerivAt F₀ (DF z) z) {K : ℝ} (hK0 : 0 ≤ K)
+    (hK : ∀ z, ‖z - e.symm xBar‖ ≤ r → ‖DF z - DF (e.symm xBar)‖ ≤ K * ‖z - e.symm xBar‖)
+    (A : E' →L[ℝ] E') {Anorm : ℝ} (hA : ∀ y, W (A y) ≤ Anorm * W y) {c : E'}
+    (hc : W (c - xBar) ≤ r) (h : E') :
+    W (A ((fderiv ℝ (e ∘ F₀ ∘ e.symm) c - fderiv ℝ (e ∘ F₀ ∘ e.symm) xBar) h)) ≤
+      K * Anorm * r * W h :=
+  (Z₂_transport e hW hF (Z := K * r) (fun z hz => (hK z hz).trans
+    (mul_le_mul_of_nonneg_left hz hK0)) A hA hc h).trans_eq (by ring)
+
+end PulledBackNorms
+
+section FinDimTransport
+
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E]
+
+/-- **Local general radii polynomial theorem in pointwise form, through a pulled-back norm.**
+Any continuous linear equivalence `e : E ≃L[ℝ] E'` onto `E'` from a finite-dimensional `E`, any
+pulled-back norm `W y = ‖e.symm y‖` carried as a plain function, `A`, `A†` only linear, every bound
+a pointwise inequality in `W`, derivative data `HasFDerivWithinAt` on the `W`-ball only, a general
+`Z₁` slot and `Z₂ : ℝ → ℝ`. No sign hypothesis: `0 ≤ Z₀`, `0 ≤ Z₁`, `0 ≤ Z₂ r · r` are derived
+(the degenerate space is handled separately). -/
+theorem rp_transport_local {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
+    (e : E ≃L[ℝ] E') {W : E' → ℝ} (hW : ∀ y, W y = ‖e.symm y‖) {F₀ : E' → E'}
+    {DF : E' → E' →L[ℝ] E'} (A A_dagger : E' →ₗ[ℝ] E') {xBar : E'} {Y₀ Z₀ Z₁ : ℝ}
+    {Z₂ : ℝ → ℝ} {r : ℝ} (hr : 0 < r)
+    (hF : ∀ x, W (x - xBar) ≤ r → HasFDerivWithinAt F₀ (DF x) {y | W (y - xBar) ≤ r} x)
+    (hY₀ : W (A (F₀ xBar)) ≤ Y₀) (hZ₀ : ∀ h, W (h - A (A_dagger h)) ≤ Z₀ * W h)
+    (hZ₁ : ∀ h, W (A (A_dagger h - DF xBar h)) ≤ Z₁ * W h)
+    (hZ₂ : ∀ c, W (c - xBar) ≤ r → ∀ h, W (A (DF c h - DF xBar h)) ≤ Z₂ r * r * W h)
+    (hp : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r < 0) :
+    ∃! xTilde, W (xTilde - xBar) ≤ r ∧ F₀ xTilde = 0 := by
+  have hWe : ∀ x, W (e x) = ‖x‖ := fun x => by rw [hW, e.symm_apply_apply]
+  rcases subsingleton_or_nontrivial E with hE | hE
+  · have : Subsingleton E' := e.symm.injective.subsingleton
+    refine ⟨xBar, ⟨?_, Subsingleton.elim _ _⟩, fun y _ => Subsingleton.elim _ _⟩
+    rw [sub_self, hW, map_zero, norm_zero]
+    exact hr.le
+  obtain ⟨y0, hy0⟩ := exists_ne (0 : E)
+  have hy0' : 0 < ‖y0‖ := norm_pos_iff.2 hy0
+  -- a pointwise bound `W (u h) ≤ K W h` for every `h` forces `0 ≤ K`
+  have hnn : ∀ (K : ℝ) (u : E' → E'), (∀ h, W (u h) ≤ K * W h) → 0 ≤ K := fun K u hu => by
+    have h1 := hu (e y0)
+    have h2 : 0 ≤ W (u (e y0)) := by rw [hW]; exact norm_nonneg _
+    rw [hWe] at h1
+    nlinarith
+  have hx0 : W (xBar - xBar) ≤ r := by rw [sub_self, hW, map_zero, norm_zero]; exact hr.le
+  have hZ₀nn := hnn Z₀ (fun h => h - A (A_dagger h)) hZ₀
+  have hZ₁nn := hnn Z₁ (fun h => A (A_dagger h - DF xBar h)) hZ₁
+  have hZ₂nn := hnn (Z₂ r * r) (fun h => A (DF xBar h - DF xBar h)) (hZ₂ xBar hx0)
+  let f : E → E := e.symm ∘ F₀ ∘ e
+  let Df : E → E →L[ℝ] E := fun z =>
+    (e.symm : E' →L[ℝ] E).comp ((DF (e z)).comp (e : E →L[ℝ] E'))
+  have hDf : ∀ z y, Df z y = e.symm (DF (e z) (e y)) := fun _ _ => rfl
+  let A' : E →L[ℝ] E := LinearMap.toContinuousLinearMap
+    ((e.symm : E' →ₗ[ℝ] E) ∘ₗ A ∘ₗ (e : E →ₗ[ℝ] E'))
+  have hA' : ∀ y, A' y = e.symm (A (e y)) := fun y => rfl
+  let Ad' : E →L[ℝ] E := LinearMap.toContinuousLinearMap
+    ((e.symm : E' →ₗ[ℝ] E) ∘ₗ A_dagger ∘ₗ (e : E →ₗ[ℝ] E'))
+  have hAd' : ∀ y, Ad' y = e.symm (A_dagger (e y)) := fun y => rfl
+  have hmaps : Set.MapsTo e (closedBall (e.symm xBar) r) {y | W (y - xBar) ≤ r} :=
+    fun w hw => by
+      show W (e w - xBar) ≤ r
+      rw [hW, map_sub, e.symm_apply_apply, ← dist_eq_norm]
+      exact hw
+  have hf : ∀ z ∈ closedBall (e.symm xBar) r,
+      HasFDerivWithinAt f (Df z) (closedBall (e.symm xBar) r) z := fun z hz =>
+    e.symm.hasFDerivAt.comp_hasFDerivWithinAt z
+      ((hF (e z) (hmaps hz)).comp z e.hasFDerivAt.hasFDerivWithinAt hmaps)
+  have main := general_rp_findim_local (f := f) (Df := Df) (xBar := e.symm xBar) (A := A')
+    (A_dagger := Ad') (Z₂ := Z₂) hr
+    (by
+      rw [hA']
+      simpa only [f, Function.comp_apply, ContinuousLinearEquiv.apply_symm_apply, ← hW] using hY₀)
+    (ContinuousLinearMap.opNorm_le_bound _ hZ₀nn fun y => by
+      have h1 := hZ₀ (e y)
+      rw [hWe, hW, map_sub, e.symm_apply_apply] at h1
+      simpa only [sub_apply, ContinuousLinearMap.id_apply,
+        ContinuousLinearMap.comp_apply, hA', hAd', ContinuousLinearEquiv.apply_symm_apply]
+        using h1)
+    (ContinuousLinearMap.opNorm_le_bound _ hZ₁nn fun y => by
+      have h1 := hZ₁ (e y)
+      rw [hWe, hW] at h1
+      simpa only [ContinuousLinearMap.comp_apply, sub_apply, hA', hAd',
+        hDf, ContinuousLinearEquiv.apply_symm_apply, map_sub] using h1)
+    (fun c hc => ContinuousLinearMap.opNorm_le_bound _ hZ₂nn fun y => by
+      have hc' : W (e c - xBar) ≤ r := hmaps hc
+      have h1 := hZ₂ (e c) hc' (e y)
+      rw [hWe, hW] at h1
+      simpa only [ContinuousLinearMap.comp_apply, sub_apply, hA', hDf,
+        ContinuousLinearEquiv.apply_symm_apply, map_sub] using h1)
+    hf hp
+  obtain ⟨z, hz1, hz2, -, hzu⟩ := main
+  refine ⟨e z, ⟨?_, ?_⟩, fun y hy => ?_⟩
+  · rw [hW, map_sub, e.symm_apply_apply, ← dist_eq_norm]
+    exact (mem_ball.1 hz1).le
+  · simpa [f] using congrArg e hz2
+  · have hyz := hzu (e.symm y)
+      (by rw [mem_closedBall, dist_eq_norm, ← map_sub, ← hW]; exact hy.1)
+      (by simp [f, hy.2])
+    rw [← hyz, e.apply_symm_apply]
+
+end FinDimTransport
+
+section IsometricTransport
+
+/-- A unique zero in a closed ball transports along any isometric equivalence. -/
+theorem existsUnique_zero_transport {X Y M N : Type*} [PseudoMetricSpace X] [PseudoMetricSpace Y]
+    [Zero M] [Zero N] (e : X ≃ᵢ Y) {F : X → M} {g : Y → N}
+    (hFg : ∀ x, g (e x) = 0 ↔ F x = 0) {c : X} {r : ℝ}
+    (h : ∃! x ∈ closedBall c r, F x = 0) : ∃! y ∈ closedBall (e c) r, g y = 0 := by
+  obtain ⟨x, ⟨hx, hFx⟩, hu⟩ := h
+  refine ⟨e x, ⟨?_, (hFg x).2 hFx⟩, fun y ⟨hy, hgy⟩ => ?_⟩
+  · rwa [mem_closedBall, e.dist_eq]
+  · have hy' : e.symm y ∈ closedBall c r := by
+      rwa [mem_closedBall, ← e.dist_eq, e.apply_symm_apply]
+    have := hu (e.symm y) ⟨hy', (hFg _).1 (by rwa [e.apply_symm_apply])⟩
+    rw [← this, e.apply_symm_apply]
+
+/-- The linear-isometry form of `existsUnique_zero_transport` (any `E ≃ₗᵢ[ℝ] E'`). -/
+theorem existsUnique_zero_transport_linear {E E' M N : Type*} [SeminormedAddCommGroup E]
+    [SeminormedAddCommGroup E'] [NormedSpace ℝ E] [NormedSpace ℝ E'] [Zero M] [Zero N]
+    (e : E ≃ₗᵢ[ℝ] E') {F : E → M} {g : E' → N} (hFg : ∀ x, g (e x) = 0 ↔ F x = 0) {c : E}
+    {r : ℝ} (h : ∃! x ∈ closedBall c r, F x = 0) : ∃! y ∈ closedBall (e c) r, g y = 0 :=
+  existsUnique_zero_transport e.toIsometryEquiv hFg h
+
+end IsometricTransport
+
+end RadiiPolynomial
