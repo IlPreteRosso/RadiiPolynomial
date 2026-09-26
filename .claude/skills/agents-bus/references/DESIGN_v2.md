@@ -1,5 +1,7 @@
 # agents-bus DESIGN v2 — universal use (rev 13 = revision-4 amendments: delegation on receipt / bounded parent units, first-valid-reply receipts, cue lifecycle, typed project packets, force-termination re-entry; 2026-09-14; rev 12 = delegation adapter operative for Claude → Codex, 2026-09-13; rev 11 + §6.2 heading, §6.7 results, §6.8 adapter contract summary)
 
+rev 14 (revision-10 amendments, 2026-09-19): revision efficiency governance (SKILL §9: time box, versioned drill packets, reuse by transitive fingerprint, peer-reviewed modeled decisions, round cap, test-first briefs, exchange cadence), finite vocabularies for records written from revision 10 on (SKILL §7), ownership/retention guidance (SKILL §8, documentation only), installation procedure incl. the user-mediated path when a harness refuses self-modification (SKILL §9), an explicit worker-environment allowlist in the delegation adapter (§6 item 4 below: incidental-inheritance prevention, NOT secret isolation), guard cleanup on a failed acquisition and a stated minimum interpreter (helpers). Sections 0–11 otherwise unchanged from rev 13.
+
 Delta over DESIGN_v1.md (approved 2026-09-13, sha256 d45a4844…). v1's message, state, lock,
 status, silence/recovery, delivery ≠ activation, trust and release-gate semantics stay in force
 unchanged. rev 3 takes Codex's "small version" (`checks/universal_review/DRAFT_REVIEW.md`,
@@ -213,7 +215,11 @@ is a scoped exclusion (not portable, no durable addressing/correlation/retry sem
    model-visible text) and records the digest; the verifier compares it with the launch record's
    `envelope_sha256` (a canonical-JSON or parsed digest does not count). The expected digest lives only in the
    launch record, never inside the prompt.
-4. Envelope per adapter (documented; no bypass flags, no elevation, no secret copying). Allow-lists are
+4. Envelope per adapter (documented; no bypass flags, no elevation). The worker's environment is built from
+   an explicit allowlist named by the adapter policy plus a documented minimal baseline (revision 10; names
+   recorded in the launch record, values never); this prevents INCIDENTAL inheritance of the launcher's
+   environment and is NOT secret isolation: files under HOME, configuration the sandbox exposes and any
+   variable the policy deliberately allows remain reachable by the worker. Allow-lists are
    NOT confinement: `Bash(uv run:*)`/`Bash(python3:*)` grant an interpreter, `Read` is unbounded. Confinement
    is the enclosing sandbox: Codex `--sandbox workspace-write` (writable = its cwd + temp roots, as the
    harness defines them); a Claude worker has no filesystem sandbox of its own and is confined only by
@@ -1744,3 +1750,126 @@ D3: actual arming results are persisted and an announced plan alone records no s
 D6: the ≤260 ceiling is a PROSPECTIVE supersession accepted only for a file that compresses and
 omits no rule. D7: watcher repair stays at A.11(a), A.13 is timer-only and the cue phase is named.
 D8: the scope paragraph REPLACES by the established convention, without broadening S2 or S3.
+
+## 19. Revision-11 amendments (rev 22) — prose compaction
+
+### 19.1 Prose compaction: what left SKILL.md, verbatim
+
+Revision 11 carries the deferred agents-bus items AB-1, AB-2, AB-3, AB-4, AB-6 and AB-7 of the
+SKILL-COMPACT-20260922 packet (AB-5 refuted and AB-8 kept are not carried) and a rewrap of the
+SKILL.md lines longer than 300 characters. They add no rule and change no route, delivery, exclusion
+or activation scope: a removed rule sentence is one that SKILL.md states operatively elsewhere
+(named per item), and a removed changelog passage or dated anecdote is kept below verbatim, beside
+the rule it motivates. Line numbers are those of the revision-10 SKILL.md, sha256
+c116070df5d7a63777029bb5522d6cfff8ac5e4ae3477d9d52e766932e8a5eb2.
+
+AB-1. The preamble's revision changelog (lines 28–63) is replaced by the revision-11 scope
+paragraph, which keeps the revision's naming of its amended sections, the byte-identity statement
+and the S1/S2/S3 activation separation verbatim. The replaced text, verbatim:
+
+```text
+**Scope of this revision.** Its number and its payload hashes live in `MANIFEST.json` and nowhere
+else in this file. Revision 10 amends the helper paragraph above (minimum interpreter), §7 (finite
+vocabularies for records written from this revision on), §8 (ownership and retention guidance),
+§9 (revision efficiency; installation), §12 (an advisory note), `references/RECOVERY.md` D.5 (the
+C-pre → D → C-post sequence) and `references/DESIGN_v2.md` (rev-14 note; §6 item 4), and changes
+`scripts/common.py`, `scripts/test_common.py`, `scripts/delegate.py`, `scripts/test_delegate.py`
+(guard cleanup on a failed acquisition; the worker-environment allowlist); every section it does not name is byte-identical to revision 9, whose amendments
+remain in force as amended here.
+**Revision 9 (in force).** It amended §6, §7, §10, §11 and this paragraph, amended `references/RECOVERY.md`
+(checklist A's preamble and numbering-history note, A.5, A.7, A.11(a), a new effect sub-step
+A.11(c-bis), a new terminal step A.13, checklist J case 28, and a new checklist K), amends
+`references/QUOTA.md` (§8) and appends `references/DESIGN_v2.md` §18; every section it does not
+name is byte-identical to the preceding revision, whose amendments remain in force as amended
+here. Its content is one default policy on top of revision 8's: every continuation this session
+owns OUTSIDE the bus — watcher, self-wakeup timer, every WORKER it launched, and every CUE it
+dispatched — is carried in ONE per-owner registry index at a named checkpoint path, with
+observations recorded and never inferred, and workers LINKED to the §10 unit journal that keeps
+authority over their execution and publication; a self-wakeup timer is admissible only on one of
+three defined justifications with its evidence, never on a routine fallback or keep-alive, and
+that justification is necessary and never sufficient; absent a verified non-interrupting delivery
+route no self-wakeup timer is armed over potentially active owned work, so ELIGIBLE timer arming
+moves from RECOVERY A.11(a) to the terminal yield phase A.13 while timer inspection, planned
+retirement and watcher repair stay where they are; on the watching side, EVALUATING §7's existing
+eligible-cue procedure after publication and ordinary reconciliation is a duty — one coalesced cue
+where that procedure permits it for the current target instance and pending generation, the
+recorded reason for deferral otherwise, dispatched at the new effect sub-step A.11(c-bis) when it
+was planned during a re-entry — delivery being no activation; and the heartbeat gains one optional
+derived `continuations:` hint that is never liveness evidence and never retry authority. It
+changes no rule of eligibility, exclusion, delivery, routes, receipts, bindings or the unit
+journal; installs no hook, service, scheduler or helper; broadens no route and no activation
+scope; and claims no survival or non-interruption property for any harness. Its design of record
+is `references/DESIGN_v2.md` at the revision `MANIFEST.json` names. Installing the package (scope S1, the portable skill and the optional
+transport-envelope convention) activates nothing else by itself: an established bus's opt-in to
+these amendments (S2) and a project's typed-packet adapter together with its inventory/audit
+amendment (S3) activate SEPARATELY, each with its own recorded activation. Item ids, correction
+decisions, proof status and ledger mutations of a project are never generic bus semantics.
+```
+
+AB-6, §1 local-bus rule ("The bus is the session's, not the data's."); the motivating observation,
+verbatim (line 84):
+
+```text
+Observed (user report, 2026-09-18): a worker session in project A, told that something to work with lay under project B, registered on B's bus instead of A's.
+```
+
+AB-6, §1 discovery (no `.agents_bus` directory or store on a possible walk); SKILL.md keeps the
+mechanism pointer and drops the date; original parenthetical, verbatim (line 96):
+
+```text
+(`scripts/bootstrap.py` marker walk; observed 2026-09-17)
+```
+
+AB-6, §6 Freshness (the two-hour staleness threshold); the motivating observation, verbatim (lines
+395–398; SKILL.md keeps "each judged by its own rule."):
+
+```text
+; and a heartbeat
+left unrewritten for about eight hours by an ACTIVE session was observed (2026-09-14T22:16Z →
+2026-09-15T06:08Z), which this threshold flags long before a peer notices by hand, without calling
+any long turn dead.
+```
+
+AB-6, §7 default activation pattern (the persistent monitor, re-armed on its expiry notice);
+SKILL.md keeps the operative duration as "(Claude Code `Monitor`: about 30 minutes)" because that
+expiry drives re-arming; original, verbatim (line 494):
+
+```text
+(Claude Code `Monitor`; 30 minutes observed 2026-09-18)
+```
+
+AB-6, §7 default activation pattern (the watching side re-arms its watcher so it cannot lapse
+between messages); the motivating observation, verbatim (lines 532–534):
+
+```text
+Observed 2026-09-18: a
+watching-side coordinator that let its one-shot watcher lapse missed two peer replies for about ten
+minutes until the user asked; the cued peer had answered within a minute of its cue.
+```
+
+AB-7, §10 work units: a project's stricter size limit stays the unit size wherever the project sets
+one; the project fact SKILL.md named is removed on §12 portability grounds and is not withdrawn for
+that project, whose own rules keep it. Removed text, verbatim (lines 719–720):
+
+```text
+(ReferenceBook currently: at most EIGHT numbered items
+within one section)
+```
+
+AB-2, AB-3, AB-4 (restatements reduced to pointers). §11 "Locks." (lines 820–825) now cites §4 (no
+leases, no expiry, recovery of an abandoned lock) and §6 "Foreign lock older than 30 minutes", which
+state it in full. §11 "Observations, not classifiers." (lines 826–830) cites §6 (observations, not a
+classifier; the 45-minute notification and its limits; quota pauses; stated defaults) and keeps its
+queue-submission tail unchanged. The turn-end reasons stay in §10 (lines 683–689); §5 Turn end
+(lines 342–344) keeps its ordinary branch (no accepted actionable work remains) and cites §10 for
+the rest, and §7's cue-target sentence (line 501) keeps "only as §5 and §10 allow" without the
+copied list.
+
+Rewrap. Lines 84, 96, 341, 345, 494, 583 and 585 are rewrapped at the file's width (at most 100
+characters) after the content edits above, with no content change: each rewrapped text equals its
+source with some spaces turned into line breaks, never inside a code span and never where a
+continuation line would open a Markdown block. Line 501, and the §11 paragraph AB-3 shortens, are
+reflowed together with the lines that follow them so that no stub line remains: line breaks move,
+the words do not. Lines 3 (the frontmatter description, harness trigger text) and 453, 454, 455 and
+457 (rows of the §7 route table, which cannot wrap without leaving the table) stay longer than 300
+characters: a known limit of this revision, not an amendment.

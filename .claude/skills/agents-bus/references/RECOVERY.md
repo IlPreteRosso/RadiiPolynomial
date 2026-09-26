@@ -226,7 +226,11 @@ tested".
 4. Sender republishes the SAME HOLD id/bytes and sends DUPLICATE CHECK; peer answers from its
    durable record: count still 1, hash unchanged, archiving did not reactivate the work.
 5. Both post a scoped final status: "nothing to wait for; nothing to do", listing unrelated
-   pending work separately. Then the real handoff cycle (C) before any agreement sentence.
+   pending work separately. The operative sequence is C-pre → D → C-post: a real handoff cycle
+   (C) runs BEFORE D as the baseline handoff, and a second real handoff cycle with a DISTINCT id
+   runs AFTER D as the post-recovery handoff, both before any agreement sentence. No exchange
+   beyond those two cycles is required by this step (revision 10: this replaces the earlier
+   wording that read as "D then C" against J's "C first"; the plan records the actual order).
 
 ## E. Bootstrapping a new project (portability exercise)
 1. Choose `R` as SKILL §1 says; one of you runs `init`; both run `hello` under distinct aliases

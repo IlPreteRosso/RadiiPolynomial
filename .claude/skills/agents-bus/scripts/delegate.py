@@ -47,6 +47,9 @@ FORBIDDEN_PREFIXES = ("--resume", "--continue", "--dangerously", "--fork", "--la
 FORBIDDEN_TOKENS = {"resume", "fork", "continue", "-r", "-c", "--last"}
 LEDGER_STATES = {"reserved", "starting", "running", "unknown", "ended"}
 LAUNCH_FLOOR_S = 5
+ENV_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
+BASE_ENV_NAMES = ("PATH", "HOME", "LANG")
+FIXED_ENV_NAMES = {"AGENTS_BUS", "PYTHONDONTWRITEBYTECODE"}
 OBSERVE_POLL_S = 0.25
 PIN_DEFAULT = ("SKILL.md", "references/RECOVERY.md", "scripts/bus.py", "scripts/admin.py", "scripts/common.py",
                "scripts/locking.py", "scripts/participants.py", "scripts/bootstrap.py")
@@ -161,6 +164,16 @@ def _option_values(argv: list[str], option: str) -> list[str]:
 
 def load_policy(path: Path) -> dict:
     policy = common.read_json(path)
+    allowed_env = policy.get("env_allowlist", [])
+    if (not isinstance(allowed_env, list)
+            or any(not isinstance(name, str) or not ENV_NAME.fullmatch(name)
+                   for name in allowed_env)):
+        raise DelegateError("env_allowlist must be a list of explicit environment variable names")
+    if len(set(allowed_env)) != len(allowed_env):
+        raise DelegateError("env_allowlist must not contain duplicate names")
+    if set(allowed_env) & FIXED_ENV_NAMES:
+        raise DelegateError("AGENTS_BUS and PYTHONDONTWRITEBYTECODE are fixed by the launcher")
+    policy["env_allowlist"] = allowed_env
     for key in ("harness", "executable", "argv_template", "id_source", "wall_clock_s", "max_per_hour", "max_concurrent", "classes"):
         if key not in policy:
             raise DelegateError(f"Adapter policy lacks {key!r}")
@@ -223,6 +236,21 @@ def load_policy(path: Path) -> dict:
         raise DelegateError("runner_argv must be a list of strings")
     policy["runner_argv"] = runner
     return policy
+
+
+def worker_environment(policy: dict, bus: str, parent: dict[str, str]) -> dict[str, str]:
+    """Filter a launch-time snapshot using a validated policy; never persist values.
+
+    This limits accidental inheritance, not access to credentials in HOME or
+    other readable files. Explicitly allowed variables may themselves be secrets.
+    The names recorded by the supervisor describe what Popen receives; a child
+    runtime may subsequently add or change variables.
+    """
+    names = set(BASE_ENV_NAMES) | set(policy["env_allowlist"])
+    env = {name: parent[name] for name in names if name in parent}
+    env["AGENTS_BUS"] = bus
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    return env
 
 
 # ----------------------------------------------------------------------------- capacity ledger
@@ -497,6 +525,7 @@ def launch(args: argparse.Namespace, report: dict | None = None) -> dict:
     envelope_bytes = Path(planrec["envelope_path"]).read_bytes()
     if sha256_bytes(envelope_bytes) != planrec["envelope_sha256"]:
         raise DelegateError("envelope bytes changed since plan")
+    env = worker_environment(policy, planrec["bus"], dict(os.environ))
     remaining = (parse_utc(planrec["deadline_utc"]) - datetime.now(timezone.utc)).total_seconds()
     if remaining <= LAUNCH_FLOOR_S:
         transition(run_dir, {"published"}, "ended", outcome="deadline-expired-before-launch")
@@ -507,6 +536,8 @@ def launch(args: argparse.Namespace, report: dict | None = None) -> dict:
     sup = {"supervisor": "delegate.py v6", "job": planrec["job_id"], "attempt": planrec["attempt_id"], "limit_s": limit_s,
            "argv_redacted": planrec["effective_argv"], "envelope_sha256": planrec["envelope_sha256"], "cwd": str(root),
            "started_at": utc(), "spawned": "unknown", "cessation_scope": "process group (PGID) only; escaped descendants not covered",
+           "environment_names": sorted(env), "environment_policy_allowlist": policy["env_allowlist"],
+           "environment_scope": "names passed at spawn; values are not recorded; child runtime may change its environment",
            "deadline_anchor": "monotonic clock at reservation; setup and record writes count against limit_s"}
     child = None
     pgid = None
@@ -526,8 +557,6 @@ def launch(args: argparse.Namespace, report: dict | None = None) -> dict:
         write_once(run_dir / "SUPERVISOR.json", sup)
         out = open(run_dir / "stdout.log", "xb")
         err = open(run_dir / "stderr.log", "xb")
-        env = dict(os.environ)
-        env["PYTHONDONTWRITEBYTECODE"] = "1"
         argv = [a if a != "<ENVELOPE bytes>" else envelope_bytes.decode("utf-8") for a in planrec["effective_argv"]]
         try:
             child = subprocess.Popen(argv, cwd=str(root), stdin=subprocess.DEVNULL, stdout=out, stderr=err, env=env, start_new_session=True)

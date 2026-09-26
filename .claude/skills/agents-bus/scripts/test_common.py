@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -10,6 +11,49 @@ class GuardFailureTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
         self.bus = Path(self.tmp.name); (self.bus / "locks").mkdir()
+
+    def test_metadata_failure_does_not_acquire_a_directory(self):
+        with patch.object(common, "utc", side_effect=RuntimeError("clock unavailable")):
+            with self.assertRaisesRegex(RuntimeError, "clock unavailable"):
+                with common.guard(self.bus, "meta", "fixture", "session"):
+                    self.fail("critical section must not run")
+        self.assertFalse((self.bus / "locks" / "meta").exists())
+
+    def test_guard_does_not_require_path_stat_follow_symlinks_keyword(self):
+        # Reproduce the older pathlib signature from the recorded incident;
+        # this does not claim support for that interpreter across all helpers.
+        def old_stat_signature(path):
+            return os.stat(path)
+        # Current pathlib.exists forwards the new keyword too; emulate its
+        # older implementation so the injected fault concerns the guard only.
+        with patch.object(Path, "stat", old_stat_signature), \
+                patch.object(Path, "exists", lambda path: os.path.exists(path)):
+            with common.guard(self.bus, "meta", "fixture", "session"):
+                self.assertTrue((self.bus / "locks" / "meta" / "OWNER").exists())
+        self.assertFalse((self.bus / "locks" / "meta").exists())
+
+    def test_unknown_directory_identity_is_not_reclaimed(self):
+        with patch.object(common.os, "lstat", side_effect=OSError("identity unavailable")):
+            with self.assertRaisesRegex(OSError, "identity unavailable"):
+                with common.guard(self.bus, "meta", "fixture", "session"):
+                    self.fail("critical section must not run")
+        directory = self.bus / "locks" / "meta"
+        self.assertTrue(directory.is_dir())
+        self.assertEqual(list(directory.iterdir()), [])
+
+    def test_body_interruption_cleans_up_owned_guard(self):
+        with self.assertRaises(KeyboardInterrupt):
+            with common.guard(self.bus, "meta", "fixture", "session"):
+                raise KeyboardInterrupt()
+        self.assertFalse((self.bus / "locks" / "meta").exists())
+
+    def test_replaced_directory_is_not_removed_on_exit(self):
+        directory = self.bus / "locks" / "meta"
+        with common.guard(self.bus, "meta", "fixture", "session"):
+            directory.rename(self.bus / "original-guard")
+            directory.mkdir()
+        self.assertTrue(directory.is_dir())
+        self.assertTrue((self.bus / "original-guard" / "OWNER").is_file())
 
     def test_failed_owner_publication_removes_only_own_new_empty_directory(self):
         with patch.object(common, "write_json", side_effect=OSError("disk full")):

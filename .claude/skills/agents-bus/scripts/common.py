@@ -136,20 +136,26 @@ def validate_bindings(bus: Path, *, allow_missing_state: bool = False) -> dict:
 
 @contextmanager
 def guard(bus: Path, key: str, agent: str, instance: str):
-    """Fail-fast mkdir guard; occupied/ownerless guards are never reclaimed."""
+    """Fail-fast guard; cleanup requires this invocation's directory identity.
+
+    Metadata preparation precedes acquisition. If the initial identity read
+    fails, leave the directory alone: its current ownership is not established.
+    This is exception cleanup, not recovery from process termination.
+    """
     identifier(key); identifier(agent); identifier(instance)
     directory = bus / "locks" / key
     token = uuid.uuid4().hex
+    owner = {"alias": agent, "instance_id": instance, "token_sha256": token_digest(token),
+             "utc": utc(), "resource": str(directory), "purpose": "metadata guard"}
     try:
         directory.mkdir()
     except FileExistsError as error:
         raise BusError(f"Occupied lock: {key}") from error
-    created = directory.stat(follow_symlinks=False)
-    owner = {"alias": agent, "instance_id": instance, "token_sha256": token_digest(token),
-             "utc": utc(), "resource": str(directory), "purpose": "metadata guard"}
+    created = None
     published = False
     refused = False
     try:
+        created = os.lstat(directory)
         if not write_json(directory / "OWNER", owner):
             refused = True
             raise BusError(f"Foreign OWNER appeared in guard: {key}")
@@ -160,8 +166,8 @@ def guard(bus: Path, key: str, agent: str, instance: str):
         # OWNER write may leave our empty directory; a foreign OWNER stays put.
         # An actual process crash still requires the ordinary recovery procedure.
         try:
-            current = directory.stat(follow_symlinks=False)
-            if (current.st_dev, current.st_ino) == (created.st_dev, created.st_ino):
+            current = os.lstat(directory) if created is not None else None
+            if current is not None and (current.st_dev, current.st_ino) == (created.st_dev, created.st_ino):
                 record = directory / "OWNER"
                 if record.exists():
                     if not refused and read_json(record) == owner:

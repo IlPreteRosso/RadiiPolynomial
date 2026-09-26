@@ -1,6 +1,7 @@
 ---
 name: lean-build-guard
-description: Guard against runaway Lean builds (a Lake package that silently clones dependencies and compiles Mathlib from source at 100 % CPU). Use before the first `lake build` / `lake env lean` in any package other than the main library, after editing a lakefile or manifest, when a second workspace shares the library's packages, or when the user reports Lean/Lake eating the CPU.
+description: >-
+  Guard against runaway Lean builds (a Lake package that silently clones dependencies and compiles Mathlib from source at 100 % CPU). Use before the first `lake build` / `lake env lean` in any package other than the main library, after editing a lakefile or manifest, when a second workspace shares the library's packages, or when the user reports Lean/Lake eating the CPU.
 ---
 
 # lean-build-guard

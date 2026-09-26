@@ -137,7 +137,7 @@ class AdapterTest(unittest.TestCase):
 
     def write_policy(self, name="policy.json", executable=None, harness="codex", argv=None,
                      id_source=None, wall_clock_s=300, max_per_hour=8, max_concurrent=4,
-                     classes=("consult", "job")):
+                     classes=("consult", "job"), env_allowlist=("FAKE_WORKER_MODE",)):
         path = self.root / name
         common.write_json(path, {
             "harness": harness, "executable": str(executable or FAKE_WORKER),
@@ -146,6 +146,7 @@ class AdapterTest(unittest.TestCase):
                                        else "claude-stream-json-session"),
             "wall_clock_s": wall_clock_s, "max_per_hour": max_per_hour,
             "max_concurrent": max_concurrent, "classes": list(classes),
+            "env_allowlist": list(env_allowlist),
             "runner_argv": ["python3"]}, replace=True)
         return path
 
@@ -161,6 +162,69 @@ class AdapterTest(unittest.TestCase):
         for name, value in overrides.items():
             setattr(args, name, value)
         return delegate.plan(args)
+
+    def test_worker_environment_is_default_deny_with_fixed_bus(self):
+        parent = {"PATH": "/bin", "HOME": "/home/test", "LANG": "C",
+                  "G5_ALLOWED": "synthetic-allowed", "G5_SECRET": "synthetic-secret",
+                  "AGENTS_BUS": "/foreign", "PYTHONDONTWRITEBYTECODE": "0"}
+        policy = delegate.load_policy(self.write_policy(env_allowlist=("G5_ALLOWED",)))
+        env = delegate.worker_environment(policy, str(self.bus), parent)
+        self.assertEqual(env, {"PATH": "/bin", "HOME": "/home/test", "LANG": "C",
+                               "G5_ALLOWED": "synthetic-allowed", "AGENTS_BUS": str(self.bus),
+                               "PYTHONDONTWRITEBYTECODE": "1"})
+        self.assertEqual(parent["AGENTS_BUS"], "/foreign")
+
+    def test_missing_environment_policy_has_no_implicit_extras(self):
+        doc = common.read_json(self.policy_path)
+        del doc["env_allowlist"]
+        common.write_json(self.policy_path, doc, replace=True)
+        policy = delegate.load_policy(self.policy_path)
+        self.assertEqual(policy["env_allowlist"], [])
+        self.assertEqual(delegate.worker_environment(policy, str(self.bus),
+                                                    {"G5_SECRET": "synthetic-secret"}),
+                         {"AGENTS_BUS": str(self.bus), "PYTHONDONTWRITEBYTECODE": "1"})
+
+    def test_invalid_environment_policy_refused_before_plan_effects(self):
+        for value in (None, "*", ["TOKEN_*"], ["A", "A"], [1], ["A=B"], [""],
+                      ["AGENTS_BUS"], ["PYTHONDONTWRITEBYTECODE"]):
+            with self.subTest(value=value):
+                doc = common.read_json(self.policy_path)
+                doc["env_allowlist"] = value
+                common.write_json(self.policy_path, doc, replace=True)
+                run = self.runs / "invalid-env"
+                with self.assertRaises(delegate.DelegateError):
+                    self.plan("invalidenv", run)
+                self.assertFalse(run.exists())
+
+    def test_launched_child_receives_only_allowed_environment_values(self):
+        # This finite local process is an environment probe, not an agent.
+        probe = self.root / "env_probe.py"
+        probe.write_text("#!" + sys.executable + "\n"
+                         "import json, os\n"
+                         "print(json.dumps({'allowed': os.environ.get('G5_ALLOWED'), "
+                         "'secret_present': 'G5_SECRET' in os.environ, "
+                         "'bus': os.environ.get('AGENTS_BUS'), "
+                         "'bytecode': os.environ.get('PYTHONDONTWRITEBYTECODE')}))\n")
+        probe.chmod(0o755)
+        self.policy_path = self.write_policy(executable=probe, env_allowlist=("G5_ALLOWED",))
+        run = self.runs / "env-probe"
+        self.plan("envprobe", run)
+        with mock.patch.dict(os.environ, {"G5_ALLOWED": "synthetic-allowed-value",
+                                         "G5_SECRET": "synthetic-secret-value",
+                                         "AGENTS_BUS": "/foreign-bus",
+                                         "PYTHONDONTWRITEBYTECODE": "0"}):
+            delegate.launch(ns(run_dir=str(run)))
+        child = json.loads((run / "stdout.log").read_text())
+        self.assertEqual(child, {"allowed": "synthetic-allowed-value", "secret_present": False,
+                                 "bus": str(self.bus), "bytecode": "1"})
+        supervisor = common.read_json(run / "SUPERVISOR.json")
+        self.assertTrue(supervisor["spawned"])
+        self.assertIn("G5_ALLOWED", supervisor["environment_names"])
+        self.assertNotIn("G5_SECRET", supervisor["environment_names"])
+        self.assertEqual(supervisor["environment_policy_allowlist"], ["G5_ALLOWED"])
+        self.assertNotIn("synthetic-allowed-value", (run / "SUPERVISOR.json").read_text())
+        for name in ("stdout.log", "stderr.log", "SUPERVISOR.json", "OBSERVATIONS.jsonl"):
+            self.assertNotIn("synthetic-secret-value", (run / name).read_text())
 
     def launcher(self, run_dir):
         thread = Launcher(run_dir)

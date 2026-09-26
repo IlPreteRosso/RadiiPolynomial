@@ -1,12 +1,13 @@
 ---
 name: radii-poly-api-design
-description: Design and refactor the RadiiPolynomial Lean API while preserving its mathematical layering, reusable-module boundaries, and compiling examples. Use for new formalizations, API extraction, proof cleanup, module moves, typeclass design, polynomial evaluation bridges, IVP or Chebyshev infrastructure, and certificate integration.
+description: Design and refactor the RadiiPolynomial Lean API while preserving its mathematical layering, reusable-module boundaries, and compiling examples (project-specific rules; the formalization PROCESS — unit pipeline, worker assignment, peer harnesses, Aristotle, research gaps — is the sibling skill lean-api-design). Use for new formalizations, API extraction, proof cleanup, module moves, typeclass design, polynomial evaluation bridges, IVP or Chebyshev infrastructure, and certificate integration.
 ---
 
 # RadiiPolynomial API Design
 
-Treat the tracked repository copy of this skill as canonical. Keep installed Codex and
-Claude mirrors byte-identical to it.
+Treat the tracked repository copy of this skill as canonical. Keep the installed Claude,
+Codex and Antigravity mirrors byte-identical to it (symlinks under `~/.claude/skills/`,
+`~/.agents/skills/` and `~/.gemini/antigravity-cli/skills/`).
 
 ## Establish Live Context
 
@@ -89,7 +90,7 @@ protecting fiber/scalar parameters with `dont_translate` where needed.
 ## Polynomial And Certificate Automation
 
 Use the existing `compPolyOf%`, `pderiv_simp`, and `auto_poly_fderiv` where supported;
-use `native_decide` for exact finite identities and `finmatrix_bound` for weighted matrix bounds.
+use `decide +kernel` for exact finite identities (`native_decide` only as a named, dispositioned exception; see the Trust policy below) and `finmatrix_bound` for weighted matrix bounds.
 The current polynomial IVPs keep literal `f_cpoly` definitions. Examples 8.1 and 14.2.1
 use `f_cpoly_reified` as a `rfl` witness for the elaborator, outside the certificate's
 dependency path.
@@ -145,53 +146,44 @@ For isolated experiments, compile their dependency chain and audit theorem axiom
 experimental conclusions from production results. Documentation-only edits need their own
 validation, not a Lean rebuild.
 
-## Escalation To Aristotle
+## Process
 
-Aristotle (Harmonic's cloud prover, `aristotlelib` in `exterior/data_pipeline`) is a bounded
-worker for a single extra-hard `sorry`, not a default step. Use it only after the local ladder
-is exhausted: `exact?`/`aesop`/`polyrith`, then one Fable sorry-closing pass. Submit one
-lemma with its dependency chain, never a whole file. Three stages, each gated on the last.
+The formalization process (unit pipeline, worker assignment, peer harnesses, Aristotle,
+research-level gaps) is the sibling skill `lean-api-design`; load both for formalization work.
 
-1. **Grind.** `source ~/.zshrc &&` before any command; the key is not loaded in tool shells,
-   and never dump the environment afterwards. Submit through
-   `generate_proofs.py aristotle --input <stmts.jsonl>` (async) or
-   `aristotle submit "<prompt>" --project-dir <dir>`; record the project id in the ledger.
-   Two things leave the machine: the whole `--project-dir` tree (tarred with no extension
-   filter, minus that directory's own `.gitignore`) and the prompt string itself. Library
-   source is fine in either. The reference-book PDFs under `docs/reference_book/` (tracked
-   in the nested checkout; listed in its `.gitignore` only to keep the client's walker out),
-   the rewrite-edition `.tex`, the `tmp/` experiment tree and any text derived from the book
-   are not, in the tree or in the prompt. So never pass the checkout root as `--project-dir`:
-   stage a scratch directory holding only `lakefile.toml`, `lean-toolchain`,
-   `RadiiPolynomial/`, `RadiiPolynomial.lean` and the statement file, the layout
-   `create_lean_project` in `generate_proofs.py` builds, and before submitting confirm that
-   `find <dir> -type f ! -name '*.lean' ! -name lakefile.toml ! -name lean-toolchain`
-   prints nothing. `book_to_proofs.py` puts book prose in the prompt by construction and is
-   gated behind `ARISTOTLE_ALLOW_BOOK_TEXT=1`; do not invoke it from this skill.
-   Aristotle resolves Mathlib on its side and runs its own toolchain (v4.28.0 as of
-   2026-09-19, against the library's v4.33.0; the CLI warns on submit), so a returned proof
-   is a candidate, not a result, until it compiles against the pinned toolchain in the nested
-   checkout. Expect renamed Mathlib lemmas and `simp` set drift across that gap. Collect
-   with `aristotle tasks <id>` (status) and `aristotle download <id> --destination <tar.gz>`.
-   The archive is Aristotle's copy of everything uploaded, possibly edited, plus its own
-   `lean-toolchain` and `lake-manifest.json`: take only the statement file out of it, diff
-   it against the one submitted, and accept only the proof-body hunk. Keep `aristotlelib`
-   current in the pipeline's `pyproject.toml`; a stale client 404s on the API.
-   Probe 2026-09-19: a Mathlib-only tsum lemma round-tripped in ~10 min and compiled on
-   v4.33.0 with standard axioms.
-2. **Trust surface.** Apply the Verification gate to the returned proof: rebuild,
-   `#print axioms` for the target and for every declaration the diff touched (Aristotle may
-   reach for `native_decide` or leave `sorryAx`), no upward imports, and a statement
-   byte-identical to the one submitted. Keep the returned statement file under the task's
-   `tmp/<task>/checks/` as provenance only, never the prompt or the uploaded tree. An
-   escalated proof is a cloud result: it does not enter the EI training data or count toward
-   the local prove rate unless its statement is first removed from the evaluation pool.
-3. **Golf.** Aristotle proofs are search-shaped: long `have` chains, redundant rewrites,
-   brute `nlinarith`/`simp` calls, and no use of the library's own API. Run the `lean-golfing`
-   skill on the accepted proof on the cheap tier (Sonnet; Opus if it stalls) with the bounded
-   goal: same statement, axiom set no larger, unfolding replaced by existing API lemmas, any
-   generic sublemma the proof surfaces extracted into the right module. Re-run the trust gate
-   after golfing, since golfing can pull in `decide` on large terms or `native_decide`.
+## Project-Specific Lean Practice (2026-09-24, from the FILTER rounds; moved here from the universal set on Codex's review)
 
-The golfed proof is what gets committed. If Aristotle had to reprove something the library
-should already offer, record it in the API insights ledger.
+- **ν-free ℚ records**: `StdIVPDataQ L N` (A_col, DF_col, abar_Q, ν_q, stored `habar_size`) with
+  `toStdIVPData q ν (hν : (ν:ℝ) = (q.ν_q:ℝ))`, default `toStd` from `0 < ν_q`, and the round trip
+  `toStdIVPData_ofStd … = d := rfl` as the replay hook; `Checks` on the ℚ record, per-slot soundness at every realization,
+  `certified_of_checks` derived from the override face `certified_of_bounds`.
+- **Radii-polynomial faces**: `_of_le` override slot per bound; `anchoredBound c ρ p` (product rule
+  Aₚ|q(c)| + |p(c)|A_q + AₚA_qρ) for Z₂ — it matches the book's constants on 2.4.5/2.4.7/2.4.9, and on 2.4.8 with the exact inverse;
+  three-layer local theorem (local fixed point → single-Z zero theorem → four-bound corollary; the
+  four-bound layer cannot serve a single-Z statement: f(x) = x − (0.4/π) sin(πx)); Z = Z₀ + Z₂(r₀)r₀
+  for the direct-Jacobian form vs Z₀ + Z₁ + Z₂(r₀)r₀ for four bounds; `Enclosure`/`PairEnclosure`
+  Prop records (IsUnit A derived by the finite-dim Neumann rung); EI face with `existenceInterval`
+  = the anchored order-connected component of {r | radiiPolynomial … r < 0} and `def_2_4_4` as a
+  forwarding definition.
+- **Carriers and polynomials**: `FνN` (a `def` synonym of Fin (N+1) → ℝ with `inferInstanceAs`
+  algebra and the weighted norm |x₀| + 2Σ|x_k|ν^k), `ιN` isometry into `symmetricSubalgebra ν`, `πN`
+  contraction with ‖πN‖ = 1; multiply in Aν BEFORE projecting (πN is not an algebra hom);
+  `evalBanach = aeval ∘ toMvPoly` gives Df from `pderiv`; "cast commutes with evaluation" gives ℚ
+  mirrors; `supportBound`/`laurentRadius` give far-column cutoffs (Mfar = 82 = 2N + 2 for 14.2.1);
+  `clm_apply_eq_sum` decomposes CLMs on `Fin L → X` into blocks (no Fin-1 collapse).
+- **Trust policy (reconciles the older "native_decide for exact finite identities" default)**:
+  kernel-checked closure is primary (`decide +kernel` on the unchanged ℚ Checks: 0.1–0.2 s per
+  finite-dimensional certificate, 15 s for the L = 2 Chebyshev set on the pinned toolchain);
+  `native_decide` only as a named, dispositioned exception (today only the library's `Example1421.data.habar_size := by native_decide`, a proposed
+  trust-reducing wave-A fix; Example 14.2.1's Checks, > 900 s as one `decide +kernel`, has closed
+  with 15 per-conjunct kernel lemmas in ≈ 110–121 s since round 5). The proposed FILTER budget (target 60 s, ceiling 300 s
+  total per certificate) needs explicit acceptance before it is quoted as agreed.
+- Toolchain-specific measurements and troubleshooting notes live in
+  `FILTER-20260924/LEAN_PRACTICE_DISTILLED.md` §7–§8 with their evidence class; quote them with
+  the class, never as laws.
+
+### Generality and placement (user rulings 2026-09-25, D145/D146)
+
+- **Generalize before a filter or landing decision.** Audit every API-side candidate for ad-hocness: a fixed number where a parameter belongs (dimension, degree, truncation N, weight ν, grid base, tolerance) or a particular algebraic expression form (x² − c, Fisher u − u², a cube-only face, a degree-2-only Z₂). A general `CompPoly` of any degree and any `L` is NOT particular; fixed numbers inside an example instance are fine. Write the general form as an experiment first; the decision waits for it.
+- **Placement rule.** An inherited or example-level ad hoc helper is either generalized or moved in or near the family of examples that consume it (`Applications/<family>`, `Certification/<family>`, or the example directory), never left in the API core (`Core/`, `Algebra/`, `Analysis/`, `Operators/` general modules). Anything in the core is general over the family-neutral engine. Every new helper carries a placement statement (target module + why); consumers of an inherited helper are listed by grep in a migration table (generalize in place | move beside consumers | move into the example | delete after migration).
+- Evidence: FILTER-20260924/ADHOC_AUDIT.md (the PS bundle was x∗x − c end to end; Core/AffineZ2 served only degree ≤ 2 on one carrier; the Z₀ checkers baked in base 10).
