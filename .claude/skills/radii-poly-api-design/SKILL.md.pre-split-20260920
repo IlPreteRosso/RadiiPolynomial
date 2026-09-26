@@ -1,0 +1,424 @@
+---
+name: radii-poly-api-design
+description: Design and refactor the RadiiPolynomial Lean API while preserving its mathematical layering, reusable-module boundaries, and compiling examples. Use for new formalizations, API extraction, proof cleanup, module moves, typeclass design, polynomial evaluation bridges, IVP or Chebyshev infrastructure, and certificate integration.
+---
+
+# RadiiPolynomial API Design
+
+Treat the tracked repository copy of this skill as canonical. Keep the installed Claude,
+Codex and Antigravity mirrors byte-identical to it (symlinks under `~/.claude/skills/`,
+`~/.agents/skills/` and `~/.gemini/antigravity-cli/skills/`).
+
+## Establish Live Context
+
+- Work in the nested Git/Lake checkout. Read its `ARCHITECTURE.md` for current
+  module boundaries, import rules, and public facades; avoid duplicating that inventory here.
+- Read the curated project-memory index identified by `AGENTS.md`, then only relevant notes.
+  Verify dated status and declaration names against the live source and pinned Mathlib.
+- Inspect Git state and preserve concurrent edits. Keep feasibility investigations in the
+  agreed ignored `tmp/` folder until concrete consumers justify promotion within the user's scope.
+- Search existing APIs before adding declarations. Consult `docs/reference_book/` when extending
+  a book theorem or certificate. Do not commit or push unless asked.
+
+## Universal Properties Specify the API
+
+- For a universal construction, expose the induced arrow, its computation on generators,
+  and extensionality on generators. Include the converse identifying every eligible arrow
+  with its lift; a constructor alone does not express the full specification.
+- Let the determining data set the parameters and assumptions: indices, weights, fibers,
+  scalars, and targets remain general where the proof permits. Pass varying bounds or
+  summability witnesses explicitly rather than strengthening typeclasses.
+- Use universal properties at design time and ordinary algebra/linear maps at proof time.
+  Do not introduce categorical packaging when the existing lift/ext API expresses the result.
+- Reuse the weighted `l1` lift and column-bound APIs for operators, and algebra lifts for
+  multiplicative evaluation. Pointwise bounds can require weaker assumptions than operator norms.
+
+## Use Friction Carefully
+
+Work from a concrete consumer through repeated friction to a reusable bridge and a second
+consumer. Classify obligations as equation-specific, representation-specific, or structural.
+Keep incidental finite/numeric cleanup in examples; extract reusable mathematics at its owning
+layer. Proof ugliness alone does not justify an abstraction. Preserve public interfaces
+by default; record authorized renames and retirements in `RENAMES.md`.
+
+## Preserve Core Boundaries
+
+- Follow `Algebra/Analysis → Core/Operators → Applications → Examples`.
+  `Certification` and `Tactic` are adapter layers; reusable modules never import `Examples`.
+  Use facades at application boundaries and narrow owning imports inside the library.
+- Keep `general_radii_polynomial_theorem` in `RadiiPolynomial.Core` as the basis-independent
+  anchor. Application layers should reduce their work to its bounds and hypotheses.
+- Keep `CompPoly` as the computable certificate representation and `MvPolynomial` as the
+  semantic algebraic representation.
+- Keep `CompPoly.evalBanach` as the public completed evaluator. Treat lower construction stages
+  such as `evalAlg` as implementation bridges unless a genuine consumer requires them.
+- Use the `evalBanach`/`toMvPoly` bridge and the universal property of `MvPolynomial` for
+  equational statements such as substitution and composition.
+- For regularity statements, induct at the most algebraic suitable layer, normally
+  `MvPolynomial.induction_on`, rather than over the larger `CompPoly` syntax.
+- Keep power-series evaluation and termwise differentiation in separate modules.
+- Keep Taylor and Chebyshev as sibling discretizations. Raw IVP residual coefficients
+  remain raw sequences; the preconditioned map `G` is the Banach self-map. Do not invent a
+  bounded approximate-inverse map on the unrestricted raw codomain.
+- Distinguish bilateral Chebyshev storage from its flip-fixed physical algebra.
+  With nonnegative storage, polynomial evaluation uses the symmetric extension `S(a)`
+  and differentiation uses `S(h)`, where `(S(a))_k = a_|k|`.
+  Chebyshev evaluation is multiplicative on the physical algebra, not arbitrary bilateral data.
+- Reuse the generic `CompPoly` AST and semantic evaluator across geometries. Its Nat Cauchy
+  coefficient interpreter is Taylor-specific; finite Laurent computation needs support evidence,
+  since high Chebyshev modes can contribute to low output modes.
+- Use `SystemBlockDiagData.composedApprox` as shared Taylor/Chebyshev operator
+  infrastructure. The former `IVP.ivpComposedApprox` compatibility alias is retired.
+- Reuse the Chebyshev `G = constG + TA(a) + TC(φ(a))` decomposition and derivative bridge.
+  Use the shared split-boundary mechanism for return to the IVP.
+- Residual correction belongs to `Certification/Residual`: a residual norm bound below one
+  gives the matching one-sided inverse, including in noncommutative rings. Finite-support completeness
+  does not by itself provide rational candidates or an effective search. Spectral
+  classification is separate from these certificate consumers.
+- Spectrum modules specialize `Gelfand.pointwiseTopology` through local instances;
+  do not install a global topology on the character types.
+- Keep the external LeanCert package as a dependency. Put only project-specific bridges in
+  `Certification/LeanCertAdapter.lean`; never copy LeanCert into this repository.
+
+## Typeclasses And Mathlib Alignment
+
+Separate assumptions by mathematical strength (`SubMulWeightBase` versus `SubMulWeight`).
+Use `lpOneAlgConvCompat` for alternative convolution-summability witnesses behind one ring
+instance. Follow pinned Mathlib conventions; use `@[to_additive]` for faithful translations,
+protecting fiber/scalar parameters with `dont_translate` where needed.
+
+## Polynomial And Certificate Automation
+
+Use the existing `compPolyOf%`, `pderiv_simp`, and `auto_poly_fderiv` where supported;
+use `native_decide` for exact finite identities and `finmatrix_bound` for weighted matrix bounds.
+The current polynomial IVPs keep literal `f_cpoly` definitions. Examples 8.1 and 14.2.1
+use `f_cpoly_reified` as a `rfl` witness for the elaborator, outside the certificate's
+dependency path.
+
+If automation cannot cross a representation boundary, add a reusable correctness bridge at
+the owning layer. Do not expose internal representations merely to make a certificate reduce.
+
+Use `CompPoly.normBound`, `lipschitzBound`, and `derivativeBound` and their Taylor/Chebyshev
+faces for syntax-derived constants. These proofs follow the computable syntax; semantic
+calculus still belongs at the `MvPolynomial` layer. The constants use triangle inequalities:
+keep exact-arithmetic bounds when evaluated coefficients cancel, as in Example 8.1's Z₁.
+Radius-independent second-derivative bounds concern syntactically quadratic expressions;
+algebraic cancellation to a quadratic polynomial does not make its syntactic bound quadratic.
+
+Reuse the Taylor `StdIVPData.Z₁_le_of_compPoly` / `Z₂_le_of_compPoly` and Chebyshev
+`StdChebIVPData.Z₂_le_of_compPoly_max` faces. Per-example derivative or operator norm bounds
+remain inputs where needed. Chebyshev still needs its full Z₁ column/leakage calculation and
+a bound on `TC`; `norm_compPolyDerivative_le` bounds the nonlinearity's derivative, not Z₁.
+
+## Example Layers
+
+For polynomial IVPs use `Numbers → Algebra → Certificate → Analytic → Analyticity`
+where applicable: data, equation-specific structure, bounds, function-space existence and
+uniqueness, then proved analyticity. Keep complex-time results in their own layer.
+Examples 7.7 and 2.4.5 have their own problem-specific routes; do not force them into the
+polynomial IVP interface. Claim analyticity only when the theorem proves it.
+
+Supply `f_cpoly`, the initial condition, numerical data and certificate bounds. Use
+`StdIVPData.existsUnique_of_compPoly` / `StdChebIVPData.existsUnique_of_compPoly` for
+coefficient zeros, Taylor's `analytic_existsUnique_of_compPoly_of_radii`, and Chebyshev's
+`solution_existsUnique_of_compPoly` or its contractive/analytic variants for function-space
+results. Coefficient faces derive differentiability; function-space faces also derive
+evaluation compatibility and the vector-field Lipschitz witness. The radii-based faces
+derive the defect bound below one.
+
+Both geometries use `IVP.vectorField f_cpoly` for the real vector field and their respective
+`banachField f_cpoly` for the coefficient nonlinearity. Retain per-example aliases and
+explicit derivative formulas when certificate consumers need them, as in the Taylor examples.
+Use `x₀` for Taylor initial data at time zero and `p₀` for Chebyshev initial data at
+time minus one. Keep the numerical pipeline radius `r_minus` distinct from theorem
+parameter `r₀`.
+Use `f` for the vector field and `F` for the coefficient operator in new interfaces.
+
+## Verification
+
+Check focused targets while iterating; after changing reusable production modules or imports,
+run `lake build` from the nested checkout, including all production examples. Reject new
+`sorry`/`admit`, forbidden upward imports, and project-local warnings.
+When rewiring certificates, compare final theorem axiom sets; a separate finite audit
+does not enter a theorem's trust surface merely because its module is imported.
+
+For isolated experiments, compile their dependency chain and audit theorem axioms; distinguish
+experimental conclusions from production results. Documentation-only edits need their own
+validation, not a Lean rebuild.
+
+## Peer Harnesses
+
+A second general-purpose model joins this work as a **bounded worker**: one headless
+invocation per goal, launched and checked by the coordinator. (A **peer** seat on the
+`agents-bus` skill, which stays harness-neutral and is not amended here, is reserved for a
+harness that runs its own long-horizon agenda; Codex holds that seat today.) Aristotle is
+neither; it is a dedicated prover, not a general model, and has its own course below.
+
+What a worker is for (user 2026-09-19): a second perspective and a double quality check on
+something the coordinator has drafted; discussion and brainstorming before a unit starts;
+and chores with no immediate substantial effect on the project that are useful as an
+intermediate step or a reference: organizing, scouting, drafting an API suggestion from an
+existing formalization, cataloguing lemmas, comparing candidate statements. Everything a
+worker returns is **non-final**: a reference the coordinator reads, not a change that lands.
+The coordinator guards the quality bar for Lean code, API orientation and library layering
+(the sections above), and only the coordinator, or a Fable/Opus proof unit it owns, writes
+what gets committed. Goals fed to a worker are bounded, chopped down, specific and
+non-final: one unit, named targets, the existing declarations to use, what done looks like,
+where to report obstacles instead of improvising around them. The tiering rules in the
+global instructions apply unchanged, and every call pins a model.
+
+Before a harness is used in either role, record its adapter in this section: one entry per
+CLI, in the shape of the Antigravity entry. An adapter names, in this order:
+
+1. **Binary and version.** The command, where it installs, how to read its version. The
+   user runs installers and sign-in; the assistant never enters credentials or accepts
+   terms, and never runs a downloaded installer from a tool shell.
+2. **Headless form.** The exact non-interactive call: prompt flag, working directory (always
+   the nested checkout), model pin, effort, structured output, timeout, permission mode.
+   A worker call uses structured output with a schema and a wall-clock timeout; it never
+   runs with auto-approval on the checkout root.
+3. **What it reads.** Context files, skill directories, MCP configs. Mirror this skill and
+   `lean-golfing` into its skill directory as symlinks to the canonical copy; do not fork.
+4. **What leaves the machine.** For a cloud model everything it reads is uploaded: the
+   Aristotle data rule applies verbatim (library source yes; `docs/reference_book/`, the
+   rewrite-edition `.tex`, `tmp/` and any text derived from the book no, unless the user
+   has set the consent variable for that run). Launch from a shell that has not sourced
+   `~/.zshrc`, so `ARISTOTLE_API_KEY` and other secrets are not in its environment; check
+   with `env | grep -c -i key` printing 0 in the launching shell. Turn the harness's own
+   telemetry off in its settings.
+5. **Bus activation.** Which lifecycle hook the harness offers for the cue route, and the
+   config file it lives in. The hook itself is written per the bus skill's activation
+   section; this skill only records the harness-side event name.
+6. **Trust surface.** Every declaration a peer or worker returns goes through the
+   Verification section and the Aristotle stage-2 gate: rebuild, per-declaration
+   `#print axioms`, byte-identical statement, no upward imports, provenance under
+   `tmp/<task>/checks/`. Then the stage-3 golf pass, since general models also produce
+   search-shaped proofs. Nothing a cloud peer proved enters EI training or the local prove
+   rate unless its statement leaves the evaluation pool first.
+7. **Probe.** A recorded first run: date, the statement used, wall time, whether the proof
+   compiled on the pinned toolchain with standard axioms. Until a probe is recorded the
+   adapter is a draft and the harness takes no owned proof unit.
+
+### Antigravity CLI (Google, `agy`)
+
+Chosen 2026-09-19 as the non-Codex peer: independent quota pool, the other top general
+model for Lean proof generation in the June 2026 formalization evaluation, hooks and skills
+kept from Gemini CLI, which it replaced on 2026-06-18.
+
+1. Install `curl -fsSL https://antigravity.google/cli/install.sh | bash` (user-run; sha512
+   verified, lands at `~/.local/bin/agy`, then `agy install` edits the shell rc for PATH).
+   First run of `agy` signs in through the browser. `agy --version`; `agy changelog`.
+   Global settings `~/.gemini/antigravity-cli/settings.json`.
+2. Worker call. Headless mode does not take the invoking cwd as its workspace: without
+   `--add-dir` the model lands in `~/.gemini/antigravity-cli/scratch` and goes hunting with
+   `find`, and `--sandbox` re-homes it there too. So stage a scratch directory holding only
+   the statement file and a `check.sh` (fixed `LEAN_PATH` from `lake env printenv LEAN_PATH`
+   in the nested checkout, running the toolchain's `lean` on `Main.lean` or on one scratch
+   file named as `$1`, refusing paths), and call
+   `agy -p "<bounded goal>" --add-dir <dir> --model gemini-3.8-flash-high --effort high --output-format json --json-schema <schema.json> --print-timeout 25m --mode accept-edits`
+   from that directory. Shell commands are soft-denied in headless mode unless an allow rule
+   in `~/.gemini/antigravity-cli/settings.json` matches; the standing rules are
+   `command(regex:(\./)?check\.sh.*)`, `command(pwd)`, `command(ls)`, `command(ls *)` and
+   nothing else, so the worker's only route to Lean is the checker (it will otherwise try
+   raw `lean`, heredocs and web lookups, which the denial ends). Say so in the prompt, and
+   say that a `#check` scratch file through the checker is how to test lemma names. Never
+   `--dangerously-skip-permissions`. Slugs come from `agy models` (2026-09-19: Gemini 3.8 /
+   3.7 / 3.6 Flash, Gemini 3.1 Pro high/low, Claude Sonnet 4.6 / Opus 4.6, GPT-OSS 120B).
+   Default `gemini-3.8-flash-high`; `gemini-3.1-pro-high` only when Flash reports an
+   obstacle, since on the probe it was 4x slower and produced the worse proof (item 7). `--conversation <id>` (id in the JSON envelope)
+   resumes a worker with its context, which is the cheap stateful mode short of a bus seat.
+   The envelope carries `status`, `structured_output` and a `usage` block; log `usage` to
+   the ledger as the quota sample. Peer role: an interactive `agy` session in the checkout,
+   coordinated through the bus.
+   Review-worker pipeline (2026-09-20, first production runs): launch detached (`nohup … &`
+   from a shell with a clean `env -i HOME=… PATH=~/.local/bin:/usr/bin:/bin`) and watch the
+   pid with a Monitor, since a 25-minute call outlives the Bash tool's cap; prompt = the
+   allowed commands, "run every `./check.sh` call in the FOREGROUND, never launch a background
+   task, never end the turn while a command runs", "read only files in this directory; learn
+   library signatures through `#check` probes", the bounded question list, and "report, do
+   not fix". Two failure signatures: an envelope with `status: SUCCESS` but no
+   `structured_output` and stderr "root agent idle; waiting for background task(s)" means the
+   worker backgrounded the checker and was killed at turn end; `denied_actions: read_file`
+   means it opened a file outside `--add-dir` (it reaches for Mathlib sources). Both are
+   fixed by resuming with `--conversation <id>` and the missing rule. Cost sample: a review of
+   ~1000 new lines inside a 4252-line module took 332 s, 14 probes, 654k tokens (596k in,
+   58k out incl. 47k thinking); an 844-line module 164 s / 269k; a 1137-line module 269 s /
+   528k. Verdicts are non-final: file them under `ledger/bus/claude_units/<unit>/agy/` and
+   record the coordinator's disposition per finding.
+   Unit pipeline (book formalization, 2026-09-20): prover (opus; fable only for the
+   big-token units) → adversarial critic (opus, own compile + per-declaration `#print
+   axioms`, marker/header fidelity) → freeze (sonnet; MANIFEST, shadow importer check) →
+   Antigravity review of the comment-stripped freeze (non-final; ≤ ~1500 lines per
+   review, blocks not whole modules) → INSIGHTS.md in the unit dir (API_INSIGHTS lines,
+   STRUCTURE_INSIGHTS lines, errata screen `none` or a candidate; drafted from the critic,
+   prover and Antigravity reports by a sonnet chore, every line verified by the
+   coordinator against its SOURCE pointer) → install (in-flux notice, install_unit.py,
+   audit, status, harvest_append.py) → ISSUES line, done notice, NEXT + checkpoint. The
+   insights and errata step is part of the main task (user 2026-09-20), so the install
+   helper refuses a unit without INSIGHTS.md, and an errata candidate stops the install
+   until the CHARTER §1.8 consult; only the final narrative report is deferred.
+   Prose-math consults (user 2026-09-20): when the question is a specifically tricky piece of
+   Worker assignment (task category → tier; standing rule, harness-neutral, 2026-09-20):
+   - Coordination, design, route notes, bounded-goal briefs (final form), fidelity GATE of
+     any new or altered marked statement, install decisions, ledger truth: the coordinator
+     (Fable). Never delegated; worker output is input to it.
+   - Proof units (lift or infra block, one bounded brief, sorry-free target): opus prover,
+     then opus adversarial critic (own compile, per-declaration axioms, marker/header diff).
+     Fable as prover only for a big-token unit the coordinator owns (sorry-closing pass,
+     research-pilot skeleton) — at most one at a time, never a fleet.
+   - Mechanical stages and chores (freeze/MANIFEST, importer shadow check, INSIGHTS draft,
+     inventories, brief DRAFTS, scouting, fidelity SWEEPS, organising): sonnet, non-final.
+   - Bounded Lean review with `#check` probes on a comment-stripped freeze: Antigravity
+     Flash 3.8 high (non-final; blocks ≤ ~1500 lines); a second reviewer is never a gate.
+   - Prose mathematics consult (route comparison, pitfalls, no formalization): Gemini 3.1 Pro
+     high, one-shot; consolidated by the coordinator into ONE route note; every "missing in
+     Mathlib" claim grep-verified before it enters a brief.
+   - Research-level gap: the ladder of "Research-Level Gaps" (route note → skeleton →
+     opus/Fable/Aristotle grind → golf → canonical install → book fill-in on the user's call).
+   - Judgment continuity across days (adversarial peer, protocol partner): exactly one
+     persistent peer (Codex on the bus) besides the coordinator; workers are disposable and
+     all state lives in the brief, the freeze and the ledger.
+   Tiering is by difficulty AND by quota balance (re-checked at each quota report); pin the
+   model on every call; never kill a fired worker to rebalance.
+
+   mathematics and the want is natural-language insight rather than a review, run
+   `gemini-3.1-pro-high --effort high` (high is the CLI's top effort) instead of Flash;
+   consolidate Gemini Pro's proof scratch with the coordinator's own scratch into one route
+   note, and hand that consolidated note (never the two raw scratches) to the Aristotle grind.
+   First A/B (2026-09-20, Liouville route): Pro and Flash gave the same route and quality,
+   Flash faster and more detailed; both reported a Mathlib lemma as missing that exists
+   (`SymplecticGroup.det_eq_one`), so grep/#check every "missing in Mathlib" claim
+   from a prose consult before it enters a brief.
+   Friction log (2026-09-20, 16 headless runs): (3) on inputs above ~1500 lines the final
+   text can degenerate into one repeated word and Google's safety filter returns
+   `status: ERROR`, yet `structured_output` is still delivered and usable — treat it as a
+   lower-trust verdict and review blocks, not whole modules (scope the prompt to a line range
+   and let the rest of the file be context); (4) a DNS/network failure (`AGY_ERROR … no such
+   host`, `retryable: true`) dies before the first model call — just relaunch; (5) trap (1)
+   recurs even with the foreground rule in the prompt (2 of 16 runs): keep the rule, and on
+   the kill resume with `--conversation <id>` restating it — the resumed run keeps its probes;
+   (6) `--effort` takes only low|medium|high (high is the ceiling); (7) a wrong line count in
+   the prompt is harmless, the worker counts for itself. Verdict profile: strong on hypothesis
+   strength, unused binders, probe-verified Mathlib duplicates and docstring honesty; weak on
+   judging against the item MARKER (it judges against the prompt's framing) and prone to
+   'vacuous when the domain is empty' padding; it never found a mathematical error (Lean
+   already checks), so its value is the second reading, not a verdict. Typical cost 160–370 s
+   and 250k–860k tokens per review.
+3. Reads `AGENTS.md` in the workspace and `~/.gemini/GEMINI.md`; skills from
+   `~/.gemini/antigravity-cli/skills/` (mirrored 2026-09-19: this skill, `lean-golfing`)
+   and `.agents/skills/` in the workspace; MCP from `~/.gemini/config/mcp_config.json` and
+   `.agents/mcp_config.json`.
+4. Cloud model: rule 4 applies in full. Telemetry is not a `settings.json` key (agy strips
+   `enableTelemetry` on every run and posts trajectory analytics regardless): the user turns
+   "Enable Telemetry" off in the interactive `/settings` menu, once per account. Do not point `--include` or the workspace at the
+   checkout root's parent, which holds `exterior/` and the book material.
+   A `ReferenceBook` module is a formalisation of the book, and its docstrings paraphrase
+   and sometimes quote it: stage a comment-stripped copy (blank every `--` comment and every
+   nested block comment, line-preserving, so the worker's line citations map onto the frozen
+   file), recompile the stripped copy through the same `check.sh` before staging, and keep
+   the prompt free of book text. The formal statements themselves are library source.
+5. Hook events `PreToolUse`, `PostToolUse`, `PreInvocation`, `PostInvocation`, `Stop`;
+   workspace file `.agents/hooks.json`, global `~/.gemini/config/hooks.json`. The cue route
+   is a `Stop` hook (stdin carries `conversationId`, `transcriptPath`, `terminationReason`,
+   `fullyIdle`), the counterpart of Codex's `notify` `turn-ended`.
+6. As above.
+7. Probe 2026-09-19, `probe_geom_tail` (Mathlib-only geometric tail, statement from the
+   Aristotle probe), both runs compiled on v4.33.0 with `[propext, Classical.choice,
+   Quot.sound]` and a byte-identical statement.
+   Gemini 3.1 Pro high: two headless calls (the first ended by a denied ad-hoc `lean` call
+   before the checker took a file argument, resumed with `--conversation`), ~5 min wall,
+   137k tokens on the second call, nested `calc` with manual `mul_inv` shuffling and
+   `clear`: golf-stage material.
+   Gemini 3.8 Flash high: one call, 62 s wall, 153k tokens, six lines
+   (`div_lt_one`, `simp_rw [pow_succ']`, `tsum_mul_left`, `tsum_geometric_of_lt_one`,
+   `field_simp`): committable after the trust gate as is. Hence the default above.
+   Sign-in and `agy update` rewrite `settings.json`: re-check the allow rules after either.
+   First production reviews 2026-09-20 (Gemini 3.8 Flash high, comment-stripped modules):
+   S-333b (Ch03/Sec3, 12 new private lemmas) PASS, confirmed no Mathlib duplicates for the
+   three reusable lemmas, six name/style findings; F-102a (Ch10/Sec2) CONCERNS, one real
+   docstring overclaim (fixed) plus API-shape notes; F-085 (Ch08/Sec5Taylor) CONCERNS, three
+   identity faces mis-judged against the prompt's "recurrence" wording plus three verified
+   API-reuse notes. The worker is reliable on hypothesis satisfiability, unused hypotheses
+   and `#check`-verified duplicates; it takes the prompt's framing literally, so describe
+   each face by what its marker says, not by a collective label.
+
+
+   Install-pipeline traps (2026-09-20, 19 installs): (a) an EXTENSION unit (append-only block
+   of an existing module) must record the base file's sha as the manifest's `canonical_sha256`
+   before install — an installer that finds no canonical sha takes the new-module path and
+   refuses because the target exists; (b) the lake-build lock is held transiently by workflow
+   critic/freeze stages: install through a wait-for-lock retry loop, never by hand-timing;
+   (c) one heading per insights section (`## API_INSIGHTS`, `## STRUCTURE_INSIGHTS`,
+   `## ERRATA`) — a repeated heading must accumulate, not overwrite; (d) stamp every ledger and
+   manifest line from `date -u` (hand-written stamps drifted ~35 min twice); (e) when scoping a
+   review to a line range, compute the range with an exact section-name grep and check the
+   prompt file is non-empty before launching — a name that prefixes another section returns
+   two lines, breaks the arithmetic, and `agy` still launches on an empty prompt; (f) never edit
+   a bash script while an instance runs.
+## Escalation To Aristotle
+
+Aristotle (Harmonic's cloud prover, `aristotlelib` in `exterior/data_pipeline`) is a bounded
+worker for a single extra-hard `sorry`, not a default step. Use it only after the local ladder
+is exhausted: `exact?`/`aesop`/`polyrith`, then one Fable sorry-closing pass. Submit one
+lemma with its dependency chain, never a whole file. Three stages, each gated on the last.
+
+1. **Grind.** `source ~/.zshrc &&` before any command; the key is not loaded in tool shells,
+   and never dump the environment afterwards. Submit through
+   `generate_proofs.py aristotle --input <stmts.jsonl>` (async) or
+   `aristotle submit "<prompt>" --project-dir <dir>`; record the project id in the ledger.
+   Two things leave the machine: the whole `--project-dir` tree (tarred with no extension
+   filter, minus that directory's own `.gitignore`) and the prompt string itself. Library
+   source is fine in either. The reference-book PDFs under `docs/reference_book/` (tracked
+   in the nested checkout; listed in its `.gitignore` only to keep the client's walker out),
+   the rewrite-edition `.tex`, the `tmp/` experiment tree and any text derived from the book
+   are not, in the tree or in the prompt. So never pass the checkout root as `--project-dir`:
+   stage a scratch directory holding only `lakefile.toml`, `lean-toolchain`,
+   `RadiiPolynomial/`, `RadiiPolynomial.lean` and the statement file, the layout
+   `create_lean_project` in `generate_proofs.py` builds, and before submitting confirm that
+   `find <dir> -type f ! -name '*.lean' ! -name lakefile.toml ! -name lean-toolchain`
+   prints nothing. `book_to_proofs.py` puts book prose in the prompt by construction and is
+   gated behind `ARISTOTLE_ALLOW_BOOK_TEXT=1`; do not invoke it from this skill.
+   Aristotle resolves Mathlib on its side and runs its own toolchain (v4.28.0 as of
+   2026-09-19, against the library's v4.33.0; the CLI warns on submit), so a returned proof
+   is a candidate, not a result, until it compiles against the pinned toolchain in the nested
+   checkout. Expect renamed Mathlib lemmas and `simp` set drift across that gap. Collect
+   with `aristotle tasks <id>` (status) and `aristotle download <id> --destination <tar.gz>`.
+   The archive is Aristotle's copy of everything uploaded, possibly edited, plus its own
+   `lean-toolchain` and `lake-manifest.json`: take only the statement file out of it, diff
+   it against the one submitted, and accept only the proof-body hunk. Keep `aristotlelib`
+   current in the pipeline's `pyproject.toml`; a stale client 404s on the API.
+   Probe 2026-09-19: a Mathlib-only tsum lemma round-tripped in ~10 min and compiled on
+   v4.33.0 with standard axioms.
+2. **Trust surface.** Apply the Verification gate to the returned proof: rebuild,
+   `#print axioms` for the target and for every declaration the diff touched (Aristotle may
+   reach for `native_decide` or leave `sorryAx`), no upward imports, and a statement
+   byte-identical to the one submitted. Keep the returned statement file under the task's
+   `tmp/<task>/checks/` as provenance only, never the prompt or the uploaded tree. An
+   escalated proof is a cloud result: it does not enter the EI training data or count toward
+   the local prove rate unless its statement is first removed from the evaluation pool.
+3. **Golf.** Aristotle proofs are search-shaped: long `have` chains, redundant rewrites,
+   brute `nlinarith`/`simp` calls, and no use of the library's own API. Run the `lean-golfing`
+   skill on the accepted proof on the cheap tier (Sonnet; Opus if it stalls) with the bounded
+   goal: same statement, axiom set no larger, unfolding replaced by existing API lemmas, any
+   generic sublemma the proof surfaces extracted into the right module. Re-run the trust gate
+   after golfing, since golfing can pull in `decide` on large terms or `native_decide`.
+
+The golfed proof is what gets committed. If Aristotle had to reprove something the library
+should already offer, record it in the API insights ledger.
+
+## Research-Level Gaps
+
+A gap that is a theory, not a lemma (an invariant-manifold theorem, a conjugacy theorem, higher
+regularity of a flow), is run as a campaign of bounded units, never as one prover call
+(user 2026-09-20). (1) Route note: the coordinator's scratch and a Gemini 3.1 Pro prose
+consult (no book text in the prompt) consolidated into one note naming the sub-lemmas; every
+"missing in Mathlib" claim grepped before it enters the note. (2) Skeleton: an infra module
+stating the sub-lemmas with `sorry` plus the ASSEMBLY proof of the endpoint from them, passed
+through the critic so the statements are known to compose before any grinding. (3) Grind:
+opus units per sub-lemma, Fable on a reported obstacle, Aristotle (the ladder above) on what
+still resists — the sub-lemma's statement and its dependency chain only. (4) Canonicalize:
+`lean-golfing` on the cheap tier, generic sublemmas moved to the module they belong to,
+API and structure insights recorded, and the proof route written as the docstring narrative.
+(5) Only then, and per item, the prose proof is written into the rewrite edition at the printed
+gap as an editorial proof under the errata recoverability discipline (snapshot, `\editorial`,
+ERRATA/EDITORIAL_NOTES record); statements are never changed by this step.
