@@ -1,6 +1,6 @@
 import RadiiPolynomial.Operators.BlockDiagonal.Scalar
 import RadiiPolynomial.Tactic.AutoPolyFDeriv
-import RadiiPolynomial.Core.AffineZ2
+import RadiiPolynomial.Applications.PowerSeries.AffineZ2
 
 /-!
 # Example 7.7 — Algebraic Infrastructure

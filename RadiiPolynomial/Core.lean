@@ -1,6 +1,5 @@
 import RadiiPolynomial.Core.Theorem
 import RadiiPolynomial.Core.Bounds
-import RadiiPolynomial.Core.AffineZ2
 import RadiiPolynomial.Core.AlgebraZ2
 import RadiiPolynomial.Core.Transport
 

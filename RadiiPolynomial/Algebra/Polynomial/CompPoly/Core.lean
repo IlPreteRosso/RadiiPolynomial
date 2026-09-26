@@ -277,6 +277,60 @@ theorem map_evalBanach (f : R →ₐ[ℝ] B) (p : CompPoly L) (a : Fin L → R) 
 
 end AlgebraHom
 
+section Support
+
+/-- Syntactic support bound: if every input sequence vanishes beyond `N`, the coefficient
+evaluation of `p` vanishes beyond `supportBound N p`. General in `L`, `N`, `p`. -/
+def supportBound (N : ℕ) : CompPoly L → ℕ
+  | .C _ => 0
+  | .X _ => N
+  | .add p q => max (supportBound N p) (supportBound N q)
+  | .sub p q => max (supportBound N p) (supportBound N q)
+  | .mul p q => supportBound N p + supportBound N q
+  | .neg p => supportBound N p
+  | .smul _ p => supportBound N p
+
+/-- The coefficient evaluation of `p` vanishes beyond `supportBound N p` when every input
+sequence vanishes beyond `N`. General in `L`, `N`, `p`, `seqs`. -/
+theorem evalCoeffSeq_eq_zero_of_support (N : ℕ) (p : CompPoly L) (seqs : Fin L → ℕ → ℚ)
+    (hs : ∀ i n, N < n → seqs i n = 0) :
+    ∀ n, supportBound N p < n → p.evalCoeffSeq seqs n = 0 := by
+  induction p with
+  | C r =>
+      intro n hn
+      simp only [supportBound] at hn
+      simp [CompPoly.evalCoeffSeq, show n ≠ 0 by omega]
+  | X i =>
+      intro n hn
+      simpa [CompPoly.evalCoeffSeq] using hs i n hn
+  | add p q ihp ihq =>
+      intro n hn
+      simp only [supportBound] at hn
+      simp only [CompPoly.evalCoeffSeq, ihp n (by omega), ihq n (by omega), add_zero]
+  | sub p q ihp ihq =>
+      intro n hn
+      simp only [supportBound] at hn
+      simp only [CompPoly.evalCoeffSeq, ihp n (by omega), ihq n (by omega), sub_zero]
+  | mul p q ihp ihq =>
+      intro n hn
+      simp only [supportBound] at hn
+      simp only [CompPoly.evalCoeffSeq, CauchyProduct.apply]
+      refine Finset.sum_eq_zero fun kl hkl => ?_
+      rw [Finset.mem_antidiagonal] at hkl
+      by_cases hk : supportBound N p < kl.1
+      · rw [ihp _ hk, zero_mul]
+      · rw [ihq _ (by omega), mul_zero]
+  | neg p ih =>
+      intro n hn
+      simp only [supportBound] at hn
+      simp only [CompPoly.evalCoeffSeq, ih n hn, neg_zero]
+  | smul r p ih =>
+      intro n hn
+      simp only [supportBound] at hn
+      simp only [CompPoly.evalCoeffSeq, ih n hn, mul_zero]
+
+end Support
+
 end CompPoly
 
 end MvPolyBridge

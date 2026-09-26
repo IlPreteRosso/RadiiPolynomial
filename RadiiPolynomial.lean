@@ -40,5 +40,10 @@ import RadiiPolynomial.Applications.IVP.Taylor.ComplexTime
 -- Chebyshev IVP application
 import RadiiPolynomial.Applications.IVP.Chebyshev
 
+-- Power-series application
+import RadiiPolynomial.Applications.PowerSeries.AffineZ2
+import RadiiPolynomial.Applications.PowerSeries.PolynomialZero
+import RadiiPolynomial.Certification.PowerSeries.PolynomialZero
+
 -- Examples
 import RadiiPolynomial.Examples

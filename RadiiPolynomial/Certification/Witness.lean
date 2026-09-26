@@ -115,6 +115,25 @@ lemma ScalarBlockDiagData.norm_toScalarCLM_action_eq_Icc_sum
 
 end ScalarSpecialization
 
+/-! ## Finitely supported elements from rational arrays -/
+
+section ArrayElements
+
+/-- The finitely supported element of `ℓ¹_ν` read off a zero-padded rational array.
+General in `ν`, `arr`. -/
+noncomputable def l1OfArrayQ {ν : PosReal} (arr : Array ℚ) : l1Weighted ν :=
+  l1Weighted.mk (fun n => ((arr.getD n 0 : ℚ) : ℝ)) (by
+    rw [l1Weighted.mem_iff]
+    refine summable_of_ne_finset_zero (s := Finset.range arr.size) fun n hn => ?_
+    rw [Finset.mem_range, not_lt] at hn
+    simp [Array.getD_eq_getD_getElem?, hn])
+
+/-- General in `ν`, `arr`. -/
+@[simp] theorem l1OfArrayQ_toSeq {ν : PosReal} (arr : Array ℚ) (n : ℕ) :
+    l1Weighted.toSeq (l1OfArrayQ (ν := ν) arr) n = ((arr.getD n 0 : ℚ) : ℝ) := rfl
+
+end ArrayElements
+
 /-! ## 3. Column Norm Pipeline (documentation)
 
 The Z₀ and ‖A‖ bounds reduce to `finWeightedMatrixNorm` (for L=1) or

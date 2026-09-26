@@ -129,6 +129,12 @@ variable {K : Type*} [DivisionRing K] [CharZero K]
 
 end Cast
 
+/-- The derivative Lipschitz constant of a univariate polynomial is the Lipschitz constant of
+its formal derivative. General in `P`, `K`. -/
+theorem derivativeLipschitzBound_one {K : Type*} [DivisionRing K] (P : CompPoly 1)
+    (R : Fin 1 → K) : P.derivativeLipschitzBound R = (P.pderiv 0).lipschitzBound R := by
+  simp [CompPoly.derivativeLipschitzBound]
+
 section Order
 
 variable {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
@@ -269,6 +275,24 @@ theorem norm_evalBanach_sub_le_max (p : CompPoly L) (a b : Fin L → A) :
   norm_evalBanach_sub_le p a b _ (fun _ => le_max_left _ _) (fun _ => le_max_right _ _)
 
 end Normed
+
+section Univariate
+
+variable {𝔸 : Type*} [NormedCommRing 𝔸] [NormedAlgebra ℝ 𝔸]
+
+/-- Ball Lipschitz bound of a univariate evaluation from the syntactic constant.
+General in `P`, `𝔸`, `R`. -/
+theorem norm_evalBanach_one_sub_le [NormOneClass 𝔸] (P : CompPoly 1) (x y : 𝔸) (R : ℝ)
+    (hx : ‖x‖ ≤ R) (hy : ‖y‖ ≤ R) :
+    ‖P.evalBanach (fun _ => x) - P.evalBanach (fun _ => y)‖ ≤
+      P.lipschitzBound (fun _ => R) * ‖x - y‖ := by
+  have h := CompPoly.norm_evalBanach_sub_le P (fun _ : Fin 1 => x) (fun _ => y) (fun _ => R)
+    (fun _ => hx) (fun _ => hy)
+  have hn : ‖(fun _ : Fin 1 => x) - (fun _ => y)‖ = ‖x - y‖ :=
+    pi_norm_const (ι := Fin 1) (x - y)
+  rwa [hn] at h
+
+end Univariate
 
 section VectorField
 

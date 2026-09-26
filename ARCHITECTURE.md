@@ -49,6 +49,7 @@ contains only project-specific bridges into that dependency.
 2. `Core` may import `Algebra` and `Analysis`, but not application or certificate modules.
 3. `Operators` may import `Core`, `Algebra`, and `Analysis`.
 4. `Certification` may import reusable operators and the external LeanCert dependency.
+   A specialized Certification adapter may import an application discretization to verify its concrete certificate data; Algebra, Analysis, Core, Operators and Applications do not import Certification or Tactic.
 5. `Applications` may import all reusable mathematical layers, but never `Examples`.
 6. `Examples` are terminal consumers; reusable library modules never import them.
    Example families do not import one another either: the single surviving

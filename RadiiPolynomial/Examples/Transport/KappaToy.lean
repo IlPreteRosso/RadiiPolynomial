@@ -1,5 +1,6 @@
 import RadiiPolynomial.Core.Transport
-import RadiiPolynomial.Core.AffineZ2
+import RadiiPolynomial.Applications.PowerSeries.AffineZ2
+import RadiiPolynomial.Certification.PowerSeries.PolynomialZero
 import RadiiPolynomial.Tactic.AutoPolyFDeriv
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered
 
@@ -139,18 +140,54 @@ lemma hβ : ‖((u.symm : l1Bordered ν₂ →L[ℝ] l1Weighted ν₂))‖ ≤ (
     one_mul]
   exact borderedToU_norm_le a
 
+/-! The toy is the member `P = X·X`, `N = 0` of the polynomial-zero family: the same four
+bounds, checked in `ℚ` by one `decide +kernel`. -/
+
+/-- The toy's certificate data as a `PolyZeroData`. -/
+def kdata : PolyZeroData where
+  P := .mul (.X 0) (.X 0)
+  N := 0
+  νq := 2
+  aQ := #[3/4]
+  cQ := #[5/9]
+  Acols := ![#[2/3]]
+  r₀ := 1/16
+  Y₀ := 1/216
+  Z₀ := 0
+  Z₁ := 0
+  Z₂ := 4/3
+
+theorem kdata_checks : kdata.Checks := by decide +kernel
+
+private lemma hν : ((ν₂ : PosReal) : ℝ) = ((kdata.νq : ℚ) : ℝ) := by
+  show (2 : ℝ) = ((2 : ℚ) : ℝ); norm_num
+
+private lemma hx (n : ℕ) : l1Weighted.toSeq xBar n = ((kdata.a n : ℚ) : ℝ) := by
+  show l1Weighted.toSeq ((3/4 : ℝ) • (1 : l1Weighted ν₂)) n = _
+  rw [l1Weighted.smul_toSeq, l1Weighted.one_toSeq_eq]
+  rcases n with _ | n <;> simp [kdata, PolyZeroData.a, Array.getD_eq_getD_getElem?]
+
+private lemma hc (n : ℕ) : l1Weighted.toSeq c n = ((kdata.cq n : ℚ) : ℝ) := by
+  show l1Weighted.toSeq ((5/9 : ℝ) • (1 : l1Weighted ν₂)) n = _
+  rw [l1Weighted.smul_toSeq, l1Weighted.one_toSeq_eq]
+  rcases n with _ | n <;> simp [kdata, PolyZeroData.cq, Array.getD_eq_getD_getElem?]
+
 /-- **ACCEPT.** At radius 1/16 the B-side margin (≈ 84%) clears the κ = 8/3
 threshold (κ−1)/κ = 62.5%, so the certificate transports: a unique zero of the
 conjugated map `F'` in the bordered Chebyshev ball of radius 1/16 around the
-transported candidate — proved without re-running any bound on the C side. -/
+transported candidate — proved without re-running any bound on the C side. The B-side
+bounds come from the polynomial-zero family face, the margin from the root `gateQ_sound`. -/
 theorem transported_existsUnique :
     ∃! bTilde ∈ Metric.closedBall (u xBar) (1/16 : ℝ), F' bTilde = 0 := by
-  refine transport_radii_polynomial_of_margin
-    (Y₀ := 1/216) (Z₀ := 0) (Z₁ := 0) (Z₂ := fun _ => (4/3 : ℝ))
-    (r₀ := 1/16) (r₁ := 1/16) (α := 8/3) (β := 1)
-    u u hsquare hα hβ (by norm_num) (by norm_num) (by norm_num)
-    hY₀ hZ₀ hZ₁ (hZ₂ (1/16) (by norm_num)) hdiff ?_ hAinj
-  norm_num [generalRadiiPolynomial]
+  obtain ⟨-, hY, hZ0, hZ1, hZ2, hd, -, hi⟩ := kdata.certified hν hx hc kdata_checks
+  exact transport_radii_polynomial_of_margin (α := 8/3) (β := 1) (r₁ := 1/16)
+    (r₀ := (kdata.r₀ : ℝ)) (Z₂ := fun _ => (kdata.Z₂ : ℝ))
+    u u hsquare hα hβ (by norm_num)
+    (by norm_num) (by show ((1/16 : ℚ) : ℝ) = 1 * (1/16); norm_num)
+    hY hZ0 hZ1 hZ2 hd (by
+      have := _root_.gateQ_sound (α := 8/3) (β := 1) (Y₀ := kdata.Y₀) (Z₀ := kdata.Z₀)
+        (Z₁ := kdata.Z₁) (Z₂ := kdata.Z₂) (r₀ := kdata.r₀) (by decide +kernel)
+      push_cast at this ⊢; exact this) hi
 
 /-- The B-side certificate is also valid at the larger radius 1/2 … -/
 theorem bside_accepts_half :
