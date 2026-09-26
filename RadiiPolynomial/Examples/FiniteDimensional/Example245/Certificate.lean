@@ -1,21 +1,24 @@
 import RadiiPolynomial.Examples.FiniteDimensional.Example245.Algebra
 import RadiiPolynomial.Certification.LeanCertAdapter
+import RadiiPolynomial.Applications.FiniteDimensional.Scalar
 
 /-!
 # Example 2.4.5 — Certificate
 
-Numerical verification of f(x) = x² - 2 near x̄ = 13/10.
-All bound proofs use `leancert` (dyadic interval arithmetic), with `abs_le`
-to split two-sided bounds.
+Verification of f(x) = x² - 2 near x̄ = 13/10 on the closed ball of radius r₀ = 3/20.
+The polynomial is reified as a `CompPoly 1`; `StdFinDimData.tightC` computes the bounds
+`Y₀`, `Z₀`, `Z₂` in exact rational arithmetic from x̄, `A = 19/50` and r₀, and the certificate
+`ChecksC` is checked by `decide +kernel`.
 
-Bound lemma statements use canonical norms (`Y₀_norm`, `Z₀_norm`, `Z₁_norm`, `Z₂_norm`)
-from `RadiiPolynomial.Core`; `main_theorem` calls `general_radii_polynomial_theorem`
-directly.
+`main_theorem` goes through the centred polynomial face `StdFinDimData.existsUniqueC` at
+`R = ℝ` and the scalar instance `StdFinDimData.existsUnique_scalar_of`. The public parameter
+abbreviations keep the example's hand-derived constants.
 -/
 
 open scoped Topology BigOperators
 open Metric Set Filter ContinuousLinearMap
 open RadiiPolynomial Example245
+open MvPolyBridge
 
 namespace Example245.Cert
 
@@ -30,49 +33,24 @@ noncomputable abbrev Z₀_bound : ℝ := 1 / 80
 noncomputable abbrev Z₂_bound : ℝ → ℝ := fun _ => 19 / 25
 noncomputable abbrev r₀    : ℝ := 3 / 20
 
-/-! ## Bound proofs — all via leancert -/
+/-! ## Certificate data -/
 
-private lemma Y₀_le : Y₀_norm f xBar A ≤ Y₀_bound := by
-  unfold Y₀_norm
-  simp only [A, f, xBar, Y₀_bound, smulCLM_apply, Real.norm_eq_abs]
-  rw [abs_le]
-  exact ⟨by leancert, by leancert⟩
+/-- `f(x) = x² − 2` reified. -/
+private def f_cpoly : CompPoly 1 := .sub (.mul (.X 0) (.X 0)) (.C 2)
 
-private lemma Z₀_le : Z₀_norm A A_dag ≤ Z₀_bound := by
-  unfold Z₀_norm
-  rw [smulCLM_comp, id_sub_smulCLM, norm_smulCLM]
-  simp only [Z₀_bound]
-  rw [abs_le]
-  exact ⟨by leancert, by leancert⟩
+/-- x̄, `A`, r₀; the bounds are computed (`tightC`). -/
+private def dataC : StdFinDimData 1 := .tightC ![f_cpoly] ![13 / 10] !![19 / 50] (3 / 20)
 
-private lemma Z₁_le : Z₁_norm f xBar A A_dag ≤ 0 := by
-  unfold Z₁_norm
-  rw [fderiv_sq_sub_const, smulCLM_sub, smulCLM_comp, norm_smulCLM, xBar]
-  rw [abs_le]
-  exact ⟨by leancert, by leancert⟩
-
-private lemma Z₂_le (c : ℝ) (hc : c ∈ closedBall xBar r₀) :
-    Z₂_norm f xBar A c ≤ Z₂_bound r₀ * r₀ :=
-  (Z₂_bound_sq_sub_const _ xBar 2 hc).trans
-    (by simp only [Z₂_bound, r₀]
-        exact (by leancert))
-
-private lemma radii_neg : generalRadiiPolynomial Y₀_bound Z₀_bound 0 Z₂_bound r₀ < 0 := by
-  unfold generalRadiiPolynomial Y₀_bound Z₀_bound Z₂_bound r₀
-  exact (by leancert)
-
-private lemma r₀_pos : 0 < r₀ := by
-  unfold r₀; exact (by leancert)
-
-private lemma A_inj : Function.Injective A :=
-  smulCLM_injective (ne_of_gt ((by leancert)))
+private theorem checksC : dataC.ChecksC := by decide +kernel
 
 /-! ## Main Theorem -/
 
 theorem main_theorem :
     ∃! xTilde ∈ closedBall xBar r₀, f xTilde = 0 :=
-  general_radii_polynomial_theorem r₀_pos Y₀_le Z₀_le Z₁_le (fun c hc => Z₂_le c hc)
-    (differentiable_sq_sub_const 2) radii_neg A_inj
+  StdFinDimData.existsUnique_scalar_of ℝ dataC (dataC.existsUniqueC ℝ checksC)
+    (fun x => by simp [dataC, StdFinDimData.tightC, f_cpoly, CompPoly.evalBanach]; ring)
+    (by simp [dataC, StdFinDimData.tightC])
+    (by norm_num [dataC, StdFinDimData.tightC])
 
 theorem sqrt2 :
     ∃! xTilde ∈ closedBall (xBar : ℝ) r₀, xTilde ^ 2 = 2 := by

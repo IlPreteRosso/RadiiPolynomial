@@ -20,6 +20,10 @@ factor and vector-field Lipschitz constant are all equal to the syntactic values
 The vector-field consequence `lipschitzOnWith_evalBanach_pi` gives an explicit Lipschitz
 constant on a closed ball of `Fin L → ℝ`, replacing compactness arguments that only produce
 an existential constant.
+
+`anchoredBound c ρ p` bounds the difference anchored at a rational centre `c`,
+`‖p(c + u) - p(c)‖ ≤ anchoredBound c ρ p · ‖u‖` for `‖u‖ ≤ ρ` (`norm_evalBanach_add_sub_le`,
+`norm_evalBanach_sub_center_le`), with the centre values computed exactly by `evalQ`.
 -/
 
 namespace MvPolyBridge.CompPoly
@@ -314,6 +318,116 @@ theorem norm_evalBanach_sub_le_max (p : CompPoly L) (a b : Fin L → A) :
   norm_evalBanach_sub_le p a b _ (fun _ => le_max_left _ _) (fun _ => le_max_right _ _)
 
 end Normed
+
+section Anchored
+
+/-! Centre-anchored difference bound. For `‖u‖ ≤ ρ`, `anchoredBound c ρ p` bounds the difference
+quotient anchored at the rational centre `c` (embedded by `ratMap`):
+`‖p(c + u) - p(c)‖ ≤ anchoredBound c ρ p · ‖u‖`. It is not a Lipschitz constant on the ball (for
+`p = X·X`, `c = 0` it is `ρ`, while `x ↦ x²` has Lipschitz constant `2ρ` on the ball). The centre
+values enter through `evalQ`, so the bound is computed in exact rational arithmetic. Holds in any
+normed commutative real algebra whose unit has norm one. -/
+
+/-- Centre-anchored difference bound of `p` at the rational centre `c`, for displacements of norm at
+most `ρ`. -/
+def anchoredBound (c : Fin L → ℚ) (ρ : ℚ) : CompPoly L → ℚ
+  | .C _ => 0
+  | .X _ => 1
+  | .add p q => anchoredBound c ρ p + anchoredBound c ρ q
+  | .sub p q => anchoredBound c ρ p + anchoredBound c ρ q
+  | .mul p q => anchoredBound c ρ p * |evalQ q c| + |evalQ p c| * anchoredBound c ρ q +
+      anchoredBound c ρ p * anchoredBound c ρ q * ρ
+  | .neg p => anchoredBound c ρ p
+  | .smul r p => |r| * anchoredBound c ρ p
+
+theorem anchoredBound_nonneg (c : Fin L → ℚ) {ρ : ℚ} (hρ : 0 ≤ ρ) (p : CompPoly L) :
+    0 ≤ anchoredBound c ρ p := by
+  induction p with
+  | C _ => exact le_rfl
+  | X _ => exact zero_le_one
+  | add p q hp hq => exact add_nonneg hp hq
+  | sub p q hp hq => exact add_nonneg hp hq
+  | mul p q hp hq =>
+    exact add_nonneg (add_nonneg (mul_nonneg hp (abs_nonneg _)) (mul_nonneg (abs_nonneg _) hq))
+      (mul_nonneg (mul_nonneg hp hq) hρ)
+  | neg p hp => exact hp
+  | smul r p hp => exact mul_nonneg (abs_nonneg r) hp
+
+variable {A : Type*} [NormedCommRing A] [NormedAlgebra ℝ A] [NormOneClass A]
+
+theorem norm_evalBanach_center (p : CompPoly L) (c : Fin L → ℚ) :
+    ‖p.evalBanach (fun i => ratMap A (c i))‖ = |((evalQ p c : ℚ) : ℝ)| := by
+  rw [evalBanach_ratMap, norm_ratMap]
+
+theorem norm_evalBanach_add_sub_le (p : CompPoly L) (c : Fin L → ℚ) (ρ : ℚ)
+    (u : Fin L → A) (hu : ‖u‖ ≤ ρ) :
+    ‖p.evalBanach (fun i => ratMap A (c i) + u i) -
+        p.evalBanach (fun i => ratMap A (c i))‖ ≤
+      (anchoredBound c ρ p : ℝ) * ‖u‖ := by
+  have hρ : (0 : ℚ) ≤ ρ := by exact_mod_cast (norm_nonneg u).trans hu
+  induction p with
+  | C r => simp [CompPoly.evalBanach, anchoredBound]
+  | X i => simpa [CompPoly.evalBanach, anchoredBound] using norm_le_pi_norm u i
+  | add p q ihp ihq =>
+    simp only [CompPoly.evalBanach, anchoredBound, Rat.cast_add]
+    rw [add_sub_add_comm, add_mul]
+    exact (norm_add_le _ _).trans (add_le_add ihp ihq)
+  | sub p q ihp ihq =>
+    simp only [CompPoly.evalBanach, anchoredBound, Rat.cast_add]
+    rw [sub_sub_sub_comm, add_mul]
+    exact (norm_sub_le _ _).trans (add_le_add ihp ihq)
+  | mul p q ihp ihq =>
+    simp only [CompPoly.evalBanach, anchoredBound]
+    set P := p.evalBanach (fun i => ratMap A (c i) + u i)
+    set P₀ := p.evalBanach (fun i => ratMap A (c i))
+    set Q := q.evalBanach (fun i => ratMap A (c i) + u i)
+    set Q₀ := q.evalBanach (fun i => ratMap A (c i))
+    have hP₀ : ‖P₀‖ = |((evalQ p c : ℚ) : ℝ)| := norm_evalBanach_center p c
+    have hQ₀ : ‖Q₀‖ = |((evalQ q c : ℚ) : ℝ)| := norm_evalBanach_center q c
+    have hAp : (0 : ℝ) ≤ anchoredBound c ρ p := by exact_mod_cast anchoredBound_nonneg c hρ p
+    have hAq : (0 : ℝ) ≤ anchoredBound c ρ q := by exact_mod_cast anchoredBound_nonneg c hρ q
+    have hu' : ‖u‖ ≤ (ρ : ℝ) := hu
+    have hsplit : P * Q - P₀ * Q₀ = (P - P₀) * (Q - Q₀) + (P - P₀) * Q₀ + P₀ * (Q - Q₀) := by
+      ring
+    rw [hsplit]
+    have h1 : ‖(P - P₀) * (Q - Q₀)‖ ≤
+        (anchoredBound c ρ p : ℝ) * ‖u‖ * ((anchoredBound c ρ q : ℝ) * ‖u‖) :=
+      (norm_mul_le _ _).trans (mul_le_mul ihp ihq (norm_nonneg _)
+        (mul_nonneg hAp (norm_nonneg _)))
+    have h2 : ‖(P - P₀) * Q₀‖ ≤ (anchoredBound c ρ p : ℝ) * ‖u‖ * ‖Q₀‖ :=
+      (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right ihp (norm_nonneg _))
+    have h3 : ‖P₀ * (Q - Q₀)‖ ≤ ‖P₀‖ * ((anchoredBound c ρ q : ℝ) * ‖u‖) :=
+      (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_left ihq (norm_nonneg _))
+    have h4 : (anchoredBound c ρ p : ℝ) * ‖u‖ * ((anchoredBound c ρ q : ℝ) * ‖u‖) ≤
+        (anchoredBound c ρ p : ℝ) * (anchoredBound c ρ q : ℝ) * ρ * ‖u‖ := by
+      have := mul_le_mul_of_nonneg_left hu'
+        (mul_nonneg (mul_nonneg hAp hAq) (norm_nonneg u))
+      nlinarith [this]
+    rw [hP₀] at h3
+    rw [hQ₀] at h2
+    push_cast
+    refine (norm_add_le _ _).trans ((add_le_add (norm_add_le _ _) le_rfl).trans ?_)
+    nlinarith [h1, h2, h3, h4]
+  | neg p ih =>
+    simp only [CompPoly.evalBanach, anchoredBound]
+    rw [neg_sub_neg, norm_sub_rev]
+    exact ih
+  | smul r p ih =>
+    simp only [CompPoly.evalBanach, anchoredBound, Rat.cast_mul, Rat.cast_abs]
+    rw [← smul_sub, norm_smul, Real.norm_eq_abs, mul_assoc]
+    exact mul_le_mul_of_nonneg_left ih (abs_nonneg _)
+
+/-- Anchored difference bound at a point `x` of the ball around the rational centre `c`. -/
+theorem norm_evalBanach_sub_center_le (p : CompPoly L) (c : Fin L → ℚ) (ρ : ℚ)
+    (x : Fin L → A) (hx : ‖x - fun i => ratMap A (c i)‖ ≤ ρ) :
+    ‖p.evalBanach x - p.evalBanach (fun i => ratMap A (c i))‖ ≤
+      (anchoredBound c ρ p : ℝ) * ‖x - fun i => ratMap A (c i)‖ := by
+  have h := norm_evalBanach_add_sub_le p c ρ _ hx
+  have hx' : (fun i => ratMap A (c i) + (x - fun i => ratMap A (c i)) i) = x :=
+    funext fun i => by simp
+  rwa [hx'] at h
+
+end Anchored
 
 section Univariate
 

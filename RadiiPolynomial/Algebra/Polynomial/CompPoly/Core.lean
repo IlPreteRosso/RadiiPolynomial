@@ -6,11 +6,12 @@ import Mathlib.Analysis.Calculus.ContDiff.Operations
 # Computable Polynomial AST
 
 `MvPolynomial` evaluation and `pderiv` are noncomputable in Mathlib, blocking `native_decide`.
-`CompPoly L` is a computable syntax tree mirroring `MvPolynomial (Fin L) ℚ`, with five
+`CompPoly L` is a computable syntax tree mirroring `MvPolynomial (Fin L) ℚ`, with six
 evaluation targets:
 
 - `evalCoeffSeq` (computable, on rational coefficient sequences)
 - `evalCoeff` (computable array adapter) — for `native_decide`
+- `evalQ` (computable, at a rational point) — exact arithmetic for `decide`
 - `evalAlg` (noncomputable, into any `ℚ`-algebra)
 - `evalBanach` (noncomputable, into any `ℝ`-algebra) — the public semantic evaluator
 - `toMvPoly` (noncomputable, into `MvPolynomial`) — connects to Mathlib's `pderiv`
@@ -257,6 +258,68 @@ theorem evalBanach_eq_evalAlg {R : Type*} [CommRing R] [Algebra ℝ R]
       rw [Algebra.smul_def]
       congr 1
       exact (IsScalarTower.algebraMap_apply ℚ ℝ R r).symm
+
+/-! ### Rational evaluation and the `ℚ → R` embedding
+
+`evalQ` evaluates at a rational point in exact arithmetic; `ratMap R` embeds `ℚ` into a real
+algebra `R` through `ℝ`; `evalBanach_ratMap` identifies the two at rational points, and
+`evalBanach_eq_aeval_map` identifies `evalBanach` with `aeval` of the `ℝ`-mapped polynomial. -/
+
+/-- Computable evaluation at a rational point. -/
+def evalQ {L : ℕ} : CompPoly L → (Fin L → ℚ) → ℚ
+  | .C r, _ => r
+  | .X i, x => x i
+  | .add p q, x => evalQ p x + evalQ q x
+  | .sub p q, x => evalQ p x - evalQ q x
+  | .mul p q, x => evalQ p x * evalQ q x
+  | .neg p, x => -evalQ p x
+  | .smul r p, x => r * evalQ p x
+
+/-- The rational embedding `ℚ → ℝ → R` into a real algebra `R` (a real algebra carries no
+`Algebra ℚ R` instance in general). -/
+noncomputable def ratMap (R : Type*) [CommRing R] [Algebra ℝ R] : ℚ →+* R :=
+  (algebraMap ℝ R).comp (Rat.castHom ℝ)
+
+theorem ratMap_apply (R : Type*) [CommRing R] [Algebra ℝ R] (q : ℚ) :
+    ratMap R q = algebraMap ℝ R (q : ℝ) := rfl
+
+/-- `evalBanach` at a rational point of `R^L` is the embedded `evalQ`. -/
+theorem evalBanach_ratMap {R : Type*} [CommRing R] [Algebra ℝ R] {L : ℕ} (p : CompPoly L)
+    (c : Fin L → ℚ) : p.evalBanach (fun i => ratMap R (c i)) = ratMap R (evalQ p c) := by
+  induction p with
+  | C r => rfl
+  | X i => rfl
+  | add p q ihp ihq => simp only [CompPoly.evalBanach, evalQ, map_add, ihp, ihq]
+  | sub p q ihp ihq => simp only [CompPoly.evalBanach, evalQ, map_sub, ihp, ihq]
+  | mul p q ihp ihq => simp only [CompPoly.evalBanach, evalQ, map_mul, ihp, ihq]
+  | neg p ih => simp only [CompPoly.evalBanach, evalQ, map_neg, ih]
+  | smul r p ih =>
+    simp only [CompPoly.evalBanach, evalQ, map_mul, ih, Algebra.smul_def]
+    rfl
+
+/-- Over `ℝ`, `evalQ` is the rational shadow of `evalBanach`. -/
+theorem evalQ_cast {L : ℕ} (p : CompPoly L) (x : Fin L → ℚ) :
+    ((evalQ p x : ℚ) : ℝ) = p.evalBanach (fun i => (x i : ℝ)) :=
+  (evalBanach_ratMap (R := ℝ) p x).symm
+
+/-- The norm of an embedded rational in a normed real algebra whose unit has norm one. -/
+theorem norm_ratMap (R : Type*) [NormedCommRing R] [NormedAlgebra ℝ R] [NormOneClass R]
+    (q : ℚ) : ‖ratMap R q‖ = |(q : ℝ)| := by
+  rw [ratMap_apply, norm_algebraMap', Real.norm_eq_abs]
+
+/-- `evalBanach` in a real algebra `R` is `aeval` of the `ℝ`-mapped `MvPolynomial`: the bridge to
+Mathlib's polynomial calculus through the canonical `Algebra ℝ R` only (no `Algebra ℚ R`). -/
+theorem evalBanach_eq_aeval_map {R : Type*} [CommRing R] [Algebra ℝ R] {L : ℕ}
+    (p : CompPoly L) (x : Fin L → R) :
+    p.evalBanach x = MvPolynomial.aeval x (MvPolynomial.map (algebraMap ℚ ℝ) p.toMvPoly) := by
+  induction p with
+  | C r => simp [CompPoly.evalBanach]
+  | X i => simp [CompPoly.evalBanach]
+  | add p q ihp ihq => simp only [CompPoly.evalBanach, CompPoly.toMvPoly, map_add, ihp, ihq]
+  | sub p q ihp ihq => simp only [CompPoly.evalBanach, CompPoly.toMvPoly, map_sub, ihp, ihq]
+  | mul p q ihp ihq => simp only [CompPoly.evalBanach, CompPoly.toMvPoly, map_mul, ihp, ihq]
+  | neg p ih => simp only [CompPoly.evalBanach, CompPoly.toMvPoly, map_neg, ih]
+  | smul r p ih => simp [CompPoly.evalBanach, ih, Algebra.smul_def]
 
 section AlgebraHom
 

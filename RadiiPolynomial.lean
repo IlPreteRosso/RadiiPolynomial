@@ -41,6 +41,12 @@ import RadiiPolynomial.Certification.IVP.Taylor
 -- Chebyshev IVP application
 import RadiiPolynomial.Applications.IVP.Chebyshev
 
+-- Finite-dimensional application
+import RadiiPolynomial.Applications.FiniteDimensional.Face
+import RadiiPolynomial.Applications.FiniteDimensional.Polynomial
+import RadiiPolynomial.Applications.FiniteDimensional.Scalar
+import RadiiPolynomial.Applications.FiniteDimensional.Periodic
+
 -- Power-series application
 import RadiiPolynomial.Applications.PowerSeries.AffineZ2
 import RadiiPolynomial.Applications.PowerSeries.PolynomialZero
