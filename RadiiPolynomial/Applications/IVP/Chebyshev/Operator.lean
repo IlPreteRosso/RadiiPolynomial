@@ -420,9 +420,7 @@ def embedWithPassThrough (seq : ℕ → ℝ) (base : l1Chebyshev ν) :
   | (n : ℕ) => lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
   | Int.negSucc m => base (Int.negSucc m)
 
-/-! ### Fiber values, membership, and norms of the embeddings
-
-Promoted from Example 14.2.1 (2026-08-25). -/
+/-! ### Fiber values, membership, and norms of the embeddings -/
 
 omit [Fact (1 ≤ (ν : ℝ))] in
 @[simp] lemma embedNatToInt_natCast (seq : ℕ → ℝ) (n : ℕ) :

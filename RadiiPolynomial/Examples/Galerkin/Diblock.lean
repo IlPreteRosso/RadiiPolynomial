@@ -136,27 +136,14 @@ theorem πD_apply (a : symmetricSubalgebra ν) (k : Fin N) :
   rw [Fin.val_succ, Nat.cast_succ]
 
 /-- The full product of three padded elements, before any projection, is the triple sum over
-`k₁ + k₂ + k₃ = k` with `kᵢ ∈ [-N, N]` (no intermediate truncation). -/
+`k₁ + k₂ + k₃ = k` with `kᵢ ∈ [-N, N]` (no intermediate truncation): the library lemma
+`Galerkin.toSeq_mul_mul_ιN` under the example's name. -/
 theorem toSeq_mul_mul_ιN (x y z : FνN ν N) (k : ℤ) :
     toSeq (((ιN x * ιN y * ιN z : symmetricSubalgebra ν)) : l1Chebyshev ν) k =
       ∑ k₁ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ), ∑ k₂ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ),
         ∑ k₃ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ),
-          if k₁ + k₂ + k₃ = k then evenLift x k₁ * evenLift y k₂ * evenLift z k₃ else 0 := by
-  have hP : (ιN x * ιN y * ιN z : symmetricSubalgebra ν) = ιN z * ιN y * ιN x := by ring
-  rw [hP]
-  change toSeq (((ιN z * ιN y : symmetricSubalgebra ν) : l1Chebyshev ν) * (ιN x : l1Chebyshev ν)) k = _
-  rw [toSeq_mul_eq_finsum _ _ k (Finset.Icc (-(N : ℤ)) (N : ℤ)) (fun i hi => by
-    rw [ιN_toSeq]; exact evenLift_eq_zero_of_not_mem x hi)]
-  refine Finset.sum_congr rfl fun k₁ _ => ?_
-  rw [toSeq_mul_ιN, ιN_toSeq, Finset.sum_mul]
-  refine Finset.sum_congr rfl fun k₂ _ => ?_
-  rw [Finset.sum_congr rfl (fun k₃ (_ : k₃ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ)) =>
-    if_congr (show k₁ + k₂ + k₃ = k ↔ k - k₁ - k₂ = k₃ from by omega) rfl rfl),
-    Finset.sum_ite_eq]
-  split_ifs with hm
-  · ring
-  · rw [evenLift_eq_zero_of_not_mem z hm]
-    ring
+          if k₁ + k₂ + k₃ = k then evenLift x k₁ * evenLift y k₂ * evenLift z k₃ else 0 :=
+  RadiiPolynomial.Galerkin.toSeq_mul_mul_ιN x y z k
 
 omit [Fact (1 ≤ (ν : ℝ))] in
 /-- The even padding of `J x` is the even extension `x̂` with `x̂_0 = 0` and `x̂_{±(k+1)} = x_k`. -/

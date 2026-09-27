@@ -148,7 +148,6 @@ def cert2 : ChebCertQ 2 where
   C := 3
   B := 8
 
-set_option profiler true in
 /-- The ONE ℚ-decidable obligation, closed by the kernel (no `native_decide`). -/
 theorem checks2 : cert2.Checks N2 d2.A_col d2.DF_col d2.abar_Q d2.ν_q f2 p_q := by
   decide +kernel
@@ -157,7 +156,6 @@ theorem checks2 : cert2.Checks N2 d2.A_col d2.DF_col d2.abar_Q d2.ν_q f2 p_q :=
 generated `epsBlockGen` of its block; row sums `0.192`, `0.254` `≤ ε = 0.26`). -/
 def E2 : Fin 2 → Fin 2 → ℚ := ![![27 / 200, 57 / 1000], ![117 / 1000, 137 / 1000]]
 
-set_option profiler true in
 /-- The same bundle through the kernel-scale obligations (one `decide +kernel`). `Z₀ = 0` (exact
 inverse): the exact-columns slot keeps exact zeros, so it certifies `Z₀ = 0`; the grid slot carries
 `L (N + 1)` grid units of slack per entry. -/

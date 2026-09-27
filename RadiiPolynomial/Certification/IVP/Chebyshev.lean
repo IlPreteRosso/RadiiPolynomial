@@ -39,7 +39,6 @@ open RadiiPolynomial MvPolyBridge RadiiPolynomial.Certification.Rational
 
 namespace ChebyshevIVP
 
-
 /-! ### ℚ layer (ν-free; the definitions of this section are computable) -/
 
 section QLayer
@@ -92,7 +91,6 @@ theorem one_le_ν_q (d : StdChebIVPData ν L N) : 1 ≤ d.ν_q := by
 theorem abar_Q_getD_eq_zero (d : StdChebIVPData ν L N) (i : Fin L) (k : ℕ) (hk : N < k) :
     (d.abar_Q i).getD k 0 = 0 := by
   simp [Array.getD, show ¬ k < (d.abar_Q i).size by rw [d.habar_size i]; omega]
-
 
 /-! #### Z₀ -/
 
@@ -376,7 +374,6 @@ noncomputable def TClj (d : StdChebIVPData ν L N) (l j : Fin L) :
 
 theorem TClj_apply (d : StdChebIVPData ν L N) (l j : Fin L) (v : l1Chebyshev ν) :
     TClj d l j v = d.TC (Pi.single j v) l := rfl
-
 
 theorem TCblock_single_toSeq (d : StdChebIVPData ν L N) (l j : Fin L) (mn : ℕ) (n : ℕ)
     (hn : n ≤ N) :
@@ -1056,7 +1053,6 @@ abbrev ChebCertQ.Checks (C : ChebCertQ L) (N : ℕ)
     0 < C.r₀ ∧
     C.Z₂ * C.r₀ ^ 2 - (1 - C.Z₀ - C.Z₁) * C.r₀ + C.Y₀ < 0
 
-
 namespace StdChebIVPData
 
 section FaceBundle
@@ -1090,7 +1086,6 @@ theorem certified_of_checks (d : StdChebIVPData ν L N) (f : Fin L → CompPoly 
   obtain ⟨hZ₀, hY₀, hR, hK, hε, hZ₁, hC, hB, hZ₂, hr₀, hrad⟩ := h
   exact certified_of_Y₀Z₀ d f p p_q hp hZ₀ hY₀ (Z₁_le_of_Q d f p hR hK hε hZ₁)
     (Z₂_le_of_Q d f p hR hr₀.le hC hB hZ₂) hr₀ hrad
-
 
 end FaceBundle
 
@@ -1394,7 +1389,6 @@ theorem checks_of_checksK (C : ChebCertQ L) (E : Fin L → Fin L → ℚ) {N : �
   rw [← colNormS_eq]
   exact hcol l j mn hmn
 
-
 namespace StdChebIVPData
 
 section KernelFaceBundle
@@ -1416,7 +1410,6 @@ theorem certified_of_checksK (d : StdChebIVPData ν L N) (f : Fin L → CompPoly
     (h : C.ChecksK s S E N d.A_col d.DF_col d.abar_Q d.ν_q f p_q) :
     ∃! xTilde ∈ Metric.closedBall d.abar (C.r₀ : ℝ), d.G (banachField f) p xTilde = 0 :=
   certified_of_checks d f p p_q hp C (checks_of_checksK C E (ν_q_pos d) s S h)
-
 
 end KernelFaceBundle
 

@@ -19,8 +19,8 @@ Contents:
 * `transport_radii_polynomial_of_margin` — acceptance via the native margin:
   κ·p_B(r₀) + (κ−1)·r₀ < 0 suffices.
 * `gateQ` / `gateQ_sound` — the reuse-or-reprove decision procedure: one
-  rational-arithmetic check (run by `native_decide` on certificate data)
-  discharging the margin hypothesis.
+  rational-arithmetic check (run by `native_decide` or `decide +kernel` on
+  certificate data) discharging the margin hypothesis.
 
 Design notes:
 * The B side needs no `CompleteSpace` — only the C side runs the fixed-point
@@ -207,7 +207,7 @@ theorem transport_radii_polynomial
 /-- §3 **Margin form.** Acceptance of the transported certificate follows from
     the native-margin inequality `κ·p_B(r₀) + (κ−1)·r₀ < 0` with `κ = αβ` —
     equivalently `m_B(r₀) = 1 − q_B(r₀)/r₀ > (κ−1)/κ`. This is the form a
-    `native_decide` gate checks on ℚ data. -/
+    `native_decide` or `decide +kernel` gate checks on ℚ data. -/
 theorem transport_radii_polynomial_of_margin
     {f : E → F} {xBar : E} {A : F →L[ℝ] E} {A_dagger : E →L[ℝ] F}
     {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}

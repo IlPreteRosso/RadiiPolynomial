@@ -9,7 +9,7 @@ A `StdFinDimData n` records a polynomial system `P : Fin n → CompPoly n`, a ra
 a rational matrix `A` (the approximate inverse), a radius `r₀` and the three bounds `Y₀`, `Z₀`,
 `Z₂`, all in `ℚ`. The certificate `ChecksC` is a decidable rational proposition (the `Z₂` row
 sums are centre-anchored, `anchoredBound`), independent of the coordinate ring; `tightC` fills
-in the tightest bounds for given `P`, `x̄`, `A`, `r₀`.
+in the bounds computed from `P`, `x̄`, `A`, `r₀`.
 
 The semantic side takes the coordinate ring `R` explicitly: any normed commutative real algebra
 (finite-dimensional, with `‖1‖ = 1`, for the faces), e.g. `R = ℝ` or `R = ℂ`. The field is

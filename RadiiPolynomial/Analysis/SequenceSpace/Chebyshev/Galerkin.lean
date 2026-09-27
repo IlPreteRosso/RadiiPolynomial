@@ -13,8 +13,9 @@ The even zero padding `ιN : FνN ν N →ₗᵢ[ℝ] symmetricSubalgebra ν` is
 flip-fixed algebra, and the Galerkin projection `πN` onto modes `0, …, N` is a contraction on it
 (`norm_πN_le`), with `πN ∘ ιN = id` (`πN_ιN`). Products are taken in the algebra before
 projecting: the Galerkin coefficients of `ιN x * ιN y` are the truncated convolution of the even
-paddings (`πN_mul_ιN`, `truncConv`). The kept-mode embedding `Jσ σ` along `σ : Fin M ↪ Fin (N+1)`
-and its left inverse `Tσ σ` handle carriers that store only some modes.
+paddings (`πN_mul_ιN`, `truncConv`); a product of three paddings is the triple sum over
+`k₁ + k₂ + k₃ = k` with `kᵢ ∈ [-N, N]` (`toSeq_mul_mul_ιN`). The kept-mode embedding `Jσ σ` along
+`σ : Fin M ↪ Fin (N+1)` and its left inverse `Tσ σ` handle carriers that store only some modes.
 -/
 
 noncomputable section
@@ -318,6 +319,29 @@ theorem toSeq_mul_ιN (x y : FνN ν N) (k : ℤ) :
   rw [toSeq_mul_eq_finsum _ _ k (Finset.Icc (-(N : ℤ)) (N : ℤ)) (fun i hi => by
     rw [ιN_toSeq]; exact evenLift_eq_zero_of_not_mem y hi)]
   simp only [ιN_toSeq]
+
+/-- The product of three padded elements in the flip-fixed algebra, before any projection, is the
+triple sum over `k₁ + k₂ + k₃ = k` with `kᵢ ∈ [-N, N]` (no intermediate truncation). -/
+protected theorem toSeq_mul_mul_ιN (x y z : FνN ν N) (k : ℤ) :
+    toSeq (((ιN x * ιN y * ιN z : symmetricSubalgebra ν)) : l1Chebyshev ν) k =
+      ∑ k₁ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ), ∑ k₂ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ),
+        ∑ k₃ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ),
+          if k₁ + k₂ + k₃ = k then evenLift x k₁ * evenLift y k₂ * evenLift z k₃ else 0 := by
+  have hP : (ιN x * ιN y * ιN z : symmetricSubalgebra ν) = ιN z * ιN y * ιN x := by ring
+  rw [hP]
+  change toSeq (((ιN z * ιN y : symmetricSubalgebra ν) : l1Chebyshev ν) * (ιN x : l1Chebyshev ν)) k = _
+  rw [toSeq_mul_eq_finsum _ _ k (Finset.Icc (-(N : ℤ)) (N : ℤ)) (fun i hi => by
+    rw [ιN_toSeq]; exact evenLift_eq_zero_of_not_mem x hi)]
+  refine Finset.sum_congr rfl fun k₁ _ => ?_
+  rw [toSeq_mul_ιN, ιN_toSeq, Finset.sum_mul]
+  refine Finset.sum_congr rfl fun k₂ _ => ?_
+  rw [Finset.sum_congr rfl (fun k₃ (_ : k₃ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ)) =>
+    if_congr (show k₁ + k₂ + k₃ = k ↔ k - k₁ - k₂ = k₃ from by omega) rfl rfl),
+    Finset.sum_ite_eq]
+  split_ifs with hm
+  · ring
+  · rw [evenLift_eq_zero_of_not_mem z hm]
+    ring
 
 /-- The Galerkin coefficients of a product of paddings are the truncated convolution of the
 even paddings. -/

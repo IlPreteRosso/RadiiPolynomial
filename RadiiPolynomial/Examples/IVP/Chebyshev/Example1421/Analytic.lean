@@ -25,7 +25,7 @@ trajectory radius.
 Three radii are recorded: `R_traj = 2(‖ā‖ + r₀)` (the non-contractive route),
 `R_traj_contractive = ‖ā‖ + r₀` (evaluation is contractive at `ν = 2`), and the round
 radius `R = 1`, which uses `abar_norm_le : ‖ā‖ ≤ 39/50` — the certificate's
-`Sabar_norm_le` transported to the stored element, no additional `native_decide`.
+`Sabar_norm_le` transported to the stored element.
 
 No analyticity is claimed here — see `Analyticity.lean`.
 -/

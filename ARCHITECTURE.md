@@ -27,16 +27,19 @@ layers, but the mathematical layers must not depend on them.
 | `Analysis/SequenceSpace/WeightedL1` | Generic weighted `l1` sequence algebras and their universal-property API (`liftCLM`, atom extensionality) |
 | `Analysis/SequenceSpace/CharacterTopology` | Carrier-independent topology of pointwise convergence on continuous characters (`Gelfand.pointwiseTopology`) and the one continuity fact the spectrum modules need (`Gelfand.continuous_character_apply`) |
 | `Analysis/SequenceSpace/Geometric` | Taylor coefficient algebras, differentiation, evaluation, analytic extensionality, radius restriction, full-disc power series and complex synthesis (`Analytic`), and the character space as the closed disc (`Spectrum`, which installs the shared `Gelfand.pointwiseTopology` as a `local instance`) |
-| `Analysis/SequenceSpace/Chebyshev` | Bilateral storage, the flip-fixed physical algebra, evaluation, analytic extensionality, the Laurent character space as the closed annulus (`LaurentSpectrum`), and the physical spectrum: classification, Bernstein ellipse, series, topology, holomorphy on the open ellipse with endpoint analyticity (`Spectrum/*`); both character spaces install the shared `Gelfand.pointwiseTopology` as a `local instance` |
+| `Analysis/SequenceSpace/Chebyshev` | Bilateral storage, the flip-fixed physical algebra, the finite Galerkin carrier `FνN` with its even padding `ιN` and projection `πN` (`Galerkin`), evaluation, analytic extensionality, the Laurent character space as the closed annulus (`LaurentSpectrum`), and the physical spectrum: classification, Bernstein ellipse, series, topology, holomorphy on the open ellipse with endpoint analyticity (`Spectrum/*`); both character spaces install the shared `Gelfand.pointwiseTopology` as a `local instance` |
 | `Analysis/SequenceSpace/CrossGeometry` | Bounded maps between coefficient geometries, their evaluation and differentiation naturality, and the character obstructions (`CharacterObstruction`: no real extension of the zero physical character, two complex extensions) |
 | `Core` | Abstract Newton map, radii polynomial, canonical bounds, and reusable bounds |
-| `Operators/Matrix` | Finite weighted matrices and their continuous-linear realizations |
+| `Operators/Matrix` | Finite weighted matrices and their continuous-linear realizations; matrices over a normed real algebra acting on `R^n` with the sup norm (`SupNorm`: `matCLM` and the row-sum operator-norm bound `opNorm_le_of_rowSum`) |
 | `Operators/BlockDiagonal` | Finite-plus-tail operators, lifts, composition, and scalar specialization |
 | `Certification` | RadiiPolynomial witness reductions, residual (Neumann) certificates for approximate inverses and finite Bézout identities with finite-support completeness, and adapters to external LeanCert |
 | `Applications/IVP/VectorField.lean` | Geometry-free ODE right-hand side `IVP.vectorField` of a `CompPoly` system; both discretizations state their function-space conclusions through it |
 | `Applications/IVP/Taylor` | Taylor-coefficient IVP operator, Jacobian (with the syntactic `ivp_Dφ_norm_le_of_compPoly` socket), theorem, analytic bridge, real analyticity of the canonical trajectory (`Analyticity`: `IVP.analyticOnNhd_x_analytic`), complex time (`ComplexTime`: complex trajectory and vector field), and the example-facing polynomial faces `StdIVPData.existsUnique_of_compPoly`, `Z₁_le_of_compPoly`, `Z₂_le_of_compPoly`, `analytic_existsUnique_of_compPoly_of_radii`, `StdIVPData.existsUnique_ivpCoeffs_of_compPoly`, `StdIVPData.analytic_existsUnique_of_compPoly` |
 | `Applications/IVP/Chebyshev` | Chebyshev-coefficient IVP operator, block-diagonal realization, polynomial residual/Jacobian adapter (`ChebyshevIVP.banachField` and syntactic Z₁/Z₂ constants), return to the IVP, analyticity of the canonical realization across `[-1, 1]` for `ν > 1` (`Analyticity`), and the example-facing faces `StdChebIVPData.existsUnique_of_compPoly`, `StdChebIVPData.Z₂_le_of_compPoly_max`, `StdChebIVPData.defect_finBlockNorm_lt_one_of_radii`, and (`AnalyticPolynomial`) `solution_existsUnique_of_compPoly`, `solution_existsUnique_of_two_le_of_compPoly`, `analytic_solution_existsUnique_of_two_le_of_compPoly` |
 | `Applications/IVP/Boundary.lean` | Shared split-boundary and anchored-primitive mechanism for IVP realizations |
+| `Applications/PowerSeries` | Polynomial zeros `P(x) - c = 0` on `ℓ¹_ν` for a univariate `CompPoly` of any degree: the approximate inverse and derivative and the `Z₁`, `Z₂` bounds (`PolynomialZero`); `Z₂` bounds for maps whose derivative is affine in `leftMul`, as corollaries of the degree-general engine (`AffineZ2`, a transition module) |
+| `Applications/FiniteDimensional` | The row-sum face on `R^n` over a finite-dimensional normed real algebra `R` (`Face`: `enclosure_of_rowSum`), polynomial systems with rational certificate data (`Polynomial`: `StdFinDimData` and the decidable check `ChecksC`), the scalar instance `n = 1` (`Scalar`), and periodic points on a finite-dimensional real normed space (`Periodic`) |
+| `Applications/Galerkin` | The polynomial Galerkin face (`Face`): a `CompPoly` system between a lift, a projection and continuous linear parts (`polyFace`), its derivative `DpolyFace` from the syntactic Jacobian, the centred bounds from `derivativeCentredBound`, and on the finite Galerkin carrier the `Z₂`-shaped bound `norm_fderiv_galerkinFace_sub_le` |
 | `Examples` | End-to-end mathematical applications and numerical certificates |
 
 The external LeanCert library remains a Lake dependency. `Certification/LeanCertAdapter.lean`
@@ -134,7 +137,12 @@ Examples/
   IVP/Taylor/Example83
   IVP/Chebyshev/Example1421
   Polynomial/Chebyshev
+  Galerkin/Fisher
+  Galerkin/Diblock
 ```
 
 Book example numbers remain in paths and namespaces, while the parent directories expose
 the mathematical problem family and discretization.
+
+`Examples/tests/<family>` holds regression witnesses outside the default build: no library module
+imports them, and each is built by its module name.

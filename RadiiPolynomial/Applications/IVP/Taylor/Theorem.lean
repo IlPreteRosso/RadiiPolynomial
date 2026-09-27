@@ -196,7 +196,6 @@ theorem ivp_system_theorem_local
     (A_dagger := CA.toCLM (ν := ν))
     hr₀ h_Y₀ h_Z₀ h_Z₁ h_Z₂ hG_diff h_radii (fun _ _ h => h)
 
-
 /-- **Theorem 8.2.2** (System-Level IVP Radii Polynomial Theorem).
 
 Given a polynomial IVP system with:

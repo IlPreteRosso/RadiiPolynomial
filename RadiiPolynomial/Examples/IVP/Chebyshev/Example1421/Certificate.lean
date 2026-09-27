@@ -1,7 +1,6 @@
 import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Algebra
 import RadiiPolynomial.Certification
 import RadiiPolynomial.Certification.IVP.Chebyshev
-import RadiiPolynomial.Tactic.FinMatrixBound
 
 /-!
 # Example 14.2.1 — Certificate (complete)
@@ -35,7 +34,7 @@ certificate uses no compiled-code evaluation. The four bounds:
 plus `radii_neg` (the radii polynomial at r = 10⁻⁶) and
 `margin_clears_gate` — the native margin (≈ 74.7%) clears the bordered↔U
 transport threshold (κ−1)/κ = 5/8 at κ = 8/3, so the certificate transports
-(`tmp/kappa_transport/Transport.lean` §7 `twin_transports`).
+(`Examples/Transport/TwinTransport.lean`, `twin_transports`).
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
