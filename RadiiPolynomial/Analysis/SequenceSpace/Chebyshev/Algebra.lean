@@ -167,6 +167,23 @@ lemma finsum_norm_le_of_cols (W : l1Chebyshev ν →L[ℝ] l1Chebyshev ν) (N : 
       rw [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
       exact hcol m) h
 
+/-! ### Finite sums -/
+
+/-- `toSeq` commutes with finite sums. -/
+theorem toSeq_finset_sum {ι : Type*} (s : Finset ι) (x : ι → l1Chebyshev ν) (k : ℤ) :
+    l1Chebyshev.toSeq (∑ i ∈ s, x i) k = ∑ i ∈ s, l1Chebyshev.toSeq (x i) k := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | insert a s ha ih => rw [Finset.sum_insert ha, Finset.sum_insert ha, l1Chebyshev.toSeq_add, ih]
+
+/-- Fiberwise triangle inequality over a finite sum. -/
+theorem norm_fiber_sum_le {ι : Type*} (s : Finset ι) (x : ι → l1Chebyshev ν) (k : ℤ) :
+    ‖(∑ i ∈ s, x i) k‖ ≤ ∑ i ∈ s, ‖(x i) k‖ := by
+  simp_rw [l1Chebyshev.norm_fiber, toSeq_finset_sum, ← Finset.sum_mul]
+  exact mul_le_mul_of_nonneg_right (Finset.abs_sum_le_sum_abs _ _)
+    (pow_nonneg ν.2.le _)
+
 /-! ### Convolution evaluation -/
 
 variable [Fact (1 ≤ (ν : ℝ))]

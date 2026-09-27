@@ -80,6 +80,15 @@ theorem derivativeLipschitzBound_nonneg (p : CompPoly L) (R : Fin L → K)
 
 end Order
 
+/-- Monotonicity of the Chebyshev derivative-Lipschitz constant in the radii. -/
+theorem chebDerivativeLipschitzBound_mono (p : CompPoly L) {R S : Fin L → ℝ}
+    (hR : ∀ i, 0 ≤ R i) (hRS : ∀ i, R i ≤ S i) :
+    CompPoly.Chebyshev.derivativeLipschitzBound p R ≤
+      CompPoly.Chebyshev.derivativeLipschitzBound p S := by
+  unfold CompPoly.Chebyshev.derivativeLipschitzBound
+  exact mul_le_mul_of_nonneg_left
+    (Finset.sum_le_sum fun _ _ => lipschitzBound_mono _ hR hRS) (by norm_num)
+
 variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
 private theorem norm_symmetrize_pi_le (h : Fin L → l1Chebyshev ν) :

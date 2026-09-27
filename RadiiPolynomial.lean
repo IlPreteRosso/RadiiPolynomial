@@ -40,6 +40,7 @@ import RadiiPolynomial.Certification.IVP.Taylor
 
 -- Chebyshev IVP application
 import RadiiPolynomial.Applications.IVP.Chebyshev
+import RadiiPolynomial.Certification.IVP.Chebyshev
 
 -- Finite-dimensional application
 import RadiiPolynomial.Applications.FiniteDimensional.Face
