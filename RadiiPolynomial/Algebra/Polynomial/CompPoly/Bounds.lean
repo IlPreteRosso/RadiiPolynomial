@@ -24,6 +24,11 @@ an existential constant.
 `anchoredBound c ρ p` bounds the difference anchored at a rational centre `c`,
 `‖p(c + u) - p(c)‖ ≤ anchoredBound c ρ p · ‖u‖` for `‖u‖ ≤ ρ` (`norm_evalBanach_add_sub_le`,
 `norm_evalBanach_sub_center_le`), with the centre values computed exactly by `evalQ`.
+
+`derivativeCentredBound p β δ` is the centred value bound of `norm_evalBanach_sub_le_centred` summed
+over the formal partials of `p`: the majorant of the derivative difference on the centred ball
+`‖b i‖ ≤ β i`, `‖a i - b i‖ ≤ δ i` (the derivative bound itself is
+`RadiiPolynomial.Galerkin.norm_gradCLM_sub_le_centred`).
 -/
 
 namespace MvPolyBridge.CompPoly
@@ -318,6 +323,82 @@ theorem norm_evalBanach_sub_le_max (p : CompPoly L) (a b : Fin L → A) :
   norm_evalBanach_sub_le p a b _ (fun _ => le_max_left _ _) (fun _ => le_max_right _ _)
 
 end Normed
+
+section Centred
+
+/-! Centred bounds. On the centred ball `‖b i‖ ≤ β i`, `‖a i - b i‖ ≤ δ i`, the value difference
+satisfies `‖p(a) - p(b)‖ ≤ p̂(β + δ) - p̂(β)` with `p̂ = normBound p`
+(`norm_evalBanach_sub_le_centred`), and `derivativeCentredBound p β δ` sums the same difference
+over the formal partials. -/
+
+/-- **Centred derivative majorant.**  For the ball `‖b i‖ ≤ β i`, `‖a i − b i‖ ≤ δ i`, the sum over
+the formal partials `∂ᵢ p` of `p̂ᵢ(β + δ) − p̂ᵢ(β)`, where `p̂ᵢ = normBound (∂ᵢ p)` is the
+syntactic absolute-value majorant of `∂ᵢ p`.  Any `DivisionRing` (`ℚ`: computable mirror). -/
+def derivativeCentredBound {K : Type*} [DivisionRing K] (p : CompPoly L) (β δ : Fin L → K) : K :=
+  ∑ i, ((p.pderiv i).normBound (β + δ) - (p.pderiv i).normBound β)
+
+/-- The exact rational centred majorant casts to the majorant computed over `K`. -/
+@[norm_cast] theorem derivativeCentredBound_ratCast {K : Type*} [DivisionRing K] [CharZero K]
+    (p : CompPoly L) (β δ : Fin L → ℚ) :
+    ((derivativeCentredBound p β δ : ℚ) : K) =
+      derivativeCentredBound p (fun i => (β i : K)) (fun i => (δ i : K)) := by
+  simp only [derivativeCentredBound, Rat.cast_sum, Rat.cast_sub, normBound_ratCast]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  congr 2
+  funext j
+  simp
+
+variable {A : Type*} [NormedCommRing A] [NormedAlgebra ℝ A] [NormOneClass A]
+
+/-- **Centred value majorant**: `‖p(a) − p(b)‖ ≤ p̂(β + δ) − p̂(β)` on the centred ball. -/
+theorem norm_evalBanach_sub_le_centred (p : CompPoly L) (a b : Fin L → A) (β δ : Fin L → ℝ)
+    (hb : ∀ i, ‖b i‖ ≤ β i) (hab : ∀ i, ‖a i - b i‖ ≤ δ i) :
+    ‖p.evalBanach a - p.evalBanach b‖ ≤ p.normBound (β + δ) - p.normBound β := by
+  have hβ : ∀ i, 0 ≤ β i := fun i => (norm_nonneg _).trans (hb i)
+  have ha : ∀ i, ‖a i‖ ≤ (β + δ) i := fun i => by
+    rw [Pi.add_apply]; linarith [norm_le_insert' (a i) (b i), hb i, hab i]
+  induction p with
+  | C r => simp [evalBanach]
+  | X i => simpa [evalBanach] using hab i
+  | add p q ihp ihq =>
+      simp only [evalBanach, normBound]
+      rw [add_sub_add_comm]
+      exact (norm_add_le _ _).trans (by linarith)
+  | sub p q ihp ihq =>
+      simp only [evalBanach, normBound]
+      rw [sub_sub_sub_comm]
+      exact (norm_sub_le _ _).trans (by linarith)
+  | mul p q ihp ihq =>
+      simp only [evalBanach, normBound]
+      have hsplit : p.evalBanach a * q.evalBanach a - p.evalBanach b * q.evalBanach b
+          = (p.evalBanach a - p.evalBanach b) * q.evalBanach a
+            + p.evalBanach b * (q.evalBanach a - q.evalBanach b) := by ring
+      rw [hsplit]
+      have h1 := mul_le_mul ihp (norm_evalBanach_le q a _ ha) (norm_nonneg _)
+        ((norm_nonneg _).trans ihp)
+      have h2 := mul_le_mul (norm_evalBanach_le p b β hb) ihq (norm_nonneg _)
+        (normBound_nonneg p β hβ)
+      refine (norm_add_le _ _).trans ((add_le_add ((norm_mul_le _ _).trans h1)
+        ((norm_mul_le _ _).trans h2)).trans_eq ?_)
+      ring
+  | neg p ih =>
+      simp only [evalBanach, normBound]
+      rw [neg_sub_neg, norm_sub_rev]
+      exact ih
+  | smul r p ih =>
+      simp only [evalBanach, normBound, Rat.cast_abs]
+      rw [← smul_sub, norm_smul, Real.norm_eq_abs, ← mul_sub]
+      exact mul_le_mul_of_nonneg_left ih (abs_nonneg _)
+
+/-- The centred majorant is nonnegative on nonnegative radii (the value lemma at `A = ℝ`). -/
+theorem derivativeCentredBound_nonneg (p : CompPoly L) (β δ : Fin L → ℝ) (hβ : ∀ i, 0 ≤ β i)
+    (hδ : ∀ i, 0 ≤ δ i) : 0 ≤ derivativeCentredBound p β δ :=
+  Finset.sum_nonneg fun i _ => (norm_nonneg _).trans
+    (norm_evalBanach_sub_le_centred (A := ℝ) (p.pderiv i) (β + δ) β β δ
+      (fun j => (Real.norm_eq_abs _).trans_le (abs_of_nonneg (hβ j)).le)
+      (fun j => by rw [Pi.add_apply, add_sub_cancel_left, Real.norm_eq_abs, abs_of_nonneg (hδ j)]))
+
+end Centred
 
 section Anchored
 

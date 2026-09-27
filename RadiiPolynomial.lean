@@ -42,6 +42,9 @@ import RadiiPolynomial.Certification.IVP.Taylor
 import RadiiPolynomial.Applications.IVP.Chebyshev
 import RadiiPolynomial.Certification.IVP.Chebyshev
 
+-- Galerkin application
+import RadiiPolynomial.Applications.Galerkin.Face
+
 -- Finite-dimensional application
 import RadiiPolynomial.Applications.FiniteDimensional.Face
 import RadiiPolynomial.Applications.FiniteDimensional.Polynomial
