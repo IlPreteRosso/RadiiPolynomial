@@ -45,8 +45,7 @@ Main declarations:
 * `lpOneAlg.norm_gen_pow_le`, `eq_geomAeval_gen`, `exists_eq_geomAeval`
 * `lpOneAlg.norm_gen_le`, `l1Weighted.norm_gen_le`
 * `l1Weighted.aeval`, `aeval_gen`, `algHom_ext`, `eq_aeval_gen`,
-  `single_eq_lpOneAlg_single`, `evalContinuousAlgHom_gen`,
-  `aeval_eq_evalContinuousAlgHom`
+  `evalContinuousAlgHom_gen`, `aeval_eq_evalContinuousAlgHom`
 -/
 
 noncomputable section
@@ -315,14 +314,6 @@ end Gate
 section Bridge
 
 variable {ν : PosReal}
-
-/-- The geometric `l1Weighted.single` is the generic `lpOneAlg.single`. -/
-theorem single_eq_lpOneAlg_single (n : ℕ) (x : ℝ) :
-    (l1Weighted.single n x : l1Weighted ν) = lpOneAlg.single n x := by
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  rw [lpOneAlg.toRealSeq_single]
-  exact l1Weighted.single_toSeq n k x
 
 /-- The library's pointwise evaluation sends the generator to the point. -/
 theorem evalContinuousAlgHom_gen (z : ℝ) (hz : |z| ≤ ν) :

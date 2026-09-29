@@ -84,3 +84,13 @@ end ScaledReal
 end RadiiPolynomial
 
 end
+
+namespace RadiiPolynomial
+
+/-- The fiber norm of `lpAlgRingData.ofReal n r` for `ScaledReal` is `|r| * νⁿ`;
+the ℕ-side twin of `ScaledRealZ.norm_lpAlgRingData_ofReal`. -/
+@[simp] theorem ScaledReal.norm_lpAlgRingData_ofReal (ν : PosReal) (n : ℕ) (r : ℝ) :
+    ‖lpAlgRingData.ofReal (E := ScaledReal ν) n r‖ = |r| * (ν : ℝ) ^ n :=
+  WeightedScalar.norm_ofReal r
+
+end RadiiPolynomial

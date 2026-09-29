@@ -780,3 +780,109 @@ end SymmetricBridge
 end RadiiPolynomial
 
 end
+
+open scoped BigOperators Topology
+
+noncomputable section
+
+namespace RadiiPolynomial
+
+namespace l1Chebyshev
+
+variable {ν : PosReal}
+
+section NatEmbed
+
+/-- The ℕ-supported coefficient family has finite bilateral weighted norm. -/
+private theorem natEmbed_memℓp (a : l1Weighted ν) :
+    Memℓp (fun k : ℤ => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
+      (if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0)) 1 := by
+  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ENNReal).toReal)]
+  simp only [ENNReal.toReal_one, Real.rpow_one]
+  apply Summable.of_nat_of_neg_add_one
+  · refine (l1Weighted.summable_weighted a).congr fun n => ?_
+    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, if_pos (by omega), Int.toNat_natCast,
+      Int.natAbs_natCast]
+  · refine summable_zero.congr fun n => ?_
+    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, if_neg (by omega), abs_zero, zero_mul]
+
+/-- The ℕ-supported embedding as an element (`natEmbed` is its linear map). -/
+private def natEmbedFun (a : l1Weighted ν) : l1Chebyshev ν :=
+  ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
+      (if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0), natEmbed_memℓp a⟩⟩
+
+/-- Coefficients of `natEmbedFun`. -/
+private theorem natEmbedFun_toSeq (a : l1Weighted ν) (k : ℤ) :
+    toSeq (natEmbedFun a) k = if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0 :=
+  lpAlgRingData.toReal_ofReal k _
+
+/-- `natEmbedFun` preserves the norm. -/
+private theorem norm_natEmbedFun (a : l1Weighted ν) : ‖natEmbedFun a‖ = ‖a‖ := by
+  have hpos : ∀ n : ℕ, ‖natEmbedFun a (n : ℤ)‖ = |l1Weighted.toSeq a n| * (ν : ℝ) ^ n :=
+    fun n => by
+      rw [norm_fiber_natCast, natEmbedFun_toSeq, if_pos (by omega), Int.toNat_natCast]
+  have hneg : ∀ n : ℕ, ‖natEmbedFun a (-((n : ℤ) + 1))‖ = 0 := fun n => by
+    rw [norm_fiber, natEmbedFun_toSeq, if_neg (by omega), abs_zero, zero_mul]
+  rw [lpOneAlg.norm_eq_tsum, tsum_of_nat_of_neg_add_one
+    ((l1Weighted.summable_weighted a).congr fun n => (hpos n).symm)
+    (summable_zero.congr fun n => (hneg n).symm), tsum_congr hpos, tsum_congr hneg, tsum_zero,
+    add_zero, ← l1Weighted.norm_eq_tsum]
+
+/-- **The ℕ-supported embedding** `ℓ¹_ν(ℕ) → ℓ¹_ν(ℤ)`: `(natEmbed a)_k = a_k` for `k ≥ 0`
+and `0` for `k < 0`. It is an isometry for every `ν : PosReal` (`norm_natEmbed`), because the
+bilateral weight `ν^{|k|}` restricts to `νⁿ` on the nonnegative modes. Built by
+`LinearMap.mkContinuous` on the coefficient map. -/
+def natEmbed : l1Weighted ν →L[ℝ] l1Chebyshev ν :=
+  LinearMap.mkContinuous
+    { toFun := natEmbedFun
+      map_add' := fun a b => lpOneAlg.ext_toRealSeq (funext fun k => by
+        show toSeq (natEmbedFun (a + b)) k = toSeq (natEmbedFun a + natEmbedFun b) k
+        rw [toSeq_add, natEmbedFun_toSeq, natEmbedFun_toSeq, natEmbedFun_toSeq]
+        split_ifs <;> simp)
+      map_smul' := fun r a => lpOneAlg.ext_toRealSeq (funext fun k => by
+        show toSeq (natEmbedFun (r • a)) k = toSeq (r • natEmbedFun a) k
+        rw [toSeq_smul, natEmbedFun_toSeq, natEmbedFun_toSeq]
+        split_ifs <;> simp) }
+    1 (fun a => (norm_natEmbedFun a).trans_le (one_mul _).ge)
+
+/-- Coefficients of the ℕ-supported embedding. -/
+theorem natEmbed_toSeq (a : l1Weighted ν) (k : ℤ) :
+    toSeq (natEmbed a) k = if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0 :=
+  natEmbedFun_toSeq a k
+
+/-- The ℕ-supported embedding at a nonnegative mode. -/
+@[simp] theorem natEmbed_toSeq_natCast (a : l1Weighted ν) (n : ℕ) :
+    toSeq (natEmbed a) (n : ℤ) = l1Weighted.toSeq a n := by
+  rw [natEmbed_toSeq, if_pos (by omega), Int.toNat_natCast]
+
+/-- The ℕ-supported embedding vanishes at the negative modes. -/
+@[simp] theorem natEmbed_toSeq_negSucc (a : l1Weighted ν) (n : ℕ) :
+    toSeq (natEmbed a) (Int.negSucc n) = 0 := by
+  rw [natEmbed_toSeq, if_neg (by omega)]
+
+/-- The ℕ-supported embedding is an isometry, for every `ν : PosReal`. -/
+@[simp] theorem norm_natEmbed (a : l1Weighted ν) : ‖natEmbed a‖ = ‖a‖ :=
+  norm_natEmbedFun a
+
+/-- The ℕ-supported embedding sends the one-sided single at `n` to the bilateral single at
+`n`. -/
+theorem natEmbed_single (n : ℕ) (x : ℝ) :
+    natEmbed (lpOneAlg.single n x : l1Weighted ν) = single (n : ℤ) x :=
+  lpOneAlg.ext_toRealSeq (funext fun k => by
+    show toSeq _ k = toSeq _ k
+    rw [natEmbed_toSeq, toSeq_single]
+    split_ifs with h1 h2 h2
+    · show lpOneAlg.toRealSeq (lpOneAlg.single n x : l1Weighted ν) k.toNat = x
+      rw [lpOneAlg.toRealSeq_single, if_pos (by omega)]
+    · show lpOneAlg.toRealSeq (lpOneAlg.single n x : l1Weighted ν) k.toNat = 0
+      rw [lpOneAlg.toRealSeq_single, if_neg (by omega)]
+    · omega
+    · rfl)
+
+end NatEmbed
+
+end l1Chebyshev
+
+end RadiiPolynomial
+
+end

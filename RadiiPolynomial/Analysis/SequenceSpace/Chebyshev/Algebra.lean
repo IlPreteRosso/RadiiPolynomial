@@ -1,4 +1,5 @@
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Scalar
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear
 import Mathlib.Analysis.Normed.Operator.Mul
 
 /-!
@@ -204,3 +205,45 @@ end l1Chebyshev
 end RadiiPolynomial
 
 end
+
+namespace RadiiPolynomial
+
+namespace l1Chebyshev
+
+variable {ν : PosReal}
+
+section OpNorm
+
+variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
+
+/-- **The bilinear operator norm on `l1Chebyshev ν` as an atom supremum.** For
+every `ν : PosReal` (no `1 ≤ ν`), `‖B‖` is the supremum of the ratios
+`‖B e_i e_j‖ / (ν^{|i|} ν^{|j|})`. The case `M = M' = ℤ` of
+`lpOneAlg.opNorm_eq_iSup_cols₂`. -/
+theorem opNorm_eq_iSup_cols₂ (B : l1Chebyshev ν →L[ℝ] l1Chebyshev ν →L[ℝ] F) :
+    ‖B‖ = ⨆ p : ℤ × ℤ, ‖B (lpOneAlg.single p.1 1) (lpOneAlg.single p.2 1)‖
+      / ((ν : ℝ) ^ p.1.natAbs * (ν : ℝ) ^ p.2.natAbs) := by
+  rw [lpOneAlg.opNorm_eq_iSup_cols₂ B]
+  simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+
+set_option maxSynthPendingDepth 2 in
+/-- **The trilinear operator norm on `l1Chebyshev ν` as an atom supremum.** For
+every `ν : PosReal`, `‖T‖` is the supremum of the ratios
+`‖T e_i e_j e_k‖ / (ν^{|i|} ν^{|j|} ν^{|k|})`. The case `M = M' = M'' = ℤ` of
+`lpOneAlg.opNorm_eq_iSup_cols₃`. (Declared under `set_option maxSynthPendingDepth 2 in`:
+at the default depth the norm does not synthesize on the three-level type; a
+consumer who restates `‖T‖` for such a map needs the same local option; see
+`WeightedL1/Multilinear.lean`.) -/
+theorem opNorm_eq_iSup_cols₃
+    (T : l1Chebyshev ν →L[ℝ] l1Chebyshev ν →L[ℝ] l1Chebyshev ν →L[ℝ] F) :
+    ‖T‖ = ⨆ p : ℤ × ℤ × ℤ, ‖T (lpOneAlg.single p.1 1) (lpOneAlg.single p.2.1 1)
+        (lpOneAlg.single p.2.2 1)‖
+      / ((ν : ℝ) ^ p.1.natAbs * (ν : ℝ) ^ p.2.1.natAbs * (ν : ℝ) ^ p.2.2.natAbs) := by
+  rw [lpOneAlg.opNorm_eq_iSup_cols₃ T]
+  simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+
+end OpNorm
+
+end l1Chebyshev
+
+end RadiiPolynomial
