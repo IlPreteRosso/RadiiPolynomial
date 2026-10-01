@@ -7,9 +7,11 @@
 -- Algebra and analysis
 import RadiiPolynomial.Algebra.Convolution
 import RadiiPolynomial.Algebra.Ring.HeadTailIdentities
+import RadiiPolynomial.Algebra.Rees.Laurent
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev
+import RadiiPolynomial.Analysis.SequenceSpace.Fourier
 import RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry
 import RadiiPolynomial.Analysis.Norm.FiniteSum
 

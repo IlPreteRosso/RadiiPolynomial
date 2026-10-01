@@ -25,10 +25,12 @@ layers, but the mathematical layers must not depend on them.
 | `Algebra/Convolution` | Discrete convolution, ring convolution, and Cauchy products |
 | `Algebra/Polynomial` | Semantic `MvPolynomial` calculus and computable `CompPoly` syntax, with Taylor and finite Laurent/Chebyshev interpreters, and certificate constants read off the syntax (`CompPoly/Bounds`, `CompPoly/Chebyshev/Bounds`: `normBound`, `lipschitzBound`, `derivativeBound`) |
 | `Algebra/Ring` | Mathlib-only ring identities for an idempotent head `P` and its complement `1 - P` (`HeadTailIdentities`: composition, defect and inverse-defect identities) |
+| `Algebra/Rees/Laurent` | Laurent/\|k\|-filtered Rees family `U R ⊆ R[X][T;T⁻¹]` with its atoms, tail ideal and structure constants (`Family`); the Euler derivation and the finite-core diagonal/cutoff calculus with the tail-inverse criterion (`Euler`, whose operator-level identities need the documented local instance opt-in); the carrier-free Γ exponent identities (`Gamma`, `GammaCutoff`); Mathlib-only |
 | `Analysis/SequenceSpace/WeightedL1` | Generic weighted `l1` sequence algebras and their universal-property API (`liftCLM`, atom extensionality); the curried column principle and atom-supremum formulas for bilinear/trilinear maps (`Multilinear`); the one-slot column principle `‖T‖ = ⨆ i, colRatio T i` (`Columns`); bounded scalar diagonals `diagCLM`, finite-head projections `headProj`/`tailProj` and the exact head/tail aggregation of column ratios and operator norms (`Diagonal`) |
 | `Analysis/SequenceSpace/CharacterTopology` | Carrier-independent topology of pointwise convergence on continuous characters (`Gelfand.pointwiseTopology`) and the one continuity fact the spectrum modules need (`Gelfand.continuous_character_apply`) |
 | `Analysis/SequenceSpace/Geometric` | Taylor coefficient algebras, differentiation, evaluation, analytic extensionality, radius restriction, full-disc power series and complex synthesis (`Analytic`), and the character space as the closed disc (`Spectrum`, which installs the shared `Gelfand.pointwiseTopology` as a `local instance`) |
 | `Analysis/SequenceSpace/Chebyshev` | Bilateral storage, the flip-fixed physical algebra, the finite Galerkin carrier `FνN` with its even padding `ιN` and projection `πN` (`Galerkin`), the unnormalized one-sided cosine interface `OneSided` (symmetric extension and restriction as continuous maps, the reflected product with its exact constants; a different normalization from the bordered carrier), evaluation, analytic extensionality, the Laurent character space as the closed annulus (`LaurentSpectrum`), and the physical spectrum: classification, Bernstein ellipse, series, topology, holomorphy on the open ellipse with endpoint analyticity (`Spectrum/*`); both character spaces install the shared `Gelfand.pointwiseTopology` as a `local instance` |
+| `Analysis/SequenceSpace/Fourier` | Bilateral `ℤ`-window and band support on the geometric carrier `lpOneAlg ℤ (geomFiberZ 𝕜 ν)` (`winZ`, the far-antitone window maximum principle, the coefficient norm, `band_mul`, `band_pow`), and the exact finite-window operator norm of the tail-diagonal defect `M P L_b Q + R L_b` (`defect`, `opNorm_defect_eq_sup'`, explicit and joint head-block forms), attained as a weighted column ratio at an atom (`defect_attained`); imports Analysis only |
 | `Analysis/SequenceSpace/CrossGeometry` | Bounded maps between coefficient geometries, their evaluation and differentiation naturality, and the character obstructions (`CharacterObstruction`: no real extension of the zero physical character, two complex extensions) |
 | `Core` | Abstract Newton map, radii polynomial, canonical bounds, and reusable bounds |
 | `Operators/Matrix` | Finite weighted matrices and their continuous-linear realizations; matrices over a normed real algebra acting on `R^n` with the sup norm (`SupNorm`: `matCLM` and the row-sum operator-norm bound `opNorm_le_of_rowSum`) |
@@ -69,9 +71,11 @@ Use the facade modules at application boundaries:
 
 - `RadiiPolynomial.Algebra.Convolution`
 - `RadiiPolynomial.Algebra.Polynomial`
+- `RadiiPolynomial.Algebra.Rees.Laurent`
 - `RadiiPolynomial.Analysis.SequenceSpace.WeightedL1`
 - `RadiiPolynomial.Analysis.SequenceSpace.Geometric`
 - `RadiiPolynomial.Analysis.SequenceSpace.Chebyshev`
+- `RadiiPolynomial.Analysis.SequenceSpace.Fourier`
 - `RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry`
 - `RadiiPolynomial.Core`
 - `RadiiPolynomial.Operators.Matrix`
