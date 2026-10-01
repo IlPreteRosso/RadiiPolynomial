@@ -604,3 +604,71 @@ Scratch declarations of filtration-probe slice 25 (`tmp/filtration_probe/freeze_
 | `RadiiPolynomial.FiltrationProbe.HeadTailColumns.colRatio_geom` | `RadiiPolynomial.Fourier.colRatio_geom` | `Analysis/SequenceSpace/Fourier/TailWindow.lean` | L002 | renamed (MIGRATION_TABLE.md) |
 | `RadiiPolynomial.FiltrationProbe.FourierSemilinear.band_mul` | `RadiiPolynomial.Fourier.band_mul` | `Analysis/SequenceSpace/Fourier/Support.lean` | L002 | generalized (MIGRATION_TABLE.md) |
 | `RadiiPolynomial.FiltrationProbe.FourierSemilinear.band_pow` | `RadiiPolynomial.Fourier.band_pow` | `Analysis/SequenceSpace/Fourier/Support.lean` | L002 | generalized (MIGRATION_TABLE.md) |
+
+## L004-FourierGammaLeakage promotion (G3, 2026-10-01)
+
+Scratch declarations of the S028b unit (`tmp/units/S028b-FourierSemilinearZ1/freeze/v1/FourierSemilinearGamma.lean`) and of filtration-probe `ReesBridge` (`tmp/filtration_probe/ReesBridge.lean`, `gammaW_inv_le`) promoted to the library by unit L004 (contract `tmp/units/L004-FourierGammaLeakage/contract/v4/`; every renamed/generalized row of its MIGRATION_TABLE.md). Namespace `RadiiPolynomial.Fourier` (`gammaW_inv_le` in `RadiiPolynomial.Rees.Laurent`); the Γ faces are stated over a real-scalar field `[NormedAlgebra ℝ 𝕜]` instead of `ℂ`, the tail estimate over any bounded diagonal `diagCLM r C hr`.
+
+| old | new | file | step | reason |
+|---|---|---|---|---|
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.gammaC` | `RadiiPolynomial.Fourier.gammaScalar` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_gammaC` | `RadiiPolynomial.Fourier.norm_gammaScalar` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.gammaC_ne_zero` | `RadiiPolynomial.Fourier.gammaScalar_ne_zero` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_gamma_head_le` | `RadiiPolynomial.Fourier.norm_gamma_head_le` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_gamma_inv_head_le` | `RadiiPolynomial.Fourier.norm_gamma_inv_head_le` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.DΓ` | `RadiiPolynomial.Fourier.gammaDiag` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.DΓplus` | `RadiiPolynomial.Fourier.gammaInvDiag` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.DΓ_comp_DΓplus` | `RadiiPolynomial.Fourier.gammaDiag_comp_gammaInvDiag` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.DΓ_entry_eq_rees` | `RadiiPolynomial.Fourier.gammaDiag_entry_eq_rees` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_DΓplus_leak_le` | `RadiiPolynomial.Fourier.norm_gammaInvDiag_leak_le` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_head_leak_le_coeff` | `RadiiPolynomial.Fourier.norm_head_leak_le_coeff` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_tail_leak_le_coeff` | `RadiiPolynomial.Fourier.norm_tail_leak_le_coeff` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.ReesBridge.gammaW_inv_le` | `RadiiPolynomial.Rees.Laurent.gammaW_inv_le` | `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` | L004 | generalized (MIGRATION_TABLE.md) |
+
+## L005-FourierSemilinear promotion (G3, 2026-10-01)
+
+Scratch declarations of the S028b unit (`tmp/units/S028b-FourierSemilinearZ1/freeze/v1/FourierSemilinear.lean` and `FourierSemilinearGamma.lean`:180) promoted to the library by unit L005 (contract `tmp/units/L005-FourierSemilinear/contract/v2/`; every renamed, generalized or compatibility-specialization row of its MIGRATION_TABLE.md whose new name is an L005 declaration; the FS:180/:195 rows landed by L002 are in its block above). Namespace `RadiiPolynomial.Fourier.Semilinear`; generalized rows are stated for a general symbol `lam : ℤ → 𝕜` over a scalar field `𝕜` instead of `ℂ` and the symbol `I * k`; the compatibility specializations keep the first-order family `ikSymbol` in `SemilinearFirstOrder.lean`.
+
+| old | new | file | step | reason |
+|---|---|---|---|---|
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_fourier_symbol` | `RadiiPolynomial.Fourier.Semilinear.norm_ikSymbol` | `Applications/Fourier/SemilinearFirstOrder.lean` | L005 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.lamH` | `RadiiPolynomial.Fourier.Semilinear.lamHead` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_lamH_le` | `RadiiPolynomial.Fourier.Semilinear.norm_lamHead_le` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.rTail` | `RadiiPolynomial.Fourier.Semilinear.tailInv` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.rTail_head_zero` | `RadiiPolynomial.Fourier.Semilinear.tailInv_head_zero` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_rTail` | `RadiiPolynomial.Fourier.Semilinear.norm_tailInv_ikSymbol` | `Applications/Fourier/SemilinearFirstOrder.lean` | L005 | compatibility specialization (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_rTail_le` | `RadiiPolynomial.Fourier.Semilinear.norm_tailInv_ikSymbol_le` | `Applications/Fourier/SemilinearFirstOrder.lean` | L005 | compatibility specialization (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.tail_symbol_ne_zero` | `RadiiPolynomial.Fourier.Semilinear.ikSymbol_ne_zero` | `Applications/Fourier/SemilinearFirstOrder.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.rTail_hmono` | `RadiiPolynomial.Fourier.Semilinear.tailInv_ikSymbol_hmono` | `Applications/Fourier/SemilinearFirstOrder.lean` | L005 | compatibility specialization (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.LamH` | `RadiiPolynomial.Fourier.Semilinear.headDiag` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.toRealSeq_LamH` | `RadiiPolynomial.Fourier.Semilinear.toRealSeq_headDiag` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.LamH_single` | `RadiiPolynomial.Fourier.Semilinear.headDiag_single` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.P_comp_LamH` | `RadiiPolynomial.Fourier.Semilinear.headProj_comp_headDiag` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.LamH_comp_P` | `RadiiPolynomial.Fourier.Semilinear.headDiag_comp_headProj` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.R_comp_P` | `RadiiPolynomial.Fourier.Semilinear.diagCLM_comp_headProj_of_head_zero` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.Φhat` | `RadiiPolynomial.Fourier.Semilinear.phiHat` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.Φ'hat` | `RadiiPolynomial.Fourier.Semilinear.phiHatDeriv` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.hasFDerivAt_Φhat` | `RadiiPolynomial.Fourier.Semilinear.hasFDerivAt_phiHat` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.toRealSeq_finset_sum` | `RadiiPolynomial.Fourier.Semilinear.toRealSeq_finset_sum` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.band_aeval` | `RadiiPolynomial.Fourier.Semilinear.band_aeval` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.b` | `RadiiPolynomial.Fourier.Semilinear.beta` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.G` | `RadiiPolynomial.Fourier.Semilinear.precondMap` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.B₀` | `RadiiPolynomial.Fourier.Semilinear.modelDeriv` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.band_b` | `RadiiPolynomial.Fourier.Semilinear.band_beta` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.Fraw` | `RadiiPolynomial.Fourier.Semilinear.rawMap` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.headEmbed` | `RadiiPolynomial.Fourier.Semilinear.headEmbed` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.Araw` | `RadiiPolynomial.Fourier.Semilinear.rawPrecond` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.toRealSeq_headEmbed` | `RadiiPolynomial.Fourier.Semilinear.toRealSeq_headEmbed` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.headEmbed_Fraw` | `RadiiPolynomial.Fourier.Semilinear.headEmbed_rawMap` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.toRealSeq_G` | `RadiiPolynomial.Fourier.Semilinear.toRealSeq_precondMap` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.hasFDerivAt_G` | `RadiiPolynomial.Fourier.Semilinear.hasFDerivAt_precondMap` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.DG_sub_B0` | `RadiiPolynomial.Fourier.Semilinear.fderiv_sub_modelDeriv` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.DG_sub_B0_hZ` | `RadiiPolynomial.Fourier.Semilinear.fderiv_sub_modelDeriv_hZ` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_DG_sub_B0_eq` | `RadiiPolynomial.Fourier.Semilinear.norm_fderiv_sub_modelDeriv` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_DG_sub_B0_eq_sup'` | `RadiiPolynomial.Fourier.Semilinear.norm_fderiv_sub_modelDeriv_eq_sup'_first` | `Applications/Fourier/SemilinearFirstOrder.lean` | L005 | compatibility specialization (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.DG_sub_B0_attained` | `RadiiPolynomial.Fourier.Semilinear.fderiv_sub_modelDeriv_attained` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.sCol_rTail_coeff` | `RadiiPolynomial.Fourier.Semilinear.tailCol_tailInv_ikSymbol_coeff` | `Applications/Fourier/SemilinearFirstOrder.lean` | L005 | compatibility specialization (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_DG_sub_B0_eq_sup'_dN` | `RadiiPolynomial.Fourier.Semilinear.norm_fderiv_sub_modelDeriv_eq_sup'_deg` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.window_dN_eq` | `RadiiPolynomial.Fourier.Semilinear.window_deg_eq` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_DG_sub_B0_real` | `RadiiPolynomial.Fourier.Semilinear.norm_restrictScalars_fderiv_sub_modelDeriv` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_DG_sub_B0_le_gamma` | `RadiiPolynomial.Fourier.Semilinear.norm_fderiv_sub_modelDeriv_le_gamma` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |

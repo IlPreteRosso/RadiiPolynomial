@@ -49,6 +49,9 @@ import RadiiPolynomial.Certification.IVP.Chebyshev
 -- Galerkin application
 import RadiiPolynomial.Applications.Galerkin.Face
 
+-- Fourier semilinear application
+import RadiiPolynomial.Applications.Fourier
+
 -- Finite-dimensional application
 import RadiiPolynomial.Applications.FiniteDimensional.Face
 import RadiiPolynomial.Applications.FiniteDimensional.Polynomial
