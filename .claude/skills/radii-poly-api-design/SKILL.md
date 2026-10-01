@@ -90,7 +90,7 @@ protecting fiber/scalar parameters with `dont_translate` where needed.
 ## Polynomial And Certificate Automation
 
 Use the existing `compPolyOf%`, `pderiv_simp`, and `auto_poly_fderiv` where supported;
-use `decide +kernel` for exact finite identities (`native_decide` only as a named, dispositioned exception; see the Trust policy below) and `finmatrix_bound` for weighted matrix bounds.
+use `decide +kernel` for exact finite identities where it is cheap and `native_decide` otherwise (accepted in certificates; see the Trust policy below), and `finmatrix_bound` for weighted matrix bounds.
 The current polynomial IVPs keep literal `f_cpoly` definitions. Examples 8.1 and 14.2.1
 use `f_cpoly_reified` as a `rfl` witness for the elaborator, outside the certificate's
 dependency path.
@@ -171,19 +171,25 @@ research-level gaps) is the sibling skill `lean-api-design`; load both for forma
   `evalBanach = aeval ∘ toMvPoly` gives Df from `pderiv`; "cast commutes with evaluation" gives ℚ
   mirrors; `supportBound`/`laurentRadius` give far-column cutoffs (Mfar = 82 = 2N + 2 for 14.2.1);
   `clm_apply_eq_sum` decomposes CLMs on `Fin L → X` into blocks (no Fin-1 collapse).
-- **Trust policy (reconciles the older "native_decide for exact finite identities" default)**:
-  kernel-checked closure is primary (`decide +kernel` on the unchanged ℚ Checks: 0.1–0.2 s per
-  finite-dimensional certificate, 15 s for the L = 2 Chebyshev set on the pinned toolchain);
-  `native_decide` only as a named, dispositioned exception (today only the library's `Example1421.data.habar_size := by native_decide`, a proposed
-  trust-reducing wave-A fix; Example 14.2.1's Checks, > 900 s as one `decide +kernel`, has closed
-  with 15 per-conjunct kernel lemmas in ≈ 110–121 s since round 5). The proposed FILTER budget (target 60 s, ceiling 300 s
-  total per certificate) needs explicit acceptance before it is quoted as agreed.
+- **Trust policy (user 2026-09-25/26; supersedes the 2026-09-24 'named exception only' wording)**:
+  `decide +kernel` is preferred where it is cheap (0.1–0.2 s per finite-dimensional certificate, 15 s
+  for the L = 2 Chebyshev set on the pinned toolchain; Example 14.2.1's Checks close with 15
+  per-conjunct kernel lemmas in ≈ 110–121 s). `native_decide` is accepted in certificates and
+  examples (standard Lean-community practice); `finmatrix_bound` itself closes through
+  `closeBridgeWithVerificationTyped` (LeanCert's configured kernel/native/auto route), and a
+  declaration's actual axioms are read from its `#print axioms` record, not from source hits. Records
+  list the inherited `…._native.native_decide.ax_*` axioms as facts; talks and notes carry no
+  caveat. New general API-side lemmas prefer kernel-checkable `decide`. Inventory =
+  `grep -rn native_decide RadiiPolynomial --include='*.lean'`, never a hand-kept list. The proposed
+  FILTER budget (target 60 s, ceiling 300 s per certificate) needs explicit acceptance before it is
+  quoted as agreed.
 - Toolchain-specific measurements and troubleshooting notes live in
   `FILTER-20260924/LEAN_PRACTICE_DISTILLED.md` §7–§8 with their evidence class; quote them with
   the class, never as laws.
 
 ### Generality and placement (user rulings 2026-09-25, D145/D146)
 
+- **Family.** A family is a class of problems or discretizations sharing mathematical assumptions and interfaces (Taylor polynomial equations, Taylor IVPs, Chebyshev IVPs); its reusable statements quantify over the family's varying data rather than fix one example.
 - **Generalize before a filter or landing decision.** Audit every API-side candidate for ad-hocness: a fixed number where a parameter belongs (dimension, degree, truncation N, weight ν, grid base, tolerance) or a particular algebraic expression form (x² − c, Fisher u − u², a cube-only face, a degree-2-only Z₂). A general `CompPoly` of any degree and any `L` is NOT particular; fixed numbers inside an example instance are fine. Write the general form as an experiment first; the decision waits for it.
-- **Placement rule.** An inherited or example-level ad hoc helper is either generalized or moved in or near the family of examples that consume it (`Applications/<family>`, `Certification/<family>`, or the example directory), never left in the API core (`Core/`, `Algebra/`, `Analysis/`, `Operators/` general modules). Anything in the core is general over the family-neutral engine. Every new helper carries a placement statement (target module + why); consumers of an inherited helper are listed by grep in a migration table (generalize in place | move beside consumers | move into the example | delete after migration).
+- **Placement rule.** An inherited or example-level ad hoc helper is either generalized to its family and placed in the family module (`Applications/<family>`, `Certification/<family>`; these are family-level reusable modules, not example-adjacent), or, while still specific to one example, kept in that example's directory under `Examples/`; it is never left in the API core (`Core/`, `Algebra/`, `Analysis/`, `Operators/` general modules) while ad hoc. A helper that generalizes past the family (family-neutral) may enter the core; anything in the core is general over the family-neutral engine. Every new helper carries a placement statement (target module + why); consumers of an inherited helper are listed by grep in a migration table (generalize in place | move beside consumers | move into the example | delete after migration).
 - Evidence: FILTER-20260924/ADHOC_AUDIT.md (the PS bundle was x∗x − c end to end; Core/AffineZ2 served only degree ≤ 2 on one carrier; the Z₀ checkers baked in base 10).

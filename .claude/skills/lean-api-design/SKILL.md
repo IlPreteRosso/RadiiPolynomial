@@ -27,8 +27,9 @@ Task category → tier (standing rule, harness-neutral, 2026-09-20; cross-harnes
   (Fable). Never delegated; worker output is input to it. The coordinator also takes, on
   purpose and never as a fleet, what needs the best model: final gate-keeping review,
   important quality checks, particularly hard tasks (user 2026-09-22).
-- Cross-harness tiers (D102, agreed with Codex; a role map by capability class, not a measured
-  equivalence): Fable 5.1 = GPT-6 Astra (coordinators); Opus 5.5 = `gpt-6-sol` high, xhigh for
+- Cross-harness tiers (D102; Codex worker tier updated by the user 2026-09-29;
+  a role map by capability class, not a measured equivalence): Fable 5.1 = GPT-6 Astra
+  (coordinators); Opus 5.5 = `gpt-6.1-sol` high, xhigh for
   a named hard unit (proof/critic units, designer + critic consults, source-first milestone and
   consult reviews); Sonnet 5.5 = `gpt-6-luna` medium, high if needed (mechanical tier).
   Limits: Claude ≤ 5 workers in flight per workflow; Codex FOUR active agents including itself
@@ -40,8 +41,8 @@ Task category → tier (standing rule, harness-neutral, 2026-09-20; cross-harnes
   child is a purposeful exception for ONE named hard unit).
 - Mechanical stages and chores (freeze/MANIFEST, importer shadow check, INSIGHTS draft,
   inventories, brief DRAFTS, scouting, fidelity SWEEPS, organising): the MECHANICAL TIER,
-  non-final — `sonnet`; until Sonnet 5.5 ships it runs on `opus` (Opus 5.5, user
-  2026-09-22), workflow freeze stages included; revert here and in the workflow scripts.
+  non-final — `sonnet` (Sonnet 5.5) at medium effort, or `gpt-6-luna` medium/high in Codex.
+  Sonnet 5.5 is released (user 2026-09-28); the temporary Opus stand-in is retired.
   Deterministic scripts are preferred for pure hashing (D102); "mechanical tier" elsewhere in
   this skill means this row.
 - Bounded Lean review with `#check` probes on a comment-stripped freeze: Antigravity
