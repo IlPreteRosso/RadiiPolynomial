@@ -1,4 +1,6 @@
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.Core
+import RadiiPolynomial.Algebra.Polynomial.CompPoly.Univariate
+import RadiiPolynomial.Algebra.Polynomial.CompPoly.Derivative
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.WeightedL1
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.Laurent
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.Chebyshev
@@ -11,6 +13,11 @@ import RadiiPolynomial.Algebra.Polynomial.CompPoly.Chebyshev.Bounds
 Public facade for the generic computable AST, Taylor coefficients, finite Laurent
 coefficients, and stored Chebyshev semantics.
 Import `CompPoly.Core` when only syntax, computation, or generic algebra evaluation is needed.
+`CompPoly.Univariate` gives the map `x ↦ P(x) - b` of a univariate polynomial on a normed
+commutative real algebra and its derivative (left multiplication by `P′(x)`).
+`CompPoly.Derivative` gives the derivative of an evaluation on `R^L` (the gradient row `gradCLM`)
+and of a polynomial system on `R^n` (the Jacobian `jacCLM`), over any normed commutative real
+algebra `R`.
 Import `CompPoly.Laurent` for computable finite Laurent and symmetric-array evaluation;
 `CompPoly.Chebyshev` adds correctness in the completed algebra and differentiation.
 `CompPoly.Bounds` and `CompPoly.Chebyshev.Bounds` read certificate constants (norm,

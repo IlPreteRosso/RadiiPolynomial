@@ -276,7 +276,7 @@ theorem norm_compPolyDerivative_le (f : Fin L → CompPoly L) (a : XCheb ν L) (
 
 /-- Lipschitz bound on the system derivative in the raw displacement `‖a - b‖`: `B` dominates
 every component's `2 · derivativeLipschitzBound` (the `2` is the symmetrization of the
-displacement), so a certificate states `B` as a single number (Example 14.2.1: `8`). -/
+displacement), so a certificate states `B` as a single number. -/
 theorem norm_compPolyDerivative_sub_le (f : Fin L → CompPoly L) (a b : XCheb ν L)
     (R : Fin L → ℝ)
     (ha : ∀ i, ‖l1Chebyshev.symmetrize (a i)‖ ≤ R i)
@@ -329,7 +329,7 @@ The syntactic constant is taken at the radii `max ‖S(cᵢ)‖ ‖S(āᵢ)‖` 
 own symmetrized norms — so `hB` is quantified over the ball, not over the whole space. For
 a syntactically quadratic presentation, the partials have radius-independent syntactic
 Lipschitz bounds: the certificate discharges `hB` by `simp; norm_num` without bounding
-`‖S(c)‖` (Example 14.2.1: `B = 8`). Semantic degree `≤ 2` after cancellation does not
+`‖S(c)‖`. Semantic degree `≤ 2` after cancellation does not
 ensure this, since the bound reads the unreduced AST. When the syntactic constant depends
 on the radii, bound them through `‖S(cᵢ)‖ ≤ 2 (‖āᵢ‖ + r₀)` first. -/
 theorem StdChebIVPData.Z₂_le_of_compPoly_max

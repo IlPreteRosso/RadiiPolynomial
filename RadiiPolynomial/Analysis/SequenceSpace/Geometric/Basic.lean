@@ -3,6 +3,7 @@ import Mathlib.Analysis.Normed.Operator.Mul
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Scalar
 import RadiiPolynomial.Algebra.Convolution.CauchyProduct
 import RadiiPolynomial.Analysis.Norm.FiniteSum
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear
 /-!
 # Weighted sequence-space infrastructure
 
@@ -642,6 +643,56 @@ lemma norm_tailProj_CLM_le (N : ℕ) : ‖tailProj_CLM (ν := ν) N‖ ≤ 1 :=
   LinearMap.mkContinuous_norm_le _ zero_le_one _
 
 end BanachAlgebra
+
+end l1Weighted
+
+end RadiiPolynomial
+
+namespace RadiiPolynomial
+
+namespace l1Weighted
+
+variable {ν : PosReal}
+
+/-- The geometric `l1Weighted.single` is the generic `lpOneAlg.single`. -/
+theorem single_eq_lpOneAlg_single (n : ℕ) (x : ℝ) :
+    (l1Weighted.single n x : l1Weighted ν) = lpOneAlg.single n x :=
+  l1Weighted.ext fun m => by
+    show l1Weighted.toSeq (l1Weighted.single n x : l1Weighted ν) m
+      = lpOneAlg.toRealSeq (lpOneAlg.single n x : l1Weighted ν) m
+    rw [l1Weighted.single_toSeq, lpOneAlg.toRealSeq_single]
+
+section OpNorm
+
+variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
+
+/-- **The bilinear operator norm on `l1Weighted ν` as an atom supremum.** For
+every `ν : PosReal` (no `1 ≤ ν`), `‖B‖` is the supremum of the ratios
+`‖B e_i e_j‖ / (νⁱ νʲ)`. The case `M = M' = ℕ` of
+`lpOneAlg.opNorm_eq_iSup_cols₂`. -/
+theorem opNorm_eq_iSup_cols₂ (B : l1Weighted ν →L[ℝ] l1Weighted ν →L[ℝ] F) :
+    ‖B‖ = ⨆ p : ℕ × ℕ, ‖B (lpOneAlg.single p.1 1) (lpOneAlg.single p.2 1)‖
+      / ((ν : ℝ) ^ p.1 * (ν : ℝ) ^ p.2) := by
+  rw [lpOneAlg.opNorm_eq_iSup_cols₂ B]
+  simp only [ScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+
+set_option maxSynthPendingDepth 2 in
+/-- **The trilinear operator norm on `l1Weighted ν` as an atom supremum.** For
+every `ν : PosReal`, `‖T‖` is the supremum of the ratios
+`‖T e_i e_j e_k‖ / (νⁱ νʲ νᵏ)`. The case `M = M' = M'' = ℕ` of
+`lpOneAlg.opNorm_eq_iSup_cols₃`. (Declared under `set_option maxSynthPendingDepth 2 in`:
+at the default depth the norm does not synthesize on the three-level type; a
+consumer who restates `‖T‖` for such a map needs the same local option; see
+`WeightedL1/Multilinear.lean`.) -/
+theorem opNorm_eq_iSup_cols₃
+    (T : l1Weighted ν →L[ℝ] l1Weighted ν →L[ℝ] l1Weighted ν →L[ℝ] F) :
+    ‖T‖ = ⨆ p : ℕ × ℕ × ℕ, ‖T (lpOneAlg.single p.1 1) (lpOneAlg.single p.2.1 1)
+        (lpOneAlg.single p.2.2 1)‖
+      / ((ν : ℝ) ^ p.1 * (ν : ℝ) ^ p.2.1 * (ν : ℝ) ^ p.2.2) := by
+  rw [lpOneAlg.opNorm_eq_iSup_cols₃ T]
+  simp only [ScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+
+end OpNorm
 
 end l1Weighted
 

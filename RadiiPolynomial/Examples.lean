@@ -22,5 +22,7 @@ import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Analytic
 import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Analyticity
 import RadiiPolynomial.Examples.Transport.KappaToy
 import RadiiPolynomial.Examples.Transport.TwinTransport
+import RadiiPolynomial.Examples.Galerkin.Fisher
+import RadiiPolynomial.Examples.Galerkin.Diblock
 
 /-! Production examples included in the default project build. -/

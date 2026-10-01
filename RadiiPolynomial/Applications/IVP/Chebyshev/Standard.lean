@@ -51,7 +51,8 @@ structure StdChebIVPData (ν : PosReal) (L N : ℕ) [NeZero L] [Fact (1 ≤ (ν 
   DF_col : Fin L → Fin L → ℕ → Array ℚ
   /-- Approximate solution coefficient arrays per component. -/
   abar_Q : Fin L → Array ℚ
-  /-- Weight as ℚ (for `finsum_bound` / `native_decide`). -/
+  /-- Weight as ℚ, read by the exact rational checks of the certification adapter
+    (`decide +kernel`). -/
   ν_q : ℚ
   /-- Bridge: ν_val = ν_q cast to ℝ. -/
   hν : (ν : ℝ) = ((ν_q : ℚ) : ℝ)

@@ -41,7 +41,9 @@ namespace Example1421
 
 abbrev N : ℕ := 40
 abbrev L : ℕ := 1
-instance : NeZero L := ⟨by decide⟩
+/-- Scoped: `L` is a reducible abbreviation of the numeral, so a global instance would also
+serve every `NeZero 1` query outside this example. -/
+scoped instance : NeZero L := ⟨by decide⟩
 abbrev ν_q : ℚ := 2
 def ν_val : PosReal := ⟨2, by norm_num⟩
 
@@ -105,7 +107,7 @@ def data : ChebyshevIVP.StdChebIVPData ν_val L N where
   abar_Q := fun _ => abar_0
   ν_q := ν_q
   hν := ν_val_eq_q
-  habar_size := fun _ => by native_decide
+  habar_size := fun _ => by decide +kernel
 
 /-- Differentiability of the preconditioned map, from the syntax
 (consumed by `Examples/Transport/TwinTransport.lean`). -/

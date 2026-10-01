@@ -20,6 +20,15 @@ factor and vector-field Lipschitz constant are all equal to the syntactic values
 The vector-field consequence `lipschitzOnWith_evalBanach_pi` gives an explicit Lipschitz
 constant on a closed ball of `Fin L → ℝ`, replacing compactness arguments that only produce
 an existential constant.
+
+`anchoredBound c ρ p` bounds the difference anchored at a rational centre `c`,
+`‖p(c + u) - p(c)‖ ≤ anchoredBound c ρ p · ‖u‖` for `‖u‖ ≤ ρ` (`norm_evalBanach_add_sub_le`,
+`norm_evalBanach_sub_center_le`), with the centre values computed exactly by `evalQ`.
+
+`derivativeCentredBound p β δ` is the centred value bound of `norm_evalBanach_sub_le_centred` summed
+over the formal partials of `p`: the majorant of the derivative difference on the centred ball
+`‖b i‖ ≤ β i`, `‖a i - b i‖ ≤ δ i` (the derivative bound itself is
+`RadiiPolynomial.Galerkin.norm_gradCLM_sub_le_centred`).
 -/
 
 namespace MvPolyBridge.CompPoly
@@ -129,6 +138,12 @@ variable {K : Type*} [DivisionRing K] [CharZero K]
 
 end Cast
 
+/-- The derivative Lipschitz constant of a univariate polynomial is the Lipschitz constant of
+its formal derivative. General in `P`, `K`. -/
+theorem derivativeLipschitzBound_one {K : Type*} [DivisionRing K] (P : CompPoly 1)
+    (R : Fin 1 → K) : P.derivativeLipschitzBound R = (P.pderiv 0).lipschitzBound R := by
+  simp [CompPoly.derivativeLipschitzBound]
+
 section Order
 
 variable {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
@@ -166,6 +181,45 @@ theorem derivativeLipschitzBound_nonneg (p : CompPoly L) (R : Fin L → K)
   Finset.sum_nonneg fun _ _ => lipschitzBound_nonneg _ R hR
 
 end Order
+
+/-- The syntactic norm bound is monotone in nonnegative radii. -/
+theorem normBound_mono (p : CompPoly L) {R S : Fin L → ℝ} (hR : ∀ i, 0 ≤ R i)
+    (hRS : ∀ i, R i ≤ S i) : p.normBound R ≤ p.normBound S := by
+  have hS : ∀ i, 0 ≤ S i := fun i => (hR i).trans (hRS i)
+  induction p with
+  | C r => exact le_rfl
+  | X i => exact hRS i
+  | add p q ihp ihq => exact add_le_add ihp ihq
+  | sub p q ihp ihq => exact add_le_add ihp ihq
+  | mul p q ihp ihq =>
+      exact mul_le_mul ihp ihq (CompPoly.normBound_nonneg q R hR)
+        (CompPoly.normBound_nonneg p S hS)
+  | neg p ih => exact ih
+  | smul r p ih => exact mul_le_mul_of_nonneg_left ih (Rat.cast_nonneg.mpr (abs_nonneg r))
+
+/-- The syntactic Lipschitz constant is monotone in nonnegative radii. -/
+theorem lipschitzBound_mono (p : CompPoly L) {R S : Fin L → ℝ} (hR : ∀ i, 0 ≤ R i)
+    (hRS : ∀ i, R i ≤ S i) : p.lipschitzBound R ≤ p.lipschitzBound S := by
+  have hS : ∀ i, 0 ≤ S i := fun i => (hR i).trans (hRS i)
+  induction p with
+  | C r => exact le_rfl
+  | X _ => exact le_rfl
+  | add p q ihp ihq => exact add_le_add ihp ihq
+  | sub p q ihp ihq => exact add_le_add ihp ihq
+  | mul p q ihp ihq =>
+      exact add_le_add
+        (mul_le_mul ihp (normBound_mono q hR hRS) (CompPoly.normBound_nonneg q R hR)
+          (CompPoly.lipschitzBound_nonneg p S hS))
+        (mul_le_mul (normBound_mono p hR hRS) ihq (CompPoly.lipschitzBound_nonneg q R hR)
+          (CompPoly.normBound_nonneg p S hS))
+  | neg p ih => exact ih
+  | smul r p ih => exact mul_le_mul_of_nonneg_left ih (Rat.cast_nonneg.mpr (abs_nonneg r))
+
+/-- The derivative Lipschitz constant is monotone in nonnegative radii. -/
+theorem derivativeLipschitzBound_mono (p : CompPoly L) {R S : Fin L → ℝ}
+    (hR : ∀ i, 0 ≤ R i) (hRS : ∀ i, R i ≤ S i) :
+    p.derivativeLipschitzBound R ≤ p.derivativeLipschitzBound S :=
+  Finset.sum_le_sum fun _ _ => lipschitzBound_mono _ hR hRS
 
 section SumMul
 
@@ -269,6 +323,210 @@ theorem norm_evalBanach_sub_le_max (p : CompPoly L) (a b : Fin L → A) :
   norm_evalBanach_sub_le p a b _ (fun _ => le_max_left _ _) (fun _ => le_max_right _ _)
 
 end Normed
+
+section Centred
+
+/-! Centred bounds. On the centred ball `‖b i‖ ≤ β i`, `‖a i - b i‖ ≤ δ i`, the value difference
+satisfies `‖p(a) - p(b)‖ ≤ p̂(β + δ) - p̂(β)` with `p̂ = normBound p`
+(`norm_evalBanach_sub_le_centred`), and `derivativeCentredBound p β δ` sums the same difference
+over the formal partials. -/
+
+/-- **Centred derivative majorant.**  For the ball `‖b i‖ ≤ β i`, `‖a i − b i‖ ≤ δ i`, the sum over
+the formal partials `∂ᵢ p` of `p̂ᵢ(β + δ) − p̂ᵢ(β)`, where `p̂ᵢ = normBound (∂ᵢ p)` is the
+syntactic absolute-value majorant of `∂ᵢ p`.  Any `DivisionRing` (`ℚ`: computable mirror). -/
+def derivativeCentredBound {K : Type*} [DivisionRing K] (p : CompPoly L) (β δ : Fin L → K) : K :=
+  ∑ i, ((p.pderiv i).normBound (β + δ) - (p.pderiv i).normBound β)
+
+/-- The exact rational centred majorant casts to the majorant computed over `K`. -/
+@[norm_cast] theorem derivativeCentredBound_ratCast {K : Type*} [DivisionRing K] [CharZero K]
+    (p : CompPoly L) (β δ : Fin L → ℚ) :
+    ((derivativeCentredBound p β δ : ℚ) : K) =
+      derivativeCentredBound p (fun i => (β i : K)) (fun i => (δ i : K)) := by
+  simp only [derivativeCentredBound, Rat.cast_sum, Rat.cast_sub, normBound_ratCast]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  congr 2
+  funext j
+  simp
+
+variable {A : Type*} [NormedCommRing A] [NormedAlgebra ℝ A] [NormOneClass A]
+
+/-- **Centred value majorant**: `‖p(a) − p(b)‖ ≤ p̂(β + δ) − p̂(β)` on the centred ball. -/
+theorem norm_evalBanach_sub_le_centred (p : CompPoly L) (a b : Fin L → A) (β δ : Fin L → ℝ)
+    (hb : ∀ i, ‖b i‖ ≤ β i) (hab : ∀ i, ‖a i - b i‖ ≤ δ i) :
+    ‖p.evalBanach a - p.evalBanach b‖ ≤ p.normBound (β + δ) - p.normBound β := by
+  have hβ : ∀ i, 0 ≤ β i := fun i => (norm_nonneg _).trans (hb i)
+  have ha : ∀ i, ‖a i‖ ≤ (β + δ) i := fun i => by
+    rw [Pi.add_apply]; linarith [norm_le_insert' (a i) (b i), hb i, hab i]
+  induction p with
+  | C r => simp [evalBanach]
+  | X i => simpa [evalBanach] using hab i
+  | add p q ihp ihq =>
+      simp only [evalBanach, normBound]
+      rw [add_sub_add_comm]
+      exact (norm_add_le _ _).trans (by linarith)
+  | sub p q ihp ihq =>
+      simp only [evalBanach, normBound]
+      rw [sub_sub_sub_comm]
+      exact (norm_sub_le _ _).trans (by linarith)
+  | mul p q ihp ihq =>
+      simp only [evalBanach, normBound]
+      have hsplit : p.evalBanach a * q.evalBanach a - p.evalBanach b * q.evalBanach b
+          = (p.evalBanach a - p.evalBanach b) * q.evalBanach a
+            + p.evalBanach b * (q.evalBanach a - q.evalBanach b) := by ring
+      rw [hsplit]
+      have h1 := mul_le_mul ihp (norm_evalBanach_le q a _ ha) (norm_nonneg _)
+        ((norm_nonneg _).trans ihp)
+      have h2 := mul_le_mul (norm_evalBanach_le p b β hb) ihq (norm_nonneg _)
+        (normBound_nonneg p β hβ)
+      refine (norm_add_le _ _).trans ((add_le_add ((norm_mul_le _ _).trans h1)
+        ((norm_mul_le _ _).trans h2)).trans_eq ?_)
+      ring
+  | neg p ih =>
+      simp only [evalBanach, normBound]
+      rw [neg_sub_neg, norm_sub_rev]
+      exact ih
+  | smul r p ih =>
+      simp only [evalBanach, normBound, Rat.cast_abs]
+      rw [← smul_sub, norm_smul, Real.norm_eq_abs, ← mul_sub]
+      exact mul_le_mul_of_nonneg_left ih (abs_nonneg _)
+
+/-- The centred majorant is nonnegative on nonnegative radii (the value lemma at `A = ℝ`). -/
+theorem derivativeCentredBound_nonneg (p : CompPoly L) (β δ : Fin L → ℝ) (hβ : ∀ i, 0 ≤ β i)
+    (hδ : ∀ i, 0 ≤ δ i) : 0 ≤ derivativeCentredBound p β δ :=
+  Finset.sum_nonneg fun i _ => (norm_nonneg _).trans
+    (norm_evalBanach_sub_le_centred (A := ℝ) (p.pderiv i) (β + δ) β β δ
+      (fun j => (Real.norm_eq_abs _).trans_le (abs_of_nonneg (hβ j)).le)
+      (fun j => by rw [Pi.add_apply, add_sub_cancel_left, Real.norm_eq_abs, abs_of_nonneg (hδ j)]))
+
+end Centred
+
+section Anchored
+
+/-! Centre-anchored difference bound. For `‖u‖ ≤ ρ`, `anchoredBound c ρ p` bounds the difference
+quotient anchored at the rational centre `c` (embedded by `ratMap`):
+`‖p(c + u) - p(c)‖ ≤ anchoredBound c ρ p · ‖u‖`. It is not a Lipschitz constant on the ball (for
+`p = X·X`, `c = 0` it is `ρ`, while `x ↦ x²` has Lipschitz constant `2ρ` on the ball). The centre
+values enter through `evalQ`, so the bound is computed in exact rational arithmetic. Holds in any
+normed commutative real algebra whose unit has norm one. -/
+
+/-- Centre-anchored difference bound of `p` at the rational centre `c`, for displacements of norm at
+most `ρ`. -/
+def anchoredBound (c : Fin L → ℚ) (ρ : ℚ) : CompPoly L → ℚ
+  | .C _ => 0
+  | .X _ => 1
+  | .add p q => anchoredBound c ρ p + anchoredBound c ρ q
+  | .sub p q => anchoredBound c ρ p + anchoredBound c ρ q
+  | .mul p q => anchoredBound c ρ p * |evalQ q c| + |evalQ p c| * anchoredBound c ρ q +
+      anchoredBound c ρ p * anchoredBound c ρ q * ρ
+  | .neg p => anchoredBound c ρ p
+  | .smul r p => |r| * anchoredBound c ρ p
+
+theorem anchoredBound_nonneg (c : Fin L → ℚ) {ρ : ℚ} (hρ : 0 ≤ ρ) (p : CompPoly L) :
+    0 ≤ anchoredBound c ρ p := by
+  induction p with
+  | C _ => exact le_rfl
+  | X _ => exact zero_le_one
+  | add p q hp hq => exact add_nonneg hp hq
+  | sub p q hp hq => exact add_nonneg hp hq
+  | mul p q hp hq =>
+    exact add_nonneg (add_nonneg (mul_nonneg hp (abs_nonneg _)) (mul_nonneg (abs_nonneg _) hq))
+      (mul_nonneg (mul_nonneg hp hq) hρ)
+  | neg p hp => exact hp
+  | smul r p hp => exact mul_nonneg (abs_nonneg r) hp
+
+variable {A : Type*} [NormedCommRing A] [NormedAlgebra ℝ A] [NormOneClass A]
+
+theorem norm_evalBanach_center (p : CompPoly L) (c : Fin L → ℚ) :
+    ‖p.evalBanach (fun i => ratMap A (c i))‖ = |((evalQ p c : ℚ) : ℝ)| := by
+  rw [evalBanach_ratMap, norm_ratMap]
+
+theorem norm_evalBanach_add_sub_le (p : CompPoly L) (c : Fin L → ℚ) (ρ : ℚ)
+    (u : Fin L → A) (hu : ‖u‖ ≤ ρ) :
+    ‖p.evalBanach (fun i => ratMap A (c i) + u i) -
+        p.evalBanach (fun i => ratMap A (c i))‖ ≤
+      (anchoredBound c ρ p : ℝ) * ‖u‖ := by
+  have hρ : (0 : ℚ) ≤ ρ := by exact_mod_cast (norm_nonneg u).trans hu
+  induction p with
+  | C r => simp [CompPoly.evalBanach, anchoredBound]
+  | X i => simpa [CompPoly.evalBanach, anchoredBound] using norm_le_pi_norm u i
+  | add p q ihp ihq =>
+    simp only [CompPoly.evalBanach, anchoredBound, Rat.cast_add]
+    rw [add_sub_add_comm, add_mul]
+    exact (norm_add_le _ _).trans (add_le_add ihp ihq)
+  | sub p q ihp ihq =>
+    simp only [CompPoly.evalBanach, anchoredBound, Rat.cast_add]
+    rw [sub_sub_sub_comm, add_mul]
+    exact (norm_sub_le _ _).trans (add_le_add ihp ihq)
+  | mul p q ihp ihq =>
+    simp only [CompPoly.evalBanach, anchoredBound]
+    set P := p.evalBanach (fun i => ratMap A (c i) + u i)
+    set P₀ := p.evalBanach (fun i => ratMap A (c i))
+    set Q := q.evalBanach (fun i => ratMap A (c i) + u i)
+    set Q₀ := q.evalBanach (fun i => ratMap A (c i))
+    have hP₀ : ‖P₀‖ = |((evalQ p c : ℚ) : ℝ)| := norm_evalBanach_center p c
+    have hQ₀ : ‖Q₀‖ = |((evalQ q c : ℚ) : ℝ)| := norm_evalBanach_center q c
+    have hAp : (0 : ℝ) ≤ anchoredBound c ρ p := by exact_mod_cast anchoredBound_nonneg c hρ p
+    have hAq : (0 : ℝ) ≤ anchoredBound c ρ q := by exact_mod_cast anchoredBound_nonneg c hρ q
+    have hu' : ‖u‖ ≤ (ρ : ℝ) := hu
+    have hsplit : P * Q - P₀ * Q₀ = (P - P₀) * (Q - Q₀) + (P - P₀) * Q₀ + P₀ * (Q - Q₀) := by
+      ring
+    rw [hsplit]
+    have h1 : ‖(P - P₀) * (Q - Q₀)‖ ≤
+        (anchoredBound c ρ p : ℝ) * ‖u‖ * ((anchoredBound c ρ q : ℝ) * ‖u‖) :=
+      (norm_mul_le _ _).trans (mul_le_mul ihp ihq (norm_nonneg _)
+        (mul_nonneg hAp (norm_nonneg _)))
+    have h2 : ‖(P - P₀) * Q₀‖ ≤ (anchoredBound c ρ p : ℝ) * ‖u‖ * ‖Q₀‖ :=
+      (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right ihp (norm_nonneg _))
+    have h3 : ‖P₀ * (Q - Q₀)‖ ≤ ‖P₀‖ * ((anchoredBound c ρ q : ℝ) * ‖u‖) :=
+      (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_left ihq (norm_nonneg _))
+    have h4 : (anchoredBound c ρ p : ℝ) * ‖u‖ * ((anchoredBound c ρ q : ℝ) * ‖u‖) ≤
+        (anchoredBound c ρ p : ℝ) * (anchoredBound c ρ q : ℝ) * ρ * ‖u‖ := by
+      have := mul_le_mul_of_nonneg_left hu'
+        (mul_nonneg (mul_nonneg hAp hAq) (norm_nonneg u))
+      nlinarith [this]
+    rw [hP₀] at h3
+    rw [hQ₀] at h2
+    push_cast
+    refine (norm_add_le _ _).trans ((add_le_add (norm_add_le _ _) le_rfl).trans ?_)
+    nlinarith [h1, h2, h3, h4]
+  | neg p ih =>
+    simp only [CompPoly.evalBanach, anchoredBound]
+    rw [neg_sub_neg, norm_sub_rev]
+    exact ih
+  | smul r p ih =>
+    simp only [CompPoly.evalBanach, anchoredBound, Rat.cast_mul, Rat.cast_abs]
+    rw [← smul_sub, norm_smul, Real.norm_eq_abs, mul_assoc]
+    exact mul_le_mul_of_nonneg_left ih (abs_nonneg _)
+
+/-- Anchored difference bound at a point `x` of the ball around the rational centre `c`. -/
+theorem norm_evalBanach_sub_center_le (p : CompPoly L) (c : Fin L → ℚ) (ρ : ℚ)
+    (x : Fin L → A) (hx : ‖x - fun i => ratMap A (c i)‖ ≤ ρ) :
+    ‖p.evalBanach x - p.evalBanach (fun i => ratMap A (c i))‖ ≤
+      (anchoredBound c ρ p : ℝ) * ‖x - fun i => ratMap A (c i)‖ := by
+  have h := norm_evalBanach_add_sub_le p c ρ _ hx
+  have hx' : (fun i => ratMap A (c i) + (x - fun i => ratMap A (c i)) i) = x :=
+    funext fun i => by simp
+  rwa [hx'] at h
+
+end Anchored
+
+section Univariate
+
+variable {𝔸 : Type*} [NormedCommRing 𝔸] [NormedAlgebra ℝ 𝔸]
+
+/-- Ball Lipschitz bound of a univariate evaluation from the syntactic constant.
+General in `P`, `𝔸`, `R`. -/
+theorem norm_evalBanach_one_sub_le [NormOneClass 𝔸] (P : CompPoly 1) (x y : 𝔸) (R : ℝ)
+    (hx : ‖x‖ ≤ R) (hy : ‖y‖ ≤ R) :
+    ‖P.evalBanach (fun _ => x) - P.evalBanach (fun _ => y)‖ ≤
+      P.lipschitzBound (fun _ => R) * ‖x - y‖ := by
+  have h := CompPoly.norm_evalBanach_sub_le P (fun _ : Fin 1 => x) (fun _ => y) (fun _ => R)
+    (fun _ => hx) (fun _ => hy)
+  have hn : ‖(fun _ : Fin 1 => x) - (fun _ => y)‖ = ‖x - y‖ :=
+    pi_norm_const (ι := Fin 1) (x - y)
+  rwa [hn] at h
+
+end Univariate
 
 section VectorField
 

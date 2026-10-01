@@ -1,6 +1,7 @@
 import RadiiPolynomial.Examples.PowerSeries.Example77.Algebra
 import RadiiPolynomial.Certification
 import RadiiPolynomial.Tactic.FinMatrixBound
+import RadiiPolynomial.Certification.PowerSeries.PolynomialZero
 
 /-!
 # Example 7.7 — Certificate
@@ -283,12 +284,39 @@ lemma A_injective :
     (defect_matrixNorm_le.trans_lt (by unfold Z₀_bound; norm_num))
     (approxInverse_tailDiag_ne_zero sol A_mat)
 
-/-! ## Main Theorem -/
+/-! ## Main Theorem
+
+The equation is the member `P = X·X` of the polynomial-zero family, with the same `x̄`, `A`
+columns, radius and bounds as above; one `decide +kernel` checks every bound in `ℚ`. -/
+
+/-- The certificate data of parameter set 1 as a `PolyZeroData`. -/
+def data : PolyZeroData where
+  P := .mul (.X 0) (.X 0)
+  N := 2
+  νq := ν_q
+  aQ := #[ā₀, ā₁, ā₂]
+  cQ := #[lam0, 1]
+  Acols := ![#[8660/10000, -12990/10000, 29240/10000], #[0, 8660/10000, -12990/10000],
+    #[0, 0, 8660/10000]]
+  r₀ := r₀
+  Y₀ := 9/500
+  Z₀ := 2/1000
+  Z₁ := 46/100
+  Z₂ := 28/10
+
+/-- The single certificate obligation. -/
+theorem data_checks : data.Checks := by decide +kernel
 
 theorem main_theorem :
     ∃! xTilde ∈ Metric.closedBall (sol.toL1 : l1Weighted ν_val) r₀,
       F lam0 xTilde = 0 :=
-  existsUnique sol A_mat lam0 r₀_pos Y₀_le Z₀_le Z₁_le
-    (fun c hc => Z₂_le c hc) radii_neg A_injective
+  data.existsUnique rfl _ _
+    (fun n => by
+      rw [ApproxSolution.toL1_toSeq]
+      rcases n with _ | _ | _ | n <;> simp [ApproxSolution.toSeq, sol, data,
+      PolyZeroData.a, Array.getD_eq_getD_getElem?])
+    (fun n => by rcases n with _ | _ | n <;> simp [c, paramSeq, data, PolyZeroData.cq,
+      Array.getD_eq_getD_getElem?])
+    data_checks
 
 end Example77.Cert

@@ -57,6 +57,15 @@ instance symmetricSubalgebra.instCompleteSpace :
     CompleteSpace (symmetricSubalgebra ν) :=
   (isClosed_symmetricSubalgebra ν).completeSpace_coe
 
+/-- The flip-fixed algebra has a unit of norm one: its unit is the unit of the bilateral algebra.
+(Mathlib's `SubringClass.toNormOneClass` is stated for the `SubringClass` norm structure, which
+agrees with `Subalgebra.normedRing` here only after unfolding, so instance search does not use it.) -/
+instance symmetricSubalgebra.instNormOneClass :
+    NormOneClass (symmetricSubalgebra ν) :=
+  ⟨by
+    change ‖((1 : symmetricSubalgebra ν) : l1Chebyshev ν)‖ = 1
+    rw [OneMemClass.coe_one, norm_one]⟩
+
 private def symmetricEvalAlgHom (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
     (t : ℝ) (ht : |t| ≤ 1) : symmetricSubalgebra ν →ₐ[ℝ] ℝ where
   toFun a := eval (a : l1Chebyshev ν) t

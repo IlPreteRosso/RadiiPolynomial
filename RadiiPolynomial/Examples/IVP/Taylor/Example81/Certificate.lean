@@ -1,5 +1,6 @@
 import RadiiPolynomial.Examples.IVP.Taylor.Example81.Algebra
 import RadiiPolynomial.Certification
+import RadiiPolynomial.Certification.IVP.Taylor
 import RadiiPolynomial.Tactic.FinMatrixBound
 
 /-!
@@ -14,6 +15,16 @@ Uses `data : StdIVPData` from Algebra.lean for all standard constructions.
 
 The approximate inverse is the **exact** inverse of DF^(N)(ā) in ℚ, so the defect is
 identically zero and Z₀ = 0.
+
+## Routes through the Taylor certification adapter
+
+`Z₀`, the exact column `Z₁` and `Z₂` are read off the ν-free record `dataQ` of `data`
+(`Certification/IVP/Taylor.lean`), each by one `decide +kernel`: `Z₀ = 0` through the
+exact-columns slot at grid denominator `10⁶⁰`; the column `Z₁` together with the Jacobian
+clause; `Z₂` through the active-block evaluator at the computed scale `ν_q · DLipBoundQ`.
+The field `x² − x` is syntactically quadratic: its partial `2x − 1` is syntactically affine, so
+the syntactic derivative-Lipschitz constant is `2` at every radius, and the single component is
+active.
 -/
 
 open scoped BigOperators Topology
@@ -25,32 +36,16 @@ namespace Example81.Cert
 
 /-! ## Z₀ — Defect bound (exact inverse → zero defect) -/
 
-private def defectBlockCols (l j : Fin L) (k : Fin (N + 1)) : Array ℚ :=
-  Array.ofFn fun (i : Fin (N + 1)) =>
-    blockDefectMatQ (fun l m k => A_col l m (k : ℕ)) (fun m j k => DF_col m j (k : ℕ)) l j i k
+/-- The ν-free record of `data` (`dataQ.toStdIVPData ν_val ν_val_eq_q = data` by `rfl`). -/
+private def dataQ : IVP.StdIVPDataQ L N :=
+  ⟨Example81.A_col, Example81.DF_col, fun _ => abar_0, ν_q, data.habar_size⟩
 
-private lemma Array.getD_ofFn_fin {n : ℕ} (f : Fin n → α) (i : Fin n) (d : α) :
-    (Array.ofFn f).getD (i : ℕ) d = f i := by
-  simp [Array.getD, Array.size_ofFn, i.isLt, Array.getElem_ofFn]
-
-private lemma defectBlockCol_correct (l j : Fin L) (i k : Fin (N + 1)) :
-    data.defect.finBlock l j i k = ((defectBlockCols l j k).getD (i : ℕ) 0 : ℝ) := by
-  rw [defectBlockCols, Array.getD_ofFn_fin]
-  have := blockDefectMatQ_correct
-    (fun l m => data.A_finBlock l m) (fun m j => data.DF_finBlock m j)
-    (fun l m (k : Fin (N + 1)) => A_col l m (k : ℕ))
-    (fun m j (k : Fin (N + 1)) => DF_col m j (k : ℕ))
-    (fun l m j i => by simp [IVP.StdIVPData.A_finBlock, data])
-    (fun m j k i => by simp [IVP.StdIVPData.DF_finBlock, data])
-    l j i k
-  show ((if l = j then 1 else 0) - ∑ m, data.A_finBlock l m * data.DF_finBlock m j) i k = _
-  exact this
+/-- The `Z₀` clause at the exact-columns slot, grid denominator `10⁶⁰`. -/
+private theorem z0_slot10 : dataQ.ChecksZ₀By .exactCols (10 ^ 60) Z₀_bound := by decide +kernel
 
 lemma Z₀_finBlockNorm_le :
-    finiteBlockMatrixNorm ν_val data.defect.finBlock ≤ (Z₀_bound : ℝ) := by
-  finmatrix_bound
-    (finiteBlockMatrixNorm_le_of_Q_le _ defectBlockCols ν_q
-      (fun l j k i => defectBlockCol_correct l j i k) ν_val_eq_q)
+    finiteBlockMatrixNorm ν_val data.defect.finBlock ≤ (Z₀_bound : ℝ) :=
+  dataQ.defectZBy_sound ν_val_eq_q .exactCols (10 ^ 60) z0_slot10
 
 /-! ## ‖A‖ bound (for Z₂) -/
 
@@ -160,17 +155,11 @@ lemma Z₁_le_cert :
 
 The production `Z₁_le_cert` above certifies the recipe value
 `Z₁_bound = ν/(N+1) · ‖2ā₀ − 1‖ = 396482/7983360 ≈ 0.0496636`. The exact
-weighted column-sup of the Z₁ tail operator is strictly smaller; the lemmas
-below certify it through `ivp_Z₁_le_exact` + the ℚ column bridge
-(`Certification/ColumnTailBound.lean`). Production `Z₁_le_cert`/`Z₁_bound`
+weighted column-sup of the Z₁ tail operator is strictly smaller; the lemma
+below certifies it through the column `Z₁` slot of the Taylor certification adapter
+(`IVP.StdIVPDataQ.Z₁col_sound`, over the ℚ column bridge of
+`Certification/ColumnTailBound.lean`). Production `Z₁_le_cert`/`Z₁_bound`
 are untouched. -/
-
-/-- Structural rewrite: the derivative component `Df h l` is left
-multiplication of `h 0` by the element `b = 2•ā₀ − 1`. -/
-private lemma Df_eq_leftMul (h : XL1 ν_val L) (l : Fin L) :
-    Df h l = (2 • data.abar 0 - (1 : l1Weighted ν_val)) * h 0 := by
-  show 2 • (data.abar 0 * h 0) - h 0 = _
-  ring
 
 /-- Exact column-sup value of the Z₁ tail operator (tightening B): the maximum
 over `M ∈ [0..N]` of the exact ℚ column tail masses
@@ -181,57 +170,38 @@ by `shiftDivN_leftMul_tail_col_antitone`). Strictly below the recipe
 `Z₁_bound = 396482/7983360 ≈ 0.0496636` (ratio ≈ 0.986). -/
 def Z₁_exact_bound : ℚ := 482763031 / 9859449600
 
+/-- The Jacobian clause and the column `Z₁` clause at `Z₁_exact_bound`. -/
+private theorem z1_checks :
+    dataQ.ChecksDF f_cpoly ∧ dataQ.ChecksZ₁col f_cpoly Z₁_exact_bound := by
+  decide +kernel
+
 /-- **Exact Z₁ bound** (tightening B): same LHS as `Z₁_le_cert`, with the
 recipe `ν/(N+1) · ‖2ā₀ − 1‖` replaced by the exact weighted column-sup,
-certified by one `native_decide` over the finite column range `M ≤ N`. -/
+certified through the column `Z₁` slot (`IVP.StdIVPDataQ.Z₁col_sound`) by one
+`decide +kernel` (`z1_checks`) over the finite column range `M ≤ N`. -/
 theorem Z₁_le_exact :
     Z₁_norm (data.G f x₀) data.abar (ContinuousLinearMap.id ℝ (XL1 ν_val L))
-      (data.composedApprox.toCLM (ν := ν_val)) ≤ ((Z₁_exact_bound : ℚ) : ℝ) := by
-  have hC : (0 : ℝ) ≤ ((Z₁_exact_bound : ℚ) : ℝ) := by
-    norm_num [Z₁_exact_bound]
-  -- Exact ℚ column check on the finite range M ≤ N (one native_decide),
-  -- extended to all M by the antitone lemma.
-  have hcols := shiftDivN_leftMul_tail_cols_le_of_Q
-    (2 • data.abar 0 - (1 : l1Weighted ν_val)) two_abar_sub_one_Q ν_q 10 N
-    (C := Z₁_exact_bound)
-    two_abar_sub_one_toSeq
-    (fun k hk => by
-      simp [Array.getD, show ¬(k < two_abar_sub_one_Q.size) from by
-        simp [two_abar_sub_one_Q]; omega])
-    ν_val_eq_q
-    (by native_decide)
-  have hDtail : ∀ h : XL1 ν_val L, ∀ l : Fin L,
-      ∑' n, |l1Weighted.toSeq (shiftDivN (Df h l)) (n + (N + 1))| *
-        (ν_val : ℝ) ^ (n + (N + 1)) ≤ ((Z₁_exact_bound : ℚ) : ℝ) * ‖h‖ := by
-    intro h l
-    rw [Df_eq_leftMul h l]
-    refine (shiftDivN_leftMul_tail_le_of_cols _ N hcols (h 0)).trans ?_
-    exact mul_le_mul_of_nonneg_left (norm_le_pi_norm h 0) hC
-  exact data.Z₁_le_exact_of_compPoly f_cpoly x₀ composedApprox_eq_fderiv_G_fin Df
-    Df_eq_fderiv hC hDtail le_rfl
+      (data.composedApprox.toCLM (ν := ν_val)) ≤ ((Z₁_exact_bound : ℚ) : ℝ) :=
+  dataQ.Z₁col_sound ν_val_eq_q f_cpoly x₀ z1_checks.1 z1_checks.2
 
 /-! ## Z₂ bound -/
 
-/-- **Z₂ obligation** through the `Z₂` socket: the syntactic derivative Lipschitz
-constant of `X² − X` is `2 = lipschitzBound (2X − 1)`, radius-free since the system
-has degree `≤ 2`; the exact-ℚ block-norm check of the preconditioner is the one
-`native_decide`. -/
+/-- The certificate radius is nonnegative. -/
+private theorem hr₀ : (0 : ℚ) ≤ r_minus := by decide +kernel
+
+/-- The `Z₂` clause at the certificate radius. -/
+private theorem z2 : dataQ.ChecksZ₂ f_cpoly r_minus Z₂_bound := by decide +kernel
+
+/-- **Z₂ obligation** through the `Z₂` clause of the Taylor adapter: the active-block evaluator
+at the computed scale `ν_q · DLipBoundQ` (the syntactic derivative-Lipschitz constant of
+`X² − X` at the radii `‖ā‖ + r₀`, which is `2`) and the computed active set, one
+`decide +kernel` (`z2`). -/
 lemma Z₂_le_cert (c : XL1 ν_val L)
     (hc : c ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ)) :
     Z₂_norm (data.G f x₀) data.abar
       (ContinuousLinearMap.id ℝ (XL1 ν_val L)) c ≤
       (Z₂_bound : ℝ) * (r_minus : ℝ) :=
-  data.Z₂_le_of_compPoly f_cpoly x₀ {0}
-    (fun l => Z₂_blockNorm_component_le data.approxInverse ABlockCols ν_q
-      (IVP.StdIVPData.approxInverse_tailBound_q (N := N)) {0}
-      (fun l j k i => data.A_finBlock_eq l j i k) ν_val_eq_q
-      data.approxInverse_tailBound_eq (by native_decide) l)
-    (by unfold r_minus; positivity)
-    (fun j hj => absurd (Finset.mem_singleton.mpr (Subsingleton.elim j 0)) hj)
-    (fun _ _ l => by
-      simp [MvPolyBridge.CompPoly.derivativeLipschitzBound, f_cpoly]
-      norm_num)
-    c hc
+  dataQ.Z₂_sound ν_val_eq_q f_cpoly x₀ hr₀ z2 c hc
 
 /-! ## Radii polynomial -/
 

@@ -27,7 +27,9 @@ namespace Example81
 
 abbrev N : ℕ := 10
 abbrev L : ℕ := 1
-instance : NeZero L := ⟨by decide⟩
+/-- Scoped: `L` is a reducible abbreviation of the numeral, so a global instance would also
+serve every `NeZero 1` query outside this example. -/
+scoped instance : NeZero L := ⟨by decide⟩
 abbrev ν_q : ℚ := 1
 def ν_val : PosReal := ⟨1, by norm_num⟩
 

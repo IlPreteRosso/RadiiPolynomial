@@ -1,6 +1,6 @@
 import RadiiPolynomial.Operators.BlockDiagonal.Scalar
 import RadiiPolynomial.Tactic.AutoPolyFDeriv
-import RadiiPolynomial.Core.AffineZ2
+import RadiiPolynomial.Applications.PowerSeries.AffineZ2
 
 /-!
 # Example 7.7 — Algebraic Infrastructure
@@ -19,7 +19,7 @@ Uses the `RadiiPolynomial/BlockDiagSystem` API exclusively.
    `approxDeriv_sub_fderiv_fin_kill` (fin modes vanish via `toScalarCLM_toSeq_fin_eq_cauchy`),
    `approxDeriv_sub_fderiv_tail_eq` (tail equals `-2•leftMul(shiftedL1)`),
    `Z₁_le_via_eval` (chains `Z₁_le_of_fin_kill_tail_dom`)
-5. **Z₂**: via `Z₂_ball_bound_of_affine_leftMul` from `Z2Affine.lean`
+5. **Z₂**: via `Z₂_ball_bound_of_affine_leftMul` from `Applications/PowerSeries/AffineZ2.lean`
 6. **Main theorem**: `existsUnique` skeleton via `general_radii_polynomial_theorem`
 -/
 
@@ -305,7 +305,7 @@ lemma Z₁_le_via_eval {N : ℕ} {ν : PosReal}
           ((norm_leftMul_le _).trans_eq (shiftedL1_norm sol)) (by positivity)))
       (approxInverse sol A_mat).tailBound_nonneg))
 
-/-! ### Z₂: via `Z₂_ball_bound_of_affine_leftMul` from Z2Affine.lean
+/-! ### Z₂: via `Z₂_ball_bound_of_affine_leftMul` from `Applications/PowerSeries/AffineZ2.lean`
 
 The fderiv of F is affine in `leftMul` with α = 2, K = 0, so the generic
 `Z₂_ball_bound_of_affine_leftMul` gives `Z₂_norm ≤ |2| * ‖A‖ * r₀ = 2 * ‖A‖ * r₀`. -/

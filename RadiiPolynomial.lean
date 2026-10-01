@@ -36,9 +36,25 @@ import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Applications.IVP.Taylor.Analytic
 import RadiiPolynomial.Applications.IVP.Taylor.Analyticity
 import RadiiPolynomial.Applications.IVP.Taylor.ComplexTime
+import RadiiPolynomial.Certification.IVP.Taylor
 
 -- Chebyshev IVP application
 import RadiiPolynomial.Applications.IVP.Chebyshev
+import RadiiPolynomial.Certification.IVP.Chebyshev
+
+-- Galerkin application
+import RadiiPolynomial.Applications.Galerkin.Face
+
+-- Finite-dimensional application
+import RadiiPolynomial.Applications.FiniteDimensional.Face
+import RadiiPolynomial.Applications.FiniteDimensional.Polynomial
+import RadiiPolynomial.Applications.FiniteDimensional.Scalar
+import RadiiPolynomial.Applications.FiniteDimensional.Periodic
+
+-- Power-series application
+import RadiiPolynomial.Applications.PowerSeries.AffineZ2
+import RadiiPolynomial.Applications.PowerSeries.PolynomialZero
+import RadiiPolynomial.Certification.PowerSeries.PolynomialZero
 
 -- Examples
 import RadiiPolynomial.Examples
