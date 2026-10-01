@@ -152,16 +152,16 @@ theorem evenLift_J (x : Fin N → ℝ) (m : ℤ) :
       if h : 1 ≤ m.natAbs ∧ m.natAbs ≤ N then x ⟨m.natAbs - 1, by omega⟩ else 0 := by
   unfold evenLift
   by_cases hN : m.natAbs ≤ N
-  · rw [dif_pos hN]
+  · rw [dite_eq_left hN]
     rcases Nat.eq_zero_or_pos m.natAbs with h0 | hpos
-    · rw [dif_neg (by omega),
+    · rw [dite_eq_right (by omega),
         show (⟨m.natAbs, Nat.lt_succ_of_le hN⟩ : Fin (N + 1)) = 0 from Fin.ext h0]
       rfl
-    · rw [dif_pos ⟨hpos, hN⟩,
+    · rw [dite_eq_left ⟨hpos, hN⟩,
         show (⟨m.natAbs, Nat.lt_succ_of_le hN⟩ : Fin (N + 1)) =
           Fin.succ ⟨m.natAbs - 1, by omega⟩ from Fin.ext (by simp; omega)]
       rfl
-  · rw [dif_neg hN, dif_neg (by omega)]
+  · rw [dite_eq_right hN, dite_eq_right (by omega)]
 
 /-- The diblock lift into the one-component algebra space `(symmetricSubalgebra ν)^1`. -/
 def ιD1 : (Fin N → ℝ) →L[ℝ] (Fin 1 → symmetricSubalgebra ν) := ContinuousLinearMap.pi fun _ => ιD
@@ -193,7 +193,7 @@ theorem diblockNorm_smul_πD_le (a : ℝ) (w : l1Chebyshev.symmetricSubalgebra �
     2 * ∑ k, |(a • πD (N := N) w) k| ≤ |a| * ‖w‖ := by
   rw [diblockNorm_eq, map_smul, norm_smul, Real.norm_eq_abs]
   refine mul_le_mul_of_nonneg_left ((norm_J_Tl_le (πN w)).trans ?_) (abs_nonneg a)
-  simpa using ContinuousLinearMap.le_of_opNorm_le _ norm_πN_le w
+  exact (ContinuousLinearMap.le_of_opNorm_le _ norm_πN_le w).trans_eq (one_mul _)
 
 theorem norm_ιD1 (x : Fin N → ℝ) :
     ‖(ιD1 (ν := ν₁) x : Fin 1 → l1Chebyshev.symmetricSubalgebra ν₁)‖ = 2 * ∑ k, |x k| := by

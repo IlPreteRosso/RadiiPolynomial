@@ -46,5 +46,5 @@ macro "pderiv_simp" "[" defns:simpLemma,* "]" : tactic => `(tactic|
           Pi.single_apply, Fin.isValue,
           mul_ite, mul_one, mul_zero, ite_mul, one_mul, zero_mul,
           add_zero, zero_add, neg_zero, sub_zero, zero_sub, neg_neg,
-          if_true, if_false, ite_self]
+          ite_true, ite_false, ite_self]
        <;> first | rfl | ring | norm_cast)))

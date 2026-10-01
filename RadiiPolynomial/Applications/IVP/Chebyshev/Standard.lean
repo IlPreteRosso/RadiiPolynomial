@@ -81,7 +81,7 @@ def approxInverse : SystemBlockDiagData L N where
     have hpos : (0 : ℝ) < 2 * (n : ℝ) := by positivity
     have hN1 : 2 * ((N : ℝ) + 1) ≤ 2 * (n : ℝ) := by
       exact_mod_cast (show 2 * (N + 1) ≤ 2 * n by omega)
-    rw [if_neg hne, abs_of_pos (div_pos one_pos hpos)]
+    rw [ite_eq_right hne, abs_of_pos (div_pos one_pos hpos)]
     exact one_div_le_one_div_of_le (by positivity) hN1
 
 /-- Bridge: A_finBlock entries = ℚ cast of A_col data. -/
@@ -105,14 +105,14 @@ def approxDeriv : BlockDiagOp L N where
 lemma tailCancel (l : Fin L) (n : ℕ) (hn : N < n) :
     d.approxInverse.tailDiag l n * d.approxDeriv.tailDiag l n = 1 := by
   simp only [approxInverse, approxDeriv]
-  rw [if_neg (by omega : n ≠ 0)]
+  rw [ite_eq_right (by omega : n ≠ 0)]
   have hne : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
   field_simp
 
 /-- A.tailDiag = 1/(2k) for k > N. -/
 lemma htail_diag_inv (l : Fin L) (n : ℕ) (hn : N < n) :
     d.approxInverse.tailDiag l n = 1 / (2 * (↑n : ℝ)) := by
-  simp only [approxInverse, if_neg (by omega : n ≠ 0)]
+  simp only [approxInverse, ite_eq_right (by omega : n ≠ 0)]
 
 /-- Defect D = I - A·A†. -/
 def defect : SystemBlockDiagData L N :=
@@ -140,7 +140,7 @@ lemma abar_seq_eq_getD (l : Fin L) (k : ℕ) :
   · simp [hk]
   · simp only [show ¬(k ≤ N) from hk, ↓reduceIte]
     symm; simp only [Array.getD]
-    rw [dif_neg (by rw [d.habar_size l]; omega)]; simp
+    rw [dite_eq_right (by rw [d.habar_size l]; omega)]; simp
 
 /-- Memℓp proof for the finitely-supported abar embedding. -/
 lemma abar_memℓp (l : Fin L) :

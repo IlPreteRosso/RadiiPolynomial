@@ -337,13 +337,13 @@ lemma SystemBlockDiagData.actionFinite_component_norm_le_restricted
   refine (Finset.sum_le_sum (g := fun j =>
       if j ∈ active then blockEntryNorm ν A.finBlock l j * ‖x‖ else 0) fun j _ => ?_).trans_eq ?_
   · by_cases hj : j ∈ active
-    · rw [if_pos hj]; exact mul_le_mul_of_nonneg_left
+    · rw [ite_eq_left hj]; exact mul_le_mul_of_nonneg_left
         ((by simpa [toCoeff, l1Weighted.toSeq] using
           l1Weighted.finSum_weighted_toSeq_le_norm (ν := ν) (a := x j) (N := N) :
           ∑ k : Fin (N + 1), |toCoeff (ν := ν) x j k| * (ν : ℝ) ^ (k : ℕ) ≤ ‖x j‖).trans
           (norm_le_pi_norm x j))
         (blockEntryNorm_nonneg (ν := ν) A.finBlock l j)
-    · rw [if_neg hj]; simp [toCoeff_eq_zero (hzero j hj)]
+    · rw [ite_eq_right hj]; simp [toCoeff_eq_zero (hzero j hj)]
   · rw [← Finset.sum_filter (p := (· ∈ active))]
     exact (Finset.sum_congr (by ext; simp) fun _ _ => rfl).trans (Finset.sum_mul ..).symm
 
@@ -428,9 +428,9 @@ lemma SystemBlockDiagData.norm_toCLM_component_le_restricted [NeZero L]
   have htail_restricted : A.tailBound * ‖w l‖ ≤
       (if l ∈ active then A.tailBound else 0) * ‖w‖ := by
     by_cases hl : l ∈ active
-    · rw [if_pos hl]
+    · rw [ite_eq_left hl]
       exact mul_le_mul_of_nonneg_left (norm_le_pi_norm w l) (A.tailBound_nonneg_at l)
-    · rw [if_neg hl, zero_mul]
+    · rw [ite_eq_right hl, zero_mul]
       exact le_of_eq (by rw [hzero l hl, norm_zero, mul_zero])
   exact ((norm_add_le _ _).trans (add_le_add hfin htail)).trans
     ((add_le_add le_rfl htail_restricted).trans_eq (by ring))
@@ -1016,7 +1016,7 @@ lemma FiniteBlockMatrix.isUnit_toMatrix_of_blockNorm_lt_one [NeZero L]
     -- Lift v to XL1 ν L
     let c : SystemCoeff L := fun l n =>
       if h : n < N + 1 then v (l, ⟨n, h⟩) else 0
-    have hc_tail : ∀ l n, ¬(n < N + 1) → c l n = 0 := fun l n h => dif_neg h
+    have hc_tail : ∀ l n, ¬(n < N + 1) → c l n = 0 := fun l n h => dite_eq_right h
     have hc_mem : ∀ l : Fin L, l1Weighted.Mem ν (c l) := by
       intro l; rw [l1Weighted.mem_iff]
       exact summable_of_ne_finset_zero (s := Finset.range (N + 1))
@@ -1062,7 +1062,7 @@ lemma FiniteBlockMatrix.isUnit_toMatrix_of_blockNorm_lt_one [NeZero L]
               (∑ m : Fin L, ∑ p : Fin (N + 1),
                 A l m n' p * B m j p k) * v (j, k) := by
             intro j k; rw [hblock]; show _ * c j ↑k = _ * v (j, k)
-            congr 1; exact dif_pos k.prop
+            congr 1; exact dite_eq_left k.prop
           simp_rw [hterm]
           exact h0
         linarith

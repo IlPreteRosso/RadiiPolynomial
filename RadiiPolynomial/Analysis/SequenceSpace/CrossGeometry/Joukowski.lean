@@ -340,20 +340,20 @@ theorem eval_joukowskiGen (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
     l1Chebyshev.eval_add (single 1 1) (single (-1) 1) ht]
   have hpos : l1Chebyshev.eval (single 1 1 : l1Chebyshev ν) t = 2 * t := by
     unfold l1Chebyshev.eval
-    rw [l1Chebyshev.toSeq_single, if_neg (by norm_num : (0 : ℤ) ≠ 1)]
+    rw [l1Chebyshev.toSeq_single, ite_eq_right (by norm_num : (0 : ℤ) ≠ 1)]
     simp only [zero_add]
     rw [tsum_eq_single 0]
     · norm_num [Polynomial.Chebyshev.T_one]
-      rw [l1Chebyshev.toSeq_single, if_pos rfl]
+      rw [l1Chebyshev.toSeq_single, ite_eq_left rfl]
       ring
     · intro k hk
-      rw [l1Chebyshev.toSeq_single, if_neg (by omega), zero_mul]
+      rw [l1Chebyshev.toSeq_single, ite_eq_right (by omega), zero_mul]
   have hneg : l1Chebyshev.eval (single (-1) 1 : l1Chebyshev ν) t = 0 := by
     unfold l1Chebyshev.eval
-    rw [l1Chebyshev.toSeq_single, if_neg (by norm_num : (0 : ℤ) ≠ -1)]
+    rw [l1Chebyshev.toSeq_single, ite_eq_right (by norm_num : (0 : ℤ) ≠ -1)]
     simp only [zero_add]
     rw [tsum_congr (fun k => by
-      rw [l1Chebyshev.toSeq_single, if_neg (by omega), zero_mul]), tsum_zero, mul_zero]
+      rw [l1Chebyshev.toSeq_single, ite_eq_right (by omega), zero_mul]), tsum_zero, mul_zero]
   rw [hpos, hneg]
   norm_num
   ring

@@ -286,7 +286,7 @@ private theorem borderedEvalCLM_nonnegRestrict
   rw [← tsum_mul_left]
   exact tsum_congr fun k => by
     rw [l1Chebyshev.nonnegRestrictCLM_apply, nonnegRestrict_toSeq]
-    simp only [Nat.succ_ne_zero, chebyshevStorageFactor, if_false, smul_eq_mul]
+    simp only [Nat.succ_ne_zero, chebyshevStorageFactor, ite_false, smul_eq_mul]
     have hseq : lpOneAlg.toRealSeq (a : l1Chebyshev ν) ((k + 1 : ℕ) : ℤ) =
         l1Chebyshev.toSeq (a : l1Chebyshev ν) ((k + 1 : ℕ) : ℤ) := rfl
     rw [hseq]

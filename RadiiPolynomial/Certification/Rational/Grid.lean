@@ -140,7 +140,7 @@ theorem initCol_getD (N : ℕ) (δ : Bool) (c i : ℕ) (hi : i < N + 1) :
   simp only [Option.map_some, Option.getD_some]
   by_cases h : δ = true ∧ i = c
   · obtain ⟨h1, h2⟩ := h; subst h1 h2; simp
-  · rw [if_neg h, if_neg (by simpa [Bool.and_eq_true, beq_iff_eq] using h)]
+  · rw [ite_eq_right h, ite_eq_right (by simpa [Bool.and_eq_true, beq_iff_eq] using h)]
     simp
 
 theorem defectColF_length {L : ℕ} (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ) (N : ℕ)
@@ -534,7 +534,7 @@ theorem initColB_spec (S N : ℕ) (δ : Bool) (c i : ℕ) (hi : i < N + 1) :
   simp only [Option.map_some, Option.getD_some]
   by_cases h : δ = true ∧ i = c
   · obtain ⟨h1, h2⟩ := h; subst h1 h2; simp [PM.val]
-  · rw [if_neg h, if_neg (by simpa [Bool.and_eq_true, beq_iff_eq] using h)]
+  · rw [ite_eq_right h, ite_eq_right (by simpa [Bool.and_eq_true, beq_iff_eq] using h)]
     simp [PM.val]
 
 theorem defectColB_length {L : ℕ} (S : ℕ) (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ) (N : ℕ)

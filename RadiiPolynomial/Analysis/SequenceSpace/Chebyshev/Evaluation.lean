@@ -119,8 +119,8 @@ lemma eval_neg (a : l1Chebyshev ν) (t : ℝ) : eval (-a) t = -eval a t := by
 
 lemma eval_one (t : ℝ) : eval (1 : l1Chebyshev ν) t = 1 := by
   unfold eval
-  rw [toSeq_one, if_pos rfl, tsum_congr (fun k => by
-    rw [toSeq_one, if_neg (by omega : ((k + 1 : ℕ) : ℤ) ≠ 0), zero_mul]), tsum_zero]
+  rw [toSeq_one, ite_eq_left rfl, tsum_congr (fun k => by
+    rw [toSeq_one, ite_eq_right (by omega : ((k + 1 : ℕ) : ℤ) ≠ 0), zero_mul]), tsum_zero]
   ring
 
 lemma eval_at_one (a : l1Chebyshev ν) :

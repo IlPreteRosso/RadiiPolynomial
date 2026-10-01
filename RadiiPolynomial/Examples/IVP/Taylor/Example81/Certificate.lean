@@ -90,7 +90,7 @@ private lemma Y₀_eval_correct (l : Fin L) (n : ℕ) :
     (fun _l n => F_Q n) ABlockCols (fun _l n => 1 / (n : ℚ)) ν_q
     (fun l j k i => data.A_finBlock_eq l j i k)
     (fun l n => F_bridge l n)
-    (fun _l n hn => by simp [IVP.StdIVPData.approxInverse, if_neg (by omega : n ≠ 0)])
+    (fun _l n hn => by simp [IVP.StdIVPData.approxInverse, ite_eq_right (by omega : n ≠ 0)])
     ν_val_eq_q l n {}
 
 lemma Y₀_le :

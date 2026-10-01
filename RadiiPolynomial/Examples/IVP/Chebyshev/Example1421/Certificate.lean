@@ -58,7 +58,7 @@ lemma abar_0_size : abar_0.size = N + 1 := by decide +kernel
 lemma qbar_eq_zero {k : ℕ} (hk : N < k) : qbar k = 0 := by
   unfold qbar
   simp only [Array.getD]
-  rw [dif_neg (by rw [abar_0_size]; omega)]
+  rw [dite_eq_right (by rw [abar_0_size]; omega)]
 
 /-- ℚ fold: `(S ā · S ā)_m` for `m ≥ 0` (symmetric-extension convolution),
 indexed by `j ∈ range (2N+1)` via `i = j − N` to stay computable. -/

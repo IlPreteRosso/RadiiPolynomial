@@ -115,11 +115,11 @@ theorem action_eq_actionQ (d : StdChebIVPData ν L N) (c : SystemCoeff L)
     d.approxInverse.action c l n = (actionQ N d.A_col cq l n : ℝ) := by
   unfold actionQ
   by_cases hn : n ≤ N
-  · rw [SystemBlockDiagData.action_finite _ _ _ _ hn, if_pos hn]
+  · rw [SystemBlockDiagData.action_finite _ _ _ _ hn, ite_eq_left hn]
     push_cast
     simp only [hc]
     rfl
-  · rw [SystemBlockDiagData.action_tail _ _ _ _ (by omega), if_neg hn,
+  · rw [SystemBlockDiagData.action_tail _ _ _ _ (by omega), ite_eq_right hn,
       d.htail_diag_inv l n (by omega), hc]
     push_cast
     ring
@@ -220,7 +220,7 @@ theorem TCcolQ_eq_zero_of_ge (N : ℕ) (A_col : Fin L → Fin L → ℕ → Arra
   · obtain ⟨kv, hkv⟩ : ∃ kv, (k : ℕ) = kv + 1 := ⟨(k : ℕ) - 1, by omega⟩
     rw [hkv, show FCe mn (kv + 1)
         = (if kv + 2 = mn then 1 else 0) - (if kv = mn then 1 else 0) from rfl,
-      if_neg (by omega), if_neg (by omega)]
+      ite_eq_right (by omega), ite_eq_right (by omega)]
     ring
 
 theorem TCblockGen_nonneg (N : ℕ) (A_col : Fin L → Fin L → ℕ → Array ℚ) {ν_q : ℚ}
@@ -287,12 +287,12 @@ theorem toSeq_pi_single_nat {L : ℕ} (j l : Fin L) (m : ℤ) (n : ℕ) :
   · subst hl
     rw [Pi.single_eq_same, l1Chebyshev.toSeq_single]
     simp
-  · rw [Pi.single_eq_of_ne hl, l1Chebyshev.toSeq_zero, if_neg (fun h => hl h.1)]
+  · rw [Pi.single_eq_of_ne hl, l1Chebyshev.toSeq_zero, ite_eq_right (fun h => hl h.1)]
 
 theorem toSeq_pi_single_negSucc_nat {L : ℕ} (j l : Fin L) (m : ℕ) (n : ℕ) :
     l1Chebyshev.toSeq ((Pi.single j (l1Chebyshev.single (ν := ν) (Int.negSucc m) 1) :
       Fin L → l1Chebyshev ν) l) n = 0 := by
-  rw [toSeq_pi_single_nat, if_neg (fun h => by have := h.2; omega)]
+  rw [toSeq_pi_single_nat, ite_eq_right (fun h => by have := h.2; omega)]
 
 omit [Fact (1 ≤ (ν : ℝ))] in
 theorem FCseq_single_nat (mn k : ℕ) :
@@ -335,14 +335,14 @@ theorem TCtailElem_norm_le_tail (N : ℕ) (v : l1Chebyshev ν) :
     have hiN : i ≤ N := by simp [Finset.mem_range] at hi; omega
     show ‖(TCtailElem N v) (↑i : ℤ)‖ = 0
     show ‖(if N < i then chebyshevShiftDiv v (↑i : ℤ) else 0)‖ = 0
-    rw [if_neg (not_lt.mpr hiN)]
+    rw [ite_eq_right (not_lt.mpr hiN)]
     exact norm_zero
   have htail_eq : (∑' n : ℕ, g ↑(n + (N + 1)))
       = ∑' n : ℕ, ‖(chebyshevShiftDiv v) (↑(n + (N + 1)) : ℤ)‖ :=
     tsum_congr fun n => by
       show ‖(TCtailElem N v) (↑(n + (N + 1)) : ℤ)‖ = _
       show ‖(if N < n + (N + 1) then chebyshevShiftDiv v (↑(n + (N + 1)) : ℤ) else 0)‖ = _
-      rw [if_pos (by omega)]
+      rw [ite_eq_left (by omega)]
   rw [h_norm, h_decomp, hneg0, add_zero, h_split, hfin0, zero_add, htail_eq]
   exact chebyshevShiftDiv_tailTsum_le_div v N
 
@@ -458,12 +458,12 @@ theorem TClj_col_le (d : StdChebIVPData ν L N) (l j : Fin L) (m : ℤ) :
   have hpow : (0 : ℝ) ≤ (ν : ℝ) ^ m.natAbs := pow_nonneg ν.2.le _
   by_cases hl : l = j
   · subst hl
-    rw [Pi.single_eq_same, if_pos rfl]
+    rw [Pi.single_eq_same, ite_eq_left rfl]
     rw [Pi.single_eq_same, l1Chebyshev.norm_single, abs_one, one_mul] at ht
     push_cast
     rw [← d.hν, add_mul]
     exact add_le_add hb ht
-  · rw [Pi.single_eq_of_ne hl, if_neg hl]
+  · rw [Pi.single_eq_of_ne hl, ite_eq_right hl]
     rw [Pi.single_eq_of_ne hl, norm_zero, mul_zero] at ht
     simp only [add_zero]
     linarith
@@ -658,12 +658,12 @@ theorem compPolyDFQ_far (N : ℕ) (f : Fin L → CompPoly L) (arrs : Fin L → A
   | zero =>
       simp only [compPolyDFQ, true_and]
       by_cases h : j' = j
-      · rw [if_pos h, if_pos h, if_neg (by omega)]
-      · rw [if_neg h, if_neg h]
+      · rw [ite_eq_left h, ite_eq_left h, ite_eq_right (by omega)]
+      · rw [ite_eq_right h, ite_eq_right h]
   | succ k =>
       simp only [compPolyDFQ, compPolyDphiQ, show ¬ (k + 1 = 0) by omega, false_and,
-        if_false, show ¬ (mn = 0) by omega]
-      rw [if_neg (fun h => by omega),
+        ite_false, show ¬ (mn = 0) by omega]
+      rw [ite_eq_right (fun h => by omega),
         CompPoly.evalChebCoeff_eq_zero_of_radius_lt _ _ _ (by omega),
         CompPoly.evalChebCoeff_eq_zero_of_radius_lt _ _ _ (by omega),
         CompPoly.evalChebCoeff_eq_zero_of_radius_lt _ _ _ (by omega),
@@ -678,17 +678,17 @@ theorem chebColNormQ_far (N : ℕ) (A_col DF_col : Fin L → Fin L → ℕ → A
   unfold chebColNormQ colNormAux rowA0Q
   rw [Finset.mul_sum]
   refine Finset.sum_congr rfl fun n _ => ?_
-  rw [DcolAux_jac, if_neg (fun h => by have := n.isLt; omega), dif_neg (by omega)]
+  rw [DcolAux_jac, ite_eq_right (fun h => by have := n.isLt; omega), dite_eq_right (by omega)]
   have hsum : ∑ j' : Fin L, ∑ k : Fin (N + 1), (A_col l j' (k : ℕ)).getD n 0 *
       compPolyDFQ f abar_Q j' j (k : ℕ) mn =
       (A_col l j 0).getD n 0 * (-2 * (-1 : ℚ) ^ mn) := by
     simp_rw [fun (j' : Fin L) (k : Fin (N + 1)) =>
       compPolyDFQ_far N f abar_Q hmn j' j (k : ℕ) (Nat.lt_succ_iff.mp k.isLt)]
     rw [Finset.sum_eq_single j (fun j' _ hj' => Finset.sum_eq_zero fun k _ => by
-        rw [if_neg (fun h => hj' h.2), mul_zero])
+        rw [ite_eq_right (fun h => hj' h.2), mul_zero])
       (fun h => absurd (Finset.mem_univ j) h)]
     rw [Finset.sum_eq_single (0 : Fin (N + 1)) (fun k _ hk => by
-        rw [if_neg (fun h => hk (Fin.ext h.1)), mul_zero])
+        rw [ite_eq_right (fun h => hk (Fin.ext h.1)), mul_zero])
       (fun h => absurd (Finset.mem_univ 0) h)]
     simp
   rw [hsum]
@@ -814,7 +814,7 @@ theorem Z₁_htail (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L) (p : F
       d.TCblockFun_toSeq_nat,
       show d.TCblockSeq (compPolyDerivative f d.abar h) l m = 0 from
         d.TCblockSeq_tail _ l m hm,
-      TCtailElem_toSeq_nat, if_pos hm]
+      TCtailElem_toSeq_nat, ite_eq_left hm]
     ring
   rw [l1Chebyshev.norm_fiber, l1Chebyshev.norm_fiber, hval, abs_neg]
 
@@ -855,13 +855,13 @@ theorem defect_actionFinite_single (d : StdChebIVPData ν L N) (l j : Fin L) (mn
     simp only [Nat.cast_inj]
   simp_rw [hc]
   rw [Finset.sum_eq_single j (fun j' _ hj' => Finset.sum_eq_zero fun k _ => by
-      rw [if_neg (fun h => hj' h.1), mul_zero])
+      rw [ite_eq_right (fun h => hj' h.1), mul_zero])
     (fun h => absurd (Finset.mem_univ j) h)]
   simp only [true_and]
   split_ifs with hmn
   · rw [Finset.sum_eq_single (⟨mn, Nat.lt_succ_of_le hmn⟩ : Fin (N + 1))
-      (fun k _ hk => by rw [if_neg (fun h => hk (Fin.ext h)), mul_zero])
-      (fun h => absurd (Finset.mem_univ _) h), if_pos rfl, mul_one]
+      (fun k _ hk => by rw [ite_eq_right (fun h => hk (Fin.ext h)), mul_zero])
+      (fun h => absurd (Finset.mem_univ _) h), ite_eq_left rfl, mul_one]
     have := blockDefectMatQ_correct
       (fun l m => d.A_finBlock l m) (fun m j => d.DF_finBlock m j)
       (fun l m (k : Fin (N + 1)) => d.A_col l m (k : ℕ))
@@ -870,7 +870,7 @@ theorem defect_actionFinite_single (d : StdChebIVPData ν L N) (l j : Fin L) (mn
         ⟨mn, Nat.lt_succ_of_le hmn⟩
     exact this
   · exact Finset.sum_eq_zero fun k _ => by
-      rw [if_neg (by have := k.isLt; omega), mul_zero]
+      rw [ite_eq_right (by have := k.isLt; omega), mul_zero]
 
 theorem Tlj_single_toSeq (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L) (p : Fin L → ℝ)
     (l j : Fin L) (mn n : ℕ) (hn : n ≤ N) :
@@ -1246,18 +1246,18 @@ theorem DcolS_eq (N : ℕ) (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ
   simp only [wQ, dfFast_eq, mul_sub, Finset.sum_sub_distrib]
   congr 1
   by_cases hmn : mn ≤ N
-  · rw [dif_pos hmn]
-    simp only [if_pos hmn]
+  · rw [dite_eq_left hmn]
+    simp only [ite_eq_left hmn]
     unfold blockDefectMatQ
     simp only [Matrix.sub_apply, Matrix.sum_apply, Matrix.mul_apply, matOfCols]
     by_cases hlj : l = j
     · subst hlj
-      simp only [if_true, true_and, Matrix.one_apply, Fin.ext_iff]
+      simp only [ite_true, true_and, Matrix.one_apply, Fin.ext_iff]
       ring
-    · simp only [hlj, if_false, false_and, Matrix.zero_apply]
+    · simp only [hlj, ite_false, false_and, Matrix.zero_apply]
       ring
-  · rw [dif_neg hmn, if_neg (fun h : l = j ∧ (n : ℕ) = mn => hmn (h.2 ▸ Nat.lt_succ_iff.mp n.isLt))]
-    simp only [if_neg hmn, mul_zero, Finset.sum_const_zero, sub_zero]
+  · rw [dite_eq_right hmn, ite_eq_right (fun h : l = j ∧ (n : ℕ) = mn => hmn (h.2 ▸ Nat.lt_succ_iff.mp n.isLt))]
+    simp only [ite_eq_right hmn, mul_zero, Finset.sum_const_zero, sub_zero]
 
 theorem colNormS_eq (N : ℕ) (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ)
     (arrs : Fin L → Array ℚ) (ν_q : ℚ) (f : Fin L → CompPoly L) (l j : Fin L) (mn : ℕ) :
@@ -1308,11 +1308,11 @@ theorem TCcolQ_eq_F (N : ℕ) (A_col : Fin L → Fin L → ℕ → Array ℚ) (l
   · obtain ⟨c, rfl⟩ : ∃ c, mn = c + 2 := ⟨mn - 2, by omega⟩
     simp only [add_left_inj, key c]
     by_cases hc : c < N
-    · rw [if_pos hc, if_pos ⟨h2, by omega⟩]
+    · rw [ite_eq_left hc, ite_eq_left ⟨h2, by omega⟩]
       rfl
-    · rw [if_neg hc, if_neg (by omega)]
-  · rw [if_neg (by omega)]
-    exact Finset.sum_eq_zero fun i _ => if_neg (by omega)
+    · rw [ite_eq_right hc, ite_eq_right (by omega)]
+  · rw [ite_eq_right (by omega)]
+    exact Finset.sum_eq_zero fun i _ => ite_eq_right (by omega)
 
 /-- `TCcolNormQ` through the closed-form rows. -/
 def TCcolNormF (N : ℕ) (A_col : Fin L → Fin L → ℕ → Array ℚ) (ν_q : ℚ) (l j : Fin L)

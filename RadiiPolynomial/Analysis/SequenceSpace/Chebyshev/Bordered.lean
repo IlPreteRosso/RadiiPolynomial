@@ -722,7 +722,7 @@ lemma symmetrize_single_negSucc (m : ℕ) (x : ℝ) :
   funext k
   show toSeq (symmetrize (single (ν := ν) (Int.negSucc m) x)) k
     = toSeq (0 : l1Chebyshev ν) k
-  rw [symmetrize_toSeq, toSeq_single, toSeq_zero, if_neg (by omega)]
+  rw [symmetrize_toSeq, toSeq_single, toSeq_zero, ite_eq_right (by omega)]
 
 private theorem symmetrize_single_toSeq (k : ℕ) (n : ℤ) :
     l1Chebyshev.toSeq (l1Chebyshev.symmetrize
@@ -730,8 +730,8 @@ private theorem symmetrize_single_toSeq (k : ℕ) (n : ℤ) :
       if n.natAbs = k then 1 else 0 := by
   rw [l1Chebyshev.symmetrize_toSeq, l1Chebyshev.toSeq_single]
   by_cases h : n.natAbs = k
-  · rw [if_pos (by exact_mod_cast h), if_pos h]
-  · rw [if_neg (fun hc => h (by exact_mod_cast hc)), if_neg h]
+  · rw [ite_eq_left (by exact_mod_cast h), ite_eq_left h]
+  · rw [ite_eq_right (fun hc => h (by exact_mod_cast hc)), ite_eq_right h]
 
 /-- The stored zero mode is single; a positive mode has both Laurent directions. -/
 theorem mul_symmetrize_single_toSeq [Fact (1 ≤ (ν : ℝ))] (c : l1Chebyshev ν) (k : ℕ) (n : ℤ) :
@@ -743,7 +743,7 @@ theorem mul_symmetrize_single_toSeq [Fact (1 ≤ (ν : ℝ))] (c : l1Chebyshev �
   | zero =>
       rw [l1Chebyshev.toSeq_mul_eq_finsum _ _ _ ({(0 : ℤ)} : Finset ℤ)
         (fun i hi => by
-          rw [symmetrize_single_toSeq, if_neg (fun hc => hi (by
+          rw [symmetrize_single_toSeq, ite_eq_right (fun hc => hi (by
             simp only [Finset.mem_singleton]
             omega))])]
       rw [Finset.sum_singleton, symmetrize_single_toSeq]
@@ -752,14 +752,14 @@ theorem mul_symmetrize_single_toSeq [Fact (1 ≤ (ν : ℝ))] (c : l1Chebyshev �
       rw [l1Chebyshev.toSeq_mul_eq_finsum _ _ _
         ({((k + 1 : ℕ) : ℤ), -((k + 1 : ℕ) : ℤ)} : Finset ℤ)
         (fun i hi => by
-          rw [symmetrize_single_toSeq, if_neg (fun hc => hi (by
+          rw [symmetrize_single_toSeq, ite_eq_right (fun hc => hi (by
             simp only [Finset.mem_insert, Finset.mem_singleton]
             omega))])]
       rw [Finset.sum_pair (by omega)]
-      rw [symmetrize_single_toSeq, if_pos (show (((k + 1 : ℕ) : ℤ)).natAbs = k + 1
+      rw [symmetrize_single_toSeq, ite_eq_left (show (((k + 1 : ℕ) : ℤ)).natAbs = k + 1
         from by omega), symmetrize_single_toSeq,
-        if_pos (show (-((k + 1 : ℕ) : ℤ)).natAbs = k + 1 from by omega)]
-      simp only [mul_one, Nat.succ_ne_zero, if_false, sub_neg_eq_add]
+        ite_eq_left (show (-((k + 1 : ℕ) : ℤ)).natAbs = k + 1 from by omega)]
+      simp only [mul_one, Nat.succ_ne_zero, ite_false, sub_neg_eq_add]
 
 /-- Restriction after symmetrization is the plain restriction. -/
 lemma nonnegRestrict_symmetrize (a : l1Chebyshev ν) :
@@ -801,10 +801,10 @@ private theorem natEmbed_memℓp (a : l1Weighted ν) :
   simp only [ENNReal.toReal_one, Real.rpow_one]
   apply Summable.of_nat_of_neg_add_one
   · refine (l1Weighted.summable_weighted a).congr fun n => ?_
-    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, if_pos (by omega), Int.toNat_natCast,
+    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, ite_eq_left (by omega), Int.toNat_natCast,
       Int.natAbs_natCast]
   · refine summable_zero.congr fun n => ?_
-    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, if_neg (by omega), abs_zero, zero_mul]
+    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, ite_eq_right (by omega), abs_zero, zero_mul]
 
 /-- The ℕ-supported embedding as an element (`natEmbed` is its linear map). -/
 private def natEmbedFun (a : l1Weighted ν) : l1Chebyshev ν :=
@@ -820,9 +820,9 @@ private theorem natEmbedFun_toSeq (a : l1Weighted ν) (k : ℤ) :
 private theorem norm_natEmbedFun (a : l1Weighted ν) : ‖natEmbedFun a‖ = ‖a‖ := by
   have hpos : ∀ n : ℕ, ‖natEmbedFun a (n : ℤ)‖ = |l1Weighted.toSeq a n| * (ν : ℝ) ^ n :=
     fun n => by
-      rw [norm_fiber_natCast, natEmbedFun_toSeq, if_pos (by omega), Int.toNat_natCast]
+      rw [norm_fiber_natCast, natEmbedFun_toSeq, ite_eq_left (by omega), Int.toNat_natCast]
   have hneg : ∀ n : ℕ, ‖natEmbedFun a (-((n : ℤ) + 1))‖ = 0 := fun n => by
-    rw [norm_fiber, natEmbedFun_toSeq, if_neg (by omega), abs_zero, zero_mul]
+    rw [norm_fiber, natEmbedFun_toSeq, ite_eq_right (by omega), abs_zero, zero_mul]
   rw [lpOneAlg.norm_eq_tsum, tsum_of_nat_of_neg_add_one
     ((l1Weighted.summable_weighted a).congr fun n => (hpos n).symm)
     (summable_zero.congr fun n => (hneg n).symm), tsum_congr hpos, tsum_congr hneg, tsum_zero,
@@ -853,12 +853,12 @@ theorem natEmbed_toSeq (a : l1Weighted ν) (k : ℤ) :
 /-- The ℕ-supported embedding at a nonnegative mode. -/
 @[simp] theorem natEmbed_toSeq_natCast (a : l1Weighted ν) (n : ℕ) :
     toSeq (natEmbed a) (n : ℤ) = l1Weighted.toSeq a n := by
-  rw [natEmbed_toSeq, if_pos (by omega), Int.toNat_natCast]
+  rw [natEmbed_toSeq, ite_eq_left (by omega), Int.toNat_natCast]
 
 /-- The ℕ-supported embedding vanishes at the negative modes. -/
 @[simp] theorem natEmbed_toSeq_negSucc (a : l1Weighted ν) (n : ℕ) :
     toSeq (natEmbed a) (Int.negSucc n) = 0 := by
-  rw [natEmbed_toSeq, if_neg (by omega)]
+  rw [natEmbed_toSeq, ite_eq_right (by omega)]
 
 /-- The ℕ-supported embedding is an isometry, for every `ν : PosReal`. -/
 @[simp] theorem norm_natEmbed (a : l1Weighted ν) : ‖natEmbed a‖ = ‖a‖ :=
@@ -873,9 +873,9 @@ theorem natEmbed_single (n : ℕ) (x : ℝ) :
     rw [natEmbed_toSeq, toSeq_single]
     split_ifs with h1 h2 h2
     · show lpOneAlg.toRealSeq (lpOneAlg.single n x : l1Weighted ν) k.toNat = x
-      rw [lpOneAlg.toRealSeq_single, if_pos (by omega)]
+      rw [lpOneAlg.toRealSeq_single, ite_eq_left (by omega)]
     · show lpOneAlg.toRealSeq (lpOneAlg.single n x : l1Weighted ν) k.toNat = 0
-      rw [lpOneAlg.toRealSeq_single, if_neg (by omega)]
+      rw [lpOneAlg.toRealSeq_single, ite_eq_right (by omega)]
     · omega
     · rfl)
 

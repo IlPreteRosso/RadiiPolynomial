@@ -256,12 +256,12 @@ lemma approxDeriv_sub_fderiv_tail_eq {N : ℕ}
   have hsup : ∀ k, N < k → sol.toSeq k = 0 := fun k hk => sol.toSeq_zero_of_gt k hk
   have hShifted_sup : ∀ k, N < k → shiftedSeq sol k = 0 := by
     intro k hk
-    simp only [shiftedSeq, Finset.mem_Icc, if_neg (show ¬(1 ≤ k ∧ k ≤ N) from by omega)]
+    simp only [shiftedSeq, Finset.mem_Icc, ite_eq_right (show ¬(1 ≤ k ∧ k ≤ N) from by omega)]
   have hShifted0 : shiftedSeq sol 0 = 0 := by
-    simp only [shiftedSeq, Finset.mem_Icc, if_neg (show ¬(1 ≤ 0 ∧ 0 ≤ N) from by omega)]
+    simp only [shiftedSeq, Finset.mem_Icc, ite_eq_right (show ¬(1 ≤ 0 ∧ 0 ≤ N) from by omega)]
   have hShifted_in : ∀ k ∈ Finset.Icc 1 N, shiftedSeq sol k = sol.toSeq k := by
     intro k hk
-    simp only [shiftedSeq, if_pos hk]
+    simp only [shiftedSeq, ite_eq_left hk]
   have hToSeq0_eq : sol.toSeq 0 = sol.aBar_fin 0 := by
     have := sol.toSeq_eq_fin ⟨0, Nat.succ_pos N⟩
     simpa using this

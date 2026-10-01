@@ -66,7 +66,7 @@ lemma ivpCoeffs_decomp (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L
     ring
   | succ k =>
     simp only [chebyshevIvpCoeffs, constFseq, FAseq, FCseq,
-      if_neg (Nat.succ_ne_zero k)]
+      ite_eq_right (Nat.succ_ne_zero k)]
     ring
 
 /-! Linearity of the rows. -/
@@ -745,7 +745,7 @@ lemma G_decomp (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ
       TCtailElem_toSeq_nat]
     rcases le_or_gt n N with hn | hn
     · -- block rows: split the finite sums
-      rw [if_neg (not_lt.mpr hn)]
+      rw [ite_eq_right (not_lt.mpr hn)]
       rw [SystemBlockDiagData.action_finite _ _ _ _ hn,
         SystemBlockDiagData.action_finite _ _ _ _ hn]
       show _ = d.approxInverse.action (constFseq p) l n
@@ -761,7 +761,7 @@ lemma G_decomp (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ
           * (constFseq p j (k : ℕ) + FAseq (a j) (k : ℕ) + FCseq (φ a j) (k : ℕ)) = _
       ring
     · -- tail rows: 1/(2n) · (2n·aₙ + c_{n+1} − c_{n−1}) = aₙ + shiftDiv(c)ₙ
-      rw [if_pos hn]
+      rw [ite_eq_left hn]
       rw [SystemBlockDiagData.action_tail _ _ _ _ hn, d.htail_diag_inv l n hn,
         d.constGseq_tail p l n hn, d.TA_action_tail_eq a l n hn,
         d.TCblockSeq_tail _ l n hn]

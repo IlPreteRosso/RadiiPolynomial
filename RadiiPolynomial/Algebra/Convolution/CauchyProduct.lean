@@ -1,6 +1,6 @@
 import Mathlib.Algebra.BigOperators.NatAntidiagonal
 import Mathlib.RingTheory.PowerSeries.Basic
-import Mathlib.Data.Real.Basic
+import Mathlib.Basic.Real.Basic
 
 open scoped BigOperators
 

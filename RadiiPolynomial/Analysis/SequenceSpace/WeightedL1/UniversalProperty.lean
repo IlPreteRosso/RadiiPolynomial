@@ -240,9 +240,9 @@ theorem liftCLM_apply (v : M → F) (C : ℝ)
     liftCLM v C hv (single m x) = x • v m := by
   show (∑' k, toRealSeq (single (E := E) m x) k • v k) = x • v m
   rw [tsum_eq_single m]
-  · rw [toRealSeq_single, if_pos rfl]
+  · rw [toRealSeq_single, ite_eq_left rfl]
   · intro k hk
-    rw [toRealSeq_single, if_neg hk, zero_smul]
+    rw [toRealSeq_single, ite_eq_right hk, zero_smul]
 
 omit [DecidableEq M] in
 /-- Pointwise norm bound for the lift, valid for every `C` (no sign
@@ -315,17 +315,17 @@ theorem single_mul_single (i j : M) (x y : 𝕜) :
     toRealSeq_single, DiscreteConvolution.addRingConvolution_apply_eq]
   by_cases hk : k = i + j
   · subst hk
-    rw [if_pos rfl]
+    rw [ite_eq_left rfl]
     rw [tsum_eq_single (⟨(i, j), by simp⟩ : DiscreteConvolution.addFiber (i + j))]
-    · rw [toRealSeq_single, toRealSeq_single, if_pos rfl, if_pos rfl]
+    · rw [toRealSeq_single, toRealSeq_single, ite_eq_left rfl, ite_eq_left rfl]
     · rintro ⟨⟨a, c⟩, hac⟩ hne
       rw [toRealSeq_single, toRealSeq_single]
       by_cases ha : a = i
       · by_cases hc : c = j
         · exact absurd (by simp [ha, hc]) hne
-        · rw [if_neg hc, mul_zero]
-      · rw [if_neg ha, zero_mul]
-  · rw [if_neg hk]
+        · rw [ite_eq_right hc, mul_zero]
+      · rw [ite_eq_right ha, zero_mul]
+  · rw [ite_eq_right hk]
     have h0 : ∀ ac : DiscreteConvolution.addFiber k,
         toRealSeq (single (E := E) i x) ac.1.1 *
           toRealSeq (single (E := E) j y) ac.1.2 = 0 := by
@@ -335,8 +335,8 @@ theorem single_mul_single (i j : M) (x y : 𝕜) :
       by_cases ha : a = i
       · by_cases hc : c = j
         · exact absurd (by rw [← hac, ha, hc]) hk
-        · rw [if_neg hc, mul_zero]
-      · rw [if_neg ha, zero_mul]
+        · rw [ite_eq_right hc, mul_zero]
+      · rw [ite_eq_right ha, zero_mul]
     rw [tsum_congr h0, tsum_zero]
 
 omit [lpOneAlgConvCompat 𝕜 M E] in

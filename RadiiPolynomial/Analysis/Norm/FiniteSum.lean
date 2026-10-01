@@ -2,7 +2,7 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.BigOperators.NatAntidiagonal
 import Mathlib.Data.Fintype.BigOperators
-import Mathlib.Data.Real.Basic
+import Mathlib.Basic.Real.Basic
 
 /-!
 # Finite Norm Inequality Helpers
