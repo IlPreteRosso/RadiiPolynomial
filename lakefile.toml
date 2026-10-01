@@ -17,4 +17,4 @@ rev = "v4.33.0"
 [[require]]
 name = "LeanCert"
 git = "https://github.com/alerad/leancert.git"
-rev = "501b2c09e367721f58200f53261787a3d280abe2"
+rev = "571a228555ae38742448854be81d7b59d994a8e3"
