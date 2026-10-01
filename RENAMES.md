@@ -319,3 +319,84 @@ Gates: full build 4,026 jobs; 51/51 experiment checks; frozen 18-endpoint axiom 
 byte-identical after the existing label rename; folded consumer/bridge checks and skill
 validation pass. No `.tex` or curated-memory edits, commits, or pushes in this correction.
 Evidence and Claude handoff: `tmp/autonomous_agenda_2026_09_13/review_fixes_codex/`.
+
+## L001-HeadTailGeneric promotion (G1, 2026-10-01)
+
+Scratch declarations of the S027 unit (`tmp/units/S027-HeadTailColumns/freeze/v1/HeadTailColumns.lean`) and of filtration-probe slice 25 (`tmp/filtration_probe/freeze_slice25_v2/FourierZ1Window.lean`) promoted to the library by unit L001 (contract `tmp/units/L001-HeadTailGeneric/contract/v2/`). Every renamed, generalized or compatibility-specialization row of its MIGRATION_TABLE.md; the scratch files stay frozen and are not imported. Test-only rows live in `Examples/tests/FZ/HeadTail*.lean`.
+
+| old | new | file | step | reason |
+|---|---|---|---|---|
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.norm_ofReal_one_pos` | `RadiiPolynomial.lpOneAlg.norm_ofReal_one_pos` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.colRatio` | `RadiiPolynomial.lpOneAlg.colRatio` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.colRatio_nonneg` | `RadiiPolynomial.lpOneAlg.colRatio_nonneg` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.cols_le_opNorm` | `RadiiPolynomial.lpOneAlg.cols_le_opNorm` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.colRatio_le_opNorm` | `RadiiPolynomial.lpOneAlg.colRatio_le_opNorm` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.opNorm_le_iff_cols` | `RadiiPolynomial.lpOneAlg.opNorm_le_iff_cols` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.colRatio_bddAbove` | `RadiiPolynomial.lpOneAlg.colRatio_bddAbove` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.opNorm_eq_iSup_cols` | `RadiiPolynomial.lpOneAlg.opNorm_eq_iSup_cols` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.norm_diagRaw_le` | `RadiiPolynomial.lpOneAlg.norm_diagCLM_apply_le` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.D_r` | `RadiiPolynomial.lpOneAlg.diagCLM` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.toRealSeq_D_r` | `RadiiPolynomial.lpOneAlg.toRealSeq_diagCLM` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.D_r_single` | `RadiiPolynomial.lpOneAlg.diagCLM_single` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.headSymbol` | `RadiiPolynomial.lpOneAlg.headSymbol` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.norm_headSymbol_le` | `RadiiPolynomial.lpOneAlg.norm_headSymbol_le` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.P_H` | `RadiiPolynomial.lpOneAlg.headProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.Q_H` | `RadiiPolynomial.lpOneAlg.tailProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.Q_H_eq` | `RadiiPolynomial.lpOneAlg.tailProj_eq_one_sub` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.toRealSeq_P_H` | `RadiiPolynomial.lpOneAlg.toRealSeq_headProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.toRealSeq_Q_H` | `RadiiPolynomial.lpOneAlg.toRealSeq_tailProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.P_H_single` | `RadiiPolynomial.lpOneAlg.headProj_single` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.Q_H_single` | `RadiiPolynomial.lpOneAlg.tailProj_single` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.P_H_comp_P_H` | `RadiiPolynomial.lpOneAlg.headProj_comp_headProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.P_H_comp_Q_H` | `RadiiPolynomial.lpOneAlg.headProj_comp_tailProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.Q_H_comp_P_H` | `RadiiPolynomial.lpOneAlg.tailProj_comp_headProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.Q_H_comp_Q_H` | `RadiiPolynomial.lpOneAlg.tailProj_comp_tailProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.P_H_add_Q_H` | `RadiiPolynomial.lpOneAlg.headProj_add_tailProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.norm_add_of_head_tail` | `RadiiPolynomial.lpOneAlg.norm_add_of_head_tail` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.colRatio_add_of_head_tail` | `RadiiPolynomial.lpOneAlg.colRatio_add_of_head_tail` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.opNorm_add_eq_iSup` | `RadiiPolynomial.lpOneAlg.opNorm_add_eq_iSup` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.head_comp_eq_zero_iff_tail_comp_eq_self` | `RadiiPolynomial.lpOneAlg.head_comp_eq_zero_iff_tail_comp_eq_self` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.colRatio_add_of_head_zero` | `RadiiPolynomial.lpOneAlg.colRatio_add_of_head_zero` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.opNorm_add_eq_iSup_of_head_zero` | `RadiiPolynomial.lpOneAlg.opNorm_add_eq_iSup_of_head_zero` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | renamed (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.composition_identity` | `RadiiPolynomial.HeadTail.composition_identity` | `Operators/HeadTail.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.HeadTailColumns.signed_transfer` | `RadiiPolynomial.HeadTail.signed_transfer` | `Operators/HeadTail.lean` | L001 | compatibility specialization (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.opNorm_le_iff_cols` | `RadiiPolynomial.lpOneAlg.opNorm_le_iff_cols` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.colRatio` | `RadiiPolynomial.lpOneAlg.colRatio` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.colRatio_nonneg` | `RadiiPolynomial.lpOneAlg.colRatio_nonneg` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.colRatio_le_opNorm` | `RadiiPolynomial.lpOneAlg.colRatio_le_opNorm` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.colRatio_bddAbove` | `RadiiPolynomial.lpOneAlg.colRatio_bddAbove` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.opNorm_eq_iSup_cols` | `RadiiPolynomial.lpOneAlg.opNorm_eq_iSup_cols` | `Analysis/SequenceSpace/WeightedL1/Columns.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.toRealSeq_diagRaw` | `RadiiPolynomial.lpOneAlg.toRealSeq_diagCLM` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.norm_diagRaw_le` | `RadiiPolynomial.lpOneAlg.norm_diagCLM_apply_le` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.diagCLM` | `RadiiPolynomial.lpOneAlg.diagCLM` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.toRealSeq_diagCLM` | `RadiiPolynomial.lpOneAlg.toRealSeq_diagCLM` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.norm_diagCLM_apply_le` | `RadiiPolynomial.lpOneAlg.norm_diagCLM_apply_le` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.diagCLM_single` | `RadiiPolynomial.lpOneAlg.diagCLM_single` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.headSym` | `RadiiPolynomial.lpOneAlg.headSymbol` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.norm_headSym_le` | `RadiiPolynomial.lpOneAlg.norm_headSymbol_le` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.headP` | `RadiiPolynomial.lpOneAlg.headProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.tailQ` | `RadiiPolynomial.lpOneAlg.tailProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.toRealSeq_headP` | `RadiiPolynomial.lpOneAlg.toRealSeq_headProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.toRealSeq_tailQ` | `RadiiPolynomial.lpOneAlg.toRealSeq_tailProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.tailQ_apply` | `RadiiPolynomial.lpOneAlg.tailProj_eq_one_sub` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.headP_single` | `RadiiPolynomial.lpOneAlg.headProj_single` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.tailQ_single` | `RadiiPolynomial.lpOneAlg.tailProj_single` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.headP_comp_headP` | `RadiiPolynomial.lpOneAlg.headProj_comp_headProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.headP_comp_tailQ` | `RadiiPolynomial.lpOneAlg.headProj_comp_tailProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.tailQ_comp_headP` | `RadiiPolynomial.lpOneAlg.tailProj_comp_headProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.tailQ_comp_tailQ` | `RadiiPolynomial.lpOneAlg.tailProj_comp_tailProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.norm_headP_apply_le` | `RadiiPolynomial.lpOneAlg.norm_headProj_apply_le` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.norm_tailQ_apply_le` | `RadiiPolynomial.lpOneAlg.norm_tailProj_apply_le` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.headP_eq_self_iff` | `RadiiPolynomial.lpOneAlg.headProj_apply_eq_self_iff` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.tailQ_eq_self_iff` | `RadiiPolynomial.lpOneAlg.tailProj_apply_eq_self_iff` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.headP_comp_diagCLM` | `RadiiPolynomial.lpOneAlg.headProj_comp_diagCLM` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.tailQ_comp_diagCLM` | `RadiiPolynomial.lpOneAlg.tailProj_comp_diagCLM` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.norm_add_of_head_tail` | `RadiiPolynomial.lpOneAlg.norm_add_of_head_tail` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.colRatio_add_of_head_tail` | `RadiiPolynomial.lpOneAlg.colRatio_add_of_head_tail` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.opNorm_add_eq_iSup` | `RadiiPolynomial.lpOneAlg.opNorm_add_eq_iSup` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.colRatio_Z_tail` | `RadiiPolynomial.lpOneAlg.colRatio_eq_zero_of_comp_tailProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.colRatio_S_head` | `RadiiPolynomial.lpOneAlg.colRatio_eq_zero_of_comp_headProj` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.colRatio_Z_add_S` | `RadiiPolynomial.lpOneAlg.colRatio_add_of_comp_split` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.opNorm_joint_eq_iSup` | `RadiiPolynomial.lpOneAlg.opNorm_joint_eq_iSup` | `Analysis/SequenceSpace/WeightedL1/Diagonal.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.defect_identity_ring` | `RadiiPolynomial.HeadTail.defect_identity_ring` | `Algebra/Ring/HeadTailIdentities.lean` | L001 | generalized (MIGRATION_TABLE.md) |
+| `RadiiPolynomial.FiltrationProbe.FourierZ1Window.inverse_defect_ring_core` | `RadiiPolynomial.HeadTail.inverse_defect_ring` | `Algebra/Ring/HeadTailIdentities.lean` | L001 | renamed (MIGRATION_TABLE.md) |

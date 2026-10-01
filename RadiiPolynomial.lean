@@ -6,6 +6,7 @@
 
 -- Algebra and analysis
 import RadiiPolynomial.Algebra.Convolution
+import RadiiPolynomial.Algebra.Ring.HeadTailIdentities
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev
@@ -21,6 +22,7 @@ import RadiiPolynomial.Algebra.Polynomial
 -- Finite and block-diagonal operators
 import RadiiPolynomial.Operators.Matrix
 import RadiiPolynomial.Operators.BlockDiagonal
+import RadiiPolynomial.Operators.HeadTail
 
 -- Certification adapters
 import RadiiPolynomial.Certification
