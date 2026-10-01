@@ -83,7 +83,7 @@ def approxInverse : SystemBlockDiagData L N where
     have hne : n ≠ 0 := by omega
     have hpos : (0 : ℝ) < n := Nat.cast_pos.mpr (by omega)
     have hN1 : ((N : ℝ) + 1) ≤ n := by exact_mod_cast (show N + 1 ≤ n by omega)
-    rw [if_neg hne, abs_of_pos (div_pos one_pos hpos)]
+    rw [ite_eq_right hne, abs_of_pos (div_pos one_pos hpos)]
     exact one_div_le_one_div_of_le (by positivity) hN1
 
 /-- Tail bound as ℚ. -/
@@ -114,14 +114,14 @@ def approxDeriv : BlockDiagOp L N where
 lemma tailCancel (l : Fin L) (n : ℕ) (hn : N < n) :
     d.approxInverse.tailDiag l n * d.approxDeriv.tailDiag l n = 1 := by
   simp only [approxInverse, approxDeriv]
-  rw [if_neg (by omega : n ≠ 0)]
+  rw [ite_eq_right (by omega : n ≠ 0)]
   have hne : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
   field_simp
 
 /-- A.tailDiag = 1/n for n > N. -/
 lemma htail_diag_inv (l : Fin L) (n : ℕ) (hn : N < n) :
     d.approxInverse.tailDiag l n = 1 / (↑n : ℝ) := by
-  simp only [approxInverse, if_neg (by omega : n ≠ 0)]
+  simp only [approxInverse, ite_eq_right (by omega : n ≠ 0)]
 
 /-- Defect D = I - A·A†. -/
 def defect : SystemBlockDiagData L N :=
@@ -149,7 +149,7 @@ lemma abar_seq_eq_getD (l : Fin L) (k : ℕ) :
   · simp [hk]
   · simp only [show ¬(k ≤ N) from hk, ↓reduceIte]
     symm; simp only [Array.getD]
-    rw [dif_neg (by rw [d.habar_size l]; omega)]; simp
+    rw [dite_eq_right (by rw [d.habar_size l]; omega)]; simp
 
 /-- Approximate solution as XL1. -/
 def abar : XL1 ν L := fun l =>

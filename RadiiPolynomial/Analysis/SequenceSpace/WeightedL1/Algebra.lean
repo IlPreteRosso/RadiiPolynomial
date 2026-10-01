@@ -136,7 +136,7 @@ instance : CoeFun (lpOneAlg M E) (fun _ => ∀ m, E m) where
 /-- NormedSpace 𝕜 for lpOneAlg, transferred from lp. No algebraic constraint on M needed. -/
 instance instNormedSpaceBase {𝕜 : Type*} [NormedField 𝕜] [∀ m, NormedSpace 𝕜 (E m)] :
     NormedSpace 𝕜 (lpOneAlg M E) :=
-  { lpOneAlg.equiv.module 𝕜 with
+  { lpOneAlg.equiv.addEquiv.module 𝕜 with
     norm_smul_le := fun r f => by
       show ‖r • f.toLp‖ ≤ _; exact norm_smul_le r f.toLp }
 
@@ -708,10 +708,10 @@ theorem toRealSeq_single (j : M) (x : 𝕜) (k : M) :
   · subst h
     show lpAlgRingData.toReal k
       (Pi.single k (lpAlgRingData.ofReal (E := E) k x) k) = _
-    rw [Pi.single_eq_same, lpAlgRingData.toReal_ofReal, if_pos rfl]
+    rw [Pi.single_eq_same, lpAlgRingData.toReal_ofReal, ite_eq_left rfl]
   · show lpAlgRingData.toReal k
       (Pi.single j (lpAlgRingData.ofReal (E := E) j x) k) = _
-    rw [Pi.single_eq_of_ne h, lpAlgRingData.toReal_zero, if_neg h]
+    rw [Pi.single_eq_of_ne h, lpAlgRingData.toReal_zero, ite_eq_right h]
 
 theorem norm_single (j : M) (x : 𝕜) :
     ‖(single (E := E) j x : lpOneAlg M E)‖
@@ -980,7 +980,7 @@ theorem norm_one_eq :
     · subst hm
       change ‖lpAlgRingData.ofReal (E := E) 0 (DiscreteConvolution.addDelta (1 : 𝕜) 0)‖ = _
       rw [DiscreteConvolution.addDelta_zero_eq]; simp
-    · rw [if_neg hm]
+    · rw [ite_eq_right hm]
       show ‖lpAlgRingData.ofReal (E := E) m (DiscreteConvolution.addDelta (1 : 𝕜) m)‖ = 0
       rw [DiscreteConvolution.addDelta_ne (1 : 𝕜) hm, lpAlgRingData.ofReal_zero, norm_zero]
   rw [h, tsum_ite_eq]

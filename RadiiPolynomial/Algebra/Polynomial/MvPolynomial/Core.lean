@@ -21,7 +21,7 @@ theorem totalDegree_pderiv_le [DecidableEq σ] (i : σ) (p : MvPolynomial σ R) 
   rw [map_sum]
   refine (totalDegree_finsetSum _ _).trans (Finset.sup_le fun s hs => ?_)
   rw [pderiv_monomial]
-  by_cases h : coeff s p * ↑(s i) = 0
+  by_cases h : p.coeff s * ↑(s i) = 0
   · simp [h]
   · refine (totalDegree_monomial _ h).le.trans ?_
     have hi : 1 ≤ s i := by
@@ -54,7 +54,7 @@ theorem pderiv_pderiv_eq_C_of_totalDegree_le_two [DecidableEq σ] (i j : σ)
     (p : MvPolynomial σ R) (hp : p.totalDegree ≤ 2) :
     ∃ c : R, pderiv i (pderiv j p) = C c := by
   have h := totalDegree_pderiv_pderiv_eq_zero i j p hp
-  exact ⟨coeff 0 (pderiv i (pderiv j p)), (totalDegree_eq_zero_iff_eq_C).mp h⟩
+  exact ⟨(pderiv i (pderiv j p)).coeff 0, (totalDegree_eq_zero_iff_eq_C).mp h⟩
 
 lemma totalDegree_C_le (a : R) : (C a : MvPolynomial σ R).totalDegree ≤ 0 :=
   le_of_eq (totalDegree_C a)

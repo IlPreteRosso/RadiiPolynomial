@@ -62,11 +62,11 @@ theorem chebyshevBoundary_not_multiplicative :
   have hneg : l1Chebyshev.eval (l1Chebyshev.single (ν := ν) (-1) 1) (-1) = 0 := by
     unfold l1Chebyshev.eval
     rw [l1Chebyshev.toSeq_single]
-    simp only [if_neg (by omega : (0 : ℤ) ≠ -1), zero_add]
+    simp only [ite_eq_right (by omega : (0 : ℤ) ≠ -1), zero_add]
     have hzero : ∀ k : ℕ,
         l1Chebyshev.toSeq (l1Chebyshev.single (ν := ν) (-1) 1)
           ((k + 1 : ℕ) : ℤ) = 0 := fun k => by
-      rw [l1Chebyshev.toSeq_single, if_neg (by omega)]
+      rw [l1Chebyshev.toSeq_single, ite_eq_right (by omega)]
     simp_rw [hzero, zero_mul]
     simp
   rw [lpOneAlg.single_mul_single]

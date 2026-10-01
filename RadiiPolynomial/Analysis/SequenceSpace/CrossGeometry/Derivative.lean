@@ -129,7 +129,7 @@ private lemma chebyshevDerivativeToUColumn_le (ν : PosReal) (k : ℕ) :
   | succ k =>
       rw [BorderedScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul,
         borderedWeight_succ, chebyshevDerivativeToUColumn]
-      simp only [Nat.succ_ne_zero, chebyshevStorageFactor, if_false,
+      simp only [Nat.succ_ne_zero, chebyshevStorageFactor, ite_false,
         norm_smul, Real.norm_eq_abs]
       rw [norm_omegaSingle, abs_one, one_mul]
       simp only [Nat.add_sub_cancel]
@@ -171,14 +171,14 @@ private theorem chebyshevDerivativeToUBorderedCLM_toSeq (ν : PosReal)
     | succ k =>
         simp only [map_smul, omegaToSeqCLM_apply,
           chebyshevDerivativeToUColumn, Nat.succ_ne_zero,
-          chebyshevStorageFactor, if_false,
+          chebyshevStorageFactor, ite_false,
           omegaSingle_toSeq, Nat.add_sub_cancel]
         by_cases hkm : k = m
         · subst k
           simp
           ring
         · have hsucc : k + 1 ≠ m + 1 := by omega
-          rw [if_neg (Ne.symm hkm), if_neg hsucc]
+          rw [ite_eq_right (Ne.symm hkm), ite_eq_right hsucc]
           ring
   rw [tsum_congr hterm, tsum_ite_eq]
 

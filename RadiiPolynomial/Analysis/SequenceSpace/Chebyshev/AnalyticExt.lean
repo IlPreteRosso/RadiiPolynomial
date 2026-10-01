@@ -109,8 +109,8 @@ private theorem fourierCoeff_boundary (f : l1Chebyshev ν) (n : ℤ) :
       ring
     rw [integral_congr_ae (Filter.Eventually.of_forall hre), integral_const_mul, horth]
   rw [tsum_congr hterm]
-  rw [tsum_eq_single n (fun k hk => by rw [if_neg (by omega), mul_zero])]
-  rw [if_pos (by omega), mul_one]
+  rw [tsum_eq_single n (fun k hk => by rw [ite_eq_right (by omega), mul_zero])]
+  rw [ite_eq_left (by omega), mul_one]
 
 private theorem eq_zero_of_boundary_eq_zero (f : l1Chebyshev ν)
     (h : ∀ x, boundary f x = 0) : f = 0 := by

@@ -429,22 +429,22 @@ lemma l1Weighted.toSeq_mul_single (b : l1Weighted ν) (M k : ℕ) :
   rw [l1Weighted.toSeq_mul, CauchyProduct.apply_range]
   simp only [l1Weighted.single_toSeq]
   by_cases hM : M ≤ k
-  · rw [if_pos hM, Finset.sum_eq_single M
-      (fun j _ hne => by rw [if_neg hne, mul_zero])
+  · rw [ite_eq_left hM, Finset.sum_eq_single M
+      (fun j _ hne => by rw [ite_eq_right hne, mul_zero])
       (fun hM' => absurd (Finset.mem_range.mpr (by omega)) hM')]
-    rw [if_pos rfl, mul_one]
-  · rw [if_neg hM]
+    rw [ite_eq_left rfl, mul_one]
+  · rw [ite_eq_right hM]
     refine Finset.sum_eq_zero fun j hj => ?_
-    rw [if_neg (by have := Finset.mem_range.mp hj; omega), mul_zero]
+    rw [ite_eq_right (by have := Finset.mem_range.mp hj; omega), mul_zero]
 
 /-- The norm of the tail projection is the tail of the weighted norm series. -/
 lemma l1Weighted.norm_tailProj_eq_tailTsum (N : ℕ) (x : l1Weighted ν) :
     ‖l1Weighted.tailProj N x‖ =
       ∑' n, |l1Weighted.toSeq x (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) := by
   rw [l1Weighted.norm_eq_tailTsum_of_fin_zero (l1Weighted.tailProj N x) (N + 1)
-    (fun n hn => by rw [l1Weighted.coeff_tailProj, if_neg (by omega)])]
+    (fun n hn => by rw [l1Weighted.coeff_tailProj, ite_eq_right (by omega)])]
   exact tsum_congr fun n => by
-    rw [l1Weighted.coeff_tailProj, if_pos (by omega)]
+    rw [l1Weighted.coeff_tailProj, ite_eq_left (by omega)]
 
 /-- Fiber-norm bridge for the geometric carrier: the `lpAlgRingData` weight at
 index `n` is `ν^n`. -/
@@ -520,10 +520,10 @@ lemma shiftDivN_leftMul_tail_col_antitone (b : l1Weighted ν) {N M : ℕ}
     intro j
     rw [l1Weighted.toSeq_mul_single, l1Weighted.toSeq_mul_single]
     by_cases hj : M ≤ j
-    · rw [if_pos (by omega : M + 1 ≤ j + 1), if_pos hj]
+    · rw [ite_eq_left (by omega : M + 1 ≤ j + 1), ite_eq_left hj]
       congr 1
       omega
-    · rw [if_neg (by omega : ¬ M + 1 ≤ j + 1), if_neg hj]
+    · rw [ite_eq_right (by omega : ¬ M + 1 ≤ j + 1), ite_eq_right hj]
   have hsumm1 := (summable_nat_add_iff (k := N + 1)).mpr
     (l1Weighted.summable_weighted (shiftDivN (b * l1Weighted.single (M + 1) 1)))
   have hsumm0 := (summable_nat_add_iff (k := N + 1)).mpr
@@ -533,7 +533,7 @@ lemma shiftDivN_leftMul_tail_col_antitone (b : l1Weighted ν) {N M : ℕ}
   have hhead : |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single (M + 1) 1)) (0 + (N + 1))| *
       (ν : ℝ) ^ (0 + (N + 1)) = 0 := by
     rw [zero_add, shiftDivN_succ_mode, l1Weighted.toSeq_mul_single,
-      if_neg (by omega : ¬ M + 1 ≤ N)]
+      ite_eq_right (by omega : ¬ M + 1 ≤ N)]
     simp
   rw [hhead, zero_add]
   -- Termwise: mode `m+1` of the shifted column against mode `m` of the original.

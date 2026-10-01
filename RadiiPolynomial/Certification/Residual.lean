@@ -109,8 +109,8 @@ private theorem op_leftInverseCorrection (a b₀ : A) :
   simp only [leftInverseCorrection, rightInverseCorrection, MulOpposite.op_mul,
     ← tsum_op, MulOpposite.op_pow, MulOpposite.op_sub, MulOpposite.op_one]
 
-private theorem hasSummableGeomSeries_opposite : HasSummableGeomSeries Aᵐᵒᵖ where
-  summable_geometric_of_norm_lt_one x hx := by
+private theorem hasSummableGeomSeries_opposite : HasSummableGeomSeries Aᵐᵒᵖ :=
+  .of_summable_pow fun ⦃x⦄ hx => by
     refine (summable_op.mpr
       (summable_geometric_of_norm_lt_one (show ‖x.unop‖ < 1 from hx))).congr ?_
     intro n

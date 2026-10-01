@@ -266,14 +266,14 @@ theorem restr_single_natCast (n : ℕ) (x : ℝ) :
 theorem restr_single_negSucc (n : ℕ) (x : ℝ) :
     restr (single (ν := ν) (Int.negSucc n) x) = 0 :=
   l1Weighted.ext fun m => by
-    rw [restr_toSeq, toSeq_single, l1Weighted.zero_toSeq, if_neg (by omega)]
+    rw [restr_toSeq, toSeq_single, l1Weighted.zero_toSeq, ite_eq_right (by omega)]
 
 /-- A bilateral atom restricts to the one-sided atom at `m.toNat`, or to `0` if `m < 0`. -/
 theorem restr_single_int (m : ℤ) (x : ℝ) :
     restr (single (ν := ν) m x) = if 0 ≤ m then l1Weighted.single m.toNat x else 0 := by
   rcases m with n | n
-  · rw [Int.ofNat_eq_natCast, restr_single_natCast, if_pos (by omega), Int.toNat_natCast]
-  · rw [restr_single_negSucc, if_neg (by omega)]
+  · rw [Int.ofNat_eq_natCast, restr_single_natCast, ite_eq_left (by omega), Int.toNat_natCast]
+  · rw [restr_single_negSucc, ite_eq_right (by omega)]
 
 /-- The one-sided norm of a restricted bilateral unit atom: `ν^m` if `0 ≤ m`, else `0`. -/
 theorem norm_restr_single (m : ℤ) :
@@ -358,7 +358,7 @@ private theorem norm_restr_single_eq_posPow (m : ℤ) :
 
 /-- `posPow ν m = 0` for `m < 0`. -/
 private theorem posPow_of_neg {m : ℤ} (h : m < 0) : posPow ν m = 0 := by
-  unfold posPow; rw [if_neg (by omega)]
+  unfold posPow; rw [ite_eq_right (by omega)]
 
 /-- `posPow ν m ≤ νˢ` for `m ≤ s` (`1 ≤ ν`). -/
 private theorem posPow_le (hν : 1 ≤ (ν : ℝ)) {m : ℤ} {s : ℕ} (h : m ≤ s) :
@@ -594,9 +594,9 @@ theorem cosMul_single_self (i : ℕ) (hi : 0 < i) :
       = l1Weighted.single (2 * i) 1 + (2 : ℝ) • l1Weighted.single 0 1 := by
   rw [cosMul_single_single i i hi hi, map_add, map_add, map_add, restr_single_int,
     restr_single_int, restr_single_int, restr_single_int,
-    if_pos (show (0 : ℤ) ≤ (i : ℤ) + i by omega), if_pos (show (0 : ℤ) ≤ (i : ℤ) - i by omega),
-    if_pos (show (0 : ℤ) ≤ -(i : ℤ) + i by omega),
-    if_neg (show ¬ (0 : ℤ) ≤ -(i : ℤ) - i by omega),
+    ite_eq_left (show (0 : ℤ) ≤ (i : ℤ) + i by omega), ite_eq_left (show (0 : ℤ) ≤ (i : ℤ) - i by omega),
+    ite_eq_left (show (0 : ℤ) ≤ -(i : ℤ) + i by omega),
+    ite_eq_right (show ¬ (0 : ℤ) ≤ -(i : ℤ) - i by omega),
     add_zero, show ((i : ℤ) + i).toNat = 2 * i by omega, show ((i : ℤ) - i).toNat = 0 by omega,
     show (-(i : ℤ) + i).toNat = 0 by omega, add_assoc, two_smul]
 
@@ -610,10 +610,10 @@ theorem norm_cosMul_single_self (i : ℕ) (hi : 0 < i) :
   rw [cosMul_single_self i hi, norm_eq_sum_of_support _ {0, 2 * i} (fun n hn => by
     simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hn
     rw [l1Weighted.add_toSeq, l1Weighted.smul_toSeq, l1Weighted.single_toSeq,
-      l1Weighted.single_toSeq, if_neg hn.2, if_neg hn.1, mul_zero, add_zero]),
+      l1Weighted.single_toSeq, ite_eq_right hn.2, ite_eq_right hn.1, mul_zero, add_zero]),
     Finset.sum_pair (Ne.symm h2i)]
   simp only [l1Weighted.add_toSeq, l1Weighted.smul_toSeq, l1Weighted.single_toSeq,
-    if_neg (Ne.symm h2i), if_neg h2i, ↓reduceIte]
+    ite_eq_right (Ne.symm h2i), ite_eq_right h2i, ↓reduceIte]
   norm_num
   ring
 
@@ -717,7 +717,7 @@ private theorem norm_cosMul₃_e1_e1_e1 :
   norm_num [h3]
   rw [norm_eq_sum_of_support _ {1, 3} (fun n hn => by
     simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hn
-    simp only [l1Weighted.add_toSeq, l1Weighted.single_toSeq, if_neg hn.1, if_neg hn.2]
+    simp only [l1Weighted.add_toSeq, l1Weighted.single_toSeq, ite_eq_right hn.1, ite_eq_right hn.2]
     norm_num), Finset.sum_pair (by norm_num)]
   simp only [l1Weighted.add_toSeq, l1Weighted.single_toSeq]
   norm_num
@@ -735,8 +735,8 @@ private theorem norm_cosMul₃_e1_e1_e2 :
   norm_num [h4, h2]
   rw [norm_eq_sum_of_support _ {0, 2, 4} (fun n hn => by
     simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hn
-    simp only [l1Weighted.add_toSeq, l1Weighted.single_toSeq, if_neg hn.1, if_neg hn.2.1,
-      if_neg hn.2.2]
+    simp only [l1Weighted.add_toSeq, l1Weighted.single_toSeq, ite_eq_right hn.1, ite_eq_right hn.2.1,
+      ite_eq_right hn.2.2]
     norm_num)]
   rw [Finset.sum_insert (by norm_num), Finset.sum_insert (by norm_num), Finset.sum_singleton]
   simp only [l1Weighted.add_toSeq, l1Weighted.single_toSeq]

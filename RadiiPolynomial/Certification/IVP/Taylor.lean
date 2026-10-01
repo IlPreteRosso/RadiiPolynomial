@@ -267,11 +267,11 @@ theorem action_eq_actionQ (d : IVP.StdIVPData ν L N) (c : SystemCoeff L)
     d.approxInverse.action c l n = (actionQ N d.A_col cq l n : ℝ) := by
   unfold actionQ
   by_cases hn : n ≤ N
-  · rw [SystemBlockDiagData.action_finite _ _ _ _ hn, if_pos hn]
+  · rw [SystemBlockDiagData.action_finite _ _ _ _ hn, ite_eq_left hn]
     push_cast
     simp only [hc]
     rfl
-  · rw [SystemBlockDiagData.action_tail _ _ _ _ (by omega), if_neg hn,
+  · rw [SystemBlockDiagData.action_tail _ _ _ _ (by omega), ite_eq_right hn,
       d.htail_diag_inv l n (by omega), hc]
     push_cast
     ring

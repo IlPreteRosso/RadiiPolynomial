@@ -484,10 +484,10 @@ lemma ScalarBlockDiagData.toScalarCLM_toSeq_eq_action {N : ℕ} {ν : PosReal}
       scalarBlockDiagAction matCols vec tailCoeff n := by
   simp only [scalarBlockDiagAction]
   by_cases hn : n ≤ N
-  · rw [if_pos hn, A.toScalarCLM_toSeq_fin (ν := ν) v ⟨n, Nat.lt_succ_of_le hn⟩]
+  · rw [ite_eq_left hn, A.toScalarCLM_toSeq_fin (ν := ν) v ⟨n, Nat.lt_succ_of_le hn⟩]
     simp_rw [hmat, hvec]
   · push Not at hn
-    rw [if_neg (not_le.mpr hn), A.toScalarCLM_toSeq_tail v n hn, htail n hn, hvec]
+    rw [ite_eq_right (not_le.mpr hn), A.toScalarCLM_toSeq_tail v n hn, htail n hn, hvec]
 
 /-- Per-term evaluator for `‖A · v‖` norm sums.
 ℚ parameters for computable interval arithmetic. -/
@@ -559,7 +559,7 @@ theorem systemBlockDiagActionEval_correct {L N : ℕ}
   simp only [systemBlockDiagActionEval, hν]
   by_cases hn : n ≤ N
   · -- Finite block
-    rw [if_pos hn]
+    rw [ite_eq_left hn]
     have : A.action c l n =
         ∑ j : Fin L, ∑ k : Fin (N + 1), A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k * c j k :=
       A.action_finite c l n hn
@@ -569,7 +569,7 @@ theorem systemBlockDiagActionEval_correct {L N : ℕ}
       (IntervalRat.mem_singleton _) cfg.precision hprec
   · -- Tail
     push Not at hn
-    rw [if_neg (not_le.mpr hn)]
+    rw [ite_eq_right (not_le.mpr hn)]
     rw [A.action_tail c l n hn, htail l n hn, hvec]
     exact_mod_cast IntervalDyadic.mem_ofIntervalRat
       (IntervalRat.mem_singleton _) cfg.precision hprec

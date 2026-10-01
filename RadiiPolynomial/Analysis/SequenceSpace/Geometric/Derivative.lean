@@ -47,12 +47,12 @@ lemma differentiable_mk_of_finSupp {E : Type*} [NormedAddCommGroup E] [NormedSpa
     by_cases hn : n ≤ M
     · -- Exactly one k has ↑k = n: the sum collapses to f a n
       rw [Finset.sum_eq_single ⟨n, by omega⟩
-        (fun k _ hk => if_neg (by intro h; exact hk (Fin.ext h.symm)))
+        (fun k _ hk => ite_eq_right (by intro h; exact hk (Fin.ext h.symm)))
         (fun h => absurd (Finset.mem_univ _) h)]
       simp
     · -- n > M: no k has ↑k = n, so sum = 0 = f a n
       rw [hsupp a n (by omega)]
-      exact (Finset.sum_eq_zero fun k _ => if_neg (by intro h; omega)).symm
+      exact (Finset.sum_eq_zero fun k _ => ite_eq_right (by intro h; omega)).symm
   intro a; show DifferentiableAt ℝ (fun a => l1Weighted.mk (f a) (hf a)) a
   rw [show (fun a => l1Weighted.mk (f a) (hf a)) =
       fun a => ∑ k : Fin (M + 1), single_CLM (ν := ν) (↑k) (f a ↑k) from funext hsum_eq]

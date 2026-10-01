@@ -231,7 +231,7 @@ lemma Z₁_le (hsz : d.aQ.size ≤ d.N + 1) (hZ : d.Z₁Q ≤ d.Z₁) :
       ∑ n ∈ Finset.Icc 0 d.K₁, |((d.dQ n - (if n = 0 then d.dQ 0 else 0) : ℚ) : ℝ)| *
         (d.νq : ℝ) ^ n := by
     rw [l1Weighted.norm_eq_Icc_sum_of_support _ d.K₁ (fun n hn => by
-      rw [hseq, dQ_eq_zero hsz n hn, if_neg (by omega)]; simp)]
+      rw [hseq, dQ_eq_zero hsz n hn, ite_eq_right (by omega)]; simp)]
     simp_rw [hseq, hν]
   have hR : ((d.Z₁Q : ℚ) : ℝ) ≤ (d.Z₁ : ℝ) := by exact_mod_cast hZ
   unfold PolyZeroData.Z₁Q at hR

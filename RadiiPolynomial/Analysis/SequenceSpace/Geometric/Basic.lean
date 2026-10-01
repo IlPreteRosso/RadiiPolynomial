@@ -236,7 +236,7 @@ lemma norm_mk_shift_neg_le (f : l1Weighted ν) (hmem : Mem ν
       (ν : ℝ) * ‖f‖ := by
   rw [norm_eq_tsum, norm_eq_tsum]; simp_rw [mk_apply]
   rw [((mem_iff _).mp hmem).tsum_eq_zero_add]
-  simp only [if_true, abs_zero, zero_mul, zero_add, Nat.succ_ne_zero, ite_false,
+  simp only [ite_true, abs_zero, zero_mul, zero_add, Nat.succ_ne_zero, ite_false,
     Nat.add_sub_cancel, abs_neg]
   rw [show (fun n => |toSeq f n| * (ν : ℝ) ^ (n + 1)) =
     fun n => (ν : ℝ) * (|toSeq f n| * (ν : ℝ) ^ n) from by ext n; rw [pow_succ]; ring]
@@ -292,7 +292,7 @@ def single (n : ℕ) (x : ℝ) : l1Weighted ν :=
 
 lemma single_toSeq_of_ne (n k : ℕ) (x : ℝ) (h : k ≠ n) :
     toSeq (single n x : l1Weighted ν) k = 0 := by
-  simp only [single_toSeq, if_neg h]
+  simp only [single_toSeq, ite_eq_right h]
 
 lemma norm_single (n : ℕ) (x : ℝ) :
     ‖(single n x : l1Weighted ν)‖ = |x| * (ν : ℝ) ^ n := by
@@ -390,12 +390,12 @@ lemma trunc_eq_sum (N : ℕ) (a : l1Weighted ν) :
   apply ext; intro n
   rw [coeff_trunc, toSeq_finset_sum]
   by_cases hn : n ≤ N
-  · rw [if_pos hn]
+  · rw [ite_eq_left hn]
     rw [Finset.sum_eq_single n
       (fun m _ hne => single_toSeq_of_ne m n (toSeq a m) (Ne.symm hne))
       (fun h => absurd (Finset.mem_range.mpr (Nat.lt_succ_iff.mpr hn)) h)]
     exact (single_toSeq_same n (toSeq a n)).symm
-  · rw [if_neg hn]
+  · rw [ite_eq_right hn]
     refine (Finset.sum_eq_zero ?_).symm
     intro k hk
     have hne : n ≠ k := fun h => hn (h ▸ Nat.lt_succ_iff.mp (Finset.mem_range.mp hk))
@@ -422,9 +422,9 @@ lemma tendsto_trunc (a : l1Weighted ν) :
   obtain ⟨K₀, hK₀⟩ := htend ε hε
   refine ⟨K₀, fun N hN => ?_⟩
   have hcoeff_zero : ∀ k, k < N + 1 → toSeq (trunc N a - a) k = 0 := fun k hk => by
-    simp only [sub_toSeq, coeff_trunc, show k ≤ N from by omega, if_true, sub_self]
+    simp only [sub_toSeq, coeff_trunc, show k ≤ N from by omega, ite_true, sub_self]
   have hcoeff_abs : ∀ k, |toSeq (trunc N a - a) (k + (N+1))| = |toSeq a (k + (N+1))| := fun k => by
-    simp only [sub_toSeq, coeff_trunc, show ¬ (k + (N+1) ≤ N) from by omega, if_false,
+    simp only [sub_toSeq, coeff_trunc, show ¬ (k + (N+1) ≤ N) from by omega, ite_false,
       zero_sub, abs_neg]
   have hnorm_eq : ‖trunc N a - a‖ =
       ∑' k, |toSeq a (k + (N+1))| * (ν : ℝ) ^ (k + (N+1)) := by
@@ -531,7 +531,7 @@ lemma single_mul (m n : ℕ) (r s : ℝ) :
       · simp [hi]
     · intro h
       exact absurd (Finset.mem_antidiagonal.mpr (rfl : m + n = m + n)) h
-  · rw [if_neg hk]
+  · rw [ite_eq_right hk]
     apply Finset.sum_eq_zero
     rintro ⟨i, j⟩ hij
     simp only [Finset.mem_antidiagonal] at hij

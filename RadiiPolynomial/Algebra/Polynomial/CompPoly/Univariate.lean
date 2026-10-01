@@ -39,7 +39,7 @@ theorem hasFDerivAt_evalBanach_one (P : CompPoly 1) (x : 𝔸) :
       exact hasFDerivAt_const _ x
   | X i =>
       obtain rfl : i = 0 := Subsingleton.elim _ _
-      simp only [CompPoly.evalBanach, CompPoly.pderiv, if_true, Rat.cast_one, map_one]
+      simp only [CompPoly.evalBanach, CompPoly.pderiv, ite_true, Rat.cast_one, map_one]
       have h1 : ContinuousLinearMap.mul ℝ 𝔸 1 = ContinuousLinearMap.id ℝ 𝔸 := by
         ext h; simp
       rw [h1]

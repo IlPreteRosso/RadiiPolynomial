@@ -107,7 +107,7 @@ theorem norm_eq (x : FνN ν N) :
   congr 1
   · simp [wt]
   · refine Finset.sum_congr rfl fun k _ => ?_
-    simp only [wt, Fin.val_succ, Nat.add_one_ne_zero, if_false]
+    simp only [wt, Fin.val_succ, Nat.add_one_ne_zero, ite_false]
     ring
 
 /-- The norm of a single stored mode: `‖c e_k‖ = |c| wt ν k`. -/
@@ -142,12 +142,12 @@ theorem evenLift_neg (x : FνN ν N) (m : ℤ) : evenLift x (-m) = evenLift x m 
 omit [Fact (1 ≤ (ν : ℝ))] in
 theorem evenLift_natCast_of_le (x : FνN ν N) {n : ℕ} (h : n ≤ N) :
     evenLift x (n : ℤ) = x ⟨n, Nat.lt_succ_of_le h⟩ := by
-  simp only [evenLift, Int.natAbs_natCast, dif_pos h]
+  simp only [evenLift, Int.natAbs_natCast, dite_eq_left h]
 
 omit [Fact (1 ≤ (ν : ℝ))] in
 theorem evenLift_natCast_of_lt (x : FνN ν N) {n : ℕ} (h : N < n) :
     evenLift x (n : ℤ) = 0 := by
-  simp only [evenLift, Int.natAbs_natCast, dif_neg (not_le.2 h)]
+  simp only [evenLift, Int.natAbs_natCast, dite_eq_right (not_le.2 h)]
 
 /-- Stored nonnegative modes, before the flip. -/
 private def rawPad (x : FνN ν N) : l1Chebyshev ν :=
@@ -164,13 +164,13 @@ private theorem rawPad_toSeq_natCast (x : FνN ν N) (n : ℕ) :
   · rw [Finset.sum_eq_single ⟨n, Nat.lt_succ_of_le h⟩]
     · simp
     · intro b _ hb
-      rw [if_neg]
+      rw [ite_eq_right]
       intro hc
       exact hb (Fin.ext hc.symm)
     · intro hc
       exact absurd (Finset.mem_univ _) hc
   · refine Finset.sum_eq_zero fun k _ => ?_
-    rw [if_neg]
+    rw [ite_eq_right]
     intro hc
     exact h (hc ▸ Nat.le_of_lt_succ k.2)
 
@@ -295,7 +295,7 @@ variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] {N : ℕ}
 
 omit [Fact (1 ≤ (ν : ℝ))] in
 theorem evenLift_eq_zero (x : FνN ν N) {m : ℤ} (hm : ¬ |m| ≤ (N : ℤ)) : evenLift x m = 0 := by
-  rw [evenLift, dif_neg]
+  rw [evenLift, dite_eq_right]
   rw [Int.abs_eq_natAbs] at hm
   omega
 

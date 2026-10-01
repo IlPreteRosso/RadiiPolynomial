@@ -103,7 +103,7 @@ lemma convolution_eq_sum_mulAntidiagonal
     (f ⋆[L] g) x = ∑ ab ∈ Finset.mulAntidiagonal x, L (f ab.1) (g ab.2) := by
   simp only [convolution]
   rw [← (Finset.mulAntidiagonal x).tsum_subtype fun ab => L (f ab.1) (g ab.2)]
-  exact (Equiv.setCongr (mulFiber_eq_mulAntidiagonal x)).tsum_eq
+  exact (Set.equivOfEq (mulFiber_eq_mulAntidiagonal x)).tsum_eq
     (fun ab => (L (f ab.1.1)) (g ab.1.2))
 
 end AntidiagonalBridge

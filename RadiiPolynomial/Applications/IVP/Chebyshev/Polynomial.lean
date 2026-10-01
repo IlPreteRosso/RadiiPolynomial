@@ -150,10 +150,10 @@ private lemma FAseq_single (k n : ℕ) :
               l1Chebyshev.toSeq (l1Chebyshev.single (ν := ν) (↑(k + 1) : ℤ) 1)
                 (↑(j + 1) : ℤ)) = (-1 : ℝ) ^ (k + 1) := by
             rw [tsum_eq_single k (fun j hj => by
-              rw [l1Chebyshev.toSeq_single, if_neg (fun h => hj (by omega)), mul_zero])]
+              rw [l1Chebyshev.toSeq_single, ite_eq_right (fun h => hj (by omega)), mul_zero])]
             simp [l1Chebyshev.toSeq_single]
           simp only [FAseq, hs]
-          rw [l1Chebyshev.toSeq_single, if_neg (by omega)]
+          rw [l1Chebyshev.toSeq_single, ite_eq_right (by omega)]
           simp
   | succ j =>
       simp only [FAseq, l1Chebyshev.toSeq_single, Nat.cast_add, Nat.cast_one]
@@ -225,7 +225,7 @@ lemma StdChebIVPData.fderiv_G_fin_toSeq_of_compPoly
       TCtailElem N (compPolyDerivative f a h l))) (n : ℤ) = _
   rw [l1Chebyshev.toSeq_add, l1Chebyshev.toSeq_add,
     d.TAfun_toSeq_nat, d.TCblockFun_toSeq_nat, TCtailElem_toSeq_nat,
-    if_neg (not_lt.mpr hn), add_zero,
+    ite_eq_right (not_lt.mpr hn), add_zero,
     SystemBlockDiagData.action_finite _ _ _ _ hn]
   rw [TCblockSeq, SystemBlockDiagData.actionFinite_finite _ _ _ _ hn]
   simp_rw [mul_add, Finset.sum_add_distrib]

@@ -80,11 +80,11 @@ theorem shiftDivN_single_tailTsum_eq_colTailQ (b : l1Weighted ν) (bQ : Array �
     rw [e1, shiftDivN_succ_mode, l1Weighted.toSeq_mul_single]
     unfold colTailTermQ
     by_cases hM : M ≤ n + N
-    · rw [if_pos hM, if_pos hM, hb, hν, abs_div,
+    · rw [ite_eq_left hM, ite_eq_left hM, hb, hν, abs_div,
         abs_of_nonneg (show (0 : ℝ) ≤ (↑(n + N + 1) : ℝ) from Nat.cast_nonneg _)]
       push_cast
       ring
-    · rw [if_neg hM, if_neg hM]
+    · rw [ite_eq_right hM, ite_eq_right hM]
       simp
   refine (tsum_congr hterm).trans ?_
   rw [tsum_eq_sum (s := Finset.range (d + M + 2)) ?_]
@@ -97,7 +97,7 @@ theorem shiftDivN_single_tailTsum_eq_colTailQ (b : l1Weighted ν) (bQ : Array �
       exact hn (Finset.mem_range.mpr (by omega))
     show ((colTailTermQ bQ ν_q N M n : ℚ) : ℝ) = 0
     unfold colTailTermQ
-    rw [if_pos (by omega : M ≤ n + N), hd (n + N - M) (by omega)]
+    rw [ite_eq_left (by omega : M ≤ n + N), hd (n + N - M) (by omega)]
     simp
 
 /-- **Certificate-facing reduction** of the `∀ M` column hypothesis of

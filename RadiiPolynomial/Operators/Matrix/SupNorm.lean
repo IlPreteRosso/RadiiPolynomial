@@ -69,7 +69,7 @@ theorem id_sub_matCLM_comp_apply {T : (Fin n → R) →L[ℝ] (Fin n → R)}
     (ContinuousLinearMap.id ℝ (Fin n → R) - matCLM A ∘L T) h i = ∑ k, (1 - A * M) i k * h k := by
   rw [sub_apply, Pi.sub_apply, matCLM_comp_apply hT]
   simp only [ContinuousLinearMap.id_apply, Matrix.sub_apply, sub_mul, Finset.sum_sub_distrib,
-    Matrix.one_apply, ite_mul, one_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, if_true]
+    Matrix.one_apply, ite_mul, one_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
 
 end Matrix
 
