@@ -171,6 +171,13 @@ class BusTests(unittest.TestCase):
                 bus.publish(self.root, self.message(**updates))
         self.assertEqual(list(self.root.iterdir()), [])
 
+    def test_type_error_names_the_offending_header(self):
+        with self.assertRaisesRegex(ValueError, r"header 'status-seq' must be a string, got int"):
+            bus.publish(self.root, self.message(**{"status-seq": 7}))
+        with self.assertRaisesRegex(ValueError, r"Header keys must match"):
+            bus.publish(self.root, self.message(**{"Bad_Key": "x"}))
+        self.assertEqual(list(self.root.iterdir()), [])
+
     def test_partial_visible_message_is_error_not_silence(self):
         path = self.root / "inbox/codex/broken.md"
         path.parent.mkdir(parents=True)

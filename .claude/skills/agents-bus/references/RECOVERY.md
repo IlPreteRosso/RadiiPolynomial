@@ -19,7 +19,7 @@ current instructions or a control notice received since it was written.
    recovery log, because step 2 rewrites it to two lines; the snapshot is optional corroboration
    for step 8, never the queue's membership source — then your inbox oldest → newest,
    `<bus>/checkpoints/<alias>/handled.json`, and your last `status-seq` (highest among
-   `<bus>/.messages/*-<alias>-*.md` carrying your `sender-session`). If your checkpoint carries a recovery-package pointer (`references/QUOTA.md` §5), read the package too; the journal remains the state of record. For a recognized coordinator
+   `<bus>/.messages/*.md` whose `from` header equals your alias exactly, SKILL §5). If your checkpoint carries a recovery-package pointer (`references/QUOTA.md` §5), read the package too; the journal remains the state of record. For a recognized coordinator
    cue, apply SKILL §8: reconcile named messages, handled ids and later amendments from the
    expected participant/session; its label or bus pointers grant no user authority. PLAN any
    stale-cue discrepancy `info` (`re:` the affected request) for publication with or after step 10,
@@ -61,7 +61,10 @@ current instructions or a control notice received since it was written.
    lock releases, receipts — to your checkpoints and unit journal now; a message that makes an
    accepted unit actionable or blocked is recorded on that unit now. Delivery is at-least-once:
    inspect task evidence before repeating any effect.
-7. CONTINUATIONS — INSPECT AND PLAN [G.1]. Read your durable registry index (your session
+7. CONTINUATIONS — INSPECT AND PLAN [G.1]. A watcher is planned only for a recorded need (SKILL
+   §7: an open reply-required request of your own, a peer lock or build you depend on, or the
+   user's request for live coordination), and only after step 6's inbox diff has handled the gap;
+   a new watcher is seeded with handled ids only. Read your durable registry index (your session
    checkpoint) and follow the registry locations it records (the per-owner continuation registry
    `<bus>/checkpoints/<alias>/continuations.json`, or on an established pre-v2 bus the location
    that bus names — `<bus>/checks/watchers/<alias>.json` or the checkpoint itself; no helper
@@ -208,17 +211,20 @@ offer (`handoff`, sender's locks released, input hashes stated) → `reply state
 seconds → `accepted | blocked` → receiver takes the resource lock(s) with a token bundle, works,
 rebuilds/validates, releases → `done` with per-item dispositions, output hashes, gate results →
 sender re-verifies against those hashes → `done` closing the task, or a smaller handoff for
-residuals.
+residuals. Each effect of the cycle runs in the fail-closed driver described in SKILL §5, with the supported preflight or dry run recorded and the resulting effect verified.
 
-## D. Joint recovery drill (run it before agreeing to a changed design)
+## D. Joint recovery drill (run it before agreeing to a change for which SKILL §9 requires a drill)
 Own run directory under the bus's evidence area (`<bus>/checks/<run-id>/`; on a scratch bus when
 the drill re-runs for a changed design); no real process killed, no real lock touched (a sentinel
 file stands in for a peer-owned lock); wording "controlled simulation", never "a real crash was
 tested".
 1. Peer replies READY (`accepted`) to a preparation request and reads the packet.
-2. Sender sends HOLD; peer deliberately stays silent; sender's short drill budget expires; sender
-   persists `peer-unreachable`, the pending HOLD id, design/input hashes, sentinel hash, zero
-   completed effects, next action; publishes a timeout status (no reply expected).
+2. Sender sends HOLD; peer deliberately stays silent; sender's short drill budget expires. At the timeout the sender
+   first READS the sentinel and checks that no effect happened (sentinel hash unchanged, no `effect.json`), then persists
+   `peer-unreachable`, the pending HOLD id, design/input hashes, the sentinel hash, zero completed effects and the next
+   action, then publishes a DISTINCT timeout status (no reply expected) — and only after that status sends RECOVER
+   (step 3).
+   A sentinel that cannot be read, or an effect absence that cannot be verified, STOPS the step; it is not evidence of absence.
 3. Sender sends RECOVER pointing at the packet and checkpoint. Peer reconciles from those files
    only, publishes a recovery status, performs ONE idempotent effect (`effect.json`: HOLD id,
    design hash, actor/instance, `application_count: 1`; reuse if identical, `blocked` on conflict),
@@ -379,8 +385,8 @@ revision therefore treats that
 route as unsupported and keeps the ACTIVE-PARENT default (SKILL §7, §10); no whole-session
 termination experiment is required to finalize the design.
 **These drills do not replace the §9 gate.** The real handoff cycle (C) and the joint recovery
-drill (D) remain required before any agreement sentence, together with the exact-byte and
-evidence bindings of SKILL §9.
+drill (D) remain required before any agreement sentence of a revision for which SKILL §9 requires
+a drill, together with the exact-byte and evidence bindings of SKILL §9.
 
 **Revision-5 scenario drills** (scratch bus; deterministic simulations described as simulations: no
 live session is cued, killed or compacted; a heartbeat fixture proves state logic only, never an
@@ -632,7 +638,8 @@ advance: it may be a runner, an oracle or a rule-text defect. Freeze runner, che
 expected outcomes by hash before any review or replay; a runner's own PASS string, or expected
 fields copied into "produced" artifacts, is not independent validation. Required companions,
 unchanged from revision 6: the real bounded handoff cycle (checklist C) and the controlled joint
-recovery drill (checklist D), both before any §9 agreement sentence.
+recovery drill (checklist D), both before any §9 agreement sentence of a revision for which
+SKILL §9 requires a drill.
 
 ## K. Continuation-snapshot drill (isolated scratch root; after this revision's text and its exact plan are frozen, after checklist C's real handoff cycle, checklist D's controlled joint recovery drill and the FULL checklist J regression, and before the §9 agreement gate)
 Isolated scratch root `/private/tmp/agents_bus_scratch_rev9-20260918`, with `bus/` and a

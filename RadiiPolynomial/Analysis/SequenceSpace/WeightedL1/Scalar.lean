@@ -86,26 +86,26 @@ instance : CoeOut (WeightedScalar 𝕜 w m) 𝕜 := ⟨toReal⟩
 /-- Additive equivalence from `𝕜`. -/
 def ofReal : 𝕜 ≃+ WeightedScalar 𝕜 w m := AddEquiv.refl 𝕜
 
-omit [NormedField 𝕜] in
-@[simp] lemma toReal_apply (x : WeightedScalar 𝕜 w m) : toReal x = x := rfl
-@[simp] lemma ofReal_apply (x : 𝕜) : (ofReal x : WeightedScalar 𝕜 w m) = x := rfl
+-- omit [NormedField 𝕜] in
+-- @[simp] lemma toReal_apply (x : WeightedScalar 𝕜 w m) : toReal x = x := rfl
+-- @[simp] lemma ofReal_apply (x : 𝕜) : (ofReal x : WeightedScalar 𝕜 w m) = x := rfl
 
-@[simp] lemma coe_zero : ((0 : WeightedScalar 𝕜 w m) : 𝕜) = 0 := rfl
-@[simp] lemma coe_one : ((1 : WeightedScalar 𝕜 w m) : 𝕜) = 1 := rfl
-@[simp] lemma coe_add (x y : WeightedScalar 𝕜 w m) :
-    ((x + y : WeightedScalar 𝕜 w m) : 𝕜) = x + y := rfl
-@[simp] lemma coe_sub (x y : WeightedScalar 𝕜 w m) :
-    ((x - y : WeightedScalar 𝕜 w m) : 𝕜) = x - y := rfl
-@[simp] lemma coe_neg (x : WeightedScalar 𝕜 w m) :
-    ((-x : WeightedScalar 𝕜 w m) : 𝕜) = -x := rfl
-@[simp] lemma coe_mul (x y : WeightedScalar 𝕜 w m) :
-    ((x * y : WeightedScalar 𝕜 w m) : 𝕜) = x * y := rfl
-@[simp] lemma coe_smul (r : 𝕜) (x : WeightedScalar 𝕜 w m) :
-    ((r • x : WeightedScalar 𝕜 w m) : 𝕜) = r • ↑x := rfl
-@[simp] lemma coe_pow (x : WeightedScalar 𝕜 w m) (k : ℕ) :
-    ((x ^ k : WeightedScalar 𝕜 w m) : 𝕜) = (↑x) ^ k := rfl
-@[simp] lemma coe_natCast (k : ℕ) : ((k : WeightedScalar 𝕜 w m) : 𝕜) = k := rfl
-@[simp] lemma coe_intCast (k : ℤ) : ((k : WeightedScalar 𝕜 w m) : 𝕜) = k := rfl
+-- @[simp] lemma coe_zero : ((0 : WeightedScalar 𝕜 w m) : 𝕜) = 0 := rfl
+-- @[simp] lemma coe_one : ((1 : WeightedScalar 𝕜 w m) : 𝕜) = 1 := rfl
+-- @[simp] lemma coe_add (x y : WeightedScalar 𝕜 w m) :
+--     ((x + y : WeightedScalar 𝕜 w m) : 𝕜) = x + y := rfl
+-- @[simp] lemma coe_sub (x y : WeightedScalar 𝕜 w m) :
+--     ((x - y : WeightedScalar 𝕜 w m) : 𝕜) = x - y := rfl
+-- @[simp] lemma coe_neg (x : WeightedScalar 𝕜 w m) :
+--     ((-x : WeightedScalar 𝕜 w m) : 𝕜) = -x := rfl
+-- @[simp] lemma coe_mul (x y : WeightedScalar 𝕜 w m) :
+--     ((x * y : WeightedScalar 𝕜 w m) : 𝕜) = x * y := rfl
+-- @[simp] lemma coe_smul (r : 𝕜) (x : WeightedScalar 𝕜 w m) :
+--     ((r • x : WeightedScalar 𝕜 w m) : 𝕜) = r • ↑x := rfl
+-- @[simp] lemma coe_pow (x : WeightedScalar 𝕜 w m) (k : ℕ) :
+--     ((x ^ k : WeightedScalar 𝕜 w m) : 𝕜) = (↑x) ^ k := rfl
+-- @[simp] lemma coe_natCast (k : ℕ) : ((k : WeightedScalar 𝕜 w m) : 𝕜) = k := rfl
+-- @[simp] lemma coe_intCast (k : ℤ) : ((k : WeightedScalar 𝕜 w m) : 𝕜) = k := rfl
 
 /-! ### Weighted Norm -/
 

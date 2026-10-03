@@ -40,8 +40,10 @@ def encode(message: dict[str, str]) -> bytes:
     if missing:
         raise ValueError(f"Missing fields: {', '.join(sorted(missing))}")
     for key, value in message.items():
-        if not KEY.fullmatch(key) or not isinstance(value, str):
-            raise ValueError("Header keys and all values must be strings")
+        if not isinstance(key, str) or not KEY.fullmatch(key):
+            raise ValueError(f"Header keys must match [a-z][a-z0-9-]*: {key!r}")
+        if not isinstance(value, str):
+            raise ValueError(f"header {key!r} must be a string, got {type(value).__name__}")
         if key != "body" and (not value or any(c in value for c in "\r\n\0")):
             raise ValueError(f"Invalid header value for {key}")
     for key in ("from", "to", "id"):

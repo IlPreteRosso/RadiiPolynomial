@@ -6,23 +6,29 @@ This is a Lean 4 formalization of radii polynomial methods for rigorous ODE solu
 
 ```
 RadiiPolynomial/
-  ARCHITECTURE.md                -- module roles, public facades, and import rules
+  ARCHITECTURE.md                -- module roles, public facades, and import rules (the inventory of record)
   RadiiPolynomial.lean           -- root import (library + production examples)
   RadiiPolynomial/
     Algebra/                     -- convolution and polynomial representations
     Analysis/                    -- weighted sequence spaces, evaluation, and calculus
     Core/                        -- abstract theorem and canonical bounds
     Operators/                   -- finite matrices and finite-plus-tail block operators
-    Certification/              -- witness reductions and the LeanCert adapter
+    Certification/               -- witness reductions, the LeanCert adapter, residual correction
+                                    (Residual/), and the IVP/, PowerSeries/, Rational/ certificate faces
     Tactic/                      -- auto_poly_fderiv, pderiv_simp, compPolyOf%, finmatrix_bound
-    Applications/IVP/Taylor/     -- Taylor IVP operator, theorem, Jacobian, and analytic bridge
-    Applications/IVP/Chebyshev/  -- Chebyshev IVP operator and block-diagonal realization
+    Applications/IVP/            -- shared vector field (VectorField.lean) and split boundary (Boundary.lean);
+      Taylor/                    --   Taylor IVP operator, theorem, Jacobian, and analytic bridge
+      Chebyshev/                 --   Chebyshev IVP operator and block-diagonal realization
+    Applications/PowerSeries/    -- polynomial zeros on l1_nu (operators, bounds, affine Z2 transition)
+    Applications/FiniteDimensional/ -- the row-sum face on R^n and rational polynomial systems
+    Applications/Galerkin/       -- the polynomial Galerkin face on the finite Chebyshev carrier
+    Applications/Fourier/        -- the general-symbol semilinear consumer on the bilateral geometric fiber
     Examples/                    -- grouped by problem family and discretization
 ```
 
 **Theorem hierarchy:**
 - `general_radii_polynomial_theorem` (Thm 7.6.2) — abstract, any Banach space zero-finding
-- `ivp_system_theorem` (Thm 8.2.2) — book-faithful monolithic IVP theorem (unused, kept for reference)
+- `ivp_system_theorem` (Thm 8.2.2) — book-faithful global IVP theorem, a corollary of the ball-local `ivp_system_theorem_local` (neither is used by the examples; kept for reference)
 - `chebyshev_system_theorem` — system IVP specialization (Chebyshev), calls 7.6.2
 - Example77 uses 7.6.2 directly (parameterized zero-finding, NOT an IVP)
 - Example81/83 use `StdIVPData.existsUnique` which calls 7.6.2 directly (not 8.2.2)
@@ -108,7 +114,6 @@ noncomputable — any ℚ mirror folded over it breaks `native_decide` / `finsum
 compilation. Index computable bilateral folds by `Finset.range` plus an explicit
 shift (`i = j − N`), and bridge to the analytic side with
 `Finset.image (fun j => (j : ℤ) − N) (Finset.range (2*N + 1))` + `Finset.sum_image`.
-(Bitten in the Example1421 Y₀ fold, 2026-08-25.)
 
 ## Design decisions
 
@@ -156,12 +161,8 @@ New IVP examples should use `ivp_hDF_block_nat`, not manual Jacobian definitions
 
 ## Reference book
 
-The reference book is at `docs/reference_book/`, split into PDFs by page range:
-- 1-48.pdf (includes table of contents)
-- 49-72.pdf, 73-120.pdf, 121-138.pdf, 139-182.pdf
-- 183-220.pdf, 221-254.pdf, 255-290.pdf, 291-312.pdf, 313-382.pdf
-
-Use `pdftotext` for more efficient text output. Check the TOC in 1-48.pdf first to find the right page range.
+Primary: the errata-corrected rewrite edition at `../exterior/book/` (`chapters/ch02–ch19.tex`, `alignment/` hubs), which follows the Lean formalization; search it with `grep -n`.
+The original edition, for original page numbers or for citing the published text, is at `docs/reference_book/`, split into PDFs by page range (1-48 with the table of contents, 49-72, 73-120, 121-138, 139-182, 183-220, 221-254, 255-290, 291-312, 313-382). Use `pdftotext`; check the TOC in 1-48.pdf first to find the right range.
 
 **Key sections for formalization:**
 - Section 7.4 (p.158): Banach algebra — `lpOneAlg`, Cauchy product

@@ -1873,3 +1873,112 @@ reflowed together with the lines that follow them so that no stub line remains: 
 the words do not. Lines 3 (the frontmatter description, harness trigger text) and 453, 454, 455 and
 457 (rows of the §7 route table, which cannot wrap without leaving the table) stay longer than 300
 characters: a known limit of this revision, not an amendment.
+
+## 20. Revision-14 amendments (rev 23) — the rev-13 design, the rewritten §9, and the user's process reset
+
+### 20.1 Provenance
+
+Revision 14 carries the design that revision 13 agreed and replaces SKILL.md §9 with the text Codex
+supplied in its review of the revision-14 proposal (`S9_REPLACEMENT.md`). Amendments by section,
+with the change-list item numbers (`CHANGE_LIST_v0.md` of the rev-13 staging):
+
+- SKILL.md "Scope of this revision": the revision-11 scope text moves verbatim to §20.2; one pointer
+  sentence remains (item 43, exact instruction RULINGS r2 C4).
+- §1: what a migration plan of an established bus preserves, checked by an inventory diff on a byte
+  copy (item 42: constraints only; the migration itself is user-sequenced).
+- §3: a second session of the same harness is its own participant with a scoped alias, a recorded
+  scope and a bound peer (item 38).
+- §4: named windows as correlated control records (item 6).
+- §5: effects behind a gate (items 1, 3; text RULINGS r1 A1); unknown outcome (item 2; A2); reply
+  budgets (item 7); the last `status-seq` after a restart by exact `from` header (item 14).
+- §6: the registration lifecycle paragraph after the heartbeat sentence (item 34; RULINGS r1 R5);
+  name takeover (item 41; A4).
+- §7: a watcher only while a need is recorded (item 31); a deferred cue relies on the target's
+  turn-boundary intake, with the no-route appendix (item 36; A6); the inbox diff before any arming,
+  background loops and captured lines (items 32, 35); the literal intake shell template is cut and
+  replaced by normative intake text (item 33; A3).
+- §8: labels on causal claims (item 4); durable evidence paths (item 5).
+- §9: replaced (the §9 rewrite): revision tiers TEXT / HELPER / BEHAVIOUR, the highest applicable
+  tier governing, replace the revision-10 "Revision efficiency" rules 1–7; one review round and at
+  most one correction round; cost as one line; close without release; the release record
+  `RELEASE.json`. The agreement paragraph puts the bare agreement line last (item 8(c)).
+  "Installation" carries the installation lessons (item 9), the installer's validation of the
+  established bus (in place of the wording of RULINGS r1 A5) and the install order and base check
+  of RULINGS r1 R12. Items 8(a) and 8(b) are superseded by the replaced §9.
+- `references/RECOVERY.md`: A.1 `status-seq` by exact sender (item 14); A.7 watcher need and inbox
+  diff before arming (items 31, 32); C the effect sentence (items 1, 2; A1); D step 2 as amended
+  (item 8(d)), with the stop clause for an unreadable sentinel or an unverifiable effect absence;
+  the headings and closing sentences of D, H and J that required checklists C and D before every
+  agreement now require them where SKILL §9 requires a drill (Codex's review requirement Q3.1).
+- `scripts/bus.py` and `scripts/tests/test_bus.py`: a header type error names the offending header
+  (item 19; one new test).
+- `MANIFEST.json`: revision 14, design revision 23. Every other payload is byte-identical to
+  revision 11.
+
+The staged text patch's first SKILL.md hunk (a longer revision-13 scope paragraph) was not applied:
+item 43 supersedes it. The staged §9 "Installation" hunk is superseded by the replaced §9.
+
+The user's ruling of 2026-10-03: the revision machinery was blocking progress; revision 14 is
+special: it does not follow the revision-10 §9 process (time box, lineage, fingerprints, a
+pre-kickoff drill packet, the RECOVERY D drill), and it resets the process by fixing how future
+revisions are done (the replaced §9). The two coordinators still agree before any installation.
+
+HISTORICAL (the revision-13 process). Revision 13 CLOSED WITHOUT RELEASE (2026-10-03T16:50:55Z;
+the project bus's `checks/skill_rev13/CLOSE_WITHOUT_RELEASE_rev13.json`, sha256
+671cb8c516bc802512991b4b863010a6c500129ef4896d98ec9a1840972b64d4); its number is not reused. Its time
+box, its pre-kickoff executable-packet prerequisite and the next-step sequence its closure record
+proposes (a further packet accepted before any kickoff) are historical: the special revision-14
+proposal and the replaced §9 supersede them, and no revision-13 cost is reset or represented as a
+release.
+
+Bound records (sha256):
+
+- `checks/skill_rev13/PLAN_rev13.md` fc29786f12e0f14a66259b08da41a154a3b5712a176eed9d95225d9d9637bbd5 (historical)
+- `checks/skill_rev13/CONSENSUS_rev13.md` 906af177b3bbd7c21595902bd390ca8c97c385c61ba08f5380756657f816072e
+- `checks/skill_rev13/codex_rulings_r1/RULINGS.md` 787631308427fce49e1be94d5f9b7de80a00b73926db5e9a95bf3986ae7ae9f5
+- `checks/skill_rev13/codex_rulings_r2/RULINGS.md` 20830e2c0c1e5479dc1893b4563cd149b5c4fe56a0e972f760df553915ad7753
+- `checks/skill_rev14/PROPOSAL_rev14.md` f6e592583a2431c69b889ecf7c03344f462f6e5fbabad44f5169b04d18825f27
+- `checks/skill_rev14/S9_rev14_proposed.md` af7e837e44730bd4b8782bbb3bb0b8f15c1bfeff9193d8395a05c363cbc0c72e (superseded)
+- `checks/skill_rev14/codex_proposal_review/RULINGS.md` d89b2c53dfa53176ee7a5fc40c131cff70fe5f85ce8916f2bdd860d4a4097e04
+- `checks/skill_rev14/codex_proposal_review/S9_REPLACEMENT.md` 369a7a43c97a703007310974b5ad018062bbb59ef32ed5c9ce7001d1192a3887
+- staged text patch `rev13_skill.diff` 6a3829ab719e7a733385d660f64546d6a00ea7ccfeae5a77d355792ec8b1641e
+- staged `BILATERAL_ITEMS.md` 949c8c0beddc8032c37084a2ae98b6d2814bc294eba1f944c31aaeef9e05442e
+- staged `bus_py_item19.diff` 1207f1e3f245a2de0c8454f384001654b5abb0560bbef9fe0df518ca6d042714
+
+### 20.2 HISTORICAL — the revision-11 scope text
+
+Moved verbatim from SKILL.md "Scope of this revision" by item 43. It describes revision 11 and is no
+longer operative:
+
+```text
+Revision 11 amends this paragraph, §1 (two rationale anecdotes moved to the
+design; rewrapped lines), §5 (the turn-end condition cites §10; rewrapped lines), §6 (a rationale
+anecdote moved to the design), §7 (two rationale anecdotes moved to the design, the `Monitor`
+duration kept; the cue target's turn end cites §5 and §10 only; rewrapped lines), §8 (rewrapped
+lines), §10 (a project-specific work-unit limit replaced by a generic example) and §11 (the "Locks."
+and "Observations, not classifiers." paragraphs reduced to pointers to §4 and §6; a reflowed line),
+appends `references/DESIGN_v2.md` §19 (the provenance of the prose compaction); every section and
+payload file it does not name is byte-identical to revision 10, whose amendments remain in force as
+amended here. What each earlier revision amended, and why, is recorded in `references/DESIGN_v2.md`
+(its revision notes and §11–§19), the design of record at the revision `MANIFEST.json` names.
+```
+
+### 20.3 Known limits
+
+- Classification and evidence of revision 14 (Codex's review of the proposal, Q2, verbatim):
+
+  Rev14 includes behavioural protocol prose and the item19 helper diagnostic change. For this special revision the coordinators explicitly choose HELPER-level validation, with `no drill run`, instead of replaying or repairing the rejected rev13 packet. Acceptance depends on the frozen diff, full helper suites and installer review. The deployed legacy bus and deferred cue/publish/handled-record tools are unchanged; installation does not activate those proposed runtime changes.
+
+- No standing drill packet ships in revision 14. The rev-13 packets v1 and v2
+  (`checks/skill_rev13/claude/drill_packet_v1/`, `checks/skill_rev13/claude/drill_packet_v2/`) are
+  historical, UNACCEPTED material for one; their defects and repair list stay in the closure record
+  above and are not prerequisites of this release.
+- Item 10 (rewrap of lines longer than 300 characters) is deferred.
+- AB-9 is carried with its rev-12 evidence.
+- Item 37(2), Codex as an MCP server, is UNVERIFIED.
+- The deployed cue and tool behaviour (`cue_codex.py` v2.3.4 with the limitations recorded in
+  RULINGS r1 R7, `pub.py` v2, the handled-ids mirror) is unchanged and distinct from the proposed
+  tools contract (`checks/skill_rev13/TOOLS_CONTRACT_post_rev13.md`, sha256
+  308d2f197a6353a6789078ad276e2e5e575d17cf3b0a1e1bf5c2bf4a1f13aa1b); revision 14 claims no stronger cue gate and no
+  mirror-reader correction.
+- The migration of the legacy bus is user-sequenced; item 42 states constraints only.

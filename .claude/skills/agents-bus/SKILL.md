@@ -25,17 +25,7 @@ metadata preparation fails acquires nothing; one whose identity read fails right
 directory whose ownership it cannot establish (emptiness is not identity; `scripts/common.py`,
 tested).
 
-**Scope of this revision.** Its number and its payload hashes live in `MANIFEST.json` and nowhere
-else in this file. Revision 11 amends this paragraph, §1 (two rationale anecdotes moved to the
-design; rewrapped lines), §5 (the turn-end condition cites §10; rewrapped lines), §6 (a rationale
-anecdote moved to the design), §7 (two rationale anecdotes moved to the design, the `Monitor`
-duration kept; the cue target's turn end cites §5 and §10 only; rewrapped lines), §8 (rewrapped
-lines), §10 (a project-specific work-unit limit replaced by a generic example) and §11 (the "Locks."
-and "Observations, not classifiers." paragraphs reduced to pointers to §4 and §6; a reflowed line),
-appends `references/DESIGN_v2.md` §19 (the provenance of the prose compaction); every section and
-payload file it does not name is byte-identical to revision 10, whose amendments remain in force as
-amended here. What each earlier revision amended, and why, is recorded in `references/DESIGN_v2.md`
-(its revision notes and §11–§19), the design of record at the revision `MANIFEST.json` names.
+**Scope of this revision.** The revision number and payload hashes are recorded in `MANIFEST.json`; amendment history is recorded in `references/DESIGN_v2.md`.
 Installing the package (scope S1, the portable skill and the optional transport-envelope convention)
 activates nothing else by itself: an established bus's opt-in to these amendments (S2) and a
 project's typed-packet adapter together with its inventory/audit amendment (S3) activate SEPARATELY,
@@ -98,7 +88,11 @@ only an ambiguous location needs the user.
 bus of the previous protocol version: read its `PROTOCOL.md` and follow THAT protocol entirely
 (its transport helpers, its manual lock procedure, its checkpoint paths); do not run `init` or
 any admin command against it, do not mix v2 registration or token bundles into it, and never
-create a second bus for the same tree; migration is the user's decision. A merely missing
+create a second bus for the same tree; migration is the user's decision. A migration plan
+preserves, and is checked by an inventory diff taken before and after on a byte copy: every alias
+epoch of every participant (a name taken over keeps its predecessor's records), every handled-id
+record, the `status-seq` maximum per name and every intent record under `checks/` (cues,
+windows); no administrative command runs against the established bus before that plan is agreed. A merely missing
 `bus.json` proves nothing by itself: an empty or incomplete directory is not a bus, and corrupt
 v2 metadata still fails closed.
 If the project carries `coordinate`-skill registries (`R/.claude/coordination.json`,
@@ -139,7 +133,11 @@ Mechanism values (descriptive metadata, not a verified-capability claim): primar
 same instance → refresh (omitted or partial mechanism fields keep or merge the recorded ones). Same alias + DIFFERENT
 instance → refused: take a new alias. A replacement session is a new participant: it inherits
 no task, pending request or lock token; it reconciles the predecessor's pending requests
-explicitly (RECOVERY A). `hello` writes your heartbeat, creates your board section from the
+explicitly (RECOVERY A). A second session of the SAME harness on one bus is its own participant
+with a SCOPED alias (for example `claude-paper` beside `claude`): its board section and its
+registration record its SCOPE (resources, lock keys) and its BOUND PEER; it addresses only that
+peer, owes cues only where a duty is recorded for that (caller, target) pair, and never publishes
+under or cues for another alias. `hello` writes your heartbeat, creates your board section from the
 template if absent (under `state`, after the participants guard is released) and otherwise
 appends one log line inside your section, never rewriting prose. Update your own placeholder
 status under the `state` lock when recording actual work (§5). If the result reports `board_update_pending` or
@@ -210,6 +208,17 @@ bundle):
 - The claim-registry refusal (§1) is a courtesy toward sessions outside this protocol, not an
   exclusion guarantee.
 
+**Named windows.** A window — a named interval in which protected resources stay quiet, such as a
+landing's close snapshot — is a set of CORRELATED CONTROL RECORDS, not a phrase: a request id, the
+protected resources, the participant set, a digest bound to what it protects, the ACK set (one
+correlated ACK per participant, `re:` the request id) and exactly ONE correlated terminal
+`WINDOW_CLOSED` notice. Windows are matched by exact ids and `re:` correlation across ALL
+participants' inboxes and their `done/`, never by family names or wording, and each window is in
+exactly one correlated state; a participant's own `received` receipt published before its ACK
+does not block the window. A literal phrase a peer's guard keys on stays mandatory where that
+guard requires it: the record adds to the phrase, never replaces it. Project landing steps live in
+project notes, not here.
+
 ## 5. Messages, requests, handoffs, board
 ```
 python3 <skill dir>/scripts/bus.py publish --bus <bus> --message msg.json
@@ -256,6 +265,14 @@ match within the timeout, and a no-match establishes nothing. A matching reply m
 the inbox before you wait; an empty inbox does not mean no pending request. To listen for NEW
 requests, list `<bus>/inbox/<me>/*.md` (skip names starting with `.`) oldest first, sleep ≤ 55 s,
 repeat within the turn. Archive to `done/` only after the pending work is recorded durably.
+
+**Effects behind a gate.** Every publish, cue, freeze, apply or install is performed by one driver. It validates its inputs and authorization in order, persists the exact intended operation before the effect, and aborts dependent effects on the first failed check. Do not compose gated effects with a shell chain. Where the tool supports a dry run, a successful dry run of the same operation and an exact comparison of its bound inputs gate the live call; otherwise the driver records the supported preflight and its limits and does not call it a dry run. The effect follows these gates; verification, completion journaling and release of the driver's own lock follow the effect. A wrapper preserves a child's failure and never reports success when its own verification fails. Hash-bound messages use digests recomputed by the driver from the named bytes; when those bytes are unchanged from a previous bound version, the message says so explicitly.
+
+**Unknown outcome.** A non-zero exit after a step that may have written, or a missing completion result for that step, leaves its outcome UNKNOWN until reconciled. Inspect the exact intended id and the intended bytes in `.messages/` and `inbox/<to>/` or `inbox/<to>/done/`; a slug match alone is insufficient. A known pre-write refusal is not an unknown write. Retry only the same operation with the same id and bytes when reconciliation permits it, or report the unresolved outcome; never mint another id to bypass uncertainty. Retain the intent and any owned lock until the applicable recovery procedure permits release.
+
+**Reply budgets.** A request MAY carry `reply-budget:` naming HARD constraints of the reply only —
+receipt-first, no recompiles, no source edits, the `input-sha256` binding. It carries no length
+cap, and a worker count in it is a suggestion the receiver decides.
 
 **First reply.** The FIRST valid, correctly correlated reply to a `request` satisfies the receipt
 requirement, and its `state` keeps its own meaning. Short control work may answer `accepted`,
@@ -308,8 +325,12 @@ append-only log). Distinguish proposed assignee, accepted task, and presently he
 recovery, completion, and before a planned turn end or compaction: observed-at, pending outbound
 ids, accepted work, held locks, next action, activation mechanism, `status-seq`. `status-seq` is
 scoped to (alias, instance id): as a receiver ignore any status whose seq is ≤ the last you saw
-for that instance; after a restart find your own last seq as the highest among
-`<bus>/.messages/*-<alias>-*.md` carrying your `sender-session`. If the scope truly has nothing
+for that instance; after a restart find your own last seq as the highest `status-seq` among
+`<bus>/.messages/*.md` whose `from` header equals your alias EXACTLY (the header block read to its
+blank line; a file-name glob such as `*-<alias>-*` also matches other senders, for example
+`<alias>-paper` or a slug that contains the alias); that maximum over the alias also exceeds your
+instance's own last seq. Writers that share an alias allocate under one exclusive lock. If the
+scope truly has nothing
 pending, say exactly "nothing to wait for; nothing to do" with `reply-required: no`; otherwise
 name what is pending. A receipt or info-only wake with no change updates your heartbeat and
 handled record and publishes nothing; informational notices and receipts never trigger
@@ -358,7 +379,7 @@ written.
 ## 6. Silence and recovery
 Heartbeat: `heartbeat/<alias>` = `<UTC ISO> <instance id> active|waiting:<id>|idle` + `next: …`,
 rewritten at every turn start and end (`hello` writes the first) and at every unit checkpoint of a
-long turn — a checkpoint action of the active turn, never a timer or scheduler. A session that ends
+long turn — a checkpoint action of the active turn, never a timer or scheduler. Where a registration schema provides an explicit lifecycle, its values are `active`, `idle`, `retired`, `replaced`; descriptive task activity belongs in `activity` and the heartbeat. A lifecycle-aware cue gate accepts only `active` or `idle`, rejects malformed or unknown lifecycle values, and checks all preserved retirement/replacement evidence as well as current alias/instance binding and native-idle evidence. A present invalid lifecycle never falls back to legacy state. An older registration without lifecycle uses the explicitly recorded legacy compatibility policy; native idleness never proves that a participant remains a member. Adding lifecycle requires a coordinated, tested reader transition and does not overwrite or discard historical lifecycle fields. A session that ends
 a turn while ACCEPTED units are still unstarted (§10) writes, after the `next:` line, exactly one
 further line `idle-with-queue: <unit id> [<unit id> …]` naming those units; the first line keeps
 its state token (`idle`, or `waiting:<id>` when a reply is also awaited), so every reader of the
@@ -442,6 +463,7 @@ list; what your own session must have on disk BEFORE a
 compaction or halt, and the per-harness continuity routes actually observed, are checklist I there
 (documentation only: it installs nothing); the joint drill that tests all of this is D, and the
 revision-4 and revision-5 scenario drills are H.
+**Name takeover.** An alias-name takeover requires the user's authorization, verified predecessor cessation, and reconciliation of pending work, effects and locks. Before mutation write a transition journal and pause dispatch to the affected registration epochs. Preserve the predecessor's registration, checkpoint and handled-id records as snapshots; NOT ADOPTED does not mean cancelled. Replace the routing record atomically. Retire the predecessor epoch and any obsolete scoped alias, with a successor pointer; do not retire the shared name now bound to the successor. Cues may address only the current eligible registration. Recompute status-seq per name, attach the successor's sender-session to subsequent messages, and never rewrite history or inherit a lock token.
 
 ## 7. Delivery ≠ activation
 Two requirements, never conflated (design §6.0): R1 = a cooperating agent of the other harness acts without
@@ -493,8 +515,14 @@ documented scheduler lifecycle is different, and this rule activates no route.
 **Default activation pattern (asymmetric, by harness capability).** The two sides of a bus are not alike,
 and the default follows what each harness can do. A session whose harness can re-invoke it when a file
 lands (Claude Code: a background wait loop or `Monitor` on `<bus>/inbox/<alias>/` that fires on the first
-unhandled `*.md`) is the WATCHING side: it arms ONE such watcher per bus at registration and re-arms it
-after every firing or one-shot expiry while its coordination scope remains open and authorized —
+unhandled `*.md`) is the WATCHING side: it arms ONE such watcher per bus only while activation is
+NEEDED — (a) a reply-required request of its own to the peer is open, (b) the peer holds a lock or
+build it depends on, or (c) the user asked for live coordination — and otherwise records
+`watchers.primary_inbox = none, <reason>` in its checkpoint; an unsolicited message then waits for
+the next intake or re-entry diff, and where a long autonomous run arms a self-wakeup at all (only
+under an admissible justification below) that ONE wakeup also diffs the inbox, never a watcher plus
+a timer. It re-arms the watcher after every firing or one-shot expiry while a need holds and its
+coordination scope remains open and authorized —
 registered before and after arming, retired at scope closure, cancellation or expiry with the
 recorded stop result, never re-armed after scope closure and never duplicating an unknown or
 stop-pending handle (design §6.6, RECOVERY A.7) — so a peer's message is noticed without a poll or
@@ -507,7 +535,9 @@ exited is not a watcher, so re-arm it before turning to other work or ending the
 the CUE DISPATCHER: after publishing to a target whose participant record carries a `verified` cue route
 (`cli-queue`), it dispatches ONE coalesced cue under that row's rules when its own native-idle evidence
 for the target holds; if the target is observed in an active turn, it waits for that turn to end and cues
-then, only for ids still unhandled. A session whose harness is woken by cues and has no watcher mechanism
+then, only for ids still unhandled — such a deferral relies on the target's own turn-boundary intake
+(§10): the dispatcher records `deferred: target active` and re-evaluates ONCE at the next observed
+turn end. If no authorized turn-end observation route is available, persist the deferred ids for the next authorized intake; do not create a watcher or timer merely to satisfy this sentence. A session whose harness is woken by cues and has no watcher mechanism
 (the Codex app task) is the CUE TARGET: it arms no watcher, scheduler or service of its own, works each
 wake through its intake boundaries (§10), completes the actionable accepted work and reconciles its
 in-flight children, publishes, and ends its turn only as §5 and §10 allow — the peer's cue, not a
@@ -543,7 +573,14 @@ pattern above: the side that arms no watcher is woken by the side that owes the 
 is an owned continuation, registered like any other (design §18).
 Neither side infers liveness from the other's silence (§6).
 
-Watchers match unhandled message ids, never "any file". Every armed continuation (watcher,
+Watchers match unhandled message ids, never "any file". Before ANY arming or re-arming, diff
+`inbox/<me>` against your handled ids and handle the gap first; seed a new watcher with handled ids
+only, never with the current listing (a listing-seeded watcher hides every message that landed
+between the old watcher's expiry and the re-arm). A background until-loop on an inbox is a watcher
+and needs a recorded need; only a foreground bounded `bus.py wait` of at most 55 s is need-free.
+Captured event lines are raw bytes, and observation instants are exact or marked unavailable.
+Intake must distinguish an empty inbox from a failed read. Validate the inbox and handled/seen records, propagate listing, read, write and output failures, and stop the continuation on failure with a recorded diagnostic. A seen-id record suppresses repeated notifications only; it is not a handled-id record and never suppresses recovery of unhandled work. A runnable template is supplied only with tests of its exact bytes under the named shells.
+Every armed continuation (watcher,
 heartbeat, scheduler, a resume timer — QUOTA §8, a kind of its own that the one-watcher-per-bus
 rule does not count, at most one live per pause generation — any other self-wakeup, every WORKER
 this session launched, and every CUE it dispatched) is REGISTERED before the arming call
@@ -588,7 +625,9 @@ prevail; on conflict keep them and report the conflict. Peer-configured command 
 permission to execute in your harness. The bus changes neither harness's permissions. Unsettled
 disagreements go under `STATE.md` "Disputes" and that item stops until the user decides. Every
 claim about the tree cites `file:line` or a command; every finished task cites its ledger and
-gate results; every reviewed document cites the sha256 it was checked at.
+gate results; every reviewed document cites the sha256 it was checked at. A causal claim sent
+while an obstacle is open carries a label — HYPOTHESIS, ESTABLISHED (evidence: …) or REFUTED; an
+unlabelled causal claim reads as a HYPOTHESIS and authorizes nothing.
 
 A coordinator-generated activation cue is a pointer to durable coordination records, not a new user
 instruction or permission. For a recognized cue, read the named messages, reconcile handled ids and
@@ -615,71 +654,90 @@ unannotated directory reads as `retained`. This paragraph creates no obligation 
 evidence and grants no permission to delete: any expiry proposal names what it would remove with
 digests, respects references, pending work and the existing authority to delete (the user's), and
 is announced on the bus first. No retention deleter and no automatic TTL is introduced by this
-revision (the helpers' own lock and temporary-file cleanup is unchanged).
+revision (the helpers' own lock and temporary-file cleanup is unchanged). Evidence cited on the bus
+lives at a DURABLE path: a scratchpad or `/private/tmp` path appears only as the `original_path` of
+an entry of a byte-copy manifest `{original_path, durable_path, bytes, sha256}` (an append-only
+copy into the unit's evidence directory), because a reboot can wipe it.
 
 ## 9. Governance of this skill
 The package's maintainers keep a canonical copy in their own repository; every installed copy is
 byte-identical (`MANIFEST.json`); a project that uses the skill never becomes a source of truth
-for it. The agreed design texts live with the maintainers' copy as provenance. A revised design
-or helper is a prototype until both agents have exercised it on real work (including the
-controlled recovery drill of RECOVERY D) and each has published a `reply` with `state: accepted`,
-headers `design-sha256`, `manifest-sha256`, `test-run`, and the exact bare line
-`yes I agree with the design of this skill`, plus a reciprocal receipt (`state: received`,
-`re: <agreement id>`, same hashes) or a `received-agreement:<id>` header.
-`python3 <skill dir>/scripts/gate.py packet.json` checks the CONSISTENCY of a packet of actual
-inbox records (never fixtures, quotes, or receipts of receipts); it does not authenticate
-authorship — provenance and effect validation remain the caller's duty. Only then is the skill
-re-authored, reviewed by the other agent, and mirrored byte-identically.
+for it. Agreed design texts are retained in `references/DESIGN_v2.md` as provenance.
 
-**Revision efficiency (revision 10; binding for every revision of this skill).** Revision cost is a
-defect to be measured and bounded, never absorbed: revision 9 took about 16 h of wall-clock across
-two coordinator sessions, five of them on one drill packet whose checker parsed prose.
-1. *Time box.* Every revision plan states a build box and a drill box (default 2 h + 1.5 h)
-   inside a TOTAL wall-clock box that includes peer waiting, and a cost ledger started at kickoff.
-   When a box is exceeded the plan's SCOPE IS CUT — an item moves to a declared known limit or to
-   the next revision — never extended by further build rounds. The measured cost per phase,
-   waiting included, is recorded in the FINAL_RECORD (`cost`).
-2. *Versioned drill packets.* The frozen runner, checker, fixtures and probe harness of the last
-   release are the BASE of the next revision's drill; a revision's packet is a DELTA against that
-   base with a before/after digest table (`lineage`). A from-scratch packet needs a stated reason.
-3. *Reuse by fingerprint.* A case's prior PASS is reused when its case text, the oracle texts it
-   cites (file:line quotes), the fixtures it reads, the runner/checker and helper code paths it
-   exercises (transitively, workers included) and the runtime and activation assumptions it
-   rests on (interpreter, host routes) are unchanged by the candidate — a recorded fingerprint with
-   the old record's hash; a changed line number alone needs re-anchoring, not a rerun. Cases on a
-   changed path keep their old evidence as history and have the affected property revalidated by
-   NAMED new tests or drills. Reuse is a recorded decision in the plan, never a silent omission.
-4. *Modeled decisions are peer-reviewed, not prose-parsed.* Where the runner writes the records it
-   decides on, the gate is the peer's batched independent review of those records plus STRUCTURAL
-   bindings — finite vocabularies (§7), exact-set and digest bindings. A checker predicate may only
-   assert what it can recompute from structure; a free-text scan is advisory and never a gate.
-5. *Round cap.* Internal author/critic rounds per packet or per item are at most two; then the
-   peer audits: one main cross-review plus narrow defect-closure rechecks. A cap may defer or
-   reject an item; it never converts a failure into a PASS. The peer's independent-lineage
-   review is scheduled EARLY, before internal hardening, because it finds different holes.
-6. *Test-first briefs.* A packet brief names the failure classes and ships the probe harness the
-   packet must reject before code is written.
-7. *Exchange cadence.* Peer exchanges are cheap; build latency is the cost. A plan puts the peer's
-   review on the critical path once per packet generation; while a peer works, independent
-   authorized work continues when there is any — otherwise the coordinator checkpoints and waits
-   or yields (no busywork, no scope expansion). Peer waiting counts against the total box.
-A revision plan carries these in its §0 (time box, lineage, delta list); its source-validation
-step reviews the delta with the base's prior PASS cited; its FINAL_RECORD gains `cost` and
-`lineage`. The author of an item and its auditor are named in the plan and are different agents;
-the author supplies a testable contract, failing witnesses and a small candidate, and keeps the
-testing duty; agreement is never itself evidence.
+A revision remains a prototype until BOTH coordinators have published a `reply` with
+`state: accepted`, headers `design-sha256`, `manifest-sha256` and `test-run`, and, as the LAST line
+of the body, the exact bare line `yes I agree with the design of this skill`, plus a reciprocal
+receipt (`state: received`, `re: <agreement id>`, same hashes) or a `received-agreement:<id>`
+header. `gate.py` must pass on the packet of actual records before installation. It checks
+consistency, not authorship; provenance and effect verification remain the coordinators' duty.
+Silence and a review deadline never count as acceptance.
 
-**Installation (revision 10).** Each coordinator installs the destinations it owns, serialized
-under the project's `skill` lock, bases re-hashed under the lock immediately before writing, every
-payload the regenerated `MANIFEST.json` lists plus that manifest, every file re-hashed, a recoverable backup, one
-`INSTALLATION_VERIFIED` record per destination. The order between the two coordinators is free
-once BOTH gates are ready; the actual order is recorded. A coordinator whose harness refuses
-writes to its own skill directories (self-modification guards) does not route around the guard:
-it uses the harness's approved user-mediated path — the unchanged scripted install handed to the
-user — never the peer; it records who ran it and every aborted or erroring run, and verifies the
-final bytes afterwards exactly as if it had run it (completion rests on the bytes, not on a
-post-write reporting error). The script used is kept with the release evidence; no generic
-installer ships in this package.
+**Revision tiers.** Classify the change by its effect, not just its file extension. The highest
+applicable tier governs; record the classification and any agreed alternative evidence in the
+release record.
+- TEXT: documentation changes that do not change runtime protocol semantics. Evidence is the
+  author's relative diff against the installed base, reviewed from the frozen bytes. Apply a
+  review diff only to a copy (`patch -p1 -d <copy>`), never to an installed directory.
+- HELPER: code or test changes under `scripts/` that do not change runtime protocol semantics,
+  such as diagnostic corrections. Evidence is TEXT plus the complete helper suites on the
+  frozen candidate under CPython 3.10 and a declared supported newer CPython, with exact
+  interpreter paths, versions, counts and results. A zero-test run fails.
+- BEHAVIOUR: changes to runtime protocol semantics, whether in code or prose, including
+  identity/registration, publication, exclusion, handoff, recovery, delegation or activation.
+  Evidence is HELPER plus a replay of the relevant cases of the standing drill packet by both
+  coordinators on a scratch bus, each supplying its own records. The standing
+  packet is versioned skill payload under `scripts/drill/`; its implementation is reviewed as
+  helper code before first use and after changes. A prior acceptance applies only to those
+  reviewed bytes; it is not a permanent approval of later versions.
+
+When no suitable standing drill packet ships, the coordinators may explicitly agree to release
+a BEHAVIOUR change using HELPER-level evidence and any named targeted checks. Record the affected
+semantics, the reason, the evidence actually reviewed and `no drill run` in `RELEASE.json`.
+This alternative is never inferred from silence or from the absence of a packet. Either
+reviewer may refuse it. A revision need not build a new drill framework merely to proceed.
+
+**Review and cost.** Use one review round and at most one correction round, followed by a narrow
+check of the corrections. Findings name `file:line`, the violated requirement and a failing
+input or concrete consequence. A cap never converts an unresolved defect into acceptance:
+defer the affected change or close without release. Unrelated changes belong in a separately
+agreed scope. Author and reviewer are independent; a coordinator does not approve its own work.
+
+Record cost in one line: start, end (or current time while open), rounds and units. No prescribed
+time box, lineage table or fingerprint ledger is required. Either coordinator may close a
+stalled revision by publishing `CLOSED WITHOUT RELEASE` and the retained artifact paths. The
+installed revision then remains operative. When the user asks whether continuing is worthwhile,
+answer with the cost line, what has been achieved, what remains and the option to close.
+
+Generate `MANIFEST.json` before freezing the candidate; it lists every payload and its hash.
+Tests, reviews and agreements identify the candidate bytes they cover. A correction is frozen
+again and receives the verification affected by that correction; no prior result is described
+as testing different bytes. Do not reuse a revision number closed without release.
+
+`RELEASE.json` is retained outside the installed inventory. It records the base and candidate
+inventory digests, manifest and diff hashes, classification, test results, drill evidence or
+the explicitly agreed `no drill run` alternative, cost line, agreement and receipt ids, and
+the passing `gate.py` result. Installation results are appended as separately identified records
+after execution; the pre-install release decision must not claim a future install succeeded.
+
+**Installation.** Each coordinator installs its own destinations, after both agreements and
+reciprocal receipts are complete and the release gate has passed. Serialize installations under
+the project's `skill` lock and release it only when its OWNER bytes exactly match those written
+by that installer. Re-hash the bases under the lock immediately before writing. A destination
+must match its expected base or the recorded new inventory byte-for-byte; verify an already
+installed destination instead of rewriting it, and refuse any third inventory.
+
+Install every manifest-listed payload and the manifest, re-hash every file, retain a recoverable
+backup, and write one `INSTALLATION_VERIFIED` record per destination. Never remove a destination
+tree recursively during rollback. The installation order is free once the gates above are met;
+record the actual order and verify every destination at completion. The installer validates the
+established bus and its declared runtime layout and never initializes or migrates that bus.
+
+A coordinator whose harness refuses writes to its own skill directories uses the approved
+user-mediated route: give the user the unchanged reviewed installer, never route the write
+through the peer. Record who ran it and every aborted or erroring run, reconcile uncertain
+outcomes, and verify the resulting bytes. Retain the installer with the release evidence;
+no generic installer ships in this package. Installation alone does not activate another
+runtime protocol or a project's adapter.
 
 ## 10. Delegation on receipt: bounded parent units and the unit journal
 The main session owns intake, deduplication, short control work and final responsibility. It

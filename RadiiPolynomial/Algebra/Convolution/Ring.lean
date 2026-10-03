@@ -251,7 +251,7 @@ variable [Monoid M]
 
 /-- The triple multiplication map `(a, b, c) ↦ a * b * c`. -/
 @[to_additive /-- The triple addition map `(a, b, c) ↦ a + b + c`. -/]
-def tripleMulMap : M × M × M → M := fun ⟨a, b, c⟩ => a * b * c
+def tripleMulMap : M × (M × M) → M := fun ⟨a, b, c⟩ => (a * b) * c
 
 /-- Fiber over `x` under triple multiplication: `{(a, b, c) | a * b * c = x}`. -/
 @[to_additive /-- Fiber over `x` under triple addition: `{(a, b, c) | a + b + c = x}`. -/]

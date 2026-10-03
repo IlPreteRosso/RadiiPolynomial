@@ -42,7 +42,6 @@ Task category → tier (standing rule, harness-neutral, 2026-09-20; cross-harnes
 - Mechanical stages and chores (freeze/MANIFEST, importer shadow check, INSIGHTS draft,
   inventories, brief DRAFTS, scouting, fidelity SWEEPS, organising): the MECHANICAL TIER,
   non-final — `sonnet` (Sonnet 5.5) at medium effort, or `gpt-6-luna` medium/high in Codex.
-  Sonnet 5.5 is released (user 2026-09-28); the temporary Opus stand-in is retired.
   Deterministic scripts are preferred for pure hashing (D102); "mechanical tier" elsewhere in
   this skill means this row.
 - Bounded Lean review with `#check` probes on a comment-stripped freeze: Antigravity
@@ -405,7 +404,7 @@ lemma with its dependency chain, never a whole file. Three stages, each gated on
    prints nothing. `book_to_proofs.py` puts book prose in the prompt by construction and is
    gated behind `ARISTOTLE_ALLOW_BOOK_TEXT=1`; do not invoke it from this skill.
    Aristotle resolves Mathlib on its side and runs its own toolchain (v4.28.0 as of
-   2026-09-19, against the library's v4.33.0; the CLI warns on submit), so a returned proof
+   2026-09-19, behind the library's pinned toolchain in `lean-toolchain`; the CLI warns on submit), so a returned proof
    is a candidate, not a result, until it compiles against the pinned toolchain in the nested
    checkout. Expect renamed Mathlib lemmas and `simp` set drift across that gap. Collect
    with `aristotle tasks <id>` (status) and `aristotle download <id> --destination <tar.gz>`.

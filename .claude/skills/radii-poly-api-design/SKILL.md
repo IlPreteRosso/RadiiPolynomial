@@ -68,7 +68,7 @@ by default; record authorized renames and retirements in `RENAMES.md`.
   coefficient interpreter is Taylor-specific; finite Laurent computation needs support evidence,
   since high Chebyshev modes can contribute to low output modes.
 - Use `SystemBlockDiagData.composedApprox` as shared Taylor/Chebyshev operator
-  infrastructure. The former `IVP.ivpComposedApprox` compatibility alias is retired.
+  infrastructure.
 - Reuse the Chebyshev `G = constG + TA(a) + TC(φ(a))` decomposition and derivative bridge.
   Use the shared split-boundary mechanism for return to the IVP.
 - Residual correction belongs to `Certification/Residual`: a residual norm bound below one
@@ -171,7 +171,7 @@ research-level gaps) is the sibling skill `lean-api-design`; load both for forma
   `evalBanach = aeval ∘ toMvPoly` gives Df from `pderiv`; "cast commutes with evaluation" gives ℚ
   mirrors; `supportBound`/`laurentRadius` give far-column cutoffs (Mfar = 82 = 2N + 2 for 14.2.1);
   `clm_apply_eq_sum` decomposes CLMs on `Fin L → X` into blocks (no Fin-1 collapse).
-- **Trust policy (user 2026-09-25/26; supersedes the 2026-09-24 'named exception only' wording)**:
+- **Trust policy (user ruling 2026-09-25/26)**:
   `decide +kernel` is preferred where it is cheap (0.1–0.2 s per finite-dimensional certificate, 15 s
   for the L = 2 Chebyshev set on the pinned toolchain; Example 14.2.1's Checks close with 15
   per-conjunct kernel lemmas in ≈ 110–121 s). `native_decide` is accepted in certificates and
