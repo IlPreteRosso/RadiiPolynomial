@@ -83,7 +83,7 @@ def stdBasis (j : Fin (N + 1)) : Space ν N :=
 
 @[simp]
 lemma stdBasis_apply_self (j : Fin (N + 1)) :
-    stdBasis (ν := ν) j j = 1 := by
+    stdBasis (ν := ν) j j = ScaledReal.ofReal 1 := by
   simp [stdBasis, ofVec]
 
 @[simp]

@@ -4,8 +4,9 @@ import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Algebra
 /-!
 # Glue: WeightedScalar as a lpOneAlg Fiber
 
-Registers `WeightedScalar 𝕜 w` as satisfying the `lpOneAlg` fiber-data typeclasses
-(`lpAlgRingData`, `lpAlgSmulCompat`, `lpOneAlgWeightMul`, `lpOneAlgWeightSubMul`).
+Registers the standard frame of `WeightedScalar 𝕜 w` as a `FiberTrivialization` (from which the
+legacy `lpAlgRingData` / `lpAlgSmulCompat` instances are derived) and the Beurling-weight classes
+`lpOneAlgWeightMul`, `lpOneAlgWeightSubMul`.
 
 Separating these instances from `WeightedScalar.lean` keeps `WeightedScalar` as a
 self-contained weighted-scalar module, independent of `lpOneAlg`. Files that build
@@ -16,43 +17,54 @@ noncomputable section
 
 namespace RadiiPolynomial
 
-/-- Generic `lpAlgRingData` for any `WeightedScalar 𝕜 w` with `PosWeight`.
-All fields are trivial since `WeightedScalar 𝕜 w m = 𝕜` with identity coercions. -/
-instance WeightedScalar.instLpAlgRingData {𝕜 : Type*} [NormedField 𝕜]
+/-- The standard frame of `WeightedScalar 𝕜 w`: `θ_m = WeightedScalar.equiv` (the identity of
+`𝕜`). The legacy `lpAlgRingData` / `lpAlgSmulCompat` instances on `WeightedScalar 𝕜 w` are the
+ones derived from this instance (`FiberTrivialization.toLpAlgRingData`,
+`FiberTrivialization.toLpAlgSmulCompat`); there is no second instance path. -/
+instance WeightedScalar.instFiberTrivialization {𝕜 : Type*} [NormedField 𝕜]
     {M : Type*} {w : M → ℝ} [PosWeight w] :
-    lpAlgRingData 𝕜 M (WeightedScalar 𝕜 w) where
-  toReal _m x := WeightedScalar.toReal x
-  ofReal _m r := WeightedScalar.ofReal r
-  toReal_ofReal _ _ := rfl
-  ofReal_toReal _ _ := rfl
-  ofReal_add _ _ _ := rfl
-  ofReal_zero _ := rfl
-  toReal_add _ _ _ := rfl
-  toReal_zero _ := rfl
-  toReal_neg _ _ := rfl
-  norm_ofReal_eq _ := WeightedScalar.norm_ofReal_eq_mul_norm_one
+    FiberTrivialization 𝕜 M (WeightedScalar 𝕜 w) where
+  equiv _ := WeightedScalar.equiv
 
-/-- Generic `lpAlgSmulCompat` — scalar multiplication is just 𝕜 multiplication. -/
-instance WeightedScalar.instLpAlgSmulCompat {𝕜 : Type*} [NormedField 𝕜]
-    {M : Type*} {w : M → ℝ} [PosWeight w] :
-    lpAlgSmulCompat 𝕜 M (WeightedScalar 𝕜 w) where
-  toReal_smul _ _ _ := rfl
+namespace WeightedScalar
+
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {w : M → ℝ} [PosWeight w]
+
+@[simp] lemma fiberTrivialization_equiv (m : M) :
+    FiberTrivialization.equiv (E := WeightedScalar 𝕜 w) m = WeightedScalar.equiv := rfl
+
+/-- Lemma of record: the derived weight of the standard model is the weight function. -/
+@[simp] lemma fiberTrivialization_weight (m : M) :
+    FiberTrivialization.weight (E := WeightedScalar 𝕜 w) m = w m := by
+  show ‖(1 : 𝕜)‖ * w m = w m
+  rw [norm_one, one_mul]
+
+lemma lpAlgRingData_weight (m : M) :
+    lpAlgRingData.weight (E := WeightedScalar 𝕜 w) m = w m :=
+  fiberTrivialization_weight m
+
+end WeightedScalar
 
 /-- Generic `lpOneAlgWeightMul` from `SubMulWeightBase` (submultiplicativity only).
 Available for ALL ν > 0 — no weight ≥ 1 requirement. -/
 instance WeightedScalar.instLpOneAlgWeightMul {𝕜 : Type*} [NormedField 𝕜]
     {M : Type*} [AddCommMonoid M]
     {w : M → ℝ} [SubMulWeightBase w] : lpOneAlgWeightMul 𝕜 M (WeightedScalar 𝕜 w) where
-  norm_ofReal_mul_le := WeightedScalar.norm_ofReal_mul_le
-  norm_ofReal_one_zero := by
-    show ‖(1 : 𝕜)‖ * w 0 = 1; simp [norm_one, SubMulWeightBase.weight_zero (w := w)]
+  weight_add_le j l := by
+    simp only [WeightedScalar.lpAlgRingData_weight]
+    exact SubMulWeightBase.submul j l
+  weight_zero := by
+    rw [WeightedScalar.lpAlgRingData_weight]
+    exact SubMulWeightBase.weight_zero
 
 /-- Generic `lpOneAlgWeightSubMul` from `SubMulWeight`.
 Adds weight ≥ 1 on top of `lpOneAlgWeightMul`. Needs `[Fact (1 ≤ ν)]`. -/
 instance WeightedScalar.instLpOneAlgWeightSubMul {𝕜 : Type*} [NormedField 𝕜]
     {M : Type*} [AddCommMonoid M]
     {w : M → ℝ} [SubMulWeight w] : lpOneAlgWeightSubMul 𝕜 M (WeightedScalar 𝕜 w) where
-  norm_ofReal_one_ge := WeightedScalar.norm_ofReal_one_ge
+  one_le_weight m := by
+    rw [WeightedScalar.lpAlgRingData_weight]
+    exact SuperUnitWeight.one_le m
 
 end RadiiPolynomial
 

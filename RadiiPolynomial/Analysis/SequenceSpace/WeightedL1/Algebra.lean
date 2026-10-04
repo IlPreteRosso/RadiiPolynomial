@@ -1,4 +1,5 @@
 import RadiiPolynomial.Algebra.Convolution.Ring
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.FiberTrivialization
 import Mathlib.Analysis.Normed.Lp.lpSpace
 import Mathlib.Analysis.Normed.Module.TransferInstance
 
@@ -33,13 +34,18 @@ namespace RadiiPolynomial
 
 /-! ### Typeclasses -/
 
-/-- Canonical trivialization of each fiber `E m` as a weighted copy of the scalar field `𝕜`.
+/-- **Legacy (deprecated interface; prefer `FiberTrivialization`).** Ten-field trivialization
+of each fiber `E m` as a weighted copy of the scalar field `𝕜`.
 
 For each `m : M`, the maps `toReal m` and `ofReal m` are mutually inverse additive-group
 isomorphisms between `E m` and `𝕜`. The norm is scaled by the weight
 `ω_m := ‖ofReal m 1‖`, giving `‖ofReal m r‖ = ‖r‖ * ω_m`, so each fiber is isometric
 to `(𝕜, ω_m · ‖·‖)`. Together, these data identify `lpOneAlg M E` with the weighted
 ℓ¹ space of `𝕜`-valued sequences on `M`, with weight `ω`.
+
+Kept as a one-way compatibility layer: every `FiberTrivialization 𝕜 M E` provides an instance
+(`FiberTrivialization.toLpAlgRingData`); there is no instance in the reverse direction (use the
+explicit constructor `FiberTrivialization.ofLpAlgRingData`, which also needs `lpAlgSmulCompat`).
 
 Monoid-independent — the same data works for both `[Monoid M]` and `[AddMonoid M]`. -/
 class lpAlgRingData (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
@@ -55,12 +61,15 @@ class lpAlgRingData (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : 
   toReal_neg : ∀ m x, toReal m (-x) = -(toReal m x)
   norm_ofReal_eq : ∀ m r, ‖ofReal m r‖ = ‖r‖ * ‖ofReal m 1‖
 
-/-- Upgrades the fiber trivialization from `lpAlgRingData` to a `𝕜`-module isomorphism.
+/-- **Legacy (deprecated interface; prefer `FiberTrivialization`).** Upgrades the fiber
+trivialization from `lpAlgRingData` to a `𝕜`-module isomorphism.
 
 The additive isomorphism `toReal m : E m → 𝕜` from `lpAlgRingData` intertwines scalar
 multiplication: `toReal m (r • x) = r * toReal m x`. Combined with `lpAlgRingData`, each
 fiber `E m` becomes a one-dimensional `𝕜`-module isomorphic to `𝕜` itself, with norm
-scaled by the weight `ω_m`.
+scaled by the weight `ω_m`. For data derived from a `FiberTrivialization` this witness is
+the instance `FiberTrivialization.toLpAlgSmulCompat` (it is `map_smul` of `θ_m⁻¹`), indexed by
+the derived data only.
 
 Monoid-independent — separated from `lpAlgRingData` because it requires `NormedSpace 𝕜`. -/
 class lpAlgSmulCompat (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
@@ -69,30 +78,42 @@ class lpAlgSmulCompat (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E 
   toReal_smul : ∀ m (r : 𝕜) (x : E m),
     lpAlgRingData.toReal m (r • x) = r * lpAlgRingData.toReal m x
 
+/-- The weight `ω_m = ‖ofReal m 1‖` of legacy fiber data. For data derived from a
+`FiberTrivialization` it is definitionally `FiberTrivialization.weight m`. -/
+def lpAlgRingData.weight {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
+    [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] (m : M) : ℝ :=
+  ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖
+
+lemma lpAlgRingData.weight_def {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
+    [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] (m : M) :
+    lpAlgRingData.weight (E := E) m = ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖ := rfl
+
+/-- Beurling weight (additive index monoid): `ω_{j+l} ≤ ω_j ω_l` and `ω_0 = 1`, stated on the
+weight alone. The old two-scalar inequality is the derived lemma `norm_ofReal_mul_le`. -/
 class lpOneAlgWeightMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
     [AddMonoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] where
-  norm_ofReal_mul_le : ∀ (j l : M) (a b : 𝕜),
-    ‖lpAlgRingData.ofReal (E := E) (j + l) (a * b)‖ ≤
-    ‖lpAlgRingData.ofReal (E := E) j a‖ * ‖lpAlgRingData.ofReal (E := E) l b‖
-  norm_ofReal_one_zero : ‖lpAlgRingData.ofReal (E := E) (0 : M) (1 : 𝕜)‖ = 1
+  weight_add_le : ∀ j l : M,
+    lpAlgRingData.weight (E := E) (j + l) ≤
+      lpAlgRingData.weight (E := E) j * lpAlgRingData.weight (E := E) l
+  weight_zero : lpAlgRingData.weight (E := E) (0 : M) = 1
 
-/-- Submultiplicative weight (no weight ≥ 1 requirement).
+/-- Beurling weight (multiplicative index monoid): `ω_{j*l} ≤ ω_j ω_l` and `ω_1 = 1`.
 Sufficient for Ring on `lpOneAlg` when `[HasAntidiagonal M]` (finite fibers). -/
 @[to_additive existing (dont_translate := E 𝕜) lpOneAlgWeightMul]
 class lpOneMulAlgWeightMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
     [Monoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] where
-  norm_ofReal_mul_le : ∀ (j l : M) (a b : 𝕜),
-    ‖lpAlgRingData.ofReal (E := E) (j * l) (a * b)‖ ≤
-    ‖lpAlgRingData.ofReal (E := E) j a‖ * ‖lpAlgRingData.ofReal (E := E) l b‖
+  weight_mul_le : ∀ j l : M,
+    lpAlgRingData.weight (E := E) (j * l) ≤
+      lpAlgRingData.weight (E := E) j * lpAlgRingData.weight (E := E) l
   /-- Weight at identity = 1: ensures `‖1‖ = 1` (NormOneClass). -/
-  norm_ofReal_one_one : ‖lpAlgRingData.ofReal (E := E) (1 : M) (1 : 𝕜)‖ = 1
+  weight_one : lpAlgRingData.weight (E := E) (1 : M) = 1
 
 class lpOneAlgWeightSubMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
     [AddMonoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E]
     extends lpOneAlgWeightMul 𝕜 M E where
   /-- Weight ≥ 1: provides the fiberwise bound `‖toRealSeq f m‖ ≤ ‖f m‖`,
   embedding the extracted `𝕜`-sequence into unweighted `ℓ¹`. -/
-  norm_ofReal_one_ge : ∀ m, 1 ≤ ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖
+  one_le_weight : ∀ m, 1 ≤ lpAlgRingData.weight (E := E) m
 
 /-- Submultiplicative weight with weight ≥ 1.
 Extends `lpOneMulAlgWeightMul`. The weight ≥ 1 axiom is not used for Cauchy
@@ -106,7 +127,108 @@ class lpOneMulAlgWeightSubMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Ty
     extends lpOneMulAlgWeightMul 𝕜 M E where
   /-- Weight ≥ 1: provides the fiberwise bound `‖mulToRealSeq f m‖ ≤ ‖f m‖`,
   embedding the extracted `𝕜`-sequence into unweighted `ℓ¹`. -/
-  norm_ofReal_one_ge : ∀ m, 1 ≤ ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖
+  one_le_weight : ∀ m, 1 ≤ lpAlgRingData.weight (E := E) m
+
+/-! ### Retained two-scalar forms of the Beurling hypotheses (derived) -/
+
+section BeurlingWrappers
+
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
+  [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E]
+
+/-- Old two-scalar form: `‖ofReal (j*l) (a*b)‖ ≤ ‖ofReal j a‖ * ‖ofReal l b‖`
+(derived from `weight_mul_le` and the scaling identity). -/
+@[to_additive (dont_translate := E 𝕜) lpOneAlgWeightMul.norm_ofReal_mul_le]
+theorem lpOneMulAlgWeightMul.norm_ofReal_mul_le [Monoid M] [lpOneMulAlgWeightMul 𝕜 M E]
+    (j l : M) (a b : 𝕜) :
+    ‖lpAlgRingData.ofReal (E := E) (j * l) (a * b)‖ ≤
+      ‖lpAlgRingData.ofReal (E := E) j a‖ * ‖lpAlgRingData.ofReal (E := E) l b‖ := by
+  rw [lpAlgRingData.norm_ofReal_eq, lpAlgRingData.norm_ofReal_eq (E := E) j,
+    lpAlgRingData.norm_ofReal_eq (E := E) l, norm_mul]
+  have h := lpOneMulAlgWeightMul.weight_mul_le (E := E) j l
+  simp only [lpAlgRingData.weight] at h
+  exact (mul_le_mul_of_nonneg_left h (mul_nonneg (norm_nonneg a) (norm_nonneg b))).trans_eq
+    (by ring)
+
+/-- Old form of the unit-weight hypothesis: `‖ofReal 1 1‖ = 1`. -/
+@[to_additive (dont_translate := E 𝕜) lpOneAlgWeightMul.norm_ofReal_one_zero]
+theorem lpOneMulAlgWeightMul.norm_ofReal_one_one [Monoid M] [lpOneMulAlgWeightMul 𝕜 M E] :
+    ‖lpAlgRingData.ofReal (E := E) (1 : M) (1 : 𝕜)‖ = 1 :=
+  lpOneMulAlgWeightMul.weight_one (E := E)
+
+/-- Old form of the weight ≥ 1 hypothesis: `1 ≤ ‖ofReal m 1‖`. -/
+@[to_additive (dont_translate := E 𝕜) lpOneAlgWeightSubMul.norm_ofReal_one_ge]
+theorem lpOneMulAlgWeightSubMul.norm_ofReal_one_ge [Monoid M] [lpOneMulAlgWeightSubMul 𝕜 M E]
+    (m : M) : 1 ≤ ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖ :=
+  lpOneMulAlgWeightSubMul.one_le_weight m
+
+end BeurlingWrappers
+
+/-! ### Compatibility layer: `FiberTrivialization` → legacy data (one-way) -/
+
+namespace FiberTrivialization
+
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
+  [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)]
+
+/-- The legacy ten-field data of a fiber trivialization: `toReal m = θ_m⁻¹`,
+`ofReal m = θ_m`. This is the ONLY instance between the two interfaces (one-way). -/
+instance toLpAlgRingData [FiberTrivialization 𝕜 M E] : lpAlgRingData 𝕜 M E where
+  toReal m := (equiv (E := E) m).symm
+  ofReal m := equiv (E := E) m
+  toReal_ofReal m r := LinearEquiv.symm_apply_apply _ r
+  ofReal_toReal m x := LinearEquiv.apply_symm_apply _ x
+  ofReal_add m a b := map_add _ a b
+  ofReal_zero m := map_zero _
+  toReal_add m x y := map_add _ x y
+  toReal_zero m := map_zero _
+  toReal_neg m x := map_neg _ x
+  norm_ofReal_eq m r := by
+    rw [norm_equiv_apply, norm_equiv_apply, norm_one, one_mul]
+
+/-- The scalar-compatibility witness, indexed specifically by the derived data
+`toLpAlgRingData` (never synthesized for independently supplied legacy data). -/
+instance toLpAlgSmulCompat [FiberTrivialization 𝕜 M E] :
+    @lpAlgSmulCompat 𝕜 _ M E _ _ (toLpAlgRingData (𝕜 := 𝕜)) where
+  toReal_smul m r x := map_smul (equiv (E := E) m).symm r x
+
+lemma toLpAlgRingData_toReal [FiberTrivialization 𝕜 M E] (m : M) (x : E m) :
+    lpAlgRingData.toReal (𝕜 := 𝕜) m x = (equiv (E := E) m).symm x := rfl
+
+lemma toLpAlgRingData_ofReal [FiberTrivialization 𝕜 M E] (m : M) (r : 𝕜) :
+    lpAlgRingData.ofReal (E := E) m r = equiv (E := E) m r := rfl
+
+lemma toLpAlgRingData_weight [FiberTrivialization 𝕜 M E] (m : M) :
+    lpAlgRingData.weight (E := E) m = weight (E := E) m := rfl
+
+/-- Explicit constructor (NOT an instance) of a fiber trivialization from a particular legacy
+data instance together with its matching scalar-compatibility witness. -/
+@[instance_reducible]
+def ofLpAlgRingData (d : lpAlgRingData 𝕜 M E) [@lpAlgSmulCompat 𝕜 _ M E _ _ d] :
+    FiberTrivialization 𝕜 M E where
+  equiv m :=
+    { toFun := d.ofReal m
+      invFun := d.toReal m
+      map_add' := d.ofReal_add m
+      map_smul' := fun r a => by
+        show d.ofReal m (r * a) = r • d.ofReal m a
+        conv_rhs => rw [← d.ofReal_toReal m (r • d.ofReal m a)]
+        rw [lpAlgSmulCompat.toReal_smul m r (d.ofReal m a), d.toReal_ofReal]
+      left_inv := d.toReal_ofReal m
+      right_inv := d.ofReal_toReal m }
+
+/-- Not `@[simp]`: as a simp lemma it would unify any `FiberTrivialization` instance with
+`ofLpAlgRingData ?d` and rewrite the primary datum `equiv` into the legacy projection. -/
+lemma ofLpAlgRingData_equiv_apply (d : lpAlgRingData 𝕜 M E)
+    [@lpAlgSmulCompat 𝕜 _ M E _ _ d] (m : M) (r : 𝕜) :
+    (ofLpAlgRingData d).equiv m r = d.ofReal m r := rfl
+
+/-- Not `@[simp]`; see `ofLpAlgRingData_equiv_apply`. -/
+lemma ofLpAlgRingData_equiv_symm_apply (d : lpAlgRingData 𝕜 M E)
+    [@lpAlgSmulCompat 𝕜 _ M E _ _ d] (m : M) (x : E m) :
+    ((ofLpAlgRingData d).equiv m).symm x = d.toReal m x := rfl
+
+end FiberTrivialization
 
 /-! ### lpOneAlg Structure -/
 
@@ -986,7 +1108,7 @@ theorem norm_one_eq :
   rw [h, tsum_ite_eq]
 
 instance instNormOneClass : NormOneClass (lpOneAlg M E) where
-  norm_one := norm_one_eq.trans (lpOneAlgWeightMul.norm_ofReal_one_zero)
+  norm_one := norm_one_eq.trans lpOneAlgWeightMul.norm_ofReal_one_zero
 
 end lpOneAlg
 

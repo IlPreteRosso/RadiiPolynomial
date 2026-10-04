@@ -74,7 +74,14 @@ variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {w : M → ℝ} {m : M}
 
 instance : AddCommGroup (WeightedScalar 𝕜 w m) := inferInstanceAs (AddCommGroup 𝕜)
 instance : Module 𝕜 (WeightedScalar 𝕜 w m) := inferInstanceAs (Module 𝕜 𝕜)
-instance : Ring (WeightedScalar 𝕜 w m) := inferInstanceAs (Ring 𝕜)
+
+/-! No `Ring` instance: no construction multiplies inside a fiber. The product of the
+weighted ℓ¹ algebra is the cross-fiber convolution, and the atom of a fiber is
+`equiv 1` with `1 : 𝕜`, not a fiber-internal unit. -/
+
+/-- The standard frame `θ_m : 𝕜 ≃ₗ[𝕜] WeightedScalar 𝕜 w m` (the identity of `𝕜`). It is the
+`FiberTrivialization` of the standard model (instance in `ScalarInstances.lean`). -/
+def equiv : 𝕜 ≃ₗ[𝕜] WeightedScalar 𝕜 w m := LinearEquiv.refl 𝕜 𝕜
 
 /-! ### Coercion to 𝕜 -/
 
@@ -83,8 +90,18 @@ instance : Ring (WeightedScalar 𝕜 w m) := inferInstanceAs (Ring 𝕜)
 
 instance : CoeOut (WeightedScalar 𝕜 w m) 𝕜 := ⟨toReal⟩
 
-/-- Additive equivalence from `𝕜`. -/
+/-- Additive equivalence from `𝕜` (the additive view of `equiv`). The body is kept as
+`AddEquiv.refl 𝕜` rather than `equiv.toAddEquiv`, so its unfolding behaviour is unchanged;
+the two are `rfl`-equal (`equiv_toAddEquiv`). -/
 def ofReal : 𝕜 ≃+ WeightedScalar 𝕜 w m := AddEquiv.refl 𝕜
+
+lemma equiv_toAddEquiv : (equiv : 𝕜 ≃ₗ[𝕜] WeightedScalar 𝕜 w m).toAddEquiv = ofReal := rfl
+
+/-- The frame applied is the additive view `ofReal` (the simp normal form). -/
+@[simp] lemma equiv_apply (r : 𝕜) : (equiv r : WeightedScalar 𝕜 w m) = ofReal r := rfl
+
+@[simp] lemma equiv_symm_apply (x : WeightedScalar 𝕜 w m) :
+    (equiv : 𝕜 ≃ₗ[𝕜] WeightedScalar 𝕜 w m).symm x = toReal x := rfl
 
 -- omit [NormedField 𝕜] in
 -- @[simp] lemma toReal_apply (x : WeightedScalar 𝕜 w m) : toReal x = x := rfl
@@ -116,17 +133,14 @@ lemma norm_def (x : WeightedScalar 𝕜 w m) : ‖x‖ = ‖toReal x‖ * w m :=
 
 @[simp] lemma norm_ofReal (r : 𝕜) : ‖(ofReal r : WeightedScalar 𝕜 w m)‖ = ‖r‖ * w m := rfl
 
-/-- `‖1‖ = w m` for WeightedScalar. Bridge for lpAlgRingData.norm_ofReal_eq. -/
-@[simp] lemma norm_one_eq_weight : ‖(1 : WeightedScalar 𝕜 w m)‖ = w m := by
-  show ‖(1 : 𝕜)‖ * w m = w m; rw [norm_one, one_mul]
-
-/-- `norm_ofReal_eq` for lpAlgRingData: `‖ofReal r‖ = ‖r‖ * ‖ofReal 1‖`. -/
+/-- Standard-model form of the scaling identity `‖ofReal r‖ = ‖r‖ * ‖ofReal 1‖`;
+retained for consumers. -/
 lemma norm_ofReal_eq_mul_norm_one (r : 𝕜) :
     ‖(ofReal r : WeightedScalar 𝕜 w m)‖ = ‖r‖ * ‖(ofReal 1 : WeightedScalar 𝕜 w m)‖ := by
   show ‖r‖ * w m = ‖r‖ * (‖(1 : 𝕜)‖ * w m); rw [norm_one, one_mul]
 
-/-- Submultiplicativity of the weighted norm: `‖a*b‖ * w(j+l) ≤ (‖a‖*w j) * (‖b‖*w l)`.
-Bridge for lpOneAlgWeightMul.norm_ofReal_mul_le. -/
+/-- Standard-model form of the (derived) two-scalar Beurling inequality
+`‖a*b‖ * w(j+l) ≤ (‖a‖*w j) * (‖b‖*w l)`; retained for consumers. -/
 lemma norm_ofReal_mul_le [AddCommMonoid M] [SubMulWeightBase w] (j l : M) (a b : 𝕜) :
     ‖(ofReal (a * b) : WeightedScalar 𝕜 w (j + l))‖ ≤
     ‖(ofReal a : WeightedScalar 𝕜 w j)‖ * ‖(ofReal b : WeightedScalar 𝕜 w l)‖ := by
@@ -134,8 +148,8 @@ lemma norm_ofReal_mul_le [AddCommMonoid M] [SubMulWeightBase w] (j l : M) (a b :
   exact (mul_le_mul_of_nonneg_left (SubMulWeightBase.submul j l)
     (mul_nonneg (norm_nonneg _) (norm_nonneg _))).trans_eq (by ring)
 
-/-- Weight ≥ 1 via norm: `1 ≤ ‖ofReal 1‖`.
-Bridge for lpOneAlgWeightSubMul.norm_ofReal_one_ge. -/
+/-- Standard-model form of the (derived) bound `1 ≤ ‖ofReal 1‖`, i.e. `1 ≤ w m`;
+retained for consumers. -/
 lemma norm_ofReal_one_ge [AddCommMonoid M] [SubMulWeight w] (m : M) :
     1 ≤ ‖(ofReal 1 : WeightedScalar 𝕜 w m)‖ := by
   simp only [norm_ofReal, norm_one, one_mul]; exact SuperUnitWeight.one_le m
