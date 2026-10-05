@@ -1,7 +1,7 @@
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.Core
 import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.WeightedL1
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.Bounds
-import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation
+import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Aeval
 
 /-!
 # Weighted l1 Semantics for CompPoly
@@ -136,12 +136,14 @@ theorem differentiable_evalBanach_l1Weighted {ν : PosReal} {L : ℕ} (p : CompP
   rw [h]
   exact differentiable_evalInBanach p.toMvPoly
 
-/-- Pointwise evaluation commutes with polynomial substitution in `l1Weighted`. -/
+/-- Pointwise evaluation commutes with polynomial substitution in `l1Weighted`.
+The evaluation arrow is the universal geometric algebra lift; its scalar action is
+definitionally the pointwise power-series evaluation. -/
 theorem eval_evalBanach {ν : PosReal} {L : ℕ}
     (p : CompPoly L) (a : Fin L → l1Weighted ν) {t : ℝ} (ht : |t| ≤ ν) :
     l1Weighted.eval (p.evalBanach a) t =
       p.evalBanach (fun i => l1Weighted.eval (a i) t) :=
-  p.map_evalBanach (l1Weighted.evalAlgHom t ht) a
+  p.map_evalBanach (l1Weighted.aeval_of_norm_le ν t ht).toAlgHom a
 
 /-- Partial derivatives of a `CompPoly` system agree with the rational coefficient
 evaluator used by finite Jacobian certificates. -/

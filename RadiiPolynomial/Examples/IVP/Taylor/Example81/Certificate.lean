@@ -151,15 +151,15 @@ lemma Z₁_le_cert :
     (by unfold Z₁_bound ν_q N; norm_num) Df_norm_le
     (by simp only [ν_val_eq_q]; norm_num [Z₁_bound, ν_q, N])
 
-/-! ## Exact Z₁ column-sup bound (tightening B, additive)
+/-! ## Exact Z₁ column-sup bound (production certificate)
 
-The production `Z₁_le_cert` above certifies the recipe value
+The comparison lemma `Z₁_le_cert` above certifies the recipe value
 `Z₁_bound = ν/(N+1) · ‖2ā₀ − 1‖ = 396482/7983360 ≈ 0.0496636`. The exact
 weighted column-sup of the Z₁ tail operator is strictly smaller; the lemma
 below certifies it through the column `Z₁` slot of the Taylor certification adapter
 (`IVP.StdIVPDataQ.Z₁col_sound`, over the ℚ column bridge of
-`Certification/ColumnTailBound.lean`). Production `Z₁_le_cert`/`Z₁_bound`
-are untouched. -/
+`Certification/ColumnTailBound.lean`). The final validation and analytic corollaries
+use this sharper bound; `Z₁_le_cert` and `Z₁_bound` remain available for comparison. -/
 
 /-- Exact column-sup value of the Z₁ tail operator (tightening B): the maximum
 over `M ∈ [0..N]` of the exact ℚ column tail masses
@@ -217,6 +217,12 @@ lemma radii_neg :
       (fun _ => (Z₂_bound : ℝ)) (r_minus : ℝ) < 0 :=
   radii_neg_icc _ ⟨le_refl _, le_refl _⟩
 
+/-- Radii negativity at the production column bound, checked by exact rational arithmetic. -/
+lemma radii_neg_exact :
+    generalRadiiPolynomial (Y₀_bound : ℝ) (Z₀_bound : ℝ) (Z₁_exact_bound : ℝ)
+      (fun _ => (Z₂_bound : ℝ)) (r_minus : ℝ) < 0 := by
+  norm_num [generalRadiiPolynomial, Y₀_bound, Z₀_bound, Z₁_exact_bound, Z₂_bound, r_minus]
+
 /-! ## Main theorem -/
 
 /-- **Theorem 8.1.7** (Scalar IVP): There exists a unique zero of the composed IVP map
@@ -230,7 +236,7 @@ theorem main_theorem :
     ∃! xTilde ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ),
       data.G f x₀ xTilde = 0 :=
   data.existsUnique_of_compPoly f_cpoly x₀ (by unfold r_minus; positivity)
-    Y₀_le Z₀_finBlockNorm_le Z₁_le_cert Z₂_le_cert radii_neg
+    Y₀_le Z₀_finBlockNorm_le Z₁_le_exact Z₂_le_cert radii_neg_exact
 
 /-- Source-residual form of `main_theorem`: the unique validated point solves the
 unpreconditioned IVP Taylor coefficient equations. `Z₀` enters in the finite-block
@@ -239,6 +245,6 @@ theorem ivp_main_theorem :
     ∃! xTilde ∈ Metric.closedBall (data.abar : XL1 ν_val L) (r_minus : ℝ),
       ∀ l n, IVP.ivpCoeffs f x₀ xTilde l n = 0 :=
   data.existsUnique_ivpCoeffs_of_compPoly f_cpoly x₀ (by unfold r_minus; positivity)
-    Y₀_le Z₀_finBlockNorm_le Z₁_le_cert Z₂_le_cert radii_neg
+    Y₀_le Z₀_finBlockNorm_le Z₁_le_exact Z₂_le_cert radii_neg_exact
 
 end Example81.Cert

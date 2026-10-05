@@ -114,7 +114,7 @@ The proof is a direct application of the two analytical engines and the IVP recu
 2. `F(a)_l_(n+1) = 0` says `(n+1)·a_l_(n+1) - (banachField φ_cpoly a)_l_n = 0`, i.e.,
    `derivShift a_l` and `banachField φ_cpoly a l` agree as ℕ-indexed sequences.
    Their evaluations therefore agree.
-3. `eval_evalBanach` (Mertens-recursive) collapses the Banach-algebra evaluation to
+3. `eval_evalBanach` (naturality for universal geometric evaluation) collapses the Banach-algebra evaluation to
    pointwise evaluation: `eval((banachField φ_cpoly a) l, t) = vectorField φ_cpoly
    (i ↦ eval(a_i, t)) l = f(x(t))_l`.
 4. `F(a)_l_0 = 0` says `a_l_0 = x₀_l`, and `eval(a_l, 0) = a_l_0` by `eval_at_zero`. -/
