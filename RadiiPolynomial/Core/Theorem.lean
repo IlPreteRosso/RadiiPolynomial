@@ -96,42 +96,36 @@ lemma invertible_comp_form {B : E →L[ℝ] E}
 
 namespace RadiiPolynomial
 
+/-- In finite dimension, `E →L[ℝ] E` is Dedekind-finite (`A B = 1 → B A = 1`): transported from
+`Module.End ℝ E` along the algebra equivalence `Module.End.toContinuousLinearMap E`. -/
+private theorem isDedekindFiniteMonoid_clm {E : Type*} [NormedAddCommGroup E]
+    [NormedSpace ℝ E] [FiniteDimensional ℝ E] : IsDedekindFiniteMonoid (E →L[ℝ] E) :=
+  (MulEquivClass.isDedekindFiniteMonoid_iff (Module.End.toContinuousLinearMap E)).mp inferInstance
+
 /-- Finite-dimensional Neumann rung: `‖I - A B‖ < 1` makes `A` injective (`A B` is a unit, so
-`A` is surjective, hence injective in finite dimension). -/
+`A` is a unit by Dedekind-finiteness). -/
 theorem injective_left_of_norm_id_sub_comp_lt_one {E : Type*} [NormedAddCommGroup E]
     [NormedSpace ℝ E] [CompleteSpace E] [FiniteDimensional ℝ E] {A B : E →L[ℝ] E}
     (h : ‖I_E - A.comp B‖ < 1) : Function.Injective A := by
-  obtain ⟨u, hu⟩ := isUnit_of_norm_sub_id_lt_one h
-  have hsurj : Function.Surjective (A : E →ₗ[ℝ] E) := fun y =>
-    ⟨B ((↑u⁻¹ : E →L[ℝ] E) y), by
-      have := congrArg (fun T : E →L[ℝ] E => T y) u.mul_inv
-      simpa [hu] using this⟩
-  exact LinearMap.injective_iff_surjective.mpr hsurj
+  have := isDedekindFiniteMonoid_clm (E := E)
+  obtain ⟨u, rfl⟩ := isUnit_of_mul_isUnit_left (isUnit_of_norm_sub_id_lt_one h)
+  exact (ContinuousLinearEquiv.unitsEquiv ℝ E u).injective
 
-/-- Finite-dimensional Neumann rung: `‖I - A B‖ < 1` makes `B` a unit (`B` is injective, hence
-bijective in finite dimension). -/
+/-- Finite-dimensional Neumann rung: `‖I - A B‖ < 1` makes `B` a unit (`A B` is a unit and
+`E →L[ℝ] E` is Dedekind-finite). -/
 theorem isUnit_right_of_norm_id_sub_comp_lt_one {E : Type*} [NormedAddCommGroup E]
     [NormedSpace ℝ E] [CompleteSpace E] [FiniteDimensional ℝ E] {A B : E →L[ℝ] E}
     (h : ‖I_E - A.comp B‖ < 1) : IsUnit B := by
-  obtain ⟨u, hu⟩ := isUnit_of_norm_sub_id_lt_one h
-  have key : ∀ z, (↑u⁻¹ : E →L[ℝ] E) (A (B z)) = z := fun z => by
-    simpa [hu] using congrArg (fun T : E →L[ℝ] E => T z) u.inv_mul
-  have hinj : Function.Injective B := fun x y hxy => by rw [← key x, ← key y, hxy]
-  have hlin : IsUnit (B : E →ₗ[ℝ] E) := (Module.End.isUnit_iff _).mpr
-    ⟨hinj, (LinearMap.injective_iff_surjective (f := (B : E →ₗ[ℝ] E))).mp hinj⟩
-  have hB : Module.End.toContinuousLinearMap E (B : E →ₗ[ℝ] E) = B := by ext; rfl
-  exact hB ▸ hlin.map (Module.End.toContinuousLinearMap E)
+  have := isDedekindFiniteMonoid_clm (E := E)
+  exact isUnit_of_mul_isUnit_right (isUnit_of_norm_sub_id_lt_one h)
 
 /-- Finite-dimensional Neumann rung: `‖I - A B‖ < 1` makes `A` a unit (the left twin of
 `isUnit_right_of_norm_id_sub_comp_lt_one`). -/
 theorem isUnit_left_of_norm_id_sub_comp_lt_one {E : Type*} [NormedAddCommGroup E]
     [NormedSpace ℝ E] [CompleteSpace E] [FiniteDimensional ℝ E] {A B : E →L[ℝ] E}
     (h : ‖I_E - A.comp B‖ < 1) : IsUnit A := by
-  have hinj := injective_left_of_norm_id_sub_comp_lt_one h
-  have hlin : IsUnit (A : E →ₗ[ℝ] E) := (Module.End.isUnit_iff _).mpr
-    ⟨hinj, (LinearMap.injective_iff_surjective (f := (A : E →ₗ[ℝ] E))).mp hinj⟩
-  have hA : Module.End.toContinuousLinearMap E (A : E →ₗ[ℝ] E) = A := by ext; rfl
-  exact hA ▸ hlin.map (Module.End.toContinuousLinearMap E)
+  have := isDedekindFiniteMonoid_clm (E := E)
+  exact isUnit_of_mul_isUnit_left (isUnit_of_norm_sub_id_lt_one h)
 
 end RadiiPolynomial
 
