@@ -1,4 +1,5 @@
 import RadiiPolynomial.Applications.Galerkin.Face
+import RadiiPolynomial.Core.Transport
 
 /-!
 # The diblock-copolymer carrier as an instance of the polynomial Galerkin face
@@ -19,6 +20,11 @@ exercise: the lift and projection, the centred constants of the cubic and the ex
 * At `ν = 1` the exercise's weighted norm `2 Σ_k |x_k|` is `‖J x‖` (`diblockNorm_eq`), `‖ιD x‖`
   (`norm_ιD_eq`) and the norm of the positive-mode carrier `FνP N` read through `FνP.amb`
   (`FνP.diblockNorm_eq_amb`).
+* The projection (2.52) `diblockF` is the polynomial face `polyFace` on `ιD1` (`diblockF_eq`); its
+  `Z₂` bound in the weighted norm is `3 |λ| AΛnorm (2 normXBar + r) r`, where `AΛnorm` bounds
+  `A ∘ Λ` and `normXBar` bounds `x̄` in that norm (`norm_fderiv_diblockF_sub_le`); the
+  radii-polynomial theorem on `FνP` then gives the unique zero in the closed `r`-ball about `x̄`
+  (`existsUnique_diblockF_zero`). These are the end theorems of the exercise, book-free.
 -/
 
 noncomputable section
@@ -240,6 +246,107 @@ theorem diblockNorm_eq_amb (y : Fin N → ℝ) : 2 * ∑ k, |y k| = ‖amb.symm 
   diblockNorm_eq y
 
 end FνP
+
+section DiblockMap
+
+variable {N : ℕ}
+
+/-- The even extension `x̂` (`x̂_0 = 0`, `x̂_{±(k+1)} = x_k`). -/
+def diblockExt (x : Fin N → ℝ) : ℤ → ℝ := fun j =>
+  if h : 1 ≤ j.natAbs ∧ j.natAbs ≤ N then x ⟨j.natAbs - 1, by omega⟩ else 0
+
+/-- The full triple convolution over `k₁ + k₂ + k₃ = k`, `kᵢ ∈ [-N, N]`. -/
+def diblockConv (x : Fin N → ℝ) (k : ℤ) : ℝ :=
+  ∑ k₁ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ), ∑ k₂ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ),
+    ∑ k₃ ∈ Finset.Icc (-(N : ℤ)) (N : ℤ),
+      if k₁ + k₂ + k₃ = k then diblockExt x k₁ * diblockExt x k₂ * diblockExt x k₃ else 0
+
+/-- The diblock-copolymer projection (2.52). -/
+def diblockF (lam sig : ℝ) (x : Fin N → ℝ) : Fin N → ℝ := fun k =>
+  (-(((k : ℕ) : ℝ) + 1) ^ 4 + lam * (((k : ℕ) : ℝ) + 1) ^ 2 - lam * sig) * x k -
+    lam * (((k : ℕ) : ℝ) + 1) ^ 2 * diblockConv x (((k : ℕ) : ℤ) + 1)
+
+theorem diblockExt_eq_evenLift_J {ν : PosReal} (x : Fin N → ℝ) (m : ℤ) :
+    diblockExt x m = evenLift (J (ν := ν) x) m := by
+  rw [evenLift_J]
+  rfl
+
+theorem diblockConv_eq_πD {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] (x : Fin N → ℝ) (k : Fin N) :
+    diblockConv x (((k : ℕ) : ℤ) + 1) =
+      πD ((fun u (l : Fin 1) => ((fun _ : Fin 1 => cubeQ) l).evalBanach u) (ιD1 (ν := ν) x) 0) k := by
+  rw [πD_apply, show ((fun u (l : Fin 1) => ((fun _ : Fin 1 => cubeQ) l).evalBanach u)
+      (ιD1 (ν := ν) x) 0 : l1Chebyshev.symmetricSubalgebra ν) = ιD x * ιD x * ιD x from rfl,
+    ιD_apply, toSeq_mul_mul_ιN]
+  simp only [diblockConv, diblockExt_eq_evenLift_J (ν := ν)]
+
+theorem diblockF_eq (lam sig : ℝ) (Λ : (Fin N → ℝ) →ₗ[ℝ] (Fin N → ℝ))
+    (hΛ : ∀ x k, Λ x k = (((k : ℕ) : ℝ) + 1) ^ 2 * x k) :
+    diblockF lam sig = polyFace
+      (diagC fun k : Fin N => -(((k : ℕ) : ℝ) + 1) ^ 4 + lam * (((k : ℕ) : ℝ) + 1) ^ 2 - lam * sig)
+      (LinearMap.toContinuousLinearMap Λ) ((-lam) • ((πD (ν := ν₁)).comp (ContinuousLinearMap.proj 0)))
+      (ιD1 (ν := ν₁)) (fun _ => cubeQ) := by
+  funext x k
+  change _ - lam * (((k : ℕ) : ℝ) + 1) ^ 2 * diblockConv x (((k : ℕ) : ℤ) + 1) = _
+  rw [diblockConv_eq_πD (ν := ν₁)]
+  simp only [polyFace, Pi.add_apply, LinearMap.coe_toContinuousLinearMap', hΛ, diagC,
+    ContinuousLinearMap.pi_apply, smul_apply, ContinuousLinearMap.comp_apply,
+    ContinuousLinearMap.proj_apply, Pi.smul_apply, smul_eq_mul]
+  ring
+
+theorem differentiable_diblockF (lam sig : ℝ) :
+    Differentiable ℝ (diblockF (N := N) lam sig) := by
+  rw [diblockF_eq lam sig (diagC fun k : Fin N => (((k : ℕ) : ℝ) + 1) ^ 2).toLinearMap
+    (fun x k => by simp [diagC])]
+  exact fun x => (hasFDerivAt_polyFace _ _ _ _ _ x).differentiableAt
+
+/-- `Z₂` of Exercise 2.7.13 (a), in the weighted norm `2 Σ_k |x_k|`. -/
+theorem norm_fderiv_diblockF_sub_le {lam sig : ℝ} {xBar : Fin N → ℝ}
+    (A Λ : (Fin N → ℝ) →ₗ[ℝ] (Fin N → ℝ))
+    (hΛ : ∀ x k, Λ x k = (((k : ℕ) : ℝ) + 1) ^ 2 * x k)
+    {AΛnorm normXBar r : ℝ} (hAΛnn : 0 ≤ AΛnorm)
+    (hAΛ : ∀ h, 2 * ∑ k, |A (Λ h) k| ≤ AΛnorm * (2 * ∑ k, |h k|))
+    (hxBar : 2 * ∑ k, |xBar k| ≤ normXBar) :
+    ∀ c, 2 * ∑ k, |(c - xBar) k| ≤ r → ∀ h,
+      2 * ∑ k, |A (fderiv ℝ (diblockF lam sig) c h - fderiv ℝ (diblockF lam sig) xBar h) k| ≤
+        3 * |lam| * AΛnorm * (2 * normXBar + r) * r * (2 * ∑ k, |h k|) := by
+  intro c hc h
+  rw [diblockF_eq lam sig Λ hΛ, fderiv_polyFace_sub_apply, LinearMap.coe_toContinuousLinearMap',
+    smul_apply, ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply]
+  have hD := norm_jacCLM_sub_le_centred (fun _ => cubeQ) (ιD1 (ν := ν₁) c) (ιD1 xBar)
+    (fun _ => normXBar) (fun _ => r) (M := 3 * (2 * normXBar + r) * r)
+    (fun _ => (derivativeCentredBound_cube _ _).le) (fun _ => (norm_ιD_eq xBar).trans_le hxBar)
+    (fun _ => by
+      show ‖(ιD c : l1Chebyshev.symmetricSubalgebra ν₁) - ιD xBar‖ ≤ r
+      rw [← map_sub, norm_ιD_eq]; exact hc)
+  refine (hAΛ _).trans ((mul_le_mul_of_nonneg_left ((diblockNorm_smul_πD_le _ _).trans
+    (mul_le_mul_of_nonneg_left ((norm_le_pi_norm _ 0).trans ((ContinuousLinearMap.le_opNorm _ _).trans
+      (mul_le_mul_of_nonneg_right hD (norm_nonneg _)))) (abs_nonneg _))) hAΛnn).trans_eq ?_)
+  rw [abs_neg, norm_ιD1]
+  ring
+
+/-- Exercise 2.7.13 (a): the diblock projection has a unique zero in the closed `r`-ball about `x̄`
+(uniqueness is relative to that ball). -/
+theorem existsUnique_diblockF_zero {lam sig : ℝ} {xBar : Fin N → ℝ}
+    (A Λ : (Fin N → ℝ) →ₗ[ℝ] (Fin N → ℝ))
+    (hΛ : ∀ x k, Λ x k = (((k : ℕ) : ℝ) + 1) ^ 2 * x k)
+    {Y₀ Z₀ AΛnorm normXBar r : ℝ} (hr : 0 < r) (hAΛnn : 0 ≤ AΛnorm)
+    (hY₀ : 2 * ∑ k, |A (diblockF lam sig xBar) k| ≤ Y₀)
+    (hZ₀ : ∀ h, 2 * ∑ k, |(h - A (fderiv ℝ (diblockF lam sig) xBar h)) k| ≤
+      Z₀ * (2 * ∑ k, |h k|))
+    (hAΛ : ∀ h, 2 * ∑ k, |A (Λ h) k| ≤ AΛnorm * (2 * ∑ k, |h k|))
+    (hxBar : 2 * ∑ k, |xBar k| ≤ normXBar)
+    (hp : 3 * |lam| * AΛnorm * r ^ 3 + 6 * |lam| * normXBar * AΛnorm * r ^ 2 -
+      (1 - Z₀) * r + Y₀ < 0) :
+    ∃! xTilde, 2 * ∑ k, |(xTilde - xBar) k| ≤ r ∧ diblockF lam sig xTilde = 0 :=
+  rp_transport_local FνP.amb (W := fun y => 2 * ∑ k, |y k|) FνP.diblockNorm_eq_amb
+    (DF := fderiv ℝ (diblockF lam sig)) A (fderiv ℝ (diblockF lam sig) xBar).toLinearMap
+    (Z₁ := 0) (Z₂ := fun ρ => 3 * |lam| * AΛnorm * (2 * normXBar + ρ)) hr
+    (fun x _ => (differentiable_diblockF lam sig x).hasFDerivAt.hasFDerivWithinAt) hY₀ hZ₀
+    (fun h => by simp)
+    (norm_fderiv_diblockF_sub_le A Λ hΛ hAΛnn hAΛ hxBar)
+    (by simp only [generalRadiiPolynomial]; linarith)
+
+end DiblockMap
 
 end ExampleDiblock
 
