@@ -14,7 +14,8 @@ nonlinearity `x²` formed in the flip-fixed algebra `symmetricSubalgebra ν` bef
   `‖DFisher c - DFisher x‖ ≤ 2 |λ| ‖c - x‖` at `ν = 1` (`norm_DFisher_sub_le`) and the carrier
   `Z₂` bound `norm_A_fderiv_fisherGalerkin_sub_le`.
 * `hAnorm_of_carrier`: read on the carrier through the identity equivalence `amb`, the operator-norm
-  hypothesis of Example 2.4.15 holds with the operator norm of `A` there as its constant.
+  hypothesis of Example 2.4.15 holds with the operator norm of `A` there as its constant;
+  `norm_amb_symm_ν₁` is the carrier form of the Fisher weight, `|x₀| + 2 Σ_{k ≥ 1} |x_k|`.
 -/
 
 noncomputable section
@@ -173,6 +174,12 @@ theorem hAnorm_of_carrier (A : (Fin (N + 1) → ℝ) →L[ℝ] (Fin (N + 1) → 
         (A.comp (amb ν₁ N : FνN ν₁ N →L[ℝ] (Fin (N + 1) → ℝ)))‖ * ‖(amb ν₁ N).symm y‖ :=
   (((amb ν₁ N).symm : (Fin (N + 1) → ℝ) →L[ℝ] FνN ν₁ N).comp
     (A.comp (amb ν₁ N : FνN ν₁ N →L[ℝ] (Fin (N + 1) → ℝ)))).le_opNorm ((amb ν₁ N).symm y)
+
+/-- The carrier form of the Fisher weight (Example 2.4.15 at `ν = 1`): read through `amb`, the
+carrier norm is `|x₀| + 2 Σ_{k ≥ 1} |x_k|`. The weighted norm of Example 2.4.15 is this one. -/
+theorem norm_amb_symm_ν₁ (x : Fin (N + 1) → ℝ) :
+    ‖(amb ν₁ N).symm x‖ = ∑ k : Fin (N + 1), (if (k : ℕ) = 0 then (1 : ℝ) else 2) * |x k| := by
+  simp [norm_amb_symm, wt, mul_comm]
 
 end Fisher
 

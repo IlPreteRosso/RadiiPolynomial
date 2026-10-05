@@ -417,6 +417,11 @@ dimension). -/
 def amb (ν : PosReal) (N : ℕ) : FνN ν N ≃L[ℝ] (Fin (N + 1) → ℝ) :=
   (ambL ν N).toContinuousLinearEquiv
 
+/-- The carrier norm read through `amb`: the weighted ℓ¹ norm of a coefficient vector. -/
+theorem norm_amb_symm {ν : PosReal} {N : ℕ} (x : Fin (N + 1) → ℝ) :
+    ‖(amb ν N).symm x‖ = ∑ k : Fin (N + 1), |x k| * wt ν k :=
+  rfl
+
 end Amb
 
 end Galerkin
