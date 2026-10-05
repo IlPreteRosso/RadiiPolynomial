@@ -236,4 +236,18 @@ lemma eval_traj_in_closedBall (a : XL1 ν L) {t : ℝ} (ht : |t| ≤ (ν : ℝ))
   show |l1Weighted.eval (a l) t| ≤ ‖a‖
   exact (l1Weighted.abs_eval_le (a l) ht).trans (norm_le_pi_norm a l)
 
+/-- The derivative of a `CompPoly` component of `banachField` at any point `a`, as a sum of
+left multiplications by the partial derivatives evaluated at `a`. -/
+theorem fderiv_banachField_apply' (f_cpoly : Fin L → CompPoly L) (a h : XL1 ν L) (l : Fin L) :
+    (fderiv ℝ (fun a => IVP.banachField f_cpoly a l) a) h =
+      ∑ m : Fin L, ((f_cpoly l).pderiv m).evalBanach a * h m := by
+  have hfun : (fun a : XL1 ν L => IVP.banachField f_cpoly a l) =
+      fun a => evalInBanach (f_cpoly l).toMvPoly a :=
+    funext fun a => compPoly_evalBanach_eq_evalInBanach (f_cpoly l) a
+  rw [hfun, fderiv_evalInBanach]
+  simp only [sum_apply, ContinuousLinearMap.comp_apply,
+    ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply]
+  refine Finset.sum_congr rfl fun m _ => ?_
+  rw [← CompPoly.pderiv_toMvPoly, ← compPoly_evalBanach_eq_evalInBanach]
+
 end IVP

@@ -446,6 +446,19 @@ lemma l1Weighted.norm_tailProj_eq_tailTsum (N : ℕ) (x : l1Weighted ν) :
   exact tsum_congr fun n => by
     rw [l1Weighted.coeff_tailProj, ite_eq_left (by omega)]
 
+/-- The tail mass of `shiftDivN` is subadditive over finite sums. -/
+theorem tail_shiftDivN_sum_le {N : ℕ} {ι : Type*} (s : Finset ι) (x : ι → l1Weighted ν) :
+    ∑' n, |l1Weighted.toSeq (shiftDivN (∑ i ∈ s, x i)) (n + (N + 1))| *
+        (ν : ℝ) ^ (n + (N + 1)) ≤
+      ∑ i ∈ s, ∑' n, |l1Weighted.toSeq (shiftDivN (x i)) (n + (N + 1))| *
+        (ν : ℝ) ^ (n + (N + 1)) := by
+  simp_rw [← l1Weighted.norm_tailProj_eq_tailTsum]
+  have hmap := map_sum ((l1Weighted.tailProj_CLM (ν := ν) N).comp shiftDivN_CLM) x s
+  simp only [ContinuousLinearMap.comp_apply, l1Weighted.tailProj_CLM_apply,
+    shiftDivN_CLM_apply] at hmap
+  rw [hmap]
+  exact norm_sum_le _ _
+
 /-- Fiber-norm bridge for the geometric carrier: the `lpAlgRingData` weight at
 index `n` is `ν^n`. -/
 private lemma scaledReal_norm_ofReal (ν : PosReal) (n : ℕ) (x : ℝ) :

@@ -16,7 +16,8 @@ converse:
   the evaluation `a ↦ ∑' n, aₙ • xⁿ` (`geomAeval_apply`), with the pointwise
   bound `norm_geomAeval_apply_le : ‖geomAeval 𝕜 ν x C hx a‖ ≤ C * ‖a‖`; the
   hypothesis is power growth, not `‖x‖ ≤ ν` — the latter is the `C = 1` case
-  `geomAeval_of_norm_le` (in a `NormOneClass` target);
+  `geomAeval_of_norm_le` (in a `NormOneClass` target); in a general target
+  `geomAeval_of_norm_le'` evaluates at the constant `C = max 1 ‖1‖`;
 * uniqueness — `lpOneAlg.geomAlgHom_ext`: two continuous algebra homomorphisms
   agreeing on `e₁` are equal;
 * computation — `@[simp] geomAeval_gen : geomAeval 𝕜 ν x C hx (single 1 1) = x`
@@ -40,7 +41,7 @@ evaluation `evalContinuousAlgHom z hz` (Evaluation.lean, built by Mertens) with
 Main declarations:
 * `geomFiber`, `geomFiber_weight`
 * `lpOneAlg.geomAeval`, `geomAeval_apply`, `geomAeval_single`, `geomAeval_gen`,
-  `norm_geomAeval_apply_le`, `geomAeval_of_norm_le`
+  `norm_geomAeval_apply_le`, `geomAeval_of_norm_le`, `geomAeval_of_norm_le'`
 * `lpOneAlg.gen_pow_eq_single`, `norm_gen_pow`, `geomAlgHom_ext`
 * `lpOneAlg.norm_gen_pow_le`, `eq_geomAeval_gen`, `exists_eq_geomAeval`
 * `lpOneAlg.norm_gen_le`, `l1Weighted.norm_gen_le`
@@ -145,6 +146,34 @@ theorem norm_geomAeval_of_norm_le_apply_le [NormOneClass B] (x : B) (hx : ‖x�
     ‖geomAeval_of_norm_le 𝕜 ν x hx a‖ ≤ ‖a‖ := by
   have h := norm_geomAeval_apply_le 𝕜 ν x 1 (pow_le_of_norm_le ν hx) a
   rwa [one_mul] at h
+
+omit [NormedAlgebra 𝕜 B] [CompleteSpace B] in
+/-- In a general target, `‖x‖ ≤ ν` gives power growth at `C = max 1 ‖1‖`: the
+`n = 0` term costs `‖1‖`, the terms `n ≥ 1` cost `1` by submultiplicativity. -/
+theorem pow_le_of_norm_le' {x : B} (hx : ‖x‖ ≤ (ν : ℝ)) (n : ℕ) :
+    ‖x ^ n‖ ≤ max 1 ‖(1 : B)‖ * (ν : ℝ) ^ n := by
+  rcases n.eq_zero_or_pos with rfl | hn
+  · rw [pow_zero, pow_zero, mul_one]
+    exact le_max_right _ _
+  · exact (norm_pow_le' x hn).trans <| (pow_le_pow_left₀ (norm_nonneg x) hx n).trans <|
+      le_mul_of_one_le_left (pow_pos ν.coe_pos n).le (le_max_left _ _)
+
+/-- Evaluation at an element of norm at most `ν` in a general target (no
+`NormOneClass`), at the growth constant `max 1 ‖1‖`. -/
+def geomAeval_of_norm_le' (x : B) (hx : ‖x‖ ≤ (ν : ℝ)) :
+    lpOneAlg ℕ (geomFiber 𝕜 ν) →A[𝕜] B :=
+  geomAeval 𝕜 ν x _ (pow_le_of_norm_le' ν hx)
+
+@[simp] theorem geomAeval_of_norm_le'_gen (x : B) (hx : ‖x‖ ≤ (ν : ℝ)) :
+    geomAeval_of_norm_le' 𝕜 ν x hx (single 1 1) = x :=
+  geomAeval_gen 𝕜 ν x _ _
+
+/-- Pointwise bound of evaluation at a point of norm at most `ν` in a general
+target: `‖geomAeval_of_norm_le' 𝕜 ν x hx a‖ ≤ max 1 ‖1‖ ‖a‖`. -/
+theorem norm_geomAeval_of_norm_le'_apply_le (x : B) (hx : ‖x‖ ≤ (ν : ℝ))
+    (a : lpOneAlg ℕ (geomFiber 𝕜 ν)) :
+    ‖geomAeval_of_norm_le' 𝕜 ν x hx a‖ ≤ max 1 ‖(1 : B)‖ * ‖a‖ :=
+  norm_geomAeval_apply_le 𝕜 ν x _ _ a
 
 end Aeval
 
@@ -275,6 +304,19 @@ theorem norm_aeval_of_norm_le_apply_le [NormOneClass B] (x : B) (hx : ‖x‖ �
     (a : l1Weighted ν) : ‖aeval_of_norm_le ν x hx a‖ ≤ ‖a‖ :=
   lpOneAlg.norm_geomAeval_of_norm_le_apply_le ℝ ν x hx a
 
+/-- Evaluation of `l1Weighted ν` at an element of norm at most `ν` in a general
+target (no `NormOneClass`; growth constant `max 1 ‖1‖`). -/
+def aeval_of_norm_le' (x : B) (hx : ‖x‖ ≤ (ν : ℝ)) : l1Weighted ν →A[ℝ] B :=
+  lpOneAlg.geomAeval_of_norm_le' ℝ ν x hx
+
+@[simp] theorem aeval_of_norm_le'_gen (x : B) (hx : ‖x‖ ≤ (ν : ℝ)) :
+    aeval_of_norm_le' ν x hx (lpOneAlg.single 1 1) = x :=
+  lpOneAlg.geomAeval_of_norm_le'_gen ℝ ν x hx
+
+theorem norm_aeval_of_norm_le'_apply_le (x : B) (hx : ‖x‖ ≤ (ν : ℝ)) (a : l1Weighted ν) :
+    ‖aeval_of_norm_le' ν x hx a‖ ≤ max 1 ‖(1 : B)‖ * ‖a‖ :=
+  lpOneAlg.norm_geomAeval_of_norm_le'_apply_le ℝ ν x hx a
+
 end Aeval
 
 section Ext
@@ -331,6 +373,23 @@ theorem aeval_eq_evalContinuousAlgHom (z : ℝ) (hz : |z| ≤ ν) :
 end Bridge
 
 end l1Weighted
+
+/-! ### Sanity: the general faces need no `NormOneClass` -/
+
+section GeneralTarget
+
+variable {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal)
+variable {B : Type*} [NormedRing B] [NormedAlgebra 𝕜 B] [CompleteSpace B]
+
+example (x : B) (hx : ‖x‖ ≤ (ν : ℝ)) :
+    lpOneAlg.geomAeval_of_norm_le' 𝕜 ν x hx (lpOneAlg.single 1 1) = x := by
+  simp
+
+example (x : B) (hx : ‖x‖ ≤ (ν : ℝ)) (a : lpOneAlg ℕ (geomFiber 𝕜 ν)) :
+    ‖lpOneAlg.geomAeval_of_norm_le' 𝕜 ν x hx a‖ ≤ max 1 ‖(1 : B)‖ * ‖a‖ :=
+  lpOneAlg.norm_geomAeval_of_norm_le'_apply_le 𝕜 ν x hx a
+
+end GeneralTarget
 
 end RadiiPolynomial
 

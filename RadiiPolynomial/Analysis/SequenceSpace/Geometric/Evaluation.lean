@@ -348,7 +348,9 @@ def eval_CLM (z : ℝ) (hz : |z| ≤ ν) : l1Weighted ν →L[ℝ] ℝ :=
 @[simp] theorem eval_CLM_apply (z : ℝ) (hz : |z| ≤ ν) (a : l1Weighted ν) :
     eval_CLM z hz a = eval a z := rfl
 
-/-- Algebra-hom view of pointwise evaluation. -/
+/-- Algebra-hom view of pointwise evaluation. The universal construction
+`l1Weighted.aeval_of_norm_le` (`Geometric/Aeval.lean`) is the preferred arrow for new
+consumers; this direct evaluator stays as the concrete model. -/
 def evalAlgHom (z : ℝ) (hz : |z| ≤ ν) : l1Weighted ν →ₐ[ℝ] ℝ :=
   (evalContinuousAlgHom z hz).toAlgHom
 

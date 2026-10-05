@@ -151,11 +151,13 @@ sup over components, the operator bound is `Σ_m colSupQ_{lm}`; the per-`M` sum
 For `L = 1` the two coincide. -/
 
 omit [NeZero L] in
+/-- `evalArr N abar_Q p` vanishes past the syntactic support window `CompPoly.supportBound N p`. -/
 theorem evalArr_getD_eq_zero (p : CompPoly L) (abar_Q : Fin L → Array ℚ) (k : ℕ)
     (hk : CompPoly.supportBound N p < k) : (evalArr N abar_Q p).getD k 0 = 0 := by
   simp [evalArr, Array.getD, show ¬ k < CompPoly.supportBound N p + 1 by omega]
 
 omit [NeZero L] in
+/-- The exact column sup `colSupQ` is nonnegative at a positive rational weight `ν_q`. -/
 theorem colSupQ_nonneg (abar_Q : Fin L → Array ℚ) {ν_q : ℚ} (hν : 0 < ν_q) (p : CompPoly L) :
     0 ≤ colSupQ N abar_Q ν_q p :=
   (div_nonneg (colTailQ_nonneg _ hν.le N 0 _) (pow_nonneg hν.le 0)).trans
@@ -163,18 +165,8 @@ theorem colSupQ_nonneg (abar_Q : Fin L → Array ℚ) {ν_q : ℚ} (hν : 0 < ν
       colTailQ (evalArr N abar_Q p) ν_q N (M : ℕ) (CompPoly.supportBound N p) / ν_q ^ (M : ℕ))
       (Finset.mem_univ 0))
 
-/-- The tail mass of `shiftDivN` is subadditive over finite sums. -/
-theorem tail_shiftDivN_sum_le {ι : Type*} (s : Finset ι) (x : ι → l1Weighted ν) :
-    ∑' n, |l1Weighted.toSeq (shiftDivN (∑ i ∈ s, x i)) (n + (N + 1))| *
-        (ν : ℝ) ^ (n + (N + 1)) ≤
-      ∑ i ∈ s, ∑' n, |l1Weighted.toSeq (shiftDivN (x i)) (n + (N + 1))| *
-        (ν : ℝ) ^ (n + (N + 1)) := by
-  simp_rw [← l1Weighted.norm_tailProj_eq_tailTsum]
-  have hmap := map_sum ((l1Weighted.tailProj_CLM (ν := ν) N).comp shiftDivN_CLM) x s
-  simp only [ContinuousLinearMap.comp_apply, l1Weighted.tailProj_CLM_apply,
-    shiftDivN_CLM_apply] at hmap
-  rw [hmap]
-  exact norm_sum_le _ _
+@[deprecated RadiiPolynomial.tail_shiftDivN_sum_le (since := "2026-10-05")]
+alias tail_shiftDivN_sum_le := RadiiPolynomial.tail_shiftDivN_sum_le
 
 end TaylorQ
 
@@ -184,18 +176,24 @@ namespace StdIVPData
 
 variable {ν : PosReal} {L N : ℕ} [NeZero L]
 
+/-- The stored rational weight of a bundle is positive (it casts to `ν > 0`). -/
 theorem ν_q_pos (d : IVP.StdIVPData ν L N) : 0 < d.ν_q := by
   have h : (0 : ℝ) < (d.ν_q : ℝ) := d.hν ▸ ν.2
   exact_mod_cast h
 
+/-- The stored approximate solution has no coefficients past `N`: `(abar_Q i)[k] = 0` for
+`N < k` (from the array size `N + 1`). -/
 theorem abar_Q_getD_eq_zero (d : IVP.StdIVPData ν L N) (i : Fin L) (k : ℕ) (hk : N < k) :
     (d.abar_Q i).getD k 0 = 0 := by
   simp [Array.getD, show ¬ k < (d.abar_Q i).size by rw [d.habar_size i]; omega]
 
+/-- The rational weighted norm `abarNormQ` of each stored component is nonnegative. -/
 theorem abarNormQ_nonneg (d : IVP.StdIVPData ν L N) (i : Fin L) :
     0 ≤ abarNormQ N d.abar_Q d.ν_q i :=
   Finset.sum_nonneg fun k _ => mul_nonneg (abs_nonneg _) (pow_nonneg (ν_q_pos d).le k)
 
+/-- The weighted ℓ¹ norm of the realized component `ā_i` equals the cast of its exact
+rational norm `abarNormQ`. -/
 theorem norm_abar_eq (d : IVP.StdIVPData ν L N) (i : Fin L) :
     ‖d.abar i‖ = (abarNormQ N d.abar_Q d.ν_q i : ℝ) := by
   rw [l1Weighted.norm_eq_Icc_sum_of_support _ N (fun n hn => by
@@ -262,6 +260,9 @@ theorem Z₂_le_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L
     exact_mod_cast Finset.le_sup' (fun l => (f_cpoly l).derivativeLipschitzBound S)
       (Finset.mem_univ l)
 
+/-- On a sequence with rational coefficients `cq`, the action of the stored preconditioner
+`approxInverse` is the cast of the exact rational action `actionQ` (finite block for `n ≤ N`,
+diagonal tail `c n / n` above). -/
 theorem action_eq_actionQ (d : IVP.StdIVPData ν L N) (c : SystemCoeff L)
     (cq : Fin L → ℕ → ℚ) (hc : ∀ l n, c l n = (cq l n : ℝ)) (l : Fin L) (n : ℕ) :
     d.approxInverse.action c l n = (actionQ N d.A_col cq l n : ℝ) := by
@@ -276,6 +277,8 @@ theorem action_eq_actionQ (d : IVP.StdIVPData ν L N) (c : SystemCoeff L)
     push_cast
     ring
 
+/-- The rational IVP coefficients at `ā` vanish past `supportM f_cpoly N`, the support index
+read off the syntax. -/
 theorem ivpCoeffsQ_support (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
     (x₀_q : Fin L → ℚ) (l : Fin L) (n : ℕ) (hn : supportM f_cpoly N < n) :
     IVP.ivpCoeffsQ f_cpoly d.abar_Q x₀_q l n = 0 := by
@@ -332,6 +335,8 @@ theorem Y₀_le_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L
   refine Finset.sum_congr rfl fun n _ => ?_
   rw [action_eq_actionQ d _ _ hF l n, d.hν]
 
+/-- The weighted norm of a `CompPoly` evaluated at `ā` equals the cast of the exact
+rational sum `seqNormQ` over its syntactic support window. -/
 theorem norm_evalBanach_abar_eq (d : IVP.StdIVPData ν L N) (p : CompPoly L) :
     ‖p.evalBanach d.abar‖ = (seqNormQ N d.abar_Q d.ν_q p : ℝ) := by
   have hz := CompPoly.evalCoeffSeq_eq_zero_of_support N p _
@@ -375,6 +380,8 @@ theorem Z₁_le_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L
   rw [d.hν]
   exact_mod_cast hle
 
+/-- Every entry of `evalArr N d.abar_Q p` (in or past the support window) is the exact
+coefficient `p.evalCoeff d.abar_Q k`. -/
 theorem evalArr_getD (d : IVP.StdIVPData ν L N) (p : CompPoly L) (k : ℕ) :
     (evalArr N d.abar_Q p).getD k 0 = p.evalCoeff d.abar_Q k := by
   by_cases hk : k < CompPoly.supportBound N p + 1
@@ -403,15 +410,8 @@ theorem tail_evalBanach_mul_le (d : IVP.StdIVPData ν L N) (p : CompPoly L)
 theorem fderiv_banachField_apply (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
     (h : XL1 ν L) (l : Fin L) :
     (fderiv ℝ (fun a => IVP.banachField f_cpoly a l) d.abar) h =
-      ∑ m : Fin L, ((f_cpoly l).pderiv m).evalBanach d.abar * h m := by
-  have hfun : (fun a : XL1 ν L => IVP.banachField f_cpoly a l) =
-      fun a => evalInBanach (f_cpoly l).toMvPoly a :=
-    funext fun a => compPoly_evalBanach_eq_evalInBanach (f_cpoly l) a
-  rw [hfun, fderiv_evalInBanach]
-  simp only [sum_apply, ContinuousLinearMap.comp_apply,
-    ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply]
-  refine Finset.sum_congr rfl fun m _ => ?_
-  rw [← CompPoly.pderiv_toMvPoly, ← compPoly_evalBanach_eq_evalInBanach]
+      ∑ m : Fin L, ((f_cpoly l).pderiv m).evalBanach d.abar * h m :=
+  fderiv_banachField_apply' f_cpoly d.abar h l
 
 /-- **Column `Z₁` face (generic in `L`)**: the finite Jacobian check `hDF` and one ℚ
 inequality `Σ_m colSupQ (∂_m f_l) ≤ Z₁` per component give the `Z₁` operator bound, through
@@ -436,7 +436,7 @@ theorem Z₁_le_col_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPo
     (fun h l => (fderiv ℝ (fun a => IVP.banachField f_cpoly a l) d.abar) h)
     (fun _ _ => rfl) hC (fun h l => ?_) le_rfl
   rw [fderiv_banachField_apply d f_cpoly h l]
-  refine (tail_shiftDivN_sum_le Finset.univ _).trans ?_
+  refine (RadiiPolynomial.tail_shiftDivN_sum_le Finset.univ _).trans ?_
   refine (Finset.sum_le_sum fun m _ =>
     (tail_evalBanach_mul_le d ((f_cpoly l).pderiv m) (h m)).trans
       (mul_le_mul_of_nonneg_left (norm_le_pi_norm h m)
@@ -549,23 +549,33 @@ section Bridges
 
 variable (q : StdIVPDataQ L N) {ν : PosReal} (hν : (ν : ℝ) = ((q.ν_q : ℚ) : ℝ))
 
+/-- The realization keeps the stored preconditioner columns `A_col`. -/
 @[simp] theorem toStdIVPData_A_col : (q.toStdIVPData ν hν).A_col = q.A_col := rfl
+/-- The realization keeps the stored Jacobian columns `DF_col`. -/
 @[simp] theorem toStdIVPData_DF_col : (q.toStdIVPData ν hν).DF_col = q.DF_col := rfl
+/-- The realization keeps the stored approximate solution `abar_Q`. -/
 @[simp] theorem toStdIVPData_abar_Q : (q.toStdIVPData ν hν).abar_Q = q.abar_Q := rfl
+/-- The realization keeps the stored rational weight `ν_q`. -/
 @[simp] theorem toStdIVPData_ν_q : (q.toStdIVPData ν hν).ν_q = q.ν_q := rfl
 
+/-- The coefficients of the realized `ā_i` are the casts of the stored rationals. -/
 theorem abar_toSeq (i : Fin L) (k : ℕ) :
     l1Weighted.toSeq ((q.toStdIVPData ν hν).abar i) k = ((q.abar_Q i).getD k 0 : ℝ) :=
   (q.toStdIVPData ν hν).abar_toSeq_eq i k
 
+/-- The realized `‖ā_i‖` is the cast of the ν-free rational norm `abarNormQ`. -/
 theorem norm_abar (i : Fin L) :
     ‖(q.toStdIVPData ν hν).abar i‖ = (abarNormQ N q.abar_Q q.ν_q i : ℝ) :=
   StdIVPData.norm_abar_eq (q.toStdIVPData ν hν) i
 
+/-- The finite block of the realized preconditioner reads the stored rational columns
+`A_col` (definitional). -/
 theorem A_finBlock_eq (l j : Fin L) (i k : Fin (N + 1)) :
     (q.toStdIVPData ν hν).A_finBlock l j i k = ((q.A_col l j (k : ℕ)).getD (i : ℕ) 0 : ℝ) :=
   rfl
 
+/-- The finite block of the realized Jacobian reads the stored rational columns `DF_col`
+(definitional). -/
 theorem DF_finBlock_eq (l j : Fin L) (i k : Fin (N + 1)) :
     (q.toStdIVPData ν hν).DF_finBlock l j i k = ((q.DF_col l j (k : ℕ)).getD (i : ℕ) 0 : ℝ) :=
   rfl
@@ -602,6 +612,7 @@ def ChecksZ₁By : Z₁Slot → ℚ → Prop
   | .recipe, Z₁ => q.ChecksZ₁ f_cpoly Z₁
   | .column, Z₁ => q.ChecksZ₁col f_cpoly Z₁
 
+/-- The `Z₁` slot clause is decidable at either route, so `decide` can discharge it. -/
 instance instDecidableChecksZ₁By (s : Z₁Slot) (Z₁ : ℚ) :
     Decidable (q.ChecksZ₁By f_cpoly s Z₁) :=
   match s with
@@ -621,19 +632,25 @@ section Sound
 
 variable (q : StdIVPDataQ L N) {ν : PosReal} (hν : (ν : ℝ) = ((q.ν_q : ℚ) : ℝ))
 
+/-- The exact `Z₀` clause bounds the finite block norm of the realized defect `I - A·A†`. -/
 theorem Z₀_sound {Z₀ : ℚ} (h : q.ChecksZ₀ Z₀) :
     finiteBlockMatrixNorm ν (q.toStdIVPData ν hν).defect.finBlock ≤ (Z₀ : ℝ) :=
   finiteBlockMatrixNorm_defect_le_of_Q _ _ q.A_col q.DF_col q.ν_q
     (fun _ _ _ _ => rfl) (fun _ _ _ _ => rfl) hν h
 
+/-- The slot/grid `Z₀` clause (at slot `s`, grid denominator `S`) implies the exact `Z₀`
+clause. -/
 theorem ChecksZ₀By_sound (s : Z₀Slot) (S : ℕ) {Z₀ : ℚ} (h : q.ChecksZ₀By s S Z₀) :
     q.ChecksZ₀ Z₀ :=
   defectBy_sound s S h
 
+/-- The slot/grid `Z₀` clause bounds the finite block norm of the realized defect. -/
 theorem defectZBy_sound (s : Z₀Slot) (S : ℕ) {Z₀ : ℚ} (h : q.ChecksZ₀By s S Z₀) :
     finiteBlockMatrixNorm ν (q.toStdIVPData ν hν).defect.finBlock ≤ (Z₀ : ℝ) :=
   q.Z₀_sound hν (q.ChecksZ₀By_sound s S h)
 
+/-- The `Z₂` clause, at a nonnegative radius `r₀`, gives the `Z₂` bound `Z₂ · r₀` on the
+closed ball of radius `r₀` around the realized `ā`. -/
 theorem Z₂_sound (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) {r₀ Z₂ : ℚ} (hr₀ : 0 ≤ r₀)
     (h : q.ChecksZ₂ f_cpoly r₀ Z₂) :
     ∀ c ∈ Metric.closedBall ((q.toStdIVPData ν hν).abar : XL1 ν L) (r₀ : ℝ),
@@ -650,6 +667,8 @@ section Faces
 variable (q : StdIVPDataQ L N) {ν : PosReal} (hν : (ν : ℝ) = ((q.ν_q : ℚ) : ℝ))
   (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
 
+/-- The `Y₀` clause bounds `‖A F(ā)‖` for the realization, given that the initial value
+`x₀` is the cast of the rational `x₀_q`. -/
 theorem Y₀_sound (x₀_q : Fin L → ℚ) (hx₀ : ∀ l, x₀ l = (x₀_q l : ℝ)) {Y₀ : ℚ}
     (h : q.ChecksY₀ f_cpoly x₀_q Y₀) :
     Y₀_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar
@@ -667,12 +686,16 @@ theorem composedApprox_eq_of_checksDF (h : q.ChecksDF f_cpoly) :
   fun v l n hn =>
     (q.toStdIVPData ν hν).composedApprox_eq_fderiv_G_fin_of_compPoly f_cpoly x₀ h v l n hn
 
+/-- The recipe `Z₁` clause, together with the Jacobian clause `ChecksDF`, bounds the
+`Z₁` operator norm of the realization. -/
 theorem Z₁_sound {Z₁ : ℚ} (hDF : q.ChecksDF f_cpoly) (h : q.ChecksZ₁ f_cpoly Z₁) :
     Z₁_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar
       (ContinuousLinearMap.id ℝ (XL1 ν L))
       ((IVP.StdIVPData.composedApprox (q.toStdIVPData ν hν)).toCLM (ν := ν)) ≤ (Z₁ : ℝ) :=
   StdIVPData.Z₁_le_of_Q (q.toStdIVPData ν hν) f_cpoly x₀ hDF h
 
+/-- The radii clause makes the general radii polynomial negative at the certificate's
+numbers `Y₀ Z₀ Z₁ Z₂ r₀`. -/
 theorem radii_sound (C : TaylorCertQ) (h : C.ChecksRadii) :
     generalRadiiPolynomial (C.Y₀ : ℝ) (C.Z₀ : ℝ) (C.Z₁ : ℝ) (fun _ => (C.Z₂ : ℝ)) (C.r₀ : ℝ)
       < 0 := by
@@ -721,12 +744,16 @@ theorem certified_ivpCoeffs_of_bounds (C : TaylorCertQ)
 
 /-! #### Soundness of the column slot and of the slot choice -/
 
+/-- The column `Z₁` clause, together with the Jacobian clause `ChecksDF`, bounds the
+`Z₁` operator norm of the realization. -/
 theorem Z₁col_sound {Z₁ : ℚ} (hDF : q.ChecksDF f_cpoly) (h : q.ChecksZ₁col f_cpoly Z₁) :
     Z₁_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar
       (ContinuousLinearMap.id ℝ (XL1 ν L))
       ((IVP.StdIVPData.composedApprox (q.toStdIVPData ν hν)).toCLM (ν := ν)) ≤ (Z₁ : ℝ) :=
   StdIVPData.Z₁_le_col_of_Q (q.toStdIVPData ν hν) f_cpoly x₀ hDF h
 
+/-- The `Z₁` clause at either slot (recipe or column), together with the Jacobian clause
+`ChecksDF`, bounds the `Z₁` operator norm of the realization. -/
 theorem Z₁By_sound (s : Z₁Slot) {Z₁ : ℚ} (hDF : q.ChecksDF f_cpoly)
     (h : q.ChecksZ₁By f_cpoly s Z₁) :
     Z₁_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar

@@ -559,7 +559,7 @@ theorem Z₂_le_of_Q (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L) (p :
       2 * CompPoly.Chebyshev.derivativeLipschitzBound (f l)
         (fun i => max ‖l1Chebyshev.symmetrize (c i)‖ ‖l1Chebyshev.symmetrize (d.abar i)‖)
         ≤ (B : ℝ) := fun c hc l => by
-    have hm := CompPoly.Chebyshev.chebDerivativeLipschitzBound_mono (f l)
+    have hm := CompPoly.Chebyshev.derivativeLipschitzBound_mono (f l)
       (fun i => le_max_of_le_left (norm_nonneg _)) (hball c hc)
     have hq : ((2 * CompPoly.Chebyshev.derivativeLipschitzBound (f l)
         (fun i => R i + 2 * r₀) : ℚ) : ℝ) ≤ (B : ℝ) := by exact_mod_cast hB l
