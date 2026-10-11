@@ -21,8 +21,9 @@ and the resulting sharper bound `‖chebyshevShiftDiv c‖ ≤ (ν/2 + 1/(2ν))�
 `Applications/IVP/Chebyshev/Operator.lean` (where `chebyshevShiftDiv` is defined).
 
 Convention note: both maps use the repo's raw bilateral storage (no separate zero-mode
-weighting for `T_0`/`U_0`). An asymmetric zero-mode convention only matters for a future
-two-sided T↔U conversion and is deliberately deferred.
+weighting for `T_0`/`U_0`). An asymmetric zero-mode convention only matters for a
+two-sided T↔U transport between storages, which this file does not build; the bordered
+carrier of `Chebyshev/Bordered.lean` is the library's version of it.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -131,8 +132,9 @@ lemma chebyshevToU_smul (r : ℝ) (c : l1Chebyshev ν) :
   ring
 
 /-- Sharp norm bound for the T→U conversion on raw bilateral storage:
-`‖chebyshevToU c‖ ≤ (1 + ν⁻²)/2 · ‖c‖`. The constant is attained on unit
-columns `e_m`, `m ≥ 1`, so it is the operator norm. Holds for every `ν > 0`. -/
+`‖chebyshevToU c‖ ≤ (1 + ν⁻²)/2 · ‖c‖`. The constant is attained on the unit
+columns `e_m`, `m ≥ 2` (at `e_1` the ratio is `1/2`), so it is the operator norm; the
+attainment is not proved here, only the bound. Holds for every `ν > 0`. -/
 lemma chebyshevToU_norm_le_sharp (c : l1Chebyshev ν) :
     ‖chebyshevToU c‖ ≤ (1 + ((ν : ℝ) ^ 2)⁻¹) / 2 * ‖c‖ := by
   rw [l1Weighted.norm_eq_tsum, lpOneAlg.norm_eq_tsum]
@@ -177,8 +179,8 @@ lemma chebyshevToU_norm_le [Fact (1 ≤ (ν : ℝ))] (c : l1Chebyshev ν) :
   have h2 : ((ν : ℝ) ^ 2)⁻¹ ≤ 1 := (inv_le_one₀ (by positivity)).mpr h1
   exact mul_le_of_le_one_left (norm_nonneg c) (by linarith)
 
-/-- The T→U conversion as a CLM with operator norm `(1 + ν⁻²)/2` (in particular ≤ 1
-for `ν ≥ 1`). -/
+/-- The T→U conversion as a CLM with operator-norm bound `(1 + ν⁻²)/2` (in particular
+≤ 1 for `ν ≥ 1`). -/
 noncomputable def chebyshevToU_CLM : l1Chebyshev ν →L[ℝ] l1Weighted ν :=
   LinearMap.mkContinuous
     { toFun := chebyshevToU
@@ -307,7 +309,7 @@ lemma uIntegrate_smul (r : ℝ) (b : l1Weighted ν) :
     | succ n => simp [uIntegrate_seq]; ring
   | negSucc n => simp
 
-/-! #### Norm bound: `‖uIntegrate b‖ ≤ ν·‖b‖` (exact: attained on `b = e_0`). -/
+/-! #### Norm bound: `‖uIntegrate b‖ ≤ ν·‖b‖` (attained on `b = e_0`; not proved here). -/
 
 -- Element-level restatements of the fiber facts (the element applied at a mode is
 -- definitionally `ofReal` of the raw sequence).
@@ -358,7 +360,7 @@ lemma uIntegrate_norm_le (b : l1Weighted ν) : ‖uIntegrate b‖ ≤ (ν : ℝ)
   rw [l1Weighted.norm_eq_tsum]
   exact tsum_mul_left
 
-/-- U-integration as a CLM with operator norm ≤ ν (exact: attained on `e_0`). -/
+/-- U-integration as a CLM with operator norm ≤ ν (attained on `e_0`; not proved here). -/
 noncomputable def uIntegrate_CLM : l1Weighted ν →L[ℝ] l1Chebyshev ν :=
   LinearMap.mkContinuous
     { toFun := uIntegrate
@@ -375,9 +377,10 @@ end UIntegrate
 /-! ### The U→T conversion (inverse direction)
 
 `chebyshevFromU b`, mode `k ≥ 0`: `2·Σ_{j≥0} b_{k+2j}` — the telescoping inverse of
-`chebyshevToU` (`(c_m - c_{m+2})/2`). An infinite-band operator: it is bounded only for
+`chebyshevToU` (`(c_m - c_{m+2})/2`). An infinite-band operator: it is bounded for
 `ν > 1` (the band sums a `ν⁻²`-geometric series), which is why this section takes
-`Fact (1 < ν)` — the quantitative face of "basis transport degenerates as ν → 1". -/
+`Fact (1 < ν)` — the quantitative face of "basis transport degenerates as ν → 1"
+(unboundedness for `ν ≤ 1` is not proved here). -/
 
 section ChebyshevFromU
 
@@ -520,7 +523,8 @@ private lemma chebyshevFromU_memℓp (b : l1Weighted ν) :
   exact chebyshevFromU_fiber_le b n
 
 /-- The U→T basis conversion: `(chebyshevFromU b)_k = 2·Σ_{j≥0} b_{k+2j}` for `k ≥ 0`,
-`0` for `k < 0` — the telescoping inverse of `chebyshevToU`. Bounded only for `ν > 1`. -/
+`0` for `k < 0` — the telescoping inverse of `chebyshevToU`. Bounded for `ν > 1`
+(`chebyshevFromU_norm_le`). -/
 def chebyshevFromU (b : l1Weighted ν) : l1Chebyshev ν :=
   ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k (chebyshevFromU_seq b k),
     chebyshevFromU_memℓp b⟩⟩
@@ -580,7 +584,8 @@ lemma chebyshevFromU_smul (r : ℝ) (b : l1Weighted ν) :
 
 /-- U-side round trip: `chebyshevToU (chebyshevFromU b) = b`, exact on all of
 `l1Weighted ν`. Together with `chebyshevFromU_chebyshevToU_toSeq` this certifies that
-`chebyshevToU` and `chebyshevFromU` are mutually inverse basis conversions. -/
+`chebyshevToU` and `chebyshevFromU` are mutually inverse basis conversions on the
+nonnegative-mode part of `l1Chebyshev ν` (negative modes are zeroed by `chebyshevFromU`). -/
 theorem chebyshevToU_chebyshevFromU (b : l1Weighted ν) :
     chebyshevToU (chebyshevFromU b) = b := by
   apply l1Weighted.ext; intro m
@@ -666,8 +671,9 @@ private lemma chebyshevFromU_norm_support (b : l1Weighted ν) :
   | negSucc n => exact absurd (by rw [chebyshevFromU_elem_negSucc, norm_zero]) hk
 
 /-- Norm bound for the U→T conversion: `‖chebyshevFromU b‖ ≤ (2ν²/(ν²-1))·‖b‖`.
-The constant is the operator norm (column ratios approach it as the mode grows), and
-blows up as ν ↓ 1 — the quantitative degeneration of T↔U transport at ν = 1. -/
+The constant blows up as ν ↓ 1 — the quantitative degeneration of T↔U transport at
+ν = 1. (It is also the operator norm, approached by the column ratios as the mode grows;
+that is not proved here, only the bound.) -/
 lemma chebyshevFromU_norm_le (b : l1Weighted ν) :
     ‖chebyshevFromU b‖ ≤ 2 * (ν : ℝ) ^ 2 / ((ν : ℝ) ^ 2 - 1) * ‖b‖ := by
   rw [lpOneAlg.norm_eq_tsum]
@@ -714,7 +720,7 @@ lemma chebyshevFromU_norm_le (b : l1Weighted ν) :
   have h2 : ((ν : ℝ) ^ 2) - 1 ≠ 0 := sub_ne_zero.mpr (one_lt_nusq (ν := ν)).ne'
   field_simp
 
-/-- The U→T conversion as a CLM with operator norm `2ν²/(ν²-1)`. -/
+/-- The U→T conversion as a CLM with operator-norm bound `2ν²/(ν²-1)`. -/
 noncomputable def chebyshevFromU_CLM : l1Weighted ν →L[ℝ] l1Chebyshev ν :=
   LinearMap.mkContinuous
     { toFun := chebyshevFromU
@@ -730,10 +736,11 @@ noncomputable def chebyshevFromU_CLM : l1Weighted ν →L[ℝ] l1Chebyshev ν :=
 `‖chebyshevToU_CLM‖ · ‖chebyshevFromU_CLM‖ ≤ (ν² + 1)/(ν² - 1)`.
 
 In closed form the right-hand side is `coth(log ν)` — kept rational in ν² here.
-It diverges as ν ↓ 1 and decreases to 1 as ν grows: the conditioning number of the
-certified basis transport. (The repo's symmetric bilateral storage adds a zero-mode
-asymmetry to the *full* storage-level transport — `κ_repo = 1 + coth(log ν)` — which is
-a separate, storage-dependent refinement, not formalized here.) -/
+It diverges as ν ↓ 1 and decreases to 1 as ν grows: a bound on the conditioning number
+of the certified basis transport. (The repo's symmetric bilateral storage adds a zero-mode
+asymmetry to the *full* storage-level transport — `κ_repo ≤ 1 + coth(log ν)` — a separate,
+storage-dependent refinement not formalized here; the bordered carrier's bound is
+`borderedToU_CLM_norm_mul_borderedFromU_CLM_norm_le` in `Chebyshev/Bordered.lean`.) -/
 theorem chebyshevToU_CLM_norm_mul_chebyshevFromU_CLM_norm_le :
     ‖chebyshevToU_CLM (ν := ν)‖ * ‖chebyshevFromU_CLM (ν := ν)‖ ≤
       ((ν : ℝ) ^ 2 + 1) / ((ν : ℝ) ^ 2 - 1) := by

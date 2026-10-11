@@ -32,7 +32,8 @@ def complexEval (a : l1Chebyshev ν) (w : ℂ) : ℂ :=
   (l1Chebyshev.toSeq a 0 : ℂ) + 2 * ∑' n : ℕ,
     (l1Chebyshev.toSeq a ((n + 1 : ℕ) : ℤ) : ℂ) * (Chebyshev.T ℂ (n + 1)).eval w
 
-/-- The open filled Bernstein ellipse, empty at the degenerate weight one. -/
+/-- The open filled Bernstein ellipse, empty at the degenerate weight one (that emptiness
+is not proved here). -/
 def openEllipse : Set ℂ :=
   {w | ‖w - 1‖ + ‖w + 1‖ < (ν : ℝ) + (ν : ℝ)⁻¹}
 

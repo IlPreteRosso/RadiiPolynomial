@@ -12,8 +12,9 @@ the all-coefficient leakage estimates of the head/tail split:
   `ν ≥ 1`;
 * the Γ scalar `gammaScalar ν N k = algebraMap ℝ 𝕜 (γ_N(k))` with `‖gammaScalar ν N k‖ = γ_N(k)`
   for every real `ν` (`norm_gammaScalar`), nonzero for `ν > 0`;
-* the head diagonals `gammaDiag N = diag(1_{W_N} γ_N)` (norm `≤ 1`) and
-  `gammaInvDiag N = diag(1_{W_N} γ_N⁻¹)` (norm `≤ ν ^ (2(N + 1))`), with
+* the head diagonals `gammaDiag N = diag(1_{W_N} γ_N)` (symbols of norm `≤ 1`,
+  `norm_gamma_head_le`) and `gammaInvDiag N = diag(1_{W_N} γ_N⁻¹)` (symbols of norm
+  `≤ ν ^ (2(N + 1))`, `norm_gamma_inv_head_le`; no operator-norm lemma is stated here), with
   `gammaDiag N ∘L gammaInvDiag N = P` and the Rees identification of the head entries
   `γ_N(k) = eval_{1/ν} (X ^ aN N k)` (`gammaDiag_entry_eq_rees`);
 * `‖L_c‖ ≤ ‖c‖` (`norm_mulLeftCLM_le`);

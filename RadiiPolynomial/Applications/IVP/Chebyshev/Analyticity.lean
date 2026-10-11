@@ -5,8 +5,8 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Holomorphic
 # Analyticity of the canonical Chebyshev solution
 
 Application layer. `Chebyshev/Analytic.lean` builds the canonical solution
-`ChebyshevIVP.x_sol` out of a sequence-space zero and claims continuity plus a
-one-sided derivative on `[-1, 1]` — deliberately no analyticity, for want of a
+`ChebyshevIVP.x_sol` out of a sequence-space zero and claims continuity on `[-1, 1]` plus
+a one-sided derivative on `[-1, 1)` — deliberately no analyticity, for want of a
 Bernstein-ellipse statement. `Analysis/SequenceSpace/Chebyshev/Spectrum/Holomorphic.lean`
 now supplies exactly that statement, so the canonical realization is here shown to be
 real analytic on a neighbourhood of every point of the closed reference interval,

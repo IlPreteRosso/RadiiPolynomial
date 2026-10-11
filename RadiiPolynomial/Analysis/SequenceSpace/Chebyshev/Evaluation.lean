@@ -29,10 +29,12 @@ sequence-space representation:
   the Cauchy product in that proof.
 
 Also here: the symmetric elements are closed under `0`, `1`, `+`, `-`, `•`
-and `*` (`l1Chebyshev.IsSymmetric.mul` reindexes the convolution by `k ↦ -k`).
+and `*` (`l1Chebyshev.IsSymmetric.mul` reindexes the convolution sum by `i ↦ -i`).
 
-Every claim is machine-checked below; `[Fact (1 ≤ (ν : ℝ))]` is assumed
-exactly where the ring structure or the domination `1 ≤ ν^k` needs it.
+Every claim is machine-checked below; `[Fact (1 ≤ (ν : ℝ))]` is assumed where
+the ring structure or the domination `1 ≤ ν^k` needs it (section-wide in the
+`Analytic` section; `norm_symmetrize_eq` is stated outside it, since neither its
+statement nor its proof needs it).
 -/
 
 open scoped BigOperators
@@ -169,6 +171,8 @@ theorem continuousOn_eval (a : l1Chebyshev ν) :
 
 /-! ### The evaluation bound (the Chebyshev Prop. 8.1.3 the book does not state) -/
 
+end Analytic
+
 /-- `‖symmetrize a‖ = |a₀| + 2 ∑_{k ≥ 1} |a_k| ν^k`: the bilateral norm of the
 `|k|`-fold reads the modes `k ≥ 0` once at `0` and twice elsewhere. -/
 theorem norm_symmetrize_eq (a : l1Chebyshev ν) :
@@ -191,6 +195,10 @@ theorem norm_symmetrize_eq (a : l1Chebyshev ν) :
       = |toSeq a ((n + 1 : ℕ) : ℤ)| * (ν : ℝ) ^ (n + 1) :=
     fun n => by rw [hfib, show (-((n : ℤ) + 1)).natAbs = n + 1 by omega]
   rw [h0, tsum_congr hp, tsum_congr hn]; ring
+
+section Analytic
+
+variable [Fact (1 ≤ (ν : ℝ))]
 
 /-- For an element stored on the modes `k ≥ 0` only, `‖a‖ ≤ ‖symmetrize a‖`: the
 `|k|`-fold doubles every positive mode and drops nothing. (Certificates store their

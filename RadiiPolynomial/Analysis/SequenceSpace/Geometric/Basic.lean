@@ -15,7 +15,7 @@ This file provides the concrete weighted spaces used by the system-level API:
 - coefficient truncation (`trunc`, `trunc_CLM`)
 
 Differentiability lemmas (`differentiable_mk_of_finSupp`, `fderiv_mk_of_finSupp_toSeq_tail`)
-are in `lpWeightedDeriv.lean` to avoid pulling in `FDeriv` imports.
+are in `Geometric/Derivative.lean` to avoid pulling in `FDeriv` imports.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal Matrix
@@ -27,7 +27,10 @@ namespace RadiiPolynomial
 /-- Weighted `ℓᵖ` space realized as `lp` with scaled fibers. -/
 abbrev lpWeighted (ν : PosReal) (p : ℝ≥0∞) := lp (ScaledReal ν) p
 
-/-- Weighted `ℓ¹` Banach algebra via `lpOneAlg`. Ring structure from `SubMulWeight`. -/
+/-- Weighted `ℓ¹` Banach algebra via `lpOneAlg`. Ring structure from the submultiplicative
+weight base `SubMulWeightBase` (through `WeightedScalar.instLpOneAlgWeightMul` and the
+finite-antidiagonal convolution path `lpOneAlg.instConvCompatOfAntidiag`), for every `ν > 0`;
+the class `SubMulWeight` (weights `≥ 1`, i.e. `1 ≤ ν`) is not needed. -/
 abbrev l1Weighted (ν : PosReal) := lpOneAlg ℕ (ScaledReal ν)
 
 namespace lpWeighted
@@ -380,11 +383,12 @@ noncomputable def trunc_CLM (N : ℕ) : l1Weighted ν →L[ℝ] l1Weighted ν :=
 
 /-- Express `trunc N a` as a finite sum of `single`-monomials:
 `π_N a = ∑_{k ≤ N} δ_k · a_k`. This is the explicit "finite-support decomposition" —
-the sum has support exactly `{0, …, N}` and each summand is a monomial.
+the sum is supported in `{0, …, N}` and each summand is a monomial.
 
 Combined with `tendsto_trunc`, this realizes `l1Weighted ν` as the topological
-closure of the ℝ-span of the monoid-algebra basis `{δ_n}_{n ∈ ℕ}` — i.e., the
-Banach completion of `AddMonoidAlgebra ℝ ℕ` with the weighted ℓ¹ norm. -/
+closure of the ℝ-span of the monoid-algebra basis `{δ_n}_{n ∈ ℕ}`. (Classically this is
+the Banach completion of `AddMonoidAlgebra ℝ ℕ` with the weighted ℓ¹ norm; that
+completion statement is not proved here.) -/
 lemma trunc_eq_sum (N : ℕ) (a : l1Weighted ν) :
     trunc N a = ∑ k ∈ Finset.range (N + 1), single k (toSeq a k) := by
   apply ext; intro n
@@ -602,8 +606,8 @@ noncomputable abbrev leftMul (a : l1Weighted ν) : l1Weighted ν →L[ℝ] l1Wei
 
 @[simp] lemma leftMul_apply (a h : l1Weighted ν) : leftMul a h = a * h := rfl
 
-/-- The operator norm of left multiplication is exact: the supremum is attained in the
-limit toward `e₀` since `‖(1 : l1Weighted ν)‖ = 1`. -/
+/-- The operator norm of left multiplication is exact: the bound `‖a‖` is attained at the
+unit `e₀`, since `‖(1 : l1Weighted ν)‖ = 1` (`ContinuousLinearMap.opNorm_mul_apply`). -/
 lemma norm_leftMul (a : l1Weighted ν) : ‖leftMul a‖ = ‖a‖ :=
   ContinuousLinearMap.opNorm_mul_apply ℝ (l1Weighted ν) a
 
@@ -622,7 +626,8 @@ lemma leftMul_smul (c : ℝ) (a : l1Weighted ν) :
     leftMul (c • a) = c • leftMul a :=
   (ContinuousLinearMap.mul ℝ (l1Weighted ν)).map_smul c a
 
-/-- Bridge: `a • .id = leftMul a`. Used by `derive_fderiv` automation. -/
+/-- Bridge: `a • .id = leftMul a`. Used by the `auto_poly_fderiv` automation
+(`Tactic/AutoPolyFDeriv.lean`). -/
 lemma smul_id_eq_leftMul (a : l1Weighted ν) :
     a • ContinuousLinearMap.id ℝ (l1Weighted ν) = leftMul a := by
   ext h; simp [smul_eq_mul]

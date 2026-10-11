@@ -29,7 +29,8 @@ below `Certification` imports it.
    `StdIVPDataQ.certified_of_bounds` and the all-generated face
    `StdIVPDataQ.certified_of_checksBy` (and their source-residual forms).
 5. `RadiiPolynomial.Z₂_blockNormQ` / `Z₂_blockNorm_component_le` — the quadratic special case
-   `C_q = ν · 2` of the active-block evaluator (transition; `Z₂_blockNormQ_eq`).
+   `C_q = ν · 2` of the active-block evaluator (transition; `Z₂_blockNormQ_eq`); placed first
+   in the file.
 -/
 
 open scoped BigOperators Topology
@@ -91,8 +92,9 @@ def abarNormQ (N : ℕ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (i : Fin L) 
 def seqNormQ (N : ℕ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (p : CompPoly L) : ℚ :=
   ∑ n ∈ Finset.Icc 0 (CompPoly.supportBound N p), |p.evalCoeff abar_Q n| * ν_q ^ n
 
-/-- Exact evaluated derivative constant `max_l Σ_m ‖∂_m f_l (ā)‖`; never larger than the
-syntactic `derivativeBound` at the norms of `ā`. -/
+/-- Exact evaluated derivative constant `max_l Σ_m ‖∂_m f_l (ā)‖` (at the stored data,
+`norm_evalBanach_abar_eq`); intended to be no larger than the syntactic `derivativeBound` at
+the norms of `ā` (that comparison is not proved here). -/
 def DfExactQ (N : ℕ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (f_cpoly : Fin L → CompPoly L) : ℚ :=
   Finset.univ.sup' Finset.univ_nonempty fun l =>
     ∑ m : Fin L, seqNormQ N abar_Q ν_q ((f_cpoly l).pderiv m)
@@ -102,8 +104,10 @@ radii `S`. -/
 def DLipBoundQ (f_cpoly : Fin L → CompPoly L) (S : Fin L → ℚ) : ℚ :=
   Finset.univ.sup' Finset.univ_nonempty fun l => (f_cpoly l).derivativeLipschitzBound S
 
-/-- Components whose derivative can move on the ball of radii `S`: those with a nonzero
-syntactic derivative-Lipschitz constant (computed from the syntax). -/
+/-- Components with a nonzero syntactic derivative-Lipschitz constant at the radii `S`
+(computed from the syntax). A component outside the set has syntactic constant `0` at every
+nonnegative radii below `S` (monotonicity; used in `StdIVPData.Z₂_le_of_Q`); a component inside
+it need not have a moving derivative, since the syntax can contain cancelling terms. -/
 def activeQ (f_cpoly : Fin L → CompPoly L) (S : Fin L → ℚ) : Finset (Fin L) :=
   Finset.univ.filter fun l => (f_cpoly l).derivativeLipschitzBound S ≠ 0
 

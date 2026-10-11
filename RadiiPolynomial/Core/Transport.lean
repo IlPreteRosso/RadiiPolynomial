@@ -26,8 +26,9 @@ Design notes:
 * The B side needs no `CompleteSpace` — only the C side runs the fixed-point
   argument. The transported data is (A' = u∘A∘w⁻¹, A†' = w∘A†∘u⁻¹).
 * r₀ = β·r₁ is a hypothesis (no division anywhere).
-* All four C-side bounds are proved by conjugation telescoping + two
-  applications of `opNorm_comp_le`; no tsums, no basis.
+* The three C-side `Z` bounds are proved by conjugation telescoping + two
+  applications of `opNorm_comp_le`, the `Y₀` bound by one `le_opNorm`; no tsums,
+  no basis.
 
 Instances: `Examples/Transport/KappaToy.lean` (toy, κ = 8/3 through
 `borderedTU_equiv`) and `Examples/Transport/TwinTransport.lean`
@@ -41,8 +42,8 @@ section PriceAlgebra
 /-- §1 The exact transport identity for the radii polynomial: with κ = αβ and
     B-side radius r₀ = β·r₁,
     `β · p_C(r₁) = κ · p_B(r₀) + (κ − 1) · r₀`.
-    Acceptance on the C side is therefore equivalent to the native margin of
-    the B-side certificate exceeding (κ−1)/κ. Pure ring identity. -/
+    For β > 0, acceptance on the C side is therefore equivalent to the native
+    margin of the B-side certificate exceeding (κ−1)/κ. Pure ring identity. -/
 lemma transported_radii_identity (Y₀ Z₀ Z₁ : ℝ) (Z₂ : ℝ → ℝ) (α β r₁ : ℝ) :
     β * generalRadiiPolynomial (α * Y₀) (α * β * Z₀) (α * β * Z₁)
         (fun s => α * β * β * Z₂ (β * s)) r₁
@@ -298,8 +299,8 @@ theorem fderiv_conj_apply (e : E ≃L[ℝ] E') (e' : F ≃L[ℝ] F') {g : E → 
 /-- **`Z₂` transport, local centred form.** A carrier bound `‖DF z − DF x̄‖ ≤ Z` for `z` in the
 ball `‖z − x̄‖ ≤ r` only (with `HasFDerivAt` only there), read on `E'` through `e`, against a
 pulled-back norm `W y = ‖e.symm y‖` and an operator bound `W (A y) ≤ Anorm · W y`. No global
-quantifier: `0 ≤ Z` is read off the hypothesis at `c` itself, and a negative `Anorm` forces
-`W h = 0` through `hA`. -/
+quantifier and no sign hypothesis on `Z`: the bound is used at `c` itself, and a negative `Anorm`
+forces `W h = 0` through `hA`. -/
 theorem Z₂_transport (e : E ≃L[ℝ] E') {W : E' → ℝ} (hW : ∀ y, W y = ‖e.symm y‖)
     {F₀ : E → E} {DF : E → E →L[ℝ] E} {r : ℝ} {xBar : E'}
     (hF : ∀ z, ‖z - e.symm xBar‖ ≤ r → HasFDerivAt F₀ (DF z) z) {Z : ℝ}

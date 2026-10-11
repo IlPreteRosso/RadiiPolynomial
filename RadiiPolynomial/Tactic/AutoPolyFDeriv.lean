@@ -22,8 +22,9 @@ Unified tactic for computing derivatives of polynomial expressions. Handles:
    Includes Pi projection bridge (`fderiv_pi_apply` + `differentiable_pi_apply`) —
    handles `fderiv ℝ (· i)` and compound expressions like `fun a => a 0 - a 1`
    for system-level derivatives on `Fin L → l1Weighted ν`.
-2. **Cleanup** (via `first`): tries `ring_nf` (fderiv scalar), then `descFactorial` reduction (iteratedDeriv).
-   `first` backtracks on failure, so the two strategies don't interfere.
+2. **Cleanup** (via `first`): the base form tries `ring_nf` (fderiv scalar), then
+   `descFactorial` reduction (iteratedDeriv); the form with extra lemmas tries them in the
+   reverse order. `first` backtracks on failure, so the two strategies don't interfere.
 
 ## Usage
 
@@ -89,7 +90,7 @@ macro "auto_poly_fderiv" : tactic => `(tactic| (
     ]
     <;> try first
       | (ring_nf; try simp)                                  -- fderiv cleanup
-      | (repeat unfold Nat.descFactorial; push_cast; ring)))                                -- fderiv cleanup
+      | (repeat unfold Nat.descFactorial; push_cast; ring)))   -- iteratedDeriv cleanup
 
 open Lean.Parser.Tactic in
 macro "auto_poly_fderiv" "[" extras:simpLemma,* "]" : tactic => `(tactic| (
@@ -215,7 +216,7 @@ example {ν : PosReal} (a : l1Weighted ν) :
     HasFDerivAt (fun x => x ^ 2) ((2 : ℝ) • l1Weighted.leftMul a) a := by
   auto_hasFDerivAt
 
--- HasFDerivAt: x^2 - c (constant offset, uses extras)
+-- HasFDerivAt: x^2 - c (constant offset)
 open ContinuousLinearMap in
 example (x c : ℝ) :
     HasFDerivAt (fun y => y ^ 2 - c) ((2 • x ^ 1) • ContinuousLinearMap.id ℝ ℝ) x := by

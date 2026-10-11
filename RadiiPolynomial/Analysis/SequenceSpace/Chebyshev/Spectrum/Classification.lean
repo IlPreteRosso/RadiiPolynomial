@@ -108,7 +108,8 @@ theorem norm_character_apply_le (χ : Character ν) (a : Physical ν) : ‖χ a�
   exact l1Chebyshev.norm_evalLaurentC_apply_le ν z hz a.val
 
 /-- The restriction map from Laurent characters onto physical characters is
-surjective over ℂ, although the corresponding real map is not. -/
+surjective over ℂ, although the corresponding real map is not (that contrast is not
+proved here). -/
 theorem restriction_surjective :
     Function.Surjective (fun χ : l1Chebyshev ν →A[ℝ] ℂ =>
       χ.comp (l1Chebyshev.symmetricSubalgebra ν).valA) := by

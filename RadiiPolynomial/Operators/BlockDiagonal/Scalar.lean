@@ -202,10 +202,11 @@ end ScalarSpecialization
 This section completes the scalar (`L = 1`) API by providing:
 1. Coefficient-level access for `toScalarCLM` (finite/tail decomposition)
 2. Z₀ residual coefficient identities and norm bounds
-3. A scalar `existsUnique` theorem entry point
+3. Operator norm bounds for `toScalarCLM` and Z₁-type composition bounds
 
-These enable the abstract RadiiPolynomial API to wrap scalar problems
-(like Example 7.7) without routing through equation-specific wrappers.
+No `existsUnique` theorem is declared here. These lemmas are intended to let the abstract
+RadiiPolynomial API wrap scalar problems (like Example 7.7) without routing through
+equation-specific wrappers.
 -/
 
 section ScalarCLMAPI
@@ -385,8 +386,8 @@ lemma ScalarBlockDiagData.finRangeSum_toScalarCLM_le
 
 /-- Tighter scalar operator norm bound using `max` instead of `+`.
 For block-diagonal operators on `ℓ¹_ν`, the operator norm is the max of column norms
-over all columns (Exercise 2.7.2). Finite columns give `finWeightedMatrixNorm`,
-tail columns give at most `tailBound`. -/
+over all columns (Exercise 2.7.2); this lemma proves the upper bound only. Finite columns
+give `finWeightedMatrixNorm`, tail columns give at most `tailBound`. -/
 lemma ScalarBlockDiagData.norm_toScalarCLM_le_max
     (A : ScalarBlockDiagData N) :
     ‖A.toScalarCLM (ν := ν)‖ ≤
@@ -451,7 +452,8 @@ lemma ScalarBlockDiagData.norm_comp_of_fin_kill
   linarith [mul_le_mul_of_nonneg_left h_tail_le_norm A.tailBound_nonneg,
             mul_le_mul_of_nonneg_left (ContinuousLinearMap.le_opNorm T h) A.tailBound_nonneg]
 
-/-! ### Z₀ defect construction (L=1 wrapper of general-L API in Concrete.lean) -/
+/-! ### Z₀ defect construction (L=1 wrapper of the general-L API in
+`Operators/BlockDiagonal/WeightedL1.lean`) -/
 
 /-- Z₀ bound for scalar pairs with tail cancellation.
 Wrapper around `SystemBlockDiagData.Z₀_le_of_tailCancel`. -/

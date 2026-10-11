@@ -29,9 +29,10 @@ namespace RadiiPolynomial
 
 `borderedWeight ν` is the pushforward of the bilateral weight `ν^{|k|}` along the
 quotient `k ↦ |k|`: each unramified fiber `{±m}` contributes `2ν^m`, the ramified
-fiber `{0}` contributes `1`. The space `l1Bordered ν` is isometric to the symmetric
-subspace of `l1Chebyshev ν` (physical T-series `a₀ + 2Σ_{k≥1} a_k T_k`), realized as
-an honest one-sided weighted space — the "bordering" datum as a weight.
+fiber `{0}` contributes `1`. Restriction to the nonnegative modes maps the symmetric
+subspace of `l1Chebyshev ν` (physical T-series `a₀ + 2Σ_{k≥1} a_k T_k`) isometrically into
+`l1Bordered ν` (`nonnegRestrict_norm_of_isSymmetric`; surjectivity is not stated here), an
+honest one-sided weighted space — the "bordering" datum as a weight.
 
 On this carrier the T↔U transport `borderedToU`/`borderedFromU` is a genuine
 two-sided Banach isomorphism with `‖P‖ ≤ 1` and `‖P⁻¹‖ ≤ 2ν²/(ν²-1)`, so
@@ -193,7 +194,7 @@ lemma borderedToU_smul (r : ℝ) (a : l1Bordered ν) :
   ring
 
 /-- `‖borderedToU a‖ ≤ ‖a‖`: on the bordered carrier the T→U conversion is
-`1`-bounded (the zero-mode column attains the bound). -/
+`1`-bounded (the zero-mode column attains the bound; that attainment is not proved here). -/
 lemma borderedToU_norm_le [Fact (1 ≤ (ν : ℝ))] (a : l1Bordered ν) :
     ‖borderedToU a‖ ≤ ‖a‖ := by
   rw [l1Weighted.norm_eq_tsum, lpOneAlg.norm_eq_tsum]
@@ -451,8 +452,9 @@ noncomputable def borderedFromU_CLM : l1Weighted ν →L[ℝ] l1Bordered ν :=
 Compare the clean pair (`chebyshevToU_CLM_norm_mul_chebyshevFromU_CLM_norm_le`,
 bound `(ν²+1)/(ν²-1) = coth(log ν)`): the `+1` is exactly the ramification of the
 index cover `k ↦ |k|` at the zero mode — the bordered weight is `1` there instead
-of `2`, so the `e₀` column of `P` attains norm `1` while every other column costs
-`(1+ν⁻²)/2`. -/
+of `2`, so the `e₀` column of `P` attains norm `1`, while the columns `e_n`, `n ≥ 2`,
+cost `(1+ν⁻²)/2` and `e₁` costs `1/2`. Only the product bound is proved here; the column
+norms are not. -/
 theorem borderedToU_CLM_norm_mul_borderedFromU_CLM_norm_le [Fact (1 ≤ (ν : ℝ))] :
     ‖borderedToU_CLM (ν := ν)‖ * ‖borderedFromU_CLM (ν := ν)‖ ≤
       2 * (ν : ℝ) ^ 2 / ((ν : ℝ) ^ 2 - 1) := by

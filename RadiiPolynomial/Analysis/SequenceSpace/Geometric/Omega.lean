@@ -14,6 +14,8 @@ This file provides:
 - `OmegaScaledReal ν n`: `WeightedScalar (omegaWeight ν) n` with PosWeight
 - `l1Omega ν`: omega-weighted `ℓ¹` space
 - Key embedding/summability lemmas connecting `l1Weighted` and `l1Omega`
+- the operators `shift`, `shiftDivN`, `lambdaN` on `l1Weighted ν` and their tail and column
+  bounds, the derivative shift `derivShift : ℓ¹_ν → ℓ¹_ω`, and the evaluation `l1Omega.eval`
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -129,9 +131,9 @@ lemma omegaWeight_mul_index (n : ℕ) :
   unfold OmegaScaledReal.omegaWeight
   rw [mul_div_cancel₀ _ (Nat.cast_ne_zero.mpr (Nat.succ_ne_zero n))]
 
-/-- Omega weight bounded by geometric weight: `ω_n ≤ ν^n` for all `n`.
-Since `ω_n = ν^{n+1}/(n+1) ≤ ν^{n+1} ≤ ν^n` only when `ν ≤ 1`, we use a
-weaker but unconditional bound: `ω_n ≤ ν · ν^n` (factor of ν). -/
+/-- Omega weight bounded by the geometric weight up to a factor `ν`: `ω_n ≤ ν · ν^n` for
+all `n`. The bound `ω_n = ν^{n+1}/(n+1) ≤ ν^{n+1} ≤ ν^n` holds only when `ν ≤ 1`, so this
+weaker but unconditional bound keeps the factor `ν`. -/
 lemma omegaWeight_le_nu_mul_pow (n : ℕ) :
     OmegaScaledReal.omegaWeight ν n ≤ (ν : ℝ) * (ν : ℝ) ^ n := by
   unfold OmegaScaledReal.omegaWeight
@@ -157,7 +159,8 @@ lemma l1Omega.deriv_shift_mem (a : l1Weighted ν) :
   exact ((l1Weighted.mem_iff (ν := ν) (l1Weighted.toSeq a)).mp a.toLp.2).comp_injective
     (fun (n m : ℕ) (h : n + 1 = m + 1) => by omega)
 
-/-- If `a ∈ ℓ¹_ν`, then `a ∈ ℓ¹_ω` (with norm bounded by `ν · ‖a‖_ν`).
+/-- If `a ∈ ℓ¹_ν`, then `a ∈ ℓ¹_ω` (membership only; the norm bound `ν · ‖a‖_ν` that
+follows termwise is not stated here).
 Since `ω_n ≤ ν · ν^n`, geometric summability implies omega summability. -/
 lemma l1Omega.geom_to_omega_mem (a : l1Weighted ν) :
     l1Omega.Mem ν (l1Weighted.toSeq a) := by
@@ -255,7 +258,8 @@ lemma shift_norm_le (a : l1Weighted ν) :
     (hb.mul_left _)
 
 /-- The right-shift operator as a CLM on `l1Weighted ν`.
-Ref: §8.2, eq. (8.25) — `‖S‖ = ν`. -/
+Ref: §8.2, eq. (8.25). Built with the bound `‖S a‖ ≤ ν · ‖a‖` (`shift_norm_le`), so
+`‖S‖ ≤ ν`; the equality `‖S‖ = ν` is not stated here. -/
 noncomputable def shift_CLM : l1Weighted ν →L[ℝ] l1Weighted ν :=
   LinearMap.mkContinuous
     { toFun := shift
@@ -274,8 +278,8 @@ section ShiftDivN
 variable {ν : PosReal}
 
 /-- The shift-and-divide operator: maps sequence `b` to `{0, b_0/1, b_1/2, b_2/3, ...}`.
-This is the key IVP tail operator: `(shift_div_n b)_n = b_{n-1}/n` for `n ≥ 1`, zero at `n = 0`.
-Bounded: `‖shift_div_n b‖ ≤ ν · ‖b‖` since `|b_{n-1}|/n · ν^n ≤ |b_{n-1}| · ν^n ≤ ν · |b_{n-1}| · ν^{n-1}`. -/
+This is the key IVP tail operator: `(shiftDivN b)_n = b_{n-1}/n` for `n ≥ 1`, zero at `n = 0`.
+Bounded: `‖shiftDivN b‖ ≤ ν · ‖b‖` since `|b_{n-1}|/n · ν^n ≤ |b_{n-1}| · ν^n ≤ ν · |b_{n-1}| · ν^{n-1}`. -/
 private def shiftDivN_seq (b : l1Weighted ν) : ℕ → ℝ
   | 0 => 0
   | n + 1 => l1Weighted.toSeq b n / (↑(n + 1) : ℝ)
@@ -354,9 +358,10 @@ lemma shiftDivN_norm_le (b : l1Weighted ν) :
   exact ((summable_nat_add_iff (k := 1)).mpr hsumm).tsum_le_tsum
     (shiftDivN_shifted_term_le b) (hb.mul_left _)
 
-/-- Tail of `shiftDivN b` starting from mode `N+1` is bounded by `ν/(N+1) · ‖b‖`.
-This is tighter than the full norm bound `‖shiftDivN b‖ ≤ ν · ‖b‖` because
-on tail modes `1/n ≤ 1/(N+1)`. Used for IVP Z₁ tail error bounds. -/
+/-- Termwise form of the tail bound: the weighted mode-`n + (N+1)` term of `shiftDivN b` is at
+most `ν/(N+1)` times the weighted mode-`n + N` term of `b`, because on tail modes
+`1/n ≤ 1/(N+1)`.
+Summed in `shiftDivN_tailTsum_le_div`. -/
 private lemma shiftDivN_shifted_term_tight_le (b : l1Weighted ν) (N n : ℕ) :
     |shiftDivN_seq b (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) ≤
     (ν : ℝ) / (↑N + 1) * (|l1Weighted.toSeq b (n + N)| * (ν : ℝ) ^ (n + N)) := by
@@ -412,9 +417,9 @@ noncomputable def shiftDivN_CLM : l1Weighted ν →L[ℝ] l1Weighted ν :=
 /-! ### Exact weighted column data of the Z₁ tail operator (tightening B)
 
 The Z₁ tail operator `T_N(b) := π_{>N} ∘ shiftDivN ∘ leftMul b` is a continuous
-linear map out of `l1Weighted ν`, so by the lift API
-(`lpOneAlg.eq_liftCLM_of_cols`) it is determined by — and its norm is exactly
-the weighted sup of — its columns at the basis vectors `single M 1`. The next
+linear map out of `l1Weighted ν`, so by the lift API it is determined by its
+columns at the basis vectors `single M 1` (`lpOneAlg.eq_liftCLM_of_cols`), and its
+norm is controlled by their weighted size (`lpOneAlg.norm_liftCLM_apply_le`). The next
 lemmas package this: a per-column tail bound `C · ν^M` transports to the
 operator bound `C · ‖h‖` (`shiftDivN_leftMul_tail_le_of_cols`), and above the
 cutoff the columns are antitone (`shiftDivN_leftMul_tail_col_antitone`), so a
@@ -680,7 +685,8 @@ private lemma derivShift_mem (a : l1Weighted ν) :
 /-- The derivative-shift operator `D : ℓ¹_ν → ℓ¹_ω`.
 The `(n+1)` factor is exactly compensated by `ω_n = ν^{n+1}/(n+1)`, so the operator
 maps into ℓ¹_ω rather than ℓ¹_ν. Term-by-term differentiation:
-`d/dt eval(a, t) = eval(D a, t)` for `|t| < ν` (proved in `Eval.lean`).
+`d/dt eval(a, t) = eval(D a, t)` for `|t| < ν` (proved as `l1Weighted.hasDerivAt_eval` in
+`Geometric/EvaluationDerivative.lean`).
 Ref: Proposition 8.1.5. -/
 noncomputable def derivShift (a : l1Weighted ν) : l1Omega ν :=
   l1Omega.mk (derivShift_seq a) (derivShift_mem a)
@@ -741,7 +747,8 @@ section Eval
 
 variable {ν : PosReal}
 
-/-- Summability of `Σ |b_n| · |t|^n` for `b ∈ ℓ¹_ω` and `|t| < ν` (strict).
+/-- Summability of `Σ b_n · t^n` for `b ∈ ℓ¹_ω` and `|t| < ν` (strict); the absolute form
+`Σ |b_n| · |t|^n` is `l1Omega.summable_abs_eval`.
 The bound `(n+1) · (|t|/ν)^n` is used as the conversion factor between `ω_n` and `|t|^n`. -/
 theorem l1Omega.summable_eval (b : l1Omega ν) {t : ℝ} (ht : |t| < ν) :
     Summable fun n => l1Omega.toSeq b n * t ^ n := by
@@ -779,7 +786,8 @@ theorem l1Omega.summable_abs_eval (b : l1Omega ν) {t : ℝ} (ht : |t| < ν) :
   refine (h.abs).congr fun n => ?_
   rw [abs_mul, abs_pow, abs_abs]
 
-/-- Evaluate an `ℓ¹_ω` sequence as a power series at `t ∈ ℝ` with `|t| < ν`.
+/-- Evaluate an `ℓ¹_ω` sequence as a power series at `t ∈ ℝ` (defined for every `t` by
+`tsum`; convergence is proved for `|t| < ν`, `l1Omega.summable_eval`).
 Convergence is strict (`|t| < ν`, not `≤`) because the `(n+1)` factor in `ω_n` doesn't
 quite control the boundary. Used to express the time-derivative of `l1Weighted.eval`. -/
 def l1Omega.eval (b : l1Omega ν) (t : ℝ) : ℝ :=

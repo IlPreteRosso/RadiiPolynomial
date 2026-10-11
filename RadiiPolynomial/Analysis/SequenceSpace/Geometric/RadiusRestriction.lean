@@ -5,7 +5,9 @@ import RadiiPolynomial.Analysis.SequenceSpace.Geometric.AnalyticExt
 # Restriction between Taylor radii
 
 A Taylor coefficient sequence summable at radius `r` is summable at every
-smaller radius `σ`.  The resulting coefficient-preserving map is a contractive
+smaller radius `σ`.  The resulting coefficient-preserving map (built as the
+evaluation at the generator; the file records its value on the generator,
+`radiusRestrict_gen`, not a mode-by-mode identity) is a contractive
 continuous algebra homomorphism.  Evaluation naturality and analytic
 extensionality make the restriction injective.
 -/
@@ -29,7 +31,8 @@ private theorem radiusRestrict_power_bound {σ r : PosReal}
     _ ≤ (r : ℝ) ^ n := pow_le_pow_left₀ σ.coe_nonneg hσr n
 
 /-- Coefficient-preserving restriction from a Taylor algebra at radius `r` to
-one at a smaller radius `σ`. -/
+one at a smaller radius `σ`, built as the evaluation `l1Weighted.aeval` at the generator
+of the smaller algebra (the mode-by-mode identity is not stated here). -/
 def radiusRestrict {σ r : PosReal} (hσr : (σ : ℝ) ≤ (r : ℝ)) :
     l1Weighted r →A[ℝ] l1Weighted σ :=
   l1Weighted.aeval r (l1Weighted.single 1 1 : l1Weighted σ) 1

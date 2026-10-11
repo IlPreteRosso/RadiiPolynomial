@@ -39,7 +39,8 @@ variable {ν : PosReal}
 
 /-- ℚ mirror of the weighted tail term of the column at `single M 1`, indexed
 by the tail offset `n` (mode `m = n + N + 1`): the coefficient reaching mode
-`m` is `b_{m-1-M}`, weighted by `ν^m / m`. -/
+`m` is `b_{m-1-M}`, weighted by `ν^m / m`, when `M ≤ n + N`; the term is `0` when
+`M > n + N`. -/
 def colTailTermQ (bQ : Array ℚ) (ν_q : ℚ) (N M n : ℕ) : ℚ :=
   if M ≤ n + N then |bQ.getD (n + N - M) 0| * ν_q ^ (n + N + 1) / (n + N + 1)
   else 0

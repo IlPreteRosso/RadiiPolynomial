@@ -57,7 +57,7 @@ structure StdIVPData (ν : PosReal) (L N : ℕ) [NeZero L] where
   abar_Q : Fin L → Array ℚ
   /-- Weight as ℚ (for `finsum_bound` / `native_decide`). -/
   ν_q : ℚ
-  /-- Bridge: ν_val = ν_q cast to ℝ. -/
+  /-- Bridge: the real weight `ν` equals `ν_q` cast to ℝ. -/
   hν : (ν : ℝ) = ((ν_q : ℚ) : ℝ)
   /-- Each abar_Q array has exactly N+1 entries. -/
   habar_size : ∀ l, (abar_Q l).size = N + 1
@@ -327,9 +327,10 @@ lemma Z₀_le {Z₀ : ℝ} (hZ₀ : finiteBlockMatrixNorm ν d.defect.finBlock �
 /-! ## 7'. F-Zero Bridge (for the f-F bridge / `analytic_solution_unique`) -/
 
 /-- `data.G φ x₀ a = 0` implies `ivpCoeffs φ x₀ a` is identically zero, provided the
-defect's finite block has operator norm strictly less than 1. The radii polynomial's
-Z₀-bound gives precisely this strict inequality (Z₀ < 1 is part of the radii polynomial
-condition `generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0`).
+defect's finite block has operator norm strictly less than 1. The radii polynomial
+condition `generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0`, together with the nonnegativity of
+the other bounds, forces `Z₀ < 1` and hence this strict inequality
+(`defect_finBlockNorm_lt_one_of_radii`).
 
 Proof structure:
 1. `G = approxInverse.action ∘ ivpCoeffs` (via `ivpMap_coeff`), so `G a = 0` gives

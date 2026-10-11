@@ -63,12 +63,16 @@ the sup norm `‖a - b‖`. -/
 /-- Operator-norm constant of the derivative of `a ↦ p.evalBanach a` on the ball
 `‖a i‖ ≤ R i`, for a geometry whose inputs enter unsymmetrized (Taylor): the sum of the
 syntactic bounds of the formal partials. The Chebyshev constant is twice this
-(`CompPoly.Chebyshev.derivativeBound_eq_two_mul`). -/
+(`CompPoly.Chebyshev.derivativeBound_eq_two_mul`). This file only defines the constant; the
+operator-norm bound is `CompPoly.norm_fderiv_evalBanach_le` (on `l1Weighted`, in
+`CompPoly/WeightedL1.lean`). -/
 def derivativeBound (p : CompPoly L) (R : Fin L → K) : K :=
   ∑ i, (p.pderiv i).normBound R
 
 /-- Lipschitz constant of `a ↦ fderiv (evalBanach p) a` on the same ball, same geometry:
-the sum of the syntactic Lipschitz constants of the formal partials. -/
+the sum of the syntactic Lipschitz constants of the formal partials. This file only defines
+the constant; the Lipschitz statement is `CompPoly.norm_fderiv_evalBanach_sub_le` (on
+`l1Weighted`, in `CompPoly/WeightedL1.lean`). -/
 def derivativeLipschitzBound (p : CompPoly L) (R : Fin L → K) : K :=
   ∑ i, (p.pderiv i).lipschitzBound R
 
@@ -532,8 +536,8 @@ section VectorField
 
 open Metric
 
-/-- A scalar polynomial vector field on `Fin L → ℝ` is Lipschitz on the closed ball of radius
-`R` with the syntactic constant `lipschitzBound p (fun _ => R)`. -/
+/-- A scalar polynomial map `(Fin L → ℝ) → ℝ` (one component of a vector field) is Lipschitz
+on the closed ball of radius `R` with any constant `K ≥ lipschitzBound p (fun _ => R)`. -/
 theorem lipschitzOnWith_evalBanach (p : CompPoly L) (R : ℝ) {K : NNReal}
     (hK : p.lipschitzBound (fun _ => R) ≤ (K : ℝ)) :
     LipschitzOnWith K (fun u : Fin L → ℝ => p.evalBanach u) (closedBall 0 R) := by

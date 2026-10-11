@@ -14,7 +14,8 @@ into the function-level statement: the IVP `u̇ = f(u)`, `u(-1) = p` has a solut
 
 - `ChebyshevIVP.StdChebIVPData.chebyshevIvpCoeffs_zero_of_G_zero` — the F-zero bridge:
   `G(a) = 0` forces every coefficient equation `F(a)_{l,k}` to vanish, given that the
-  finite defect block has norm `< 1` (which the radii polynomial's `Z₀ < 1` supplies).
+  finite defect block has norm `< 1` (which the radii polynomial supplies when `Z₀` bounds
+  the finite block: `StdChebIVPData.defect_finBlockNorm_lt_one_of_radii`).
   Mirrors `IVP.StdIVPData.ivpCoeffs_zero_of_G_zero`.
 - `ChebyshevIVP.StdChebIVPData.neg_modes_zero_of_G_zero` — the negative modes of a zero of
   `G` vanish, straight from the pass-through identity `G(a)_k = a_k` for `k < 0`
@@ -30,11 +31,13 @@ into the function-level statement: the IVP `u̇ = f(u)`, `u(-1) = p` has a solut
 - The parallel declarations ending in `_of_two_le` use contractive evaluation at
   weights `ν ≥ 2`, replacing the trajectory radius `2(‖ā‖ + r₀)` by `‖ā‖ + r₀`.
 
-**No analyticity is claimed.** The conclusion is `C¹` on the interval plus uniqueness in
-the trajectory ball; Taylor's `IsAnalyticSolution` / `analytic_existsUnique` names are
-deliberately *not* mirrored, because a Bernstein-ellipse statement would need machinery
-that is in neither the book nor this repository. The `IsSolution` naming records the
-weaker claim.
+**No analyticity is claimed in this file.** The conclusions are continuity on `[-1, 1]`,
+the one-sided derivative on `[-1, 1)` (`IsSolution.solves`) and the two-sided derivative on
+`(-1, 1)` (`x_sol_hasDerivAt`), plus uniqueness in the trajectory ball; continuity of the
+derivative is not stated. Taylor's `IsAnalyticSolution` / `analytic_existsUnique` names are
+deliberately *not* mirrored, and the `IsSolution` naming records the weaker claim.
+Analyticity of the canonical solution for `1 < ν` is proved separately, in
+`Chebyshev/Analyticity.lean` (`analyticOnNhd_x_sol`), which imports this file.
 -/
 
 open RadiiPolynomial Set Metric
@@ -94,8 +97,8 @@ lemma G_toSeq_negSucc (a : XCheb ν L) (l : Fin L) (m : ℕ) :
 
 /-- **F-zero bridge** (Chebyshev mirror of `IVP.StdIVPData.ivpCoeffs_zero_of_G_zero`).
 `d.G φ p a = 0` forces the raw coefficient equations `chebyshevIvpCoeffs φ p a` to vanish,
-provided the finite defect block has operator norm `< 1` — which is precisely what the
-radii polynomial's `Z₀ < 1` gives.
+provided the finite defect block has operator norm `< 1` — which the radii polynomial
+gives when `Z₀` bounds the finite block (`defect_finBlockNorm_lt_one_of_radii`).
 
 `G = approxInverse.action ∘ chebyshevIvpCoeffs` on the non-negative modes, so `G a = 0`
 gives action-zero; `finite_block_injective_of_defect_norm_lt_one` inverts the finite block
@@ -233,15 +236,16 @@ variable [NeZero L] [Fact (1 ≤ (ν : ℝ))] (d : StdChebIVPData ν L N)
   (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ)
   (f : (Fin L → ℝ) → Fin L → ℝ)
 
-/-- **Existence + uniqueness on `[-1, 1]`**, straight from the four radii-polynomial
-bounds. The `∃` paired with the universal clause is the "∃! modulo `Set.EqOn`" pattern of
+/-- **Existence + uniqueness on `[-1, 1]`**, from the four radii-polynomial bounds
+together with the hypotheses listed below. The `∃` paired with the universal clause is the "∃! modulo `Set.EqOn`" pattern of
 `IVP.StdIVPData.analytic_existsUnique`: candidates may differ outside `[-1, 1]`.
 
 `hφ` says that the coefficient nonlinearity `φ` evaluates to the ODE vector field `f`.
 When both interpret the same `CompPoly` system, `MvPolyBridge.CompPoly.Chebyshev.eval_eval`
 supplies this identity through the physical Chebyshev evaluation character. The theorem
 also accepts any other nonlinearity with this identity. The radii-polynomial bounds,
-Lipschitz bound, and trajectory-radius bound remain separate hypotheses.
+Lipschitz bound, and trajectory-radius bound remain separate hypotheses, as do the
+finite-defect condition `hZ₀_lt_one` and the differentiability `hG_diff` of `G`.
 No analyticity is asserted — see the module docstring. -/
 theorem solution_existsUnique
     (hφ : ∀ (a : XCheb ν L) (l : Fin L) (t : ℝ), t ∈ Icc (-1 : ℝ) 1 →

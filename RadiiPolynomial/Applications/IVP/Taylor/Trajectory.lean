@@ -12,8 +12,10 @@ import Mathlib.Analysis.Calculus.ContDiff.RCLike
 # f-F Bridge: Sequence-Space Zeros to Function-Space Solutions
 
 This file establishes the analytic content of the radii-polynomial / Taylor-method
-correspondence: a zero of the sequence-space residual `F` on `(ℓ¹_ν)^L` corresponds
-to an analytic solution of the ODE `ẋ = f(x)` on the open interval `(-ν, ν)`.
+correspondence: a zero `a` of the sequence-space residual `F` on `(ℓ¹_ν)^L` yields the
+solution `t ↦ (eval(a_l, t))_l` of the ODE `ẋ = f(x)` on the open interval `(-ν, ν)`, unique
+among solutions that stay in a closed ball containing it. The analyticity of this solution is
+proved in `Applications/IVP/Taylor/Analyticity.lean`, not here.
 
 ## The bridge in classical terms
 
@@ -51,26 +53,29 @@ namespace IVP
 variable {ν : PosReal} {L : ℕ}
 
 /-- The Banach-algebra interpretation of the same CompPoly: arithmetic on Taylor
-coefficient sequences with Cauchy product for multiplication. This is `φ` in the
-Setup-IVP notation. -/
+coefficient sequences with Cauchy product for multiplication. This is the coefficient
+nonlinearity `φ` of `Applications/IVP/Taylor/Operator.lean`. -/
 noncomputable def banachField (φ_cpoly : Fin L → CompPoly L) (a : XL1 ν L) (l : Fin L) :
     l1Weighted ν :=
   (φ_cpoly l).evalBanach a
 
-/-- The vector field `vectorField φ_cpoly : ℝ^L → ℝ^L` is `C^∞` at every point.
+/-- The vector field `vectorField φ_cpoly : ℝ^L → ℝ^L` is `ContDiff ℝ ⊤`, i.e. of class
+`C^ω` (analytic) on all of `ℝ^L`, in particular `C^∞`.
 Polynomial maps are smooth; smoothness is what the analytic-solution side needs, while
-the Lipschitz constant for Picard-Lindelöf is read off the syntax
+the Lipschitz constant for the uniqueness argument is read off the syntax
 (`lipschitzOnWith_vectorField_closedBall`). -/
 theorem contDiff_vectorField (φ_cpoly : Fin L → CompPoly L) (l : Fin L) :
     ContDiff ℝ ⊤ (fun x : Fin L → ℝ => vectorField φ_cpoly x l) :=
   MvPolyBridge.contDiff_evalBanach (φ_cpoly l)
 
-/-- The full vector field `vectorField φ_cpoly : ℝ^L → (Fin L → ℝ)` is `C^∞`. -/
+/-- The full vector field `vectorField φ_cpoly : ℝ^L → (Fin L → ℝ)` is `ContDiff ℝ ⊤`
+(class `C^ω`). -/
 theorem contDiff_vectorField_pi (φ_cpoly : Fin L → CompPoly L) :
     ContDiff ℝ ⊤ (fun x : Fin L → ℝ => vectorField φ_cpoly x) :=
   contDiff_pi.mpr (contDiff_vectorField φ_cpoly)
 
-/-- The vector field is differentiable. (Derived from `contDiff_vectorField`.) -/
+/-- The vector field is differentiable. (Via `MvPolyBridge.differentiable_evalBanach`, which
+derives it from the same smoothness fact as `contDiff_vectorField`.) -/
 theorem differentiable_vectorField (φ_cpoly : Fin L → CompPoly L) (l : Fin L) :
     Differentiable ℝ (fun x : Fin L → ℝ => vectorField φ_cpoly x l) :=
   MvPolyBridge.differentiable_evalBanach (φ_cpoly l)
@@ -142,7 +147,7 @@ theorem solves_ODE_of_F_zero
                     l1Weighted.eval (banachField φ_cpoly a l) t := by
       unfold l1Omega.eval l1Weighted.eval
       exact tsum_congr fun n => by rw [h_seq_eq]
-    -- Step 3: Mertens-recursive bridge collapses Banach eval to pointwise
+    -- Step 3: naturality of evaluation (`eval_evalBanach`) collapses Banach eval to pointwise
     have h_mertens : l1Weighted.eval (banachField φ_cpoly a l) t =
                     vectorField φ_cpoly (fun i => l1Weighted.eval (a i) t) l :=
       eval_evalBanach _ a ht.le
@@ -158,9 +163,10 @@ theorem solves_ODE_of_F_zero
 /-- **Function-space uniqueness lift** (the Picard-Lindelöf side of the bridge).
 
 Given a CompPoly nonlinearity `φ_cpoly`, an initial condition `x₀`, and a Taylor
-coefficient sequence `a` with `F(a) = 0`, the analytic function `t ↦ eval(a · , t)`
+coefficient sequence `a` with `F(a) = 0`, the function `t ↦ eval(a · , t)`
 is the unique solution to the IVP `ẋ = f(x), x(0) = x₀` on `(-ν, ν)` among solutions
-whose trajectory stays in the closed ball of radius `R`.
+whose trajectory stays in the closed ball of radius `R`, provided its own trajectory stays
+there too (`hf_in_R`). Analyticity of `g` or of `t ↦ eval(a · , t)` is not asserted.
 
 Where the Lipschitz constant comes from: on `closedBall 0 R` the polynomial vector field
 is Lipschitz with the explicit syntactic constant `Σ_l |lipschitzBound (φ_cpoly l) R|`
@@ -172,7 +178,7 @@ The proof composes:
 - `solves_ODE_of_F_zero` (forward bridge): `eval(a, ·)` is a solution.
 - `hasDerivAt_pi`: assemble per-component derivatives into a Pi-type derivative.
 - `lipschitzOnWith_vectorField_closedBall`: the syntactic Lipschitz K on the closed ball.
-- `ODE_solution_unique_of_mem_Ioo` (Mathlib's Picard-Lindelöf via Grönwall): two
+- `ODE_solution_unique_of_mem_Ioo` (Mathlib's Grönwall-based uniqueness theorem): two
   solutions on the same Lipschitz domain agree if they agree at one point. -/
 theorem analytic_solution_unique
     (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) (a : XL1 ν L)
@@ -213,7 +219,7 @@ theorem analytic_solution_unique
     have h_abs : |(0 : ℝ)| < (ν : ℝ) := by rw [abs_zero]; exact hν
     have ⟨_, h_init⟩ := solves_ODE_of_F_zero φ_cpoly x₀ a hF h_abs
     exact h_init l
-  -- Picard-Lindelöf via Grönwall
+  -- Grönwall-based uniqueness
   exact ODE_solution_unique_of_mem_Ioo
     (v := fun _ => vectorField φ_cpoly)
     (s := fun _ => Metric.closedBall (0 : Fin L → ℝ) R) (K := K)
@@ -223,7 +229,7 @@ theorem analytic_solution_unique
     (by rw [hg_init, h_eval_init])
 
 /-- The pointwise trajectory `t ↦ (eval(a_l, t))_l` of an `XL1` element stays
-within the closed ball of radius `‖a‖` (the XL1 sup-of-ℓ¹ norm) on the disk
+within the closed ball of radius `‖a‖` (the XL1 sup-of-ℓ¹ norm) on the closed interval
 `|t| ≤ ν`. Used to discharge the trajectory hypothesis `hf_in_R` in
 `analytic_solution_unique`: take `R = ‖a‖`, or any larger value.
 

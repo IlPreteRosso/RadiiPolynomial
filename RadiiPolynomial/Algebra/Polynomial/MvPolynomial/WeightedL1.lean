@@ -14,27 +14,29 @@ and `l1Weighted ν` (Banach algebra with CauchyProduct multiplication).
 ## Architecture
 
 `MvPolynomial` is noncomputable in Mathlib, so it lives in the PROOF world only.
-For `native_decide`, the user provides a computable ℚ mirror (`φ_Q : Fin L → ℕ → ℚ`)
-as in the existing pipeline. The MvPolynomial bridge automates:
+For `native_decide`, the caller supplies computable ℚ data outside this file (for example
+the `Dφ_Q` table of `ivp_hDF_block_nat`, or `CompPoly.evalCoeff`); no computable mirror is
+declared here. The MvPolynomial bridge automates:
 
 1. **ℚ↔ℝ bridge**: `toSeq(aeval a p) n = (mvPolyCoeffQ p arrs n : ℝ)`
-   — reduces to `ratCast_CauchyProduct` + ring hom properties
+   — reduces to `CauchyProduct.ratCast` + ring hom properties
 2. **Differentiability**: `aeval · p` is differentiable (polynomial on Banach algebra)
 3. **Fderiv via pderiv**: `fderiv(aeval · p)(a) = Σᵢ leftMul(aeval a (pderiv i p)) ∘ proj i`
 4. **DF verification**: Jacobian entries = `mvPolyCoeffQ(pderiv m (φ_spec j))`
-5. **Z₂ bound**: for degree ≤ 2, `pderiv i (pderiv j p)` is constant → bilinear bound
+5. **Z₂ bound**: when every `pderiv j (pderiv i p)` is a constant (hypothesis `hD₂`; true for
+   degree ≤ 2) → bilinear bound
 
-The computable ℚ evaluator (`φ_Q`) matches `mvPolyCoeffQ` by a simple
-agreement lemma. The user proves this once per equation (~5 lines).
+The caller connects its computable ℚ data to `mvPolyCoeffQ` by an agreement hypothesis
+(for example `hDφ_Q` of `ivp_hDF_block_nat`).
 
 ## Key Insight
 
 The value of MvPolynomial is NOT computation — it's PROOF automation.
 By stating φ as `MvPolynomial (Fin L) ℚ`, we get:
-- `differentiable_aeval` (replaces ~60 lines of manual differentiability proofs)
-- `fderiv_aeval` (replaces ~100 lines of fderiv computation)
+- `differentiable_evalInBanach` (replaces ~60 lines of manual differentiability proofs)
+- `fderiv_evalInBanach` (replaces ~100 lines of fderiv computation)
 - `pderiv`-based DF verification (~200 lines collapsed into `ivp_hDF_block_nat`)
-- degree-based Z₂ bound (replaces ~60 lines of bilinear bound proofs)
+- constant-second-pderiv Z₂ bound (replaces ~60 lines of bilinear bound proofs)
 -/
 
 open MvPolynomial (C X aeval pderiv)
@@ -50,7 +52,7 @@ variable {L : ℕ}
 
 variable {ν : PosReal}
 
--- Algebra ℚ instance and ratSmul_eq are in LpOneBanachAlgebra.lean
+-- Algebra ℚ instance and ratSmul_eq are in Analysis/SequenceSpace/Geometric/Basic.lean
 
 /-- Evaluate MvPolynomial in the Banach algebra `l1Weighted ν` via `aeval`.
 Multiplication = CauchyProduct (from `instNormedCommRing`). -/
@@ -80,7 +82,7 @@ private lemma toSeq_algebraMap_rat (r : ℚ) (n : ℕ) :
   | zero => simp
   | succ n => simp
 
--- toSeq_mul is now public in LpOneBanachAlgebra.lean as l1Weighted.toSeq_mul
+-- toSeq_mul is public in Analysis/SequenceSpace/Geometric/Basic.lean as l1Weighted.toSeq_mul
 
 /-- Coefficient extraction commutes with `MvPolynomial` evaluation. -/
 theorem toSeq_evalInBanach_of_coeffs (p : MvPolynomial (Fin L) ℚ)
@@ -189,8 +191,8 @@ This formalizes the book's equation (8.27): `Dφ_j(a)b = Σ_{j'} D_{a_{j'}} φ_j
 
 open ContinuousLinearMap (proj)
 
-/-- `evalInBanach p` is differentiable: polynomial expressions on Banach algebras
-are smooth (constant, sum, product of differentiable functions). -/
+/-- `evalInBanach p` is differentiable at every point: by induction, constants, sums and
+products with a coordinate of differentiable functions are differentiable. -/
 theorem differentiable_evalInBanach (p : MvPolynomial (Fin L) ℚ) :
     Differentiable ℝ (fun x : Fin L → l1Weighted ν => evalInBanach p x) := by
   induction p using MvPolynomial.induction_on with
@@ -270,8 +272,8 @@ pderiv evaluation differences:
 (fderiv(evalInBanach p)(c) - fderiv(evalInBanach p)(a)) h =
   Σᵢ (evalInBanach(pderiv i p)(c) - evalInBanach(pderiv i p)(a)) * h i
 ```
-For degree ≤ 2 polynomials, each `pderiv i p` is degree ≤ 1 (affine),
-so the difference is bilinear in `(c - a)` and `h`. -/
+The statement assumes nothing on the degree. For degree ≤ 2 polynomials, each `pderiv i p`
+is degree ≤ 1 (affine), so the difference is bilinear in `(c - a)` and `h`. -/
 theorem fderiv_diff_evalInBanach (p : MvPolynomial (Fin L) ℚ)
     (c a : Fin L → l1Weighted ν) (h : Fin L → l1Weighted ν) :
     (fderiv ℝ (fun x => evalInBanach p x) c -
@@ -311,7 +313,7 @@ the fderiv difference `(Df(c) - Df(a)) h` at each component j equals
 Since each `∂ᵢφⱼ` has degree ≤ 1, the difference `evalInBanach(∂ᵢφⱼ)(c) - evalInBanach(∂ᵢφⱼ)(a)`
 is controlled by `‖c - a‖` (it's a linear function of `c - a`).
 
-We accept a bound `C_Z₂` as a parameter with a verification hypothesis, matching the
+We accept a bound `C` as a parameter with a verification hypothesis, matching the
 existing API style where certificates provide numerical bounds. -/
 
 /-! ## 5b. Generic Z₂ bilinear bound for polynomial systems
@@ -375,10 +377,12 @@ theorem norm_fderiv_diff_evalInBanach_bilinear
 
 For degree ≤ 2 polynomials, each `pderiv j (pderiv i p) = C c_{i,j}` is constant.
 The caller provides a ℚ coefficient table `D₂` and verifies:
-1. `D₂ i j = coeff 0 (pderiv j (pderiv i p))` (by `native_decide`)
-2. `∑_{i,j} |D₂ i j| ≤ C` (by `native_decide` or `norm_num`)
+1. `hD₂ : pderiv j (pderiv i p) = C (D₂ i j)` (e.g. by `pderiv_simp`)
+2. `∑_{i,j} |D₂ i j| ≤ C` (e.g. by `norm_num`)
 
-The internal proof uses `pderiv_pderiv_eq_C_of_totalDegree_le_two` structure. -/
+The proof does not use the degree: constancy of the second pderivs is the hypothesis `hD₂`
+(for total degree ≤ 2 it exists by `MvPolynomial.pderiv_pderiv_eq_C_of_totalDegree_le_two`,
+which this proof does not invoke). -/
 theorem norm_fderiv_diff_evalInBanach_of_const_second_pderiv
     (p : MvPolynomial (Fin L) ℚ)
     (c a h : Fin L → l1Weighted ν)
@@ -406,13 +410,15 @@ theorem norm_fderiv_diff_evalInBanach_of_const_second_pderiv
 
 /-- System-level Z₂ bilinear bound for polynomial systems with constant second pderivs.
 
-Given `D₂ l i j = coeff of ∂ⱼ∂ᵢ(φ_spec l)` for the whole system, derives:
-- Per-component bilinear bound `‖(Df_l c - Df_l ā) h‖ ≤ C * ‖c-ā‖ * ‖h‖`
-- `hzero`: inactive components (where all `D₂ l i j = 0`) have zero fderiv difference
+Given `D₂ l i j = coeff of ∂ⱼ∂ᵢ(φ_spec l)` for the whole system, derives the
+per-component bilinear bound `‖(Df_l c - Df_l a) h‖ ≤ C * ‖c-a‖ * ‖h‖`. The vanishing of
+the difference on inactive components (all `D₂ l i j = 0`) is the separate
+`fderiv_diff_zero_of_D₂_zero`.
 
 The caller provides:
 - `D₂` and `hD₂` (verified by `pderiv_simp`)
-- `C` and `hC` (the maximum row sum, verified by `norm_num`) -/
+- `C` and `hC` (a bound on every component sum `∑ᵢ ∑ⱼ |D₂ l i j|`, e.g. their maximum,
+  verified by `norm_num`) -/
 theorem norm_fderiv_diff_system_of_const_second_pderiv
     (φ_spec : Fin L → MvPolynomial (Fin L) ℚ)
     (c a : Fin L → l1Weighted ν)

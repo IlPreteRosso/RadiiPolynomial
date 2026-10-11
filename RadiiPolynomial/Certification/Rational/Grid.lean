@@ -219,7 +219,7 @@ theorem colNormQ_mono {col col' : Array ℚ} {ν : ℚ} (hν : 0 ≤ ν) (N j : 
 
 theorem finWeightedMatrixNormQ_mono {N : ℕ} {cols cols' : Fin (N + 1) → Array ℚ} {ν : ℚ}
     (hν : 0 ≤ ν) (h : ∀ c, ∀ i ≤ N, |(cols c).getD i 0| ≤ |(cols' c).getD i 0|) :
-    finWeightedMatrixNormQ cols ν N ≤ finWeightedMatrixNormQ cols' ν N :=
+    finWeightedMatrixNormQ cols ν ≤ finWeightedMatrixNormQ cols' ν :=
   Finset.sup'_le _ _ fun c _ =>
     Finset.le_sup'_of_le _ (Finset.mem_univ c) (colNormQ_mono hν N c (h c))
 
@@ -333,14 +333,16 @@ def dotN : List ℕ → List ℕ → ℕ
   | u :: us, w :: ws => Nat.add (Nat.mul u w) (dotN us ws)
   | _, _ => 0
 
-/-- Upper bound of the weighted norm of defect column `c` of block `(l, j)` at grid `1/S`. -/
+/-- Upper bound of the weighted norm of defect column `c` of block `(l, j)` at grid `1/S`, when
+`νn = |ν.num|`, `νd = ν.den` for a weight `0 < ν` and `0 < S` (`colNormQ_defect_le_colValB`). -/
 noncomputable def colValB {L : ℕ} (S : ℕ) (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ)
     (N νn νd : ℕ) (l j : Fin L) (c : ℕ) : ℚ :=
   ((Nat.mul (dotN (roundNatsB (L * (N + 1)) (defectColB S A_col DF_col N l j c))
       (weightsB N νn νd)) (Nat.pow νd c) : ℕ) : ℚ) /
     ((Nat.mul (Nat.mul S (Nat.pow νd N)) (Nat.pow νn c) : ℕ) : ℚ)
 
-/-- Upper bound of the weighted matrix norm of block `(l, j)` (max over columns). -/
+/-- Upper bound of the weighted matrix norm of block `(l, j)` (max over columns), under the
+same conditions (`finWeightedMatrixNormQ_defect_le_blockBoundB`). -/
 noncomputable def blockBoundB {L : ℕ} (S : ℕ) (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ)
     (N νn νd : ℕ) (l j : Fin L) : ℚ :=
   ((List.range (N + 1)).map (colValB S A_col DF_col N νn νd l j)).foldl max 0
@@ -675,7 +677,7 @@ theorem le_foldl_max : ∀ (xs : List ℚ) (init : ℚ),
 
 theorem finWeightedMatrixNormQ_defect_le_blockBoundB {L N : ℕ} (S : ℕ) (hS : 0 < S)
     (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ) (ν : ℚ) (hν : 0 < ν) (l j : Fin L) :
-    finWeightedMatrixNormQ (defectCols (N := N) A_col DF_col l j) ν N ≤
+    finWeightedMatrixNormQ (defectCols (N := N) A_col DF_col l j) ν ≤
       blockBoundB S A_col DF_col N ν.num.natAbs ν.den l j :=
   Finset.sup'_le _ _ fun c _ =>
     (colNormQ_defect_le_colValB S hS A_col DF_col ν hν l j c).trans

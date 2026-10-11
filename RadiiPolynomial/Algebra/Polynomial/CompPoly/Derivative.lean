@@ -83,7 +83,8 @@ theorem hasFDerivAt_system {n : ℕ} (P : Fin n → CompPoly n) (x : Fin n → R
 
 /-- At `L = 1` the gradient row is left multiplication by the evaluated formal derivative
 `p′(x) = (pderiv 0 p)(x)` after the coordinate projection. Composing with `y ↦ fun _ => y` gives
-the derivative of `y ↦ p.evalBanach (fun _ => y)` on `R` itself as `ContinuousLinearMap.mul`. -/
+the derivative of `y ↦ p.evalBanach (fun _ => y)` on `R` itself as `ContinuousLinearMap.mul`
+(a consequence not stated in this file). -/
 theorem gradCLM_eq_mul_comp_proj (p : CompPoly 1) (x : Fin 1 → R) :
     gradCLM p x = (ContinuousLinearMap.mul ℝ R ((p.pderiv 0).evalBanach x)).comp
       (ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin 1 => R) 0) := by

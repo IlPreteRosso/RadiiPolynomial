@@ -22,8 +22,11 @@ bilateral carrier is
 
 On characters this map is contravariantly the classical Joukowski map
 `z ↦ (z + z⁻¹) / 2`: Laurent evaluation at an annulus point after
-`joukowskiAeval` is Taylor evaluation at its Joukowski image.  The final
-theorem states the same naturality for an arbitrary complex-valued character.
+`joukowskiAeval` is Taylor evaluation at its Joukowski image.  A further
+theorem (`comp_joukowskiAeval_eq_evalC`) states the same naturality for an
+arbitrary complex-valued character.  The last section replaces `g` by `1 + g`
+under the stronger gate `1 + a(ν) ≤ r`, so that the Chebyshev left endpoint
+pulls back to the Taylor centre.
 
 This module is independent of the concrete Taylor/Chebyshev IVP applications
 and is exposed by the `CrossGeometry` sequence-space facade.
@@ -96,8 +99,9 @@ theorem semiMajor_sq_sub_semiMinor_sq (ν : PosReal) :
   field_simp
   ring
 
-/-- A Taylor disc of radius `s ≥ 0` fits inside the Bernstein ellipse exactly
-when the corresponding ellipse parameter is at most `ν`. -/
+/-- For every real `s`, `bernsteinParameter s ≤ ν` iff `s ≤ semiMinor ν`.  For
+`s ≥ 0` this reads: a Taylor disc of radius `s` fits inside the Bernstein
+ellipse exactly when the corresponding ellipse parameter is at most `ν`. -/
 theorem bernsteinParameter_le_iff_le_semiMinor {ν : PosReal} {s : ℝ} :
     bernsteinParameter s ≤ (ν : ℝ) ↔ s ≤ semiMinor ν := by
   have hν0 : (0 : ℝ) < (ν : ℝ) := ν.2

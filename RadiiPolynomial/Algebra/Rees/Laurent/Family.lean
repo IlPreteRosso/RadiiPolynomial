@@ -329,7 +329,8 @@ theorem q_of_ne_zero {m : ℕ} (hm : m ≠ 0) : (q m : U R) = z (m : ℤ) + z (-
 theorem q_zero : (q 0 : U R) = 1 := by
   rw [q, ite_eq_left rfl]
 
-/-- The annihilator of the class of the stored-Chebyshev atom `q m` in `U / J_N`. -/
+/-- The annihilator of the class of the stored-Chebyshev atom `q m` in `U / J_N`, for
+`m ≤ N`: it is `(X ^ (2 (N + 1 - m)))`. -/
 theorem smul_q_mem_JN_iff {N m : ℕ} (hm : m ≤ N) (p : R[X]) :
     p • (q m : U R) ∈ JN N ↔ (X : R[X]) ^ (2 * (N + 1 - m)) ∣ p := by
   rcases Nat.eq_zero_or_pos m with rfl | hm0
@@ -352,7 +353,8 @@ theorem smul_q_mem_JN_iff {N m : ℕ} (hm : m ≤ N) (p : R[X]) :
       · rwa [ha _ (by omega)]
       · rwa [ha _ (by omega)]
 
-/-- The attainment identity `q_{N+1} q_{N+1-m} - q_{2N+2-m} = X^{2(N+1-m)} q_m`. -/
+/-- The attainment identity `q_{N+1} q_{N+1-m} - q_{2N+2-m} = X^{2(N+1-m)} q_m`, for
+`1 ≤ m ≤ N`. -/
 theorem q_mul_q_sub {N m : ℕ} (hm : 1 ≤ m) (hmN : m ≤ N) :
     (q (N + 1) : U R) * q (N + 1 - m) - q (2 * N + 2 - m) =
       ((X : R[X]) ^ (2 * (N + 1 - m))) • q m := by

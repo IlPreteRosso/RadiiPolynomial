@@ -10,20 +10,21 @@ import Mathlib.Analysis.Normed.Module.TransferInstance
 
 ## Typeclass convention
 
-Multiplicative typeclasses (`lpAlgRingData`, `lpOneMulAlgWeightSubMul`,
-`lpAlgSmulCompat`, `lpOneMulAlgConvCompat`) are primary; additive versions
-(`lpAlgRingData`, `lpOneAlgWeightSubMul`, `lpAlgSmulCompat`,
-`lpOneAlgConvCompat`) are registered via `@[to_additive]`.
+The fiber data `lpAlgRingData` and the scalar-compatibility class `lpAlgSmulCompat` are
+monoid-independent and have no additive versions. The weight and convolution classes come in
+pairs: the additive classes (`lpOneAlgWeightMul`, `lpOneAlgWeightSubMul`, `lpOneAlgConvCompat`)
+are declared directly, and the multiplicative ones (`lpOneMulAlgWeightMul`,
+`lpOneMulAlgWeightSubMul`, `lpOneMulAlgConvCompat`) are linked to them by
+`@[to_additive existing]` (the class field `mulConvSummable` corresponds to `convSummable`).
 
-Helper definitions and summability lemmas (`mulToRealSeq`, `mulConvSummable`, etc.)
-are defined with `[Monoid M]` and auto-generate additive versions (`toRealSeq`,
-`convSummable`, etc.) via `@[to_additive]`.
-
-Ring infrastructure helper lemmas (`mul_memℓp_mul`, `norm_mul_le_mul'`,
-`mulConv_assoc`, etc.) are defined with `[Monoid M]` and auto-generate additive
-versions via `@[to_additive]`. Ring *instances* (`instMul`, `instRing`, etc.) are
-defined manually for both `[Monoid M]` and `[AddMonoid M]` because `to_additive`
-cannot distinguish ring multiplication on `lpOneAlg` from monoid multiplication on `M`.
+Helper definitions and lemmas are stated in multiplicative spelling and generate their
+additive versions via `@[to_additive]` (`mulToRealSeq` ↦ `toRealSeq`, `mul_memℓp_mul` ↦
+`mul_memℓp`, `norm_mul_le_mul'` ↦ `norm_mul_le'`, etc.); `mulToRealSeq` itself needs no monoid
+structure on `M`. The ring *instances* are generated the same way: `instMulMul`, `instMulOne`,
+`instMulRing`, `instMulNormedRing` (for `[Monoid M]`) give `instMul`, `instOne`, `instRing`,
+`instNormedRing` (for `[AddMonoid M]`) by `@[to_additive (dont_translate := E 𝕜)]`, with the
+fibers and the scalar field excluded from the translation. The `Algebra`, `NormedAlgebra`,
+`CommRing` and `NormOneClass` instances are stated for an additive index monoid only.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal DiscreteConvolution
@@ -98,7 +99,9 @@ class lpOneAlgWeightMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (
   weight_zero : lpAlgRingData.weight (E := E) (0 : M) = 1
 
 /-- Beurling weight (multiplicative index monoid): `ω_{j*l} ≤ ω_j ω_l` and `ω_1 = 1`.
-Sufficient for Ring on `lpOneAlg` when `[HasAntidiagonal M]` (finite fibers). -/
+Sufficient for Ring on `lpOneAlg` when `[HasMulAntidiagonal M]` (finite fibers,
+`lpOneAlg.instMulConvCompatOfAntidiag`) or when `𝕜` is complete
+(`lpOneAlg.instMulConvCompatOfWeightMul`). -/
 @[to_additive existing (dont_translate := E 𝕜) lpOneAlgWeightMul]
 class lpOneMulAlgWeightMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
     [Monoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] where
@@ -385,8 +388,9 @@ end lpOneAlg
 /-! ### Convolution compatibility: abstraction over summability path -/
 
 /-- Provides the convolution primitives needed for Ring on `lpOneAlg M E` (additive).
-Two instances: from `[lpOneAlgWeightMul]` (tsum path, submultiplicativity alone) or
-from `[HasAntidiagonal M] + [lpOneAlgWeightMul 𝕜 M E]` (finite sum path, priority 1100). -/
+Two instances: from `[lpOneAlgWeightMul]` with `[CompleteSpace 𝕜]` (tsum path,
+submultiplicativity alone) or from `[HasAntidiagonal M] + [lpOneAlgWeightMul 𝕜 M E]` (finite
+sum path, priority 1100, no completeness). -/
 class lpOneAlgConvCompat (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
     [AddMonoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] where
   convSummable : ∀ (f g : lpOneAlg M E) (k : M),
@@ -402,8 +406,9 @@ class lpOneAlgConvCompat (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) 
     ∑' ab : DiscreteConvolution.addFiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖
 
 /-- Provides the convolution primitives needed for Ring on `lpOneAlg M E` (multiplicative).
-Two instances: from `[lpOneMulAlgWeightMul]` (tsum path, submultiplicativity alone) or
-from `[HasMulAntidiagonal M] + [lpOneMulAlgWeightMul 𝕜 M E]` (finite sum path, priority 1100). -/
+Two instances: from `[lpOneMulAlgWeightMul]` with `[CompleteSpace 𝕜]` (tsum path,
+submultiplicativity alone) or from `[HasMulAntidiagonal M] + [lpOneMulAlgWeightMul 𝕜 M E]`
+(finite sum path, priority 1100, no completeness). -/
 @[to_additive existing (dont_translate := E 𝕜) lpOneAlgConvCompat]
 class lpOneMulAlgConvCompat (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
     [Monoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] where
@@ -543,8 +548,8 @@ private theorem lpOneAlg.tripleMulConvSummable_of_weightMul
   exact (mul_le_mul_of_nonneg_left hsub
     (mul_nonneg (mul_nonneg (norm_nonneg _) (norm_nonneg _)) (norm_nonneg _))).trans_eq (by ring)
 
-/-- Instance from `[lpOneMulAlgWeightMul]`: tsum path using submultiplicativity alone
-(no weight ≥ 1 needed). -/
+/-- Instance from `[lpOneMulAlgWeightMul]` and `[CompleteSpace 𝕜]`: tsum path using
+submultiplicativity alone (no weight ≥ 1 needed). -/
 @[to_additive (dont_translate := E 𝕜) lpOneAlg.instConvCompatOfWeightMul]
 instance lpOneAlg.instMulConvCompatOfWeightMul
     {𝕜 : Type*} [NormedField 𝕜] [CompleteSpace 𝕜]

@@ -3,8 +3,9 @@ import RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Joukowski
 /-!
 # Character obstructions across the Joukowski bridge
 
-Sequence-space layer, cross-geometry. Six negative results about the characters
-of the production carriers: no real algebra character of the bilateral carrier
+Sequence-space layer, cross-geometry. Six results about the characters of the
+production carriers: three negative results, and three identity and existence
+statements that serve the last of them. No real algebra character of the bilateral carrier
 kills the Joukowski generator, so the physical character at `0` has *no* real
 continuous extension to the Laurent carrier (the obstruction is algebraic, before
 continuity); it does have two distinct complex extensions, at `±I`, so restriction
@@ -12,7 +13,8 @@ of complex Laurent characters to the physical subalgebra is not injective.
 
 These are the documentary counterexamples behind the physical spectrum and the
 Laurent restriction fibers (`Chebyshev/Spectrum/*`): they pin why the real-character
-route is dead and why the complex route is two-to-one.
+route is dead and why the complex route is not one-to-one. (That each restriction
+fiber has at most two points is not proved here.)
 -/
 
 noncomputable section

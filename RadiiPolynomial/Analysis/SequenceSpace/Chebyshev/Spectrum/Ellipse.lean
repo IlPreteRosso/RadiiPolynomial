@@ -4,9 +4,10 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Classification
 # The character space as the filled Bernstein ellipse
 
 Parameterization layer. `Ellipse ν` is the closed filled Bernstein ellipse in
-focal-sum form `‖w - 1‖ + ‖w + 1‖ ≤ ν + ν⁻¹` (degenerating to `[-1,1]` at `ν = 1`);
-`focal_sum_eq` identifies it as the Joukowski image of the closed annulus, by the
-parallelogram law. Every point of the ellipse is the normalized coordinate `χ ↦ χ(g)`
+focal-sum form `‖w - 1‖ + ‖w + 1‖ ≤ ν + ν⁻¹` (degenerating to `[-1,1]` at `ν = 1`; that
+degeneration is not proved here); `focal_sum_eq` (by the parallelogram law), with
+`joukowski_mem_ellipse` and `exists_annular_preimage`, identifies it as the Joukowski
+image of the closed annulus. Every point of the ellipse is the normalized coordinate `χ ↦ χ(g)`
 of exactly one continuous complex character (`existsUnique_character`,
 `exists_character_iff`), which packages the classification into the set-level
 bijection `characterEquivEllipse : Character ν ≃ Ellipse ν`.
@@ -22,12 +23,14 @@ namespace RadiiPolynomial.PhysicalSpectrum
 open lpOneAlg CrossGeometry
 
 /-- Focal-distance description of the closed filled Bernstein ellipse.
-At `ν = 1` this includes the degenerate ellipse, the interval `[-1,1]`. -/
+At `ν = 1` this includes the degenerate ellipse, the interval `[-1,1]` (that identification
+is not proved here). -/
 abbrev Ellipse (ν : PosReal) :=
   {w : ℂ // ‖w - 1‖ + ‖w + 1‖ ≤ (ν : ℝ) + (ν : ℝ)⁻¹}
 
 /-- The focal-sum threshold is twice the semi-major axis of `CrossGeometry.semiMajor`,
-so this ellipse is the one of `CrossGeometry/Joukowski.lean` in axis form. -/
+so this ellipse is the one of `CrossGeometry/Joukowski.lean` in axis form (only this
+identity of thresholds is proved here). -/
 theorem two_mul_semiMajor (ν : PosReal) : 2 * semiMajor ν = (ν : ℝ) + (ν : ℝ)⁻¹ := by
   unfold semiMajor
   ring

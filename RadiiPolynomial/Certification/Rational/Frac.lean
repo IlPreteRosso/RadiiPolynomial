@@ -34,7 +34,8 @@ def subMul (a : QF) (b c : ℚ) : QF :=
   ⟨a.num * ((b.den * c.den : ℕ) : ℤ) - b.num * c.num * (a.den : ℤ), a.den * (b.den * c.den),
     Nat.mul_pos a.den_pos (Nat.mul_pos b.den_pos c.den_pos)⟩
 
-/-- `⌈|a|·S⌉` (one `Nat` ceiling division). -/
+/-- `⌈|a|·S⌉` (one `Nat` ceiling division). The file proves only the upper bound
+`|a| ≤ ceilAbs S a / S` for `0 < S` (`abs_toRat_le`). -/
 def ceilAbs (S : ℕ) (a : QF) : ℕ := (a.num.natAbs * S + (a.den - 1)) / a.den
 
 theorem den_ne (a : QF) : (a.den : ℚ) ≠ 0 := by exact_mod_cast a.den_pos.ne'

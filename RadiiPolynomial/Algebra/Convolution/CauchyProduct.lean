@@ -176,8 +176,8 @@ a `Fin (N+1)`-indexed sum: `Σ_{p : Fin (N+1)} (if p ≤ n then f(n-p) else 0) *
 Since all `l ≤ n ≤ N`, the `Fin (N+1)` range captures every antidiagonal pair.
 
 This form matches `Matrix.mulVec` of a lower-triangular Toeplitz matrix built from `f`.
-Used in `ivp_hDF_block_nat` to connect CauchyProduct (from `fderiv_evalInBanach`)
-to the Jacobian matrix entries (from `DF_col`/`native_decide`). -/
+Used in `toSeq_fderiv_evalInBanach` (and through it in `ivp_hDF_block_nat`) to connect
+the Cauchy product (from `fderiv_evalInBanach`) to Jacobian matrix entries. -/
 lemma eq_sum_fin {N : ℕ} (f g : ℕ → R) {n : ℕ} (hn : n ≤ N) :
     CauchyProduct f g n =
       ∑ p : Fin (N + 1), (if (p : ℕ) ≤ n then f (n - (p : ℕ)) else 0) * g p := by

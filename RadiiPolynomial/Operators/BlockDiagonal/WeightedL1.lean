@@ -668,7 +668,7 @@ and `B` to be `SystemBlockDiagData L N` against a single weight `ν`
 unbounded tail (`Λ_n = n`), which is bounded only relative to the
 omega-weighted space `ℓ¹_ω` (`ω_k = ν^{k+1}/(k+1)`); see
 `Analysis/SequenceSpace/Geometric/Omega.lean`. The current workaround is `IVP.ivp_Z₀_le`
-(`IVP/Theorem.lean`), which takes `A_dag : BlockDiagOp` (the looser
+(`Applications/IVP/Taylor/Theorem.lean`), which takes `A_dag : BlockDiagOp` (the looser
 structure permitting unbounded tail) and bounds the *composed*
 approximation `A.composedApprox A_dag` instead of A_dag in
 isolation. A future two-weight `SystemBlockDiagData ν₁ ν₂` (mapping
@@ -690,11 +690,14 @@ lemma SystemBlockDiagData.Z₀_le_of_tailCancel [NeZero L]
 
 /-- Defect construction for A (bounded `SystemBlockDiagData`) composed with B (`BlockDiagOp`,
 possibly unbounded tail). The finite block is `δ_{l,j}·I - ∑_m A_{l,m} B_{m,j}` and
-the tail is zero (assuming tail cancellation). Used for the IVP case where A† has
-unbounded tail diagonal `k·δ_{j,j'}`.
+the tail is zero (the tail of `I - A∘B` when the tail diagonals cancel; no cancellation
+hypothesis enters the definition). Used for the IVP case where A† has unbounded tail
+diagonal `k·δ_{j,j'}`.
 
-The caller must separately prove that `I - A.toCLM ∘ DF_CLM = defect.toCLM` by showing
-the Fréchet derivative has the block-diagonal structure matching B. -/
+The definition does not relate the defect to any operator: the caller proves separately
+that `I - A.toCLM ∘ DF_CLM = defect.toCLM` (`defectOfBlockDiagOp_toCLM_eq`, when the
+Fréchet derivative has the block-diagonal structure matching B) or that
+`I - G_CLM = defect.toCLM` for a composed derivative (`defect_of_composed_toCLM_eq`). -/
 def defectOfBlockDiagOp [NeZero L]
     (A : SystemBlockDiagData L N) (B : BlockDiagOp L N) :
     SystemBlockDiagData L N where
@@ -925,9 +928,10 @@ When `T` kills finite modes and the tail contributions satisfy a per-component
 weighted sum bound, the operator norm is bounded directly. This pattern arises
 in IVP tail errors (shiftDivN structure) and manifold tail errors (eigenvalue decay).
 
-The general lemma `norm_le_of_fin_kill_tail_weighted` reduces the operator norm
-to a componentwise tail tsum bound. The helper `ivp_shiftDivN_tail_sum_le`
-provides the IVP-specific bound: `1/n ≤ 1/(N+1)` yields `ν/(N+1) · ‖D(h)‖`. -/
+This file declares only the generic reduction `norm_le_of_pi_component_bound`
+(componentwise bounds give an operator norm bound). The componentwise tail bounds
+themselves (e.g. the IVP estimate `1/n ≤ 1/(N+1)` giving `ν/(N+1) · ‖D(h)‖`) are not
+declared here. -/
 
 /-- Direct operator norm bound from per-component bounds.
 If each component of `T h` satisfies `‖(T h) l‖ ≤ C * ‖h‖`, then `‖T‖ ≤ C`.

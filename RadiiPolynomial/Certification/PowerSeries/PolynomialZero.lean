@@ -62,7 +62,12 @@ namespace PolyZeroData
 
 variable (d : PolyZeroData)
 
-/-! ### ℚ mirror -/
+/-! ### ℚ mirror
+
+The readings of `M`, `K₁` as support bounds of `F(x̄)`, `P′(x̄)` and of `Y₀Q`, `Z₁Q`,
+`abarNormQ` as exact norms hold for real `x̄`, `c` with coefficients `a`, `cq`, at `ν = νq`, when
+`aQ.size ≤ N + 1` (a clause of `Checks`): `FQ_eq_zero`, `dQ_eq_zero`, `norm_xbar`, and inside
+the proofs of `Y₀_le`, `Z₁_le`. -/
 
 /-- `x̄` coefficients. -/
 def a (k : ℕ) : ℚ := d.aQ.getD k 0
@@ -91,7 +96,7 @@ def DFcols (j : Fin (d.N + 1)) : Array ℚ :=
 def defectCols (j : Fin (d.N + 1)) : Array ℚ :=
   Array.ofFn fun i : Fin (d.N + 1) => defectMatQ d.Acols d.DFcols i j
 /-- Exact ℚ value of the finite `Z₀`. -/
-def Z₀Q : ℚ := finWeightedMatrixNormQ d.defectCols d.νq d.N
+def Z₀Q : ℚ := finWeightedMatrixNormQ d.defectCols d.νq
 /-- Exact ℚ `Z₁ = |tail(A)| · ‖P′(x̄) - (P′(x̄))₀·1‖`, summed over the support of `P′(x̄)`. -/
 def Z₁Q : ℚ := |d.tailQ| *
   ∑ n ∈ Finset.Icc 0 d.K₁, |d.dQ n - (if n = 0 then d.dQ 0 else 0)| * d.νq ^ n
@@ -99,7 +104,7 @@ def Z₁Q : ℚ := |d.tailQ| *
 def abarNormQ : ℚ := ∑ n ∈ Finset.Icc 0 d.N, |d.a n| * d.νq ^ n
 /-- `Z₂ = derivativeLipschitzBound P (‖x̄‖ + r₀) · max(‖A_fin‖, |tail(A)|)`. -/
 def Z₂Q : ℚ := d.P.derivativeLipschitzBound (fun _ => d.abarNormQ + d.r₀) *
-  max (finWeightedMatrixNormQ d.Acols d.νq d.N) |d.tailQ|
+  max (finWeightedMatrixNormQ d.Acols d.νq) |d.tailQ|
 
 /-- The only certificate obligation: a ℚ-decidable conjunction (one `decide +kernel`). -/
 def Checks : Prop :=
@@ -186,7 +191,7 @@ lemma Y₀_le (h : d.aQ.size ≤ d.N + 1) (hY : d.Y₀Q ≤ d.Y₀) :
   exact hR
 
 omit hx hc in
-/-- Finite defect norm = exact ℚ `Z₀Q`. -/
+/-- Finite defect norm ≤ exact ℚ `Z₀Q`. -/
 lemma defect_le :
     FiniteWeightedNorm.finWeightedMatrixNorm ν
       (1 - d.toReal.A.finBlock0 * d.toReal.Adag.finBlock0) ≤ (d.Z₀Q : ℝ) :=
@@ -244,7 +249,7 @@ omit hx hc in
 /-- `‖A‖` from the exact ℚ column norms. -/
 lemma norm_A_le :
     ‖d.toReal.A.toScalarCLM (ν := ν)‖ ≤
-      ((max (finWeightedMatrixNormQ d.Acols d.νq d.N) |d.tailQ| : ℚ) : ℝ) :=
+      ((max (finWeightedMatrixNormQ d.Acols d.νq) |d.tailQ| : ℚ) : ℝ) :=
   norm_toScalarCLM_le_of_Q (ν := ν) d.toReal.A d.Acols d.νq |d.tailQ|
     (fun j i => rfl) hν
     (by simp [PolyZeroReal.A, ScalarBlockDiagData.ofParts, PolyZeroData.toReal]) le_rfl
@@ -290,7 +295,7 @@ lemma Z₂_le (hsz : d.aQ.size ≤ d.N + 1) (hZ : d.Z₂Q ≤ d.Z₂) :
 end Bounds
 
 /-- **The family face, bound form.** From the ℚ-decidable `Checks` and the two coefficient
-bridges, all seven hypotheses of the general radii polynomial theorem at `A = d.toReal.A`,
+bridges, all eight hypotheses of the general radii polynomial theorem at `A = d.toReal.A`,
 `A† = d.toReal.Adag`, for any univariate polynomial `P`. -/
 theorem certified (d : PolyZeroData) {ν : PosReal} (hν : (ν : ℝ) = (d.νq : ℝ))
     {xbar c : l1Weighted ν}

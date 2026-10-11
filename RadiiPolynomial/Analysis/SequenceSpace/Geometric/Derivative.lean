@@ -10,7 +10,7 @@ This file contains differentiability and `fderiv` lemmas for `l1Weighted`:
 - `differentiable_mk_of_finSupp`: finitely-supported `l1Weighted.mk` is differentiable
 - `fderiv_mk_of_finSupp_toSeq_tail`: fderiv vanishes on tail modes
 
-These are separated from `lpWeighted.lean` because they are the only consumers
+These are separated from `Geometric/Basic.lean` because they are the only consumers
 of `Mathlib.Analysis.Calculus.FDeriv.{Linear,Add}`.
 -/
 

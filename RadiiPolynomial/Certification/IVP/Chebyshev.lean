@@ -39,7 +39,12 @@ open RadiiPolynomial MvPolyBridge RadiiPolynomial.Certification.Rational
 
 namespace ChebyshevIVP
 
-/-! ### ℚ layer (ν-free; the definitions of this section are computable) -/
+/-! ### ℚ layer (ν-free; the definitions of this section are computable)
+
+The formulas take arbitrary rational data. The readings of `Y₀Q` and `SnormQ` as exact norms
+hold at the stored data of a bundle `d : StdChebIVPData ν L N` (`ν_q = d.ν_q`, `p` the cast of
+`p_q`): for `Y₀Q` inside the proof of `StdChebIVPData.Y₀_le_of_Q`, for `SnormQ` as
+`StdChebIVPData.norm_symmetrize_abar_eq`. -/
 
 section QLayer
 
@@ -603,7 +608,9 @@ def colNormAux (N : ℕ) (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ) 
     (mn : ℕ) (jc : Array (Array ℚ)) : ℚ :=
   ∑ n : Fin (N + 1), |DcolAux N A_col DF_col l j mn jc n| * ν_q ^ (n : ℕ)
 
-/-- Exact ℚ weighted finite-row norm of column `mn` of block `(l, j)` of the `Z₁` operator. -/
+/-- Exact ℚ weighted finite-row norm of column `mn` of block `(l, j)` of the `Z₁` operator, at
+the stored data of a bundle (rows: `StdChebIVPData.Tlj_single_toSeq`; used in
+`StdChebIVPData.Tlj_col_le`). -/
 def chebColNormQ (N : ℕ) (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ) (abar_Q : Fin L → Array ℚ)
     (ν_q : ℚ) (f : Fin L → CompPoly L) (l j : Fin L) (mn : ℕ) : ℚ :=
   colNormAux N A_col DF_col ν_q l j mn (jacColQ N f abar_Q j mn)
@@ -1095,7 +1102,7 @@ end Face
 
 /-! ### Kernel-scale checker
 
-Three cost cuts, each with a generic soundness lemma, so that the kernel (`decide +kernel`)
+Four cost cuts, each with a generic soundness lemma, so that the kernel (`decide +kernel`)
 closes certificates with a few dozen modes:
 
 * `evalFast`: the Laurent interpreter with the convolution window clipped to the

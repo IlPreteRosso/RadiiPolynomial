@@ -10,10 +10,11 @@ import RadiiPolynomial.Algebra.Polynomial.CompPoly.Core
 
 Takes a single-argument lambda `fun (a : Fin L → R) => body` whose body is a
 polynomial expression in the projections `a 0, a 1, …, a (L-1)`, and produces
-the corresponding `MvPolyBridge.CompPoly L` term. This collapses the dual-write
+the corresponding `MvPolyBridge.CompPoly L` term. This addresses the dual-write
 pattern in `Example83/Algebra.lean` (where `f_cpoly` is hand-written as
 an AST and `f` is the same expression via `evalBanach`) — with this
-elaborator, the AST is generated from the `evalBanach`-side lambda.
+elaborator, the AST can be generated from the `evalBanach`-side lambda
+(`Example83/Algebra.lean` itself still writes `f_cpoly` by hand).
 
 ## Recognition rules
 

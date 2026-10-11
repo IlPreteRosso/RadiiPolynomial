@@ -10,7 +10,7 @@ This file keeps the norm-level and invertibility-level results:
 - Neumann-style criterion via `‖I - M‖ < 1`
 
 The matrix-to-CLM construction API (`toWeightedCLM`, multiplication/subtraction
-transport, apply lemmas) lives in `MatrixCLM.lean`.
+transport, apply lemmas) lives in `Operators/Matrix/Continuous.lean`.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal Matrix

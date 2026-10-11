@@ -8,8 +8,8 @@ import Mathlib.Analysis.Normed.Operator.Mul
 `l1Chebyshev ν = lpOneAlg ℤ (ScaledRealZ ν)` — ℤ-indexed sequences with
 bilateral weighted norm `∑|a_k|·ν^{|k|}` and convolution product.
 
-Ring and algebra instances flow from `lpOneAlg` + `SubMulWeight` via
-generic `WeightedScalar` instances in `WeightedScalar.lean`.
+Ring and algebra instances flow from `lpOneAlg` + `SubMulWeight` via the
+generic `WeightedScalar` instances in `WeightedL1/ScalarInstances.lean`.
 -/
 
 open scoped BigOperators Topology

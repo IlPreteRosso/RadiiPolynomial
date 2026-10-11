@@ -4,11 +4,14 @@ import RadiiPolynomial.Operators.BlockDiagonal.Lift
 /-!
 # Block-Diagonal Defect CLM on XCheb (ℤ-Indexed Chebyshev Space)
 
-Lifts the defect of a `SystemBlockDiagData` (with tailDiag = 0) to a continuous linear map
-on `XCheb ν L` (ℤ-indexed Chebyshev space).
+Lifts the finite-block action `actionFinite` of a `SystemBlockDiagData` to a continuous
+linear map on `XCheb ν L` (ℤ-indexed Chebyshev space). The tail part of the data is not
+used; the intended input is a defect, whose tail model is `0`.
 
 The composed approximate derivative is `composedApproxCheb D = id - defectChebCLM D`.
-Norm bound: `‖defectChebCLM D‖ ≤ finiteBlockMatrixNorm(D.finBlock)`.
+Norm bound, pointwise form: `‖defectCheb_apply D h‖ ≤ finiteBlockMatrixNorm(D.finBlock) * ‖h‖`
+(`defectCheb_norm_le`), from which `defectChebCLM` is built; the operator-norm form is not
+stated separately.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal

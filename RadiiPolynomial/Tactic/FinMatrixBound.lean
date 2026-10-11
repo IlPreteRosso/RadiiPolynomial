@@ -15,13 +15,15 @@ Proves bounds of the form `finWeightedMatrixNorm ν M ≤ C` (or block-level
 `finiteBlockMatrixNorm ν A ≤ C`) using a bridge lemma + `native_decide`.
 
 The user provides the bridge lemma fully applied except for the final
-`hle : ... ≤ C` argument. The tactic closes that argument with `native_decide`.
+`hle : ... ≤ C` argument. The tactic closes that argument through LeanCert's verification
+boundary: `native_decide` by default; the option `leancert.trust` (`native`, `kernel`,
+`auto`) selects the route.
 
 ## Usage
 
 ```lean
 -- Single matrix: finWeightedMatrixNorm ν M ≤ C
-finmatrix_bound (l1Weighted.finWeightedMatrixNorm_le_of_Q_le _ cols ν_q hcols hν)
+finmatrix_bound (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le _ cols ν_q hcols hν)
 
 -- Block matrix: finiteBlockMatrixNorm ν A ≤ C  (1 native_decide instead of L×L)
 finmatrix_bound (finiteBlockMatrixNorm_le_of_Q_le _ blockCols ν_q hcols hν)
@@ -33,7 +35,9 @@ The tactic:
 1. Elaborates the bridge term (which has one remaining argument of type `_ ≤ _`)
 2. Creates a fresh mvar for the `hle` argument
 3. Applies the bridge proof with the mvar
-4. Calls `closeBridgeWithNativeDecide` to close `hle` with `native_decide`
+4. Calls `closeBridgeWithVerificationTyped` (the successor of `closeBridgeWithNativeDecide`)
+   to close `hle` by the configured verification route (`native_decide` by default), with
+   converter fallbacks
 -/
 
 open Lean Meta Elab Tactic Term
@@ -41,7 +45,8 @@ open Lean Meta Elab Tactic Term
 namespace LeanCert.Tactic
 
 /-- Prove a matrix norm bound by applying a bridge lemma and closing
-    the ℚ certificate check with `native_decide`.
+    the ℚ certificate check with `native_decide` (the default route of
+    `leancert.trust`; `kernel` and `auto` are the alternatives).
 
     Usage: `finmatrix_bound bridgeTerm` where `bridgeTerm` is the bridge
     lemma applied to all arguments except the final `hle : ... ≤ C`. -/
@@ -96,7 +101,7 @@ elab_rules : tactic
 /-- Prove a matrix norm bound by decomposing into per-column sums and closing
     each with `finsum_bound using colNormTermEval`.
 
-    Usage: `finmatrix_bound using cols hcols ν_q hν`
+    Usage: `finmatrix_dyadic cols, hcols, ν_q, hν`
     where:
     - `cols : Fin (N+1) → Array ℚ` — ℚ column arrays for the matrix
     - `hcols : ∀ j i, M i j = ((cols j).getD i 0 : ℝ)` — bridge proof

@@ -8,15 +8,17 @@ import RadiiPolynomial.Algebra.Polynomial.CompPoly.WeightedL1
 The Jacobian bridge for the IVP zero-finding map. Each IVP example needs to
 prove that the Fréchet derivative of `ivpCoeffs` agrees with the numerical
 Jacobian stored in `A_dag.finBlock`. This file combines the coefficient
-derivative formulas from `IVP.Setup`, `toSeq_fderiv_evalInBanach`, and the
-Toeplitz row action into `ivp_hDF_block_nat`.
+derivative formulas `fderiv_ivpCoeffs_zero_apply` / `fderiv_ivpCoeffs_succ_apply` of
+`Applications/IVP/Taylor/Operator.lean`, `toSeq_fderiv_evalInBanach`, and the
+Toeplitz row action into `ivp_hDF_block` and its array form `ivp_hDF_block_nat`.
 
 ## Solution
 
 `ivp_hDF_block_nat` provides the generic proof. The user supplies:
 1. `φ_spec` — MvPolynomial specification of the nonlinearity
 2. `Dφ_Q` — computable ℚ mirror of `pderiv(φ_spec)` evaluated at ābar
-3. Proofs connecting these (`hφ_eq`, `habar`, `hDφ_Q`, `hDF`)
+3. `DF_cols` — the stored ℚ Jacobian columns
+4. Proofs connecting these (`hφ_eq`, `hφ_diff`, `hDφ_Q`, `hDF_finBlock`, `hDF_nat`)
 
 ## Live consumer
 
@@ -194,10 +196,9 @@ omit [NeZero L] in
 Given `φ_spec` and a per-component bound `K` on `Σ_m ‖pderiv_m(φ_spec l) at ā‖`,
 proves `‖(fderiv φ l ā) h‖ ≤ K * ‖h‖`.
 
-The user provides:
-- `Dφ_norms : Fin L → Fin L → ℝ` — upper bounds on `‖evalInBanach(pderiv m (spec l), ā)‖`
-- `hDφ_norms` — proofs of these bounds (e.g., via `finsum_bound`)
-- `K` — overall bound: `Σ_m Dφ_norms l m ≤ K` for each `l`
+The user provides `hDφ_le`: for each `l`, the row sum
+`Σ_m ‖evalInBanach (pderiv m (φ_spec l)) ā‖ ≤ K`, proved directly (the lemma takes no
+separate table of per-entry bounds).
 
 `ivp_Dφ_norm_le_of_compPoly` discharges the sum from the polynomial syntax
 (`CompPoly.derivativeBound`) when the nonlinearity is given by a `CompPoly` system.
@@ -245,10 +246,11 @@ lemma ivp_Dφ_norm_le_of_compPoly
 omit [NeZero L] in
 /-- Convenience version of `ivp_hDF_block` accepting a `Fin`-bounded `native_decide` proof.
 
-The user provides:
+The user provides the stored columns `DF_cols`, their identification with the block
+`hDF_finBlock : A_dag.finBlock j m k p = ((DF_cols j m p).getD k 0 : ℝ)`, and
 ```
 hDF_nat : ∀ j m : Fin L, ∀ row col : Fin (N + 1),
-    (DF_col j m (col : ℕ)).getD (row : ℕ) 0 = ivp_DF_of_Dφ_nat Dφ_Q j m (row : ℕ) (col : ℕ)
+    (DF_cols j m (col : ℕ)).getD (row : ℕ) 0 = ivp_DF_of_Dφ_nat Dφ_Q j m (row : ℕ) (col : ℕ)
 ```
 proved by `native_decide`, and this wraps it into the form needed internally. -/
 theorem ivp_hDF_block_nat

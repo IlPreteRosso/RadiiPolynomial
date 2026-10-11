@@ -23,8 +23,11 @@ Under the default instances, `(1 : U R →ₗ[R[X]] U R) - PH H` does not elabor
 linear maps on the subalgebra `U R` fails to find its additive group). The section `Selection` of
 this file therefore declares two `local instance`s, `instUAddCommGroup` (the additive group
 inherited through the induced ring structure `(U R).toRing`) and `instUZero` (its zero), which select
-the EXISTING operations and introduce no independent structure (`zero_selection_eq_existing` is the
-`rfl` witness). They are local to that section; the operator-level identities `PH_comp_one_sub`,
+the EXISTING operations by construction and introduce no independent structure. The lemma
+`zero_selection_eq_existing` only records, by `rfl`, that `instUZero` is the zero of
+`instUAddCommGroup` (as elaborated, both sides are selected zeros); that the selected operations
+are those of the subalgebra is the construction itself, not a stated lemma. They are local to that
+section; the operator-level identities `PH_comp_one_sub`,
 `one_sub_comp_PH`, `PH_qDelta_tail` and `PH_add_qDelta_tail` are stated there.
 
 REQUIRED USAGE for operator-level identities: a consumer that states or rewrites with them opts into

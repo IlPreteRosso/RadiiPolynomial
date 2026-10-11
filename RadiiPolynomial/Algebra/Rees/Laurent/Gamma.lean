@@ -10,10 +10,13 @@ One cancellation length `eps k j = |k - j| + |j| - |k|` with `z (k - j) * z j = 
 (`z_sub_mul_z`), its arithmetic on head × tail (`|k| ≤ N < |j|`) against the ONE annihilator exponent
 `aN` of `Family` (`aN_le_eps`, `eps_sub_aN`, attainment at `jstar N k = sgn' k * (N + 1)`), and the
 ONE gamma `gammaW ν N k = ν ^ (2|k|) / ν ^ (2(N + 1))` over real `ν`, with the carrier-free identities
-consumed by the Fourier units: `gammaW_eq_eval_annihilator` (`Γ = eval_{1/ν} (X ^ aN N k)`),
-`weight_eq` / `weight_eq_rees` (the column-weight identity) and `eval_eps_div_eval_aN`.
+`gammaW_eq_eval_annihilator` (`Γ = eval_{1/ν} (X ^ aN N k)`), `weight_eq` / `weight_eq_rees` (the
+column-weight identity) and `eval_eps_div_eval_aN`; the Fourier unit
+`Analysis/SequenceSpace/Fourier/GammaLeakage.lean` consumes `gammaW_eq_eval_annihilator` and
+`weight_eq_rees`.
 
-Nothing analytic lands here: no norm, no `ℓ¹` carrier, no `Fact`. This module imports `Family` only.
+Nothing analytic lands here: no norm, no `ℓ¹` carrier, no `Fact`. Of the library modules, this
+module imports `Family` only.
 
 Promoted from the slice-23 `ReesBridge` and the S028a `ReesGamma` sources by unit L003-ReesLaurent
 (see `RENAMES.md`).
@@ -27,7 +30,7 @@ open Polynomial LaurentPolynomial
 
 section Exponents
 
-/-- The cancellation length of `z_{k−j} z_j = ρ^{ε} z_k` in the based Rees family:
+/-- The cancellation length of `z_{k−j} z_j = X^{ε} z_k` in the based Rees family:
 `ε(k, j) = |k − j| + |j| − |k|`. -/
 def eps (k j : ℤ) : ℕ := (k - j).natAbs + j.natAbs - k.natAbs
 
@@ -82,7 +85,8 @@ def gammaW (ν : ℝ) (N : ℕ) (k : ℤ) : ℝ := ν ^ (2 * k.natAbs) / ν ^ (2
 theorem gammaW_pos {ν : ℝ} (hν : 0 < ν) (N : ℕ) (k : ℤ) : 0 < gammaW ν N k :=
   div_pos (pow_pos hν _) (pow_pos hν _)
 
-/-- `Γ_k` is the annihilator monomial of `z_k` evaluated at `h = 1/ν`. -/
+/-- For a head index `|k| ≤ N` and `0 < ν`, `Γ_k` is the annihilator monomial of `z_k`
+evaluated at `h = 1/ν`. -/
 theorem gammaW_eq_eval_annihilator (ν : ℝ) (hν : 0 < ν) {N : ℕ} {k : ℤ} (hk : k.natAbs ≤ N) :
     gammaW ν N k = Polynomial.eval (1 / ν) ((Polynomial.X : Polynomial ℝ) ^ aN N k) := by
   rw [eval_pow, eval_X, gammaW, aN,

@@ -9,7 +9,8 @@ import Mathlib.RingTheory.Polynomial.Chebyshev
 When the Taylor disc of radius `σ` lies in the Bernstein ellipse of parameter
 `ν`, the Taylor coefficients of the Chebyshev polynomials define a contraction
 from the physical, flip-fixed Chebyshev algebra into `l1Weighted σ`.  Real
-evaluation commutes with this map near the expansion centre.  Taylor analytic
+evaluation commutes with this map at every real point `t` with `|t| ≤ 1` and
+`|t| ≤ σ`, in particular near the expansion centre.  Taylor analytic
 extensionality then supplies its unital and multiplicative laws, so the
 contraction upgrades to a continuous algebra homomorphism.
 -/

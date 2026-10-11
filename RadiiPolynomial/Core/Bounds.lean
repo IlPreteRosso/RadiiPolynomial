@@ -11,7 +11,8 @@ abstracted over a sequence-space family `Seq : PosReal → Type*`.
 - `Y = (Seq ν')^L`, modeled as `Fin L → Seq ν'`
 
 Canonical norm quantities (`Y₀_norm`, `Z₀_norm`, `Z₁_norm`, `Z₂_norm`) are
-defined over general Banach spaces (`E F : Type*` with `NormedAddCommGroup`),
+defined over general real normed spaces (`E F : Type*` with `NormedAddCommGroup` and
+`NormedSpace ℝ`; no completeness is assumed),
 so both `l1Weighted ν` (scalar) and `XL1 ν L` (system) can use them without
 type bridging or `(Seq := Seq)` annotations.
 

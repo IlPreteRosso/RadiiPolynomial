@@ -7,7 +7,8 @@ import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation
 Over the geometric weight `n ↦ νⁿ` on `ℕ`, the weighted ℓ¹ algebra
 `lpOneAlg ℕ (geomFiber 𝕜 ν)` is the algebra of one generator `e₁ = single 1 1`
 under the growth constraint `‖e₁ⁿ‖ = νⁿ` (`norm_gen_pow`, from `single_pow` +
-`geomFiber_weight`): `ν` is the spectral radius of `e₁`. Its continuous
+`geomFiber_weight`); by Gelfand's formula `ν` is then the spectral radius of
+`e₁`, which this file does not state. Its continuous
 algebra homomorphisms into a Banach algebra `B` are exactly the power-series
 evaluations at elements of power growth `‖xⁿ‖ ≤ C νⁿ` — three faces and a
 converse:
@@ -188,7 +189,8 @@ theorem gen_pow_eq_single (n : ℕ) :
     (single (E := geomFiber 𝕜 ν) 1 (1 : 𝕜)) ^ n = single n 1 := by
   rw [single_pow, smul_eq_mul, mul_one]
 
-/-- `ν` is the spectral radius of the generator: `‖e₁ⁿ‖ = νⁿ` exactly. -/
+/-- The powers of the generator have norm exactly `‖e₁ⁿ‖ = νⁿ` (so `ν` is its spectral
+radius by Gelfand's formula; the spectral radius itself is not stated here). -/
 theorem norm_gen_pow (n : ℕ) :
     ‖(single (E := geomFiber 𝕜 ν) 1 (1 : 𝕜)) ^ n‖ = (ν : ℝ) ^ n := by
   rw [gen_pow_eq_single, norm_single, norm_one, one_mul, geomFiber_weight]

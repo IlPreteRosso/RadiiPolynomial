@@ -12,8 +12,10 @@ Bridges the coefficient space ℓ¹_ν to analytic functions via power series ev
 
 ## Main Results
 
-* `l1Weighted.toPowerSeries`: Embedding ℓ¹_ν ↪ ℝ⟦X⟧
-* `l1Weighted.eval`: Evaluation at points in the disk |z| ≤ ν
+* `l1Weighted.toPowerSeries`: the coefficientwise map ℓ¹_ν → ℝ⟦X⟧ (its injectivity is not
+  stated here)
+* `l1Weighted.eval`: Evaluation `∑' n, aₙ zⁿ` at a real point `z` (defined for every `z` by
+  `tsum`; summability and the algebra laws are proved for `|z| ≤ ν`)
 * `l1Weighted.eval_mul`: Evaluation is a ring homomorphism (Mertens' theorem)
 * `l1Weighted.evalContinuousAlgHom`: The completed continuous algebra character
 -/
@@ -173,7 +175,7 @@ lemma continuous_eval (z : ℝ) (hz : |z| ≤ ν) :
 
 /-- The pointwise evaluation bound: `|eval a z| ≤ ‖a‖_ν` on the disk of convergence.
 Repackages the pre-Mertens continuous-linear bound as a direct estimate, useful for
-trajectory bounds in the f-F bridge (see `IVP/Bridge.lean`). -/
+trajectory bounds (see `Applications/IVP/Taylor/Trajectory.lean`). -/
 lemma abs_eval_le (a : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
     |eval a z| ≤ ‖a‖ := by
   have h_le : ‖evalCLM z hz a‖ ≤ ‖evalCLM z hz‖ * ‖a‖ := (evalCLM z hz).le_opNorm a
@@ -197,11 +199,12 @@ additive monoid algebra `ℝ[ℕ]`:
 
 2. **Linearity side** (`eval_finset_sum`, `eval_double_finset_sum`): `eval`
    distributes over finite sums, so the monomial identity propagates to
-   finite linear combinations. With `trunc_eq_sum` (in `lpWeighted.lean`),
+   finite linear combinations. With `trunc_eq_sum` (in `Geometric/Basic.lean`),
    `trunc N a` is exactly such a finite sum — this gives `eval_mul_trunc`.
 
 3. **Density side** (`tendsto_trunc`, `continuous_eval`): truncations converge
-   in the ℓ¹ norm; `eval` is continuous (via `eval_CLM`); multiplication is
+   in the ℓ¹ norm; `eval` is continuous (via the private bundled map `evalCLM`);
+   multiplication is
    continuous on the Banach algebra. The product-eval identity is preserved
    under the limit, giving `eval_mul`.
 
@@ -260,8 +263,8 @@ lemma eval_mul_trunc (a b : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) (N : ℕ)
 -- the classical version threads `tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm`
 -- and explicit antidiagonal index manipulation, while the density version
 -- factors through the categorical structure (monomial → finite sum → limit).
--- See `exterior/tmp/eval_mul_density/eval_mul_density.tex` for the full
--- classical-math write-up of both versions and the performance pitfall.
+-- A classical-math write-up of both versions and the performance pitfall was kept at
+-- `exterior/tmp/eval_mul_density/eval_mul_density.tex`; that file is no longer present.
 --
 -- theorem eval_mul (a b : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
 --     eval a z * eval b z = eval (a * b) z := by

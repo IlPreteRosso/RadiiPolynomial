@@ -27,7 +27,8 @@ nonlinearity `Φ ∈ 𝕜[X₀]`, `Φ̂(a) = aeval a Φ`, in six layers:
    `r = 0` on the head);
 5. the degree window `(d − 1) N + max (N + 1) K₀`, equal to `d N + 1` when `d ≥ 1` and
    `K₀ ≤ N + 1` (`window_deg_eq`);
-6. the Γ majorant `‖DG(ā) − B₀‖ ≤ (‖M P Γ‖ + C) ‖β‖` over the L004 Γ diagonal (real-scalar `𝕜`).
+6. the Γ majorant `‖DG(ā) − B₀‖ ≤ (‖M P Γ‖ + C) ‖β‖` over the L004 Γ diagonal (`𝕜` a normed
+   `ℝ`-algebra).
 
 The Γ majorant is a universal head bound: it is NOT the exact window norm of layer 4. The
 first-order family `λ_k = i k` (first-tail bound `1/(N + 1)`, `K₀ = 1`, window `N + m + 1`) is the

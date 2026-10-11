@@ -62,7 +62,7 @@ lemma ivp_Z₀_le
   exact ((defectOfBlockDiagOp A A_dag).norm_toCLM_le (ν := ν)).trans
     (by simp [defectOfBlockDiagOp, add_zero]; exact hZ₀)
 
-/-! ## 3. Z₁ Finite-Mode Identity -/
+/-! ## 2. Z₁ Finite-Mode Identity -/
 
 /-- Z₁ finite-mode identity: `composedApprox = fderiv(ivpMap)` on modes ≤ N.
 This is the generic version of Example83's `composedApprox_eq_fderiv_G_fin`.
@@ -113,7 +113,7 @@ lemma composedApprox_eq_fderiv_fin
   congr 1; ext m; congr 1; ext p; congr 1
   exact (hDF_block h m p).symm
 
-/-! ## 4. Main Theorem (Theorem 8.2.2) -/
+/-! ## 3. Main Theorem (Theorem 8.2.2) -/
 
 /-- **Theorem 8.2.2, ball-local form.** As `IVP.ivp_system_theorem`, but the derivative
 sparsity `hzero` and the derivative Lipschitz bound `hDφ_diff` are required only at points
@@ -212,8 +212,9 @@ internalizes bound assembly (Y₀, Z₀, Z₁, Z₂) from raw IVP ingredients. I
 `StdIVPData.existsUnique_ivpCoeffs` is preferred: it takes pre-computed abstract bounds,
 passes them directly to `general_radii_polynomial_theorem`, and returns the source IVP
 coefficient residual. This gives examples more flexibility in how they compute each bound.
-The individual bound lemmas (`ivp_Y₀_le`, `ivp_Z₀_le`,
-`ivp_Z₁_le`, `ivp_Z₂_le`) used internally here are the same ones examples call directly.
+Of the bound lemmas used internally here (`ivp_Y₀_le`, `ivp_Z₀_le`, `ivp_Z₁_le`,
+`ivp_Z₂_le`), the last three are also called by the bundled faces (`StdIVPData.Z₀_le`,
+`StdIVPData.Z₁_le`, `StdIVPData.Z₂_le_of_compPoly`); no example calls them directly.
 
 The derivative sparsity `hzero` and the derivative Lipschitz bound `hDφ_diff` are assumed at
 every point; the proof restricts them to the closed ball and applies

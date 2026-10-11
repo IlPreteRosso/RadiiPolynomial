@@ -63,10 +63,13 @@ def ChecksC : Prop :=
 
 instance : Decidable d.ChecksC := by unfold ChecksC z2RowC; infer_instance
 
-/-- Max of a finite family of rationals (0 for `n = 0`); computable. -/
+/-- Max of `0` and a finite family of rationals (so `0` for `n = 0`, and `0` when every
+entry is negative); computable. -/
 def maxRow {n : ℕ} (g : Fin n → ℚ) : ℚ := (List.finRange n).foldl (fun m i => max m (g i)) 0
 
-/-- Tight centred data: `Y₀`, `Z₀` exact; `Z₂` = max of the centred row sums. -/
+/-- Tight centred data: each of `Y₀`, `Z₀`, `Z₂` is the `maxRow` of the left-hand sides of
+its row clause in `ChecksC` (for `Z₂`, the centred row sums `z2RowC`). No statement about
+these data is proved here; whether they pass is decided by `ChecksC`. -/
 def tightC {n : ℕ} (P : Fin n → CompPoly n) (xBar : Fin n → ℚ) (A : Matrix (Fin n) (Fin n) ℚ)
     (r₀ : ℚ) : StdFinDimData n :=
   let d₀ : StdFinDimData n := ⟨P, xBar, A, r₀, 0, 0, 0⟩

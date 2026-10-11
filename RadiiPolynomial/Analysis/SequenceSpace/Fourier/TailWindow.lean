@@ -13,8 +13,8 @@ multiplier `b ∈ E` with band `m` (`b_i = 0` for `|i| > m`), a bounded tail dia
 
 Its columns are read through the weighted column ratio of `WeightedL1/Columns.lean`
 (`colRatio_geom`: `‖T e_j‖ / ν^|j|`). Beyond the shell `N + m` the defect column is the tail
-column (`colRatio_defect_far_eq_defectTail`), so once `‖r‖` is two-ray nonincreasing beyond
-`max (N + 1) K₀` the columns are antitone outward and the full operator norm is the finite
+column (`colRatio_defect_far_eq_defectTail`), so once `‖r‖` is two-ray nonincreasing from
+`max (N + 1) K₀` on, the columns are antitone outward and the full operator norm is the finite
 maximum over `|j| ≤ m + max (N + 1) K₀` (`opNorm_defect_eq_sup'`), attained as a weighted column
 ratio at an atom (`defect_attained`). This holds for every bounded `M` and `r`. Under range
 (`P M = M`) and head vanishing (`r = 0` on the head) the columns split as `headCol + tailCol`
@@ -273,7 +273,7 @@ theorem colRatio_defectTail_pred_le (m W : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr
     (zpow_nonneg hν.le _)
 
 /-- **(T28, L002.)** Far antitonicity of the defect columns on the right, any window
-`W > N + m` beyond which the moduli are monotone. -/
+`W > N + m` such that the moduli are monotone from `W − m` on (`W ≤ n + m`). -/
 theorem colRatio_defect_succ_le_of (N m W : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ)
     (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0)
     (hWN : N + m < W)
@@ -352,7 +352,8 @@ theorem opNorm_defect_eq_iSup (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 
     (tailProj_comp_defectTail N r C hr b hr0)
 
 /-- **(T29, L002.)** The operator norm of the defect is the finite maximum of its column ratios
-over `winZ W`, any window `W > N + m` beyond which the moduli are monotone. -/
+over `winZ W`, any window `W > N + m` such that the moduli are monotone from `W − m` on
+(`W ≤ n + m`). -/
 theorem opNorm_defect_eq_sup'_of (N m W : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ)
     (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0)
     (hWN : N + m < W)
@@ -381,7 +382,7 @@ theorem opNorm_defect_eq_sup' (N m K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : �
     (colRatio_defect_far_antitone N m K₀ M r C hr b hb hmono).2)
 
 /-- **(T33, L002.)** The exact finite window in explicit form: under band, range and head
-vanishing, `‖D‖ = max_{|j| ≤ W} (a_j + s_j)`. -/
+vanishing, `‖D‖ = max_{|j| ≤ W} (a_j + s_j)` with `W = m + max (N + 1) K₀`. -/
 theorem opNorm_defect_eq_sup'_explicit (N m K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜)
     (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
     (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0) (hPM : 𝓟[N] ∘L M = M)
@@ -425,8 +426,9 @@ theorem opNorm_defect_eq_sup'_first (N m : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : 
   opNorm_defect_eq_sup'_of N m _ M r C hr b hb (by omega) fun n hn => hmono n (by omega)
 
 /-- **(T37, L002.)** Joint form with a head block `Z` (`P Z = Z`, `Z Q = 0`): under band, range
-and head vanishing, `‖Z + D‖ = max_{|j| ≤ W} (z_j + a_j + s_j)` in column-ratio form. A norm
-identity only: it does not replace injectivity of `A` or the `Z₀` obligations. -/
+and head vanishing, `‖Z + D‖ = max_{|j| ≤ W} (z_j + a_j + s_j)` in column-ratio form, with
+`W = m + max (N + 1) K₀`. A norm identity only: it does not replace injectivity of `A` or the
+`Z₀` obligations. -/
 theorem opNorm_joint_defect_eq_sup' (N m K₀ : ℕ) (Z M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜)
     (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
     (hPZ : 𝓟[N] ∘L Z = Z) (hZQ : Z ∘L 𝓠[N] = 0)
@@ -460,8 +462,9 @@ theorem opNorm_joint_defect_eq_sup' (N m K₀ : ℕ) (Z M : 𝓔 →L[𝕜] 𝓔
     simp only [zero_add]
     exact colRatio_defectTail_pred_le m _ r C hr b hb (by omega) hm j hj
 
-/-- **(T38, L002.)** The joint form for `Z − D` (the joint operator `I − A·DF = Z − D`): the same
-finite maximum, from T37 at `(−M, −r)`. -/
+/-- **(T38, L002.)** The joint form for `Z − D` (which consumers read as the joint operator
+`I − A·DF`; that identification is not proved here): the same finite maximum, from T37 at
+`(−M, −r)`. -/
 theorem opNorm_joint_defect_sub_eq_sup' (N m K₀ : ℕ) (Z M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜)
     (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
     (hPZ : 𝓟[N] ∘L Z = Z) (hZQ : Z ∘L 𝓠[N] = 0)

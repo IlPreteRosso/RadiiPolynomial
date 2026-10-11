@@ -6,8 +6,8 @@ import RadiiPolynomial.Algebra.Polynomial.CompPoly.Chebyshev.Bounds
 # Polynomial adapter for the Chebyshev IVP recipe
 
 The coefficient residual remains a raw sequence. Finite rational data are
-interpreted with symmetric Laurent multiplication before the existing bounded
-preconditioned map is formed. The adapter supplies residual and Jacobian cast
+interpreted with symmetric Laurent multiplication before the existing (nonlinear)
+preconditioned map `G` is formed. The adapter supplies residual and Jacobian cast
 bridges, differentiability, and exact finite-output columns. A finite square
 Jacobian check does not identify unrestricted finite-output rows: Chebyshev
 multiplication can send high input modes to low output modes. The remaining
@@ -252,7 +252,7 @@ lemma StdChebIVPData.fderiv_G_single_fin_eq_cast_of_compPoly
 
 /-! ## Certificate constants from syntax
 
-The Z₁ operator constant `K` and the Z₂ Lipschitz constant of the system derivative are
+The Z₁ operator constant and the Z₂ Lipschitz constant of the system derivative are
 read off the polynomial syntax, with the input radii stated on the symmetrized candidate.
 These are the system (`Fin L`-valued) faces of the componentwise lemmas in
 `CompPoly/Chebyshev/Bounds.lean`; a certificate whose Z₁ theorem is componentwise
@@ -320,7 +320,7 @@ the certificate proves) and the radii-polynomial inequality. The function-level 
 theorem is componentwise (`chebyshev_Z₁_le_relaxed` + `norm_derivative_apply_le`), see
 `norm_compPolyDerivative_le`. -/
 
-/-- `Z₂` from syntax: with `C` a bound for the tail-composition operator `TC` and `B` a
+/-- `Z₂` from syntax: with `C` a bound for the linear-in-`c` operator `TC` and `B` a
 bound, over the certificate ball `closedBall ā r₀`, for twice the syntactic derivative
 Lipschitz constant of each component, the preconditioned derivative is
 `(C * B)`-Lipschitz on that ball.
@@ -331,7 +331,8 @@ a syntactically quadratic presentation, the partials have radius-independent syn
 Lipschitz bounds: the certificate discharges `hB` by `simp; norm_num` without bounding
 `‖S(c)‖`. Semantic degree `≤ 2` after cancellation does not
 ensure this, since the bound reads the unreduced AST. When the syntactic constant depends
-on the radii, bound them through `‖S(cᵢ)‖ ≤ 2 (‖āᵢ‖ + r₀)` first. -/
+on the radii, bound them through `‖S(cᵢ)‖ ≤ 2 (‖āᵢ‖ + r₀)` first (an estimate this file
+does not state). -/
 theorem StdChebIVPData.Z₂_le_of_compPoly_max
     (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L) (p : Fin L → ℝ)
     {C B r₀ : ℝ} (hC : 0 ≤ C) (hr₀ : 0 ≤ r₀)

@@ -249,7 +249,8 @@ theorem StdIVPData.Z₂_le_of_compPoly
 /-- A zero of the preconditioned map annihilates the source coefficient residual, with the
 contraction `Z₀ < 1` that the bridge `ivpCoeffs_zero_of_G_zero` needs derived from the four
 bounds. Same hypothesis list as `existsUnique_of_compPoly`, plus the zero; this is the
-statement the complex-time and analyticity consumers of a named zero use. -/
+statement the complex-time consumer of a named zero uses (the analyticity consumers go
+through the `IVP.StdIVPData.analytic_*_of_compPoly_of_radii` faces instead). -/
 theorem StdIVPData.ivpCoeffs_zero_of_compPoly_of_radii
     (d : StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
     {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}

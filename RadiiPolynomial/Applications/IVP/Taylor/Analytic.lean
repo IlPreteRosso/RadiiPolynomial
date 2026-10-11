@@ -11,9 +11,10 @@ to give the full existence + uniqueness statement on `(-ν, ν)`.
 
 ## Surface
 
-- `IVP.IsAnalyticSolution φ_cpoly x₀ R g` (`structure`): "g is an analytic
-  solution of the IVP `ẋ = vectorField φ_cpoly x, x(0) = x₀` on `(-ν, ν)`
-  with trajectory in `closedBall 0 R`." Three fields: `init`, `in_R`, `solves`.
+- `IVP.IsAnalyticSolution φ_cpoly x₀ R g` (`structure`): "g solves the IVP
+  `ẋ = vectorField φ_cpoly x, x(0) = x₀` on `(-ν, ν)` with trajectory in
+  `closedBall 0 R`." Three fields: `init`, `in_R`, `solves`; despite the name, none
+  of them asks `g` to be analytic (the analytic object is `x_analytic`).
 - `IVP.x_analytic xTilde`: canonical analytic solution
   `t ↦ (eval(xTilde l, t))_l`.
 - `StdIVPData.x_analytic_isAnalyticSolution`: existence half — `x_analytic`
@@ -45,9 +46,11 @@ namespace IVP
 
 variable {ν : PosReal} {L : ℕ}
 
-/-- `g : ℝ → Fin L → ℝ` is an analytic solution of the polynomial IVP
-`ẋ = vectorField φ_cpoly x, x(0) = x₀` on the open interval `(-ν, ν)` with
-trajectory in `closedBall 0 R`.
+/-- `g : ℝ → Fin L → ℝ` solves the polynomial IVP `ẋ = vectorField φ_cpoly x, x(0) = x₀`
+on the open interval `(-ν, ν)` (a derivative at every point there) with trajectory in
+`closedBall 0 R`. Despite the name, the fields do not ask `g` to be analytic: the
+predicate is a differentiable solution with bounded trajectory, and the analytic object
+is the canonical solution `x_analytic`.
 
 Packaged as a `structure` so callers can write `hg.init`, `hg.in_R`,
 `hg.solves` instead of the awkward `hg.1`, `hg.2.1`, `hg.2.2` of a flat

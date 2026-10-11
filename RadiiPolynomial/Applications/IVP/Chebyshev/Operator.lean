@@ -92,7 +92,8 @@ For `k ≤ 0`: `(chebyshevShiftDiv c)_k = 0`
 This arises from the Chebyshev integration formula:
 `∫ T_k(s) ds = (T_{k+1}/(k+1) - T_{k-1}/(k-1)) / 2` for `k ≥ 2`.
 
-On tail modes `k > N`, the composed map `G(a)_k = a_k + chebyshevShiftDiv(φ(a))_k`. -/
+On tail modes `k > N`, when `A.tailDiag = 1/(2k)`, the composed map is
+`G(a)_k = a_k + chebyshevShiftDiv(φ(a))_k` (see the Tail Decomposition section below). -/
 
 /-- The raw shift-divide sequence for Chebyshev integration. -/
 private def chebyshevShiftDiv_seq (c : l1Chebyshev ν) : ℤ → ℝ
@@ -126,13 +127,12 @@ Per-element bound for `k ≥ 1`:
 where `‖c_m‖_fiber = |c_m| * ν^{|m|}`. Both are subsequences of `‖c‖`.
 
 Operator norm: `‖chebyshevShiftDiv c‖ ≤ ν * ‖c‖` (since `1/(2ν) + ν/2 ≤ ν` for `ν ≥ 1`).
--/
 
-omit [Fact (1 ≤ (ν : ℝ))] in
-/-- Shifted subseries of `l1Chebyshev` norms are summable (shift invariance). -/
-private lemma summable_norm_shift (c : l1Chebyshev ν) (s : ℤ) :
-    Summable (fun n : ℕ => ‖c (↑n + s)‖) :=
-  (lpOneAlg.summable_norm c).comp_injective (fun n m h => by omega)
+The formalized per-element bound (`chebyshevShiftDiv_fiber_le`) carries the coarser `ν/2` on
+both terms, which gives the same operator bound `ν * ‖c‖`; the constant `ν/2 + 1/(2ν)` of the
+asymmetric form is proved separately, through the U-factorization
+(`chebyshevShiftDiv_norm_le'`).
+-/
 
 -- Per-element bound: |(a-b)/(2k)| * ν^k ≤ (ν/2)*(‖c(k+1)‖ + ‖c(k-1)‖).
 private lemma chebyshevShiftDiv_fiber_le (c : l1Chebyshev ν) (k : ℕ) (hk : 0 < k) :
@@ -327,11 +327,11 @@ lemma chebyshevShiftDiv_norm_le (c : l1Chebyshev ν) :
 
 /-! ### CLM construction -/
 
-/-- The Chebyshev shift-divide as a continuous linear map. Analogue of `shiftDivN_CLM`.
-Maps `l1Chebyshev ν → l1Chebyshev ν` with `‖chebyshevShiftDiv_CLM‖ ≤ ν`. -/
 -- Verify Module ℝ (l1Chebyshev ν) is available
 example : Module ℝ (l1Chebyshev ν) := inferInstance
 
+/-- The Chebyshev shift-divide as a continuous linear map. Analogue of `shiftDivN_CLM`.
+Maps `l1Chebyshev ν → l1Chebyshev ν` with `‖chebyshevShiftDiv_CLM‖ ≤ ν`. -/
 noncomputable def chebyshevShiftDiv_CLM : l1Chebyshev ν →L[ℝ] l1Chebyshev ν := by
   exact LinearMap.mkContinuous
     { toFun := chebyshevShiftDiv
@@ -350,7 +350,8 @@ From Eq. 14.11: `F(a)_{l,k} = 2k·a_k + c_{k+1} - c_{k-1}`.
 With `A.tailDiag = 1/(2k)`, `G_k = (1/(2k))·F_k = a_k + (c_{k+1} - c_{k-1})/(2k)`. -/
 
 /-- The Chebyshev IVP tail: `a l + chebyshevShiftDiv_CLM(φ(a) l)`.
-On modes `k > N`, this equals the full composed map `G` (up to finite corrections). -/
+On modes `k > N`, when `A.tailDiag = 1/(2k)`, its coefficients are those of the composed map
+`G` (coefficientwise: `action_chebyshev_tail_eq` below); on the modes `k ≤ N` the two differ. -/
 def chebyshevIvpTail (φ : XCheb ν L → Fin L → l1Chebyshev ν)
     (a : XCheb ν L) : XCheb ν L := fun l =>
   a l + chebyshevShiftDiv_CLM (φ a l)
@@ -412,8 +413,8 @@ def embedNatToInt (seq : ℕ → ℝ) : ∀ k : ℤ, ScaledRealZ ν k :=
 On non-negative modes `k ≥ 0`: applies `ofReal` to the ℕ-indexed `seq`.
 On negative modes `k < 0`: preserves the value from `base`.
 
-Negative modes are structural invariants of the Chebyshev/Fourier symmetry
-(`a_{-k} = a_k`). The IVP operator only acts on ℕ-modes; negative modes are inert. -/
+The IVP equations do not constrain the negative modes: the IVP operator only acts on
+ℕ-modes, and negative modes are inert. -/
 def embedWithPassThrough (seq : ℕ → ℝ) (base : l1Chebyshev ν) :
     ∀ k : ℤ, ScaledRealZ ν k :=
   fun k => match k with
@@ -842,7 +843,8 @@ Combines norm-splitting + `chebyshevShiftDiv_tailTsum_le_div` to get the per-com
 Z₁ bound: if `d` is zero on finite modes and equals `chebyshevShiftDiv(w)` on tail modes,
 then `‖d‖ ≤ ν/(N+1) · ‖w‖`.
 
-This is the ℤ-indexed analogue of `Z₁_component_le` from `IVP/Setup.lean`. -/
+This is the ℤ-indexed analogue of the private `Z₁_component_le` of
+`Applications/IVP/Taylor/Operator.lean`. -/
 
 /-- Chebyshev Z₁ per-component bound.
 If `d : l1Chebyshev` vanishes for `k ≤ N` and equals `chebyshevShiftDiv(w)` for `k > N`,
@@ -944,7 +946,7 @@ lemma chebyshev_Z₁_component_le_semiMajor (d w : l1Chebyshev ν) (N : ℕ)
 /-! ## Chebyshev Z₁ Operator Norm Bound
 
 Assembles per-component Z₁ bounds into `‖composedApprox - fderiv G ā‖ ≤ Z₁`.
-Analogous to `ivp_Z₁_le` from IVP/Setup.lean. -/
+Analogous to `ivp_Z₁_le` from `Applications/IVP/Taylor/Operator.lean`. -/
 
 omit [NeZero L] in
 /-- **Chebyshev Z₁ bound**: `‖composedApprox - fderiv G ā‖ ≤ Z₁`.
@@ -991,7 +993,8 @@ and the tail contribution (via Dφ norm bound K).
 Total: `Z₁ ≤ ε + ν/(N+1) · K`.
 
 Use when the IVP derivative DF is not lower-triangular (Chebyshev mode-0 alternating sum
-couples all modes, creating O(1/ν^{N+1}) leakage into finite modes). -/
+couples all modes, creating a leakage into finite modes, heuristically of size O(1/ν^{N+1});
+that estimate is not a statement of this file). -/
 lemma chebyshev_Z₁_le_relaxed
     (N : ℕ) (composedApprox : XCheb ν L →L[ℝ] XCheb ν L)
     (G : XCheb ν L → XCheb ν L) (ā : XCheb ν L)
@@ -1073,8 +1076,10 @@ lemma chebyshev_Z₁_le_semiMajor
 Existence and uniqueness of a zero of the composed Chebyshev IVP map,
 via `general_radii_polynomial_theorem` with `A = identity`.
 
-The key bound `hZ₁` is assembled using `chebyshev_Z₁_le`, which chains:
+The key bound `hZ₁` can be assembled using `chebyshev_Z₁_le`, which chains:
   `chebyshevShiftDiv_tailTsum_le_div` → `chebyshev_Z₁_component_norm_le` → operator norm
+or, when the finite modes do not cancel, with `chebyshev_Z₁_le_relaxed` /
+`chebyshev_Z₁_le_semiMajor`.
 
 The user provides the composed map `G`, composed approximate derivative `composedApprox`,
 approximate solution `ā`, and the four numerical bounds Y₀, Z₀, Z₁, Z₂. -/
@@ -1084,7 +1089,8 @@ omit [NeZero L] in
 in `closedBall ā r₀`, given the radii polynomial `Z₂·r₀² - (1 - Z₀ - Z₁)·r₀ + Y₀ < 0`.
 
 Instantiates `general_radii_polynomial_theorem` (Theorem 7.6.2) with `A = identity`.
-The Z₁ bound is typically supplied by `chebyshev_Z₁_le`. -/
+The Z₁ bound can be supplied by `chebyshev_Z₁_le`; the library's Chebyshev certificates,
+whose row 0 couples all modes, use `chebyshev_Z₁_le_relaxed`. -/
 theorem chebyshev_system_theorem
     (G : XCheb ν L → XCheb ν L) (ā : XCheb ν L)
     (hG_diff : Differentiable ℝ G)
@@ -1159,9 +1165,9 @@ theorem chebyshevShiftDiv_eq_neg_uIntegrate_chebyshevToU (c : l1Chebyshev ν) :
 
 /-- Sharper norm bound from the U-factorization:
 `‖chebyshevShiftDiv c‖ ≤ (ν/2 + 1/(2ν))·‖c‖`, the product of `‖uIntegrate‖ ≤ ν`
-and `‖chebyshevToU‖ ≤ (1 + ν⁻²)/2`. Strictly sharper than the direct bound
+and `‖chebyshevToU‖ ≤ (1 + ν⁻²)/2`. Sharper than the direct bound
 `chebyshevShiftDiv_norm_le` (`≤ ν·‖c‖`), which it recovers since `1/(2ν) ≤ ν/2`
-for `ν ≥ 1`. -/
+for `ν ≥ 1`; strictly sharper for `ν > 1`, while at `ν = 1` both constants equal `1`. -/
 theorem chebyshevShiftDiv_norm_le' (c : l1Chebyshev ν) :
     ‖chebyshevShiftDiv c‖ ≤ ((ν : ℝ) / 2 + 1 / (2 * ν)) * ‖c‖ := by
   rw [chebyshevShiftDiv_eq_neg_uIntegrate_chebyshevToU, norm_neg]

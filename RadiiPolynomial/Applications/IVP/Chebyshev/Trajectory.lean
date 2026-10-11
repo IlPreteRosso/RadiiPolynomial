@@ -21,7 +21,8 @@ series termwise, so its zeros are read back the same way — the **integral-equa
   `(∫c)_k = (c_{k-1} - c_{k+1}) / (2k)` for `k ≥ 1`, `(∫c)_0 = 0`;
 * `integral_eval` — **termwise integration**, `∫_{-1}^t u_c = u_{∫c}(t) - u_{∫c}(-1)`: the
   Σ/∫ interchange the book skips (p. 328), proved by dominated convergence under the
-  constant dominant `|c_{k+1}|` (`intervalIntegral.hasSum_integral_of_dominated_convergence`),
+  constant dominant `‖c_{k+1}‖ = |c_{k+1}| ν^{k+1}`
+  (`intervalIntegral.hasSum_integral_of_dominated_convergence`),
   then one reindexing of the ℕ-sum;
 * `eval_eq_integral_of_F_zero` — `F(a) = 0 ⟹ u_{a_l}(t) = p_l + ∫_{-1}^t u_{φ(a)_l}`: rows
   `k ≥ 1` of `F` identify `a` with `∫φ(a)` on the positive modes, row 0 with
@@ -30,10 +31,11 @@ series termwise, so its zeros are read back the same way — the **integral-equa
   `t ↦ (u_{a_l}(t))_l` is continuous on `[-1, 1]`, right-differentiable on `[-1, 1)` and
   differentiable on `(-1, 1)` with derivative `f(u(t))`, and `u(-1) = p`;
 * `solution_unique` — any solution of the IVP that stays in a ball on which `f` is
-  Lipschitz agrees with the trajectory on `[-1, 1]` (Mathlib's one-sided
+  Lipschitz agrees on `[-1, 1]` with the trajectory, when the trajectory stays in the same
+  ball (Mathlib's one-sided
   `ODE_solution_unique_of_mem_Icc_right`, the initial time being the endpoint `-1`);
 * `eval_traj_in_closedBall` — the trajectory radius `2‖a‖` (the factor 2 is the storage
-  convention: `‖symmetrize a‖ ≤ 2‖a‖`).
+  convention `u_a = a₀ + 2∑ a_k T_k`, through `abs_eval_le_two_mul_norm`).
 * `eval_traj_in_closedBall_of_two_le` — at weights `ν ≥ 2`, evaluation is contractive
   already on the production storage carrier, so the trajectory radius improves to `‖a‖`.
 
@@ -148,7 +150,8 @@ private lemma summable_of_bounded (c : l1Chebyshev ν) (g : ℕ → ℝ) (hg : �
     ((summable_norm_natCast c).comp_injective (add_left_injective s))
     (fun k => norm_term_le c (hg k) (k + s))
 
-/-- The antiderivative series regrouped: `∑ c_{k+1} A_k = u_{∫c} - c₀ t / 2`. -/
+/-- The antiderivative series regrouped:
+`∑ c_{k+1} A_k(u) = ∑_m (∫c)_{m+1} T_{m+1}(u) - c₀ u / 2`, i.e. `(u_{∫c}(u) - c₀ u) / 2`. -/
 private lemma tsum_chebAntideriv (c : l1Chebyshev ν) {u : ℝ} (hu : |u| ≤ 1) :
     ∑' k : ℕ, l1Chebyshev.toSeq c ((k + 1 : ℕ) : ℤ) * chebAntideriv k u
       = ∑' m : ℕ, l1Chebyshev.toSeq (chebyshevIntegrate c) ((m + 1 : ℕ) : ℤ)

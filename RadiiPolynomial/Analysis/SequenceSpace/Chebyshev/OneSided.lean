@@ -14,11 +14,12 @@ in the bilateral algebra `l1Chebyshev ν`, keep the nonnegative modes. This file
 carrier interface on the library's spaces.
 
 This is not the library's normalized storage. The bordered carrier `l1Bordered ν`
-(`Chebyshev/Bordered.lean`) weights mode `n ≥ 1` by `2νⁿ`; through `nonnegRestrict` it is
-isometric to the flip-fixed subalgebra `symmetricSubalgebra ν` of `l1Chebyshev ν`, where the
-product is submultiplicative. Here the weights are `νⁿ`, the doubling of the nonzero modes is
-not counted, and the product pays a constant: `‖a ⋆ b‖ ≤ C₂ ‖a‖ ‖b‖` with `C₂ = 1 + 2ν⁻²`,
-which is exact (for `1 ≤ ν`, `C₂ ≤ 3`, below the constant `4` printed in (13.12)).
+(`Chebyshev/Bordered.lean`) weights mode `n ≥ 1` by `2νⁿ`; `nonnegRestrict` maps the
+flip-fixed subalgebra `symmetricSubalgebra ν` of `l1Chebyshev ν`, where the product is
+submultiplicative, isometrically into it. Here the weights are `νⁿ`, the doubling of the
+nonzero modes is not counted, and the product pays a constant: `‖a ⋆ b‖ ≤ C₂ ‖a‖ ‖b‖`
+with `C₂ = 1 + 2ν⁻²`, which is exact (for `1 ≤ ν`, `C₂ ≤ 3`, below the constant `4` printed
+in (13.12)).
 
 Main declarations:
 * `l1Chebyshev.natEmbed` (declared in `Chebyshev/Bordered.lean`) — the ℕ-supported embedding
@@ -46,7 +47,8 @@ Hypotheses on `ν`. The embedding, the symmetric extension and the restriction e
 `ν : PosReal`. The hypothesis `1 ≤ ν` enters only with the bilateral multiplication (it is the
 `Fact` that makes `l1Chebyshev ν` a Banach algebra): at `symExt_mem_symmetricSubalgebra` and
 in the product section. The constants are stated for every `ν`, with `1 ≤ ν` as an explicit
-hypothesis where it is used (`t_le_one`, `C₂_le_three`, `C₃_le_five`).
+hypothesis where it is used (`t_le_one`, `C₂_le_three`, `C₃_le_five`, and the private real
+estimates behind the trilinear atom bound).
 
 Instance path. With the pinned Mathlib, `Norm` on the three-level type of `cosMul₃` does not
 synthesize at the default `maxSynthPendingDepth` (Mathlib itself builds with 3). The two

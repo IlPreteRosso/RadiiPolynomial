@@ -7,9 +7,11 @@ Reduces `pderiv i (pderiv j p)` to `C r` for concrete degree ≤ 2 polynomials.
 
 ## Strategy
 
-1. `dsimp` — unfold user definitions (match expressions on concrete `Fin` values)
+1. `dsimp` — unfold user definitions (match expressions on concrete `Fin` values);
+   if `rfl` then closes the goal, stop
 2. `simp` — apply pderiv computation rules (Leibniz, Kronecker delta, etc.)
-3. `ring` / `norm_cast` — normalize the result (e.g., `1 + 1 = 2`, `(2 : MvPoly) = C 2`)
+3. `rfl` / `ring` / `norm_cast` — normalize the result (e.g., `1 + 1 = 2`,
+   `(2 : MvPoly) = C 2`)
 
 ## Usage
 
@@ -27,8 +29,9 @@ fin_cases i <;> fin_cases j <;> pderiv_simp [φ_spec]
   exact Derivation.map_natCast _ _
 
 open Lean.Parser.Tactic in
-/-- Normalize MvPolynomial pderiv expressions. Unfolds definitions via `dsimp`,
-applies pderiv computation rules via `simp`, then cleans up with `ring`/`norm_cast`. -/
+/-- Normalize MvPolynomial pderiv expressions. Unfolds definitions via `dsimp` and tries
+`rfl`; otherwise applies pderiv computation rules via `simp`, then cleans up with
+`rfl`/`ring`/`norm_cast`. -/
 macro "pderiv_simp" "[" defns:simpLemma,* "]" : tactic => `(tactic|
     -- Step 1: unfold definitions (match on concrete Fin values)
     -- Step 2: apply pderiv rules + cleanup

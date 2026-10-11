@@ -14,7 +14,9 @@ positive weight function. This provides a single parameterized fiber type that u
 - `WeightedScalar 𝕜 w m`: 𝕜 with weighted norm
 - `PosWeight w`: weight with positive values (→ NormedAddCommGroup)
 - `SuperUnitWeight w`: weight ≥ 1 (→ ℓ¹_w ↪ ℓ¹, uniform convergence)
-- `SubMulWeight w`: submultiplicative weight (→ Banach algebra on lpOneAlg)
+- `SubMulWeightBase w`: submultiplicative weight with `w 0 = 1` (→ ring and normed-ring
+  structure on lpOneAlg, through `WeightedScalar.instLpOneAlgWeightMul`)
+- `SubMulWeight w`: `SubMulWeightBase` together with weight ≥ 1 (adds ℓ¹_w ↪ ℓ¹)
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -46,13 +48,17 @@ class SuperUnitWeight {M : Type*} (w : M → ℝ) extends PosWeight w where
   one_le : ∀ m, 1 ≤ w m
 
 /-- Submultiplicative weight with identity (extends PosWeight).
-Sufficient for Ring on `lpOneAlg` when fibers are finite (HasAntidiagonal). -/
+Sufficient for Ring on `lpOneAlg` (through `WeightedScalar.instLpOneAlgWeightMul`) when the
+addition fibers are finite (HasAntidiagonal) or the scalar field is complete. -/
 class SubMulWeightBase {M : Type*} [AddCommMonoid M] (w : M → ℝ) extends PosWeight w where
   submul : ∀ m n, w (m + n) ≤ w m * w n
   weight_zero : w 0 = 1
 
 /-- Submultiplicative weight with weight ≥ 1 (extends SubMulWeightBase + SuperUnitWeight).
-Needed for tsum-based Ring on general M (infinite fibers). -/
+The bound `w ≥ 1` is not needed for the ring structure, even on a general `M` with infinite
+fibers (submultiplicativity and a complete scalar field suffice,
+`lpOneAlg.instConvCompatOfWeightMul`); it gives the embedding into unweighted ℓ¹
+(`lpOneAlg.abs_toRealSeq_le`, through `WeightedScalar.instLpOneAlgWeightSubMul`). -/
 class SubMulWeight {M : Type*} [AddCommMonoid M] (w : M → ℝ)
     extends SubMulWeightBase w, SuperUnitWeight w
 

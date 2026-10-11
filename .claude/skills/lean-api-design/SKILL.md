@@ -31,7 +31,8 @@ Task category → tier (standing rule, harness-neutral, 2026-09-20; cross-harnes
   a role map by capability class, not a measured equivalence): Fable 5.1 = GPT-6 Astra
   (coordinators); Opus 5.5 = `gpt-6.1-sol` high, xhigh for
   a named hard unit (proof/critic units, designer + critic consults, source-first milestone and
-  consult reviews); Sonnet 5.5 = `gpt-6-luna` medium, high if needed (mechanical tier).
+  consult reviews); Haiku 5.5 = the fast tier (user 2026-10-10; Sonnet 5.5 retired from the
+  hierarchy); its Codex counterpart is the peer's choice (suggested on the bus 2026-10-10).
   Limits: Claude ≤ 5 workers in flight per workflow; Codex FOUR active agents including itself
   (≤ 3 children, normally two substantive workers + one spare); sequential cohorts.
 - Proof units (lift or infra block, one bounded brief, sorry-free target): opus prover,
@@ -39,11 +40,16 @@ Task category → tier (standing rule, harness-neutral, 2026-09-20; cross-harnes
   Fable as prover only for a big-token unit the coordinator owns (sorry-closing pass,
   research-pilot skeleton) — at most one at a time, never a fleet (D102: a coordinator-tier
   child is a purposeful exception for ONE named hard unit).
-- Mechanical stages and chores (freeze/MANIFEST, importer shadow check, INSIGHTS draft,
-  inventories, brief DRAFTS, scouting, fidelity SWEEPS, organising): the MECHANICAL TIER,
-  non-final — `sonnet` (Sonnet 5.5) at medium effort, or `gpt-6-luna` medium/high in Codex.
-  Deterministic scripts are preferred for pure hashing (D102); "mechanical tier" elsewhere in
-  this skill means this row.
+- "Do good or do fast" (user 2026-10-10): every stage is either judgment (→ Opus) or
+  recipe-plus-script-check (→ Haiku); no middle tier.
+- Judgment stages (INSIGHTS draft, brief DRAFTS, scouting, fidelity SWEEPS, organising):
+  `opus` at medium effort, non-final.
+- Fast stages, only when the stage has a written recipe AND a script/gate checks its output
+  (freeze/MANIFEST, importer shadow check, scripted inventories, hash checks, gate files, bus
+  composition from a recipe, close-window announcements): the MECHANICAL TIER, non-final —
+  `haiku` (Haiku 5.5) at medium effort. No recipe or no check → Opus. Deterministic scripts
+  are preferred for pure hashing (D102); "mechanical tier" elsewhere in this skill means this
+  row.
 - Bounded Lean review with `#check` probes on a comment-stripped freeze: Antigravity
   Flash 3.8 high (non-final; blocks ≤ ~1500 lines); a second reviewer is never a gate.
 - Prose mathematics consult (route comparison, pitfalls, no formalization): Gemini 3.1 Pro
@@ -423,7 +429,7 @@ lemma with its dependency chain, never a whole file. Three stages, each gated on
    the local prove rate unless its statement is first removed from the evaluation pool.
 3. **Golf.** Aristotle proofs are search-shaped: long `have` chains, redundant rewrites,
    brute `nlinarith`/`simp` calls, and no use of the library's own API. Run the `lean-golfing`
-   skill on the accepted proof on the mechanical tier (one tier up if it stalls) with the bounded
+   skill on the accepted proof on `opus` (golfing is judgment, user 2026-10-10) with the bounded
    goal: same statement, axiom set no larger, unfolding replaced by existing API lemmas, any
    generic sublemma the proof surfaces extracted into the right module. Re-run the trust gate
    after golfing, since golfing can pull in `decide` on large terms or `native_decide`.
@@ -446,7 +452,7 @@ defines the chapter's vocabulary never hosts the campaign theorem — its marked
 verbatim (byte-identity checked) to a new campaign module first (D86, D89, D90). (3) Grind:
 opus units per sub-lemma, Fable on a reported obstacle, Aristotle (the ladder above) on what
 still resists — the sub-lemma's statement and its dependency chain only. (4) Canonicalize:
-`lean-golfing` on the mechanical tier, generic sublemmas moved to the module they belong to,
+`lean-golfing` on `opus`, generic sublemmas moved to the module they belong to,
 API and structure insights recorded, and the proof route written as the docstring narrative.
 (5) Only then, and per item, the prose proof is written into the rewrite edition at the printed
 gap as an editorial proof under the errata recoverability discipline (snapshot, `\editorial`,

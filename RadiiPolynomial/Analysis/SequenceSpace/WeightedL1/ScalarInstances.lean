@@ -46,7 +46,8 @@ lemma lpAlgRingData_weight (m : M) :
 end WeightedScalar
 
 /-- Generic `lpOneAlgWeightMul` from `SubMulWeightBase` (submultiplicativity only).
-Available for ALL ν > 0 — no weight ≥ 1 requirement. -/
+No weight ≥ 1 requirement: in the geometric specialization `w n = νⁿ` it is available for
+all ν > 0. -/
 instance WeightedScalar.instLpOneAlgWeightMul {𝕜 : Type*} [NormedField 𝕜]
     {M : Type*} [AddCommMonoid M]
     {w : M → ℝ} [SubMulWeightBase w] : lpOneAlgWeightMul 𝕜 M (WeightedScalar 𝕜 w) where
@@ -58,7 +59,8 @@ instance WeightedScalar.instLpOneAlgWeightMul {𝕜 : Type*} [NormedField 𝕜]
     exact SubMulWeightBase.weight_zero
 
 /-- Generic `lpOneAlgWeightSubMul` from `SubMulWeight`.
-Adds weight ≥ 1 on top of `lpOneAlgWeightMul`. Needs `[Fact (1 ≤ ν)]`. -/
+Adds weight ≥ 1 on top of `lpOneAlgWeightMul`. In the geometric specialization `w n = νⁿ`
+the `SubMulWeight` instance needs `[Fact (1 ≤ ν)]`. -/
 instance WeightedScalar.instLpOneAlgWeightSubMul {𝕜 : Type*} [NormedField 𝕜]
     {M : Type*} [AddCommMonoid M]
     {w : M → ℝ} [SubMulWeight w] : lpOneAlgWeightSubMul 𝕜 M (WeightedScalar 𝕜 w) where

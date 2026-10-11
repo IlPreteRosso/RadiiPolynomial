@@ -117,7 +117,8 @@ theorem continuous_ellipseCharacter_apply (a : Physical ν) :
   exact (synthesis ν a.val).continuous
 
 /-- The bilateral Chebyshev series is absolutely convergent. For symmetric
-coefficients, pairing its ±k modes is the usual `a₀ + 2 Σ aₖ Tₖ(w)`. -/
+coefficients, pairing its ±k modes is the usual `a₀ + 2 Σ aₖ Tₖ(w)` (that pairing is
+carried out in `Spectrum/Holomorphic.lean`, `complexEval_eq_ellipseCharacter`). -/
 theorem summable_character_series (w : Ellipse ν) (a : Physical ν) :
     Summable (fun k : ℤ => ‖(toRealSeq a.val k : ℂ) *
       (Chebyshev.T ℂ k.natAbs).eval w.val‖) := by

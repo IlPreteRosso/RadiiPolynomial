@@ -99,9 +99,9 @@ theorem norm_fderiv_evalBanach_sub_le {ν : PosReal} {L : ℕ} (p : CompPoly L)
   exact norm_evalBanach_sub_le _ c a R hc ha
 
 /-- Ball-free face of `norm_fderiv_evalBanach_sub_le`: the radii are the two points' own
-norms. For a syntactically quadratic presentation the constant is independent of these
-radii. Semantic degree `≤ 2` alone does not suffice: the bound reads the unreduced AST
-and does not cancel higher-degree terms. -/
+norms. Not proved here: for a syntactically quadratic presentation the constant is
+independent of these radii. Semantic degree `≤ 2` alone does not suffice: the bound reads
+the unreduced AST and does not cancel higher-degree terms. -/
 theorem norm_fderiv_evalBanach_sub_le_max {ν : PosReal} {L : ℕ} (p : CompPoly L)
     (c a h : Fin L → l1Weighted ν) :
     ‖(fderiv ℝ (fun x => p.evalBanach x) c - fderiv ℝ (fun x => p.evalBanach x) a) h‖ ≤
@@ -111,7 +111,8 @@ theorem norm_fderiv_evalBanach_sub_le_max {ν : PosReal} {L : ℕ} (p : CompPoly
 
 end CompPoly
 
-/-- The pointwise interpretation of a `CompPoly` is smooth. -/
+/-- The pointwise interpretation of a `CompPoly` on `Fin L → ℝ` is `ContDiff ℝ ⊤`, i.e. of
+class `C^ω` (analytic), which in particular makes it smooth. -/
 theorem contDiff_evalBanach {L : ℕ} (p : CompPoly L) :
     ContDiff ℝ ⊤ (fun x : Fin L → ℝ => p.evalBanach x) := by
   have h : (fun x : Fin L → ℝ => p.evalBanach x) =

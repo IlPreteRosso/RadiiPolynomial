@@ -269,8 +269,8 @@ def uPolyOmegaSynthesisCLM {σ ν : PosReal}
     l1Omega ν →L[ℝ] l1Omega σ :=
   (uPolyOmegaSynthesisWrappedCLM hgate).comp (omegaWrapCLM ν)
 
-/-- The synthesis map is the absolutely convergent sum of the input
-`U`-coefficients against their monomial coefficient realizations. -/
+/-- The synthesis map is the sum `∑'` of the input `U`-coefficients against the
+coefficient realizations `uPolyOmega σ n` of the polynomials `Uₙ`. -/
 theorem uPolyOmegaSynthesisCLM_apply {σ ν : PosReal}
     (hgate : bernsteinParameter (σ : ℝ) ≤ (ν : ℝ)) (a : l1Omega ν) :
     uPolyOmegaSynthesisCLM hgate a =

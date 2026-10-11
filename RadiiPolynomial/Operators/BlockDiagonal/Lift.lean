@@ -3,9 +3,9 @@ import RadiiPolynomial.Operators.BlockDiagonal.Basic
 /-!
 # Block-Diagonal Lift Typeclass
 
-Abstracts the bridge between a concrete system Banach space `X` and the
-ℕ-indexed coefficient space `SystemCoeff L`, enabling generic construction
-of the composed approximate derivative CLM and Z₀ bound.
+Abstracts the bridge between a concrete system space `X` (a real normed space; no
+completeness is assumed) and the ℕ-indexed coefficient space `SystemCoeff L`, enabling
+generic construction of the composed approximate derivative CLM and Z₀ bound.
 
 Both Taylor (`XL1 = Fin L → l1Weighted ν`) and Chebyshev (`XCheb = Fin L → l1Chebyshev ν`)
 share the same `SystemBlockDiagData` structure operating on `SystemCoeff L`. They differ only
@@ -35,21 +35,26 @@ namespace RadiiPolynomial
 
 variable {ν : PosReal} {L : ℕ}
 
-/-- Typeclass for Banach spaces that support lifting `SystemBlockDiagData`
-finite block actions via coefficient extraction and re-embedding.
+/-- Typeclass for real normed spaces (no completeness is assumed) that support lifting
+`SystemBlockDiagData` finite block actions via coefficient extraction and re-embedding.
 
 An instance provides:
 - `extractCoeff`: project elements of `X` to ℕ-indexed `SystemCoeff L`
-- `liftDefect`: apply `actionFinite` to extracted coefficients and embed result back into `X`
+- `liftDefect`: intended as `actionFinite` applied to extracted coefficients and embedded back
+  into `X`
 - Linearity and norm bound for `liftDefect`
+
+The fields impose only the linearity and the norm bound; no field relates `liftDefect` to
+`extractCoeff` or to `actionFinite`.
 
 From these, generic `composedApproxCLM` and `composedApprox_Z₀` are derived. -/
 class BlockDiagLift (X : Type*) [NormedAddCommGroup X] [NormedSpace ℝ X]
     (L : ℕ) [NeZero L] (ν : PosReal) where
   /-- Extract ℕ-indexed coefficient representation from system space element. -/
   extractCoeff : X → SystemCoeff L
-  /-- Lift finite block action to X: apply `D.actionFinite` to extracted coefficients,
-  re-embed result into X. The result is zero on tail modes (n > N). -/
+  /-- Lift finite block action to X. Intended meaning (not imposed by the class): apply
+  `D.actionFinite` to extracted coefficients, re-embed result into X, zero on tail modes
+  (n > N). -/
   liftDefect : {N : ℕ} → SystemBlockDiagData L N → X → X
   /-- Additivity of lifted defect. -/
   liftDefect_add : ∀ {N : ℕ} (D : SystemBlockDiagData L N) (x y : X),

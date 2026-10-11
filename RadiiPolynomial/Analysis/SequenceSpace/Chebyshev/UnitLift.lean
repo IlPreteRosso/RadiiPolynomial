@@ -39,13 +39,15 @@ nothing more. Rewriting that real value as the cosine series
 `a₀ + 2∑ₖ aₖ cos kθ` uses the ℤ→ℕ tsum split in
 `l1Chebyshev.evalLaurentC_circle_eq_eval`, proved in `Chebyshev/Evaluation.lean`.
 The identity
-`evalLaurent z (symmetrize a) = re (evalLaurent z a)` is FALSE, because
+`evalLaurent z (symmetrize a) = re (evalLaurent z a)` is FALSE in general, because
 `symmetrize` is the `|k|`-fold, not `(a + reflect a) / 2`.
 
 Hygiene: `[Fact (1 ≤ (ν : ℝ))]` is exactly where the ring structure of the
 bilateral carrier demands it (the bilateral weight `ν^|k|` is submultiplicative
-iff `ν ≥ 1`), plus the one place it is mathematically needed — the unit circle
-lies in the annulus `[ν⁻¹, ν]` (`evalLaurentC_circle`). The domination lemmas
+for `ν ≥ 1`, `ScaledRealZ.pow_natAbs_add_le`; the converse is not proved here),
+plus the places where it is used mathematically — the unit circle lies in the
+annulus `[ν⁻¹, ν]` (`evalLaurentC_circle`), and `conj_evalLaurentC_of_isSymmetric`
+uses it to place `z⁻¹` in the annulus. The domination lemmas
 `unit_zpow_le_weight` / `norm_unit_zpow_le` carry no `Fact`.
 
 The exists-unique forms of these statements live in `tmp/ground_floor` (frozen).
@@ -234,8 +236,9 @@ variable [CompleteSpace B]
 
 /-- **Every continuous algebra homomorphism out of the bilateral carrier is
 the lift of its generator value** (completeness face): `φ = geomUnitLift ν
-(genUnit φ) ‖φ‖ _`. This is "characters are Laurent evaluations" for every
-complete Banach algebra `B` over every nontrivially normed field. -/
+(genUnit φ) ‖φ‖ _`. This is "characters are Laurent evaluations" (as the series
+`a ↦ ∑' k, aₖ (φ e₁)ᵏ`; the annulus bound on `φ e₁` is the gate section) for every
+complete normed algebra `B` over every complete nontrivially normed field. -/
 theorem eq_geomUnitLift_gen (φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →A[𝕜] B) :
     φ = geomUnitLift ν (genUnit ν φ) ‖φ.toContinuousLinearMap‖ (norm_genUnit_zpow_le ν φ) :=
   bilateralAlgHom_ext ν (by rw [geomUnitLift_gen, genUnit_val])
@@ -447,8 +450,9 @@ theorem norm_evalLaurentC_apply_le (a : l1Chebyshev ν) :
   have h := lpOneAlg.norm_geomUnitLift_apply_le ν _ _ (lpOneAlg.norm_annulus_zpow_le ν hz) a
   rwa [one_mul] at h
 
-/-- The unit circle lies in the closed annulus `[ν⁻¹, ν]` — the one place
-`1 ≤ ν` is used mathematically in this file. -/
+/-- The unit circle lies in the closed annulus `[ν⁻¹, ν]` — one of the two places
+`1 ≤ ν` is used mathematically in this file (the other is
+`conj_evalLaurentC_of_isSymmetric`, which places `z⁻¹` in the annulus). -/
 theorem evalLaurentC_circle (θ : ℝ) :
     (ν : ℝ)⁻¹ ≤ ‖exp (θ * I)‖ ∧ ‖exp (θ * I)‖ ≤ (ν : ℝ) := by
   rw [norm_exp_ofReal_mul_I]
@@ -507,7 +511,7 @@ part.
 
 The cosine-series identity is `l1Chebyshev.evalLaurentC_circle_eq_eval` in
 `Chebyshev/Evaluation.lean`. In contrast,
-`evalLaurent z (symmetrize a) = re (evalLaurent z a)` is false because
+`evalLaurent z (symmetrize a) = re (evalLaurent z a)` is false in general because
 `symmetrize` is the `|k|`-fold, not `(a + reflect a) / 2`. -/
 theorem evalLaurentC_symmetrize_eq_re (θ : ℝ) (a : l1Chebyshev ν) :
     evalLaurentC ν (exp (θ * I)) (evalLaurentC_circle ν θ) (symmetrize a)

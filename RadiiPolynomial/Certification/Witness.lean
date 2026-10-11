@@ -3,13 +3,14 @@ import RadiiPolynomial.Operators.BlockDiagonal.Scalar
 /-!
 # WitnessSpec — General Block-Diagonal Witness Infrastructure
 
-Equation-independent structural lemmas that reduce operator norms of
-`SystemBlockDiagData` to evaluable finite sums. These bridge the gap between
+Equation-independent structural lemmas that reduce the norm of a `SystemBlockDiagData` operator
+applied to a finitely supported vector to evaluable finite sums. These bridge the gap between
 the abstract CLM norms (Y₀, Z₀, ‖A‖) and the `finsum_bound` computational layer.
 
 ## Architecture
 
-General-L lemmas first, then L=1 specializations.
+General-L lemmas first, then L=1 specializations, then the array element `l1OfArrayQ`, and a
+closing documentation section (no declarations) on the column norm pipeline.
 
 ## What belongs here (equation-independent)
 
@@ -17,11 +18,14 @@ General-L lemmas first, then L=1 specializations.
 - **Z₀**: `finiteBlockMatrixNorm` / `finWeightedMatrixNorm` of defect → column norm sums
 - **‖A‖**: `finiteBlockMatrixNorm + tailBound` → column norm sums
 
-## What stays in example files (equation-specific)
+(For Z₀ and ‖A‖ this file has no lemmas: §3 documents the column norm reduction, whose lemmas
+are in `Operators/Matrix/WeightedNorm.lean`.)
 
-- Z₁ structure (how A† approximates DF)
-- Z₂ Lipschitz constant (depends on derivative of F)
-- LeanCert evaluators (`IntervalDyadic` computations)
+## What stays elsewhere
+
+- Z₁ structure (how A† approximates DF) and Z₂ Lipschitz constant (depends on derivative of
+  F): equation-specific, in the application, family certification and example modules
+- LeanCert evaluators (`IntervalDyadic` computations): `Certification/LeanCertAdapter.lean`
 -/
 
 open scoped BigOperators Topology
@@ -68,7 +72,7 @@ For finitely-supported `v` with support ≤ M ≥ N, the per-component norm of `
 equals a finite sum of `|A.action(toCoeff v) l n| * ν^n`. The caller bounds each component
 sum (typically via `finsum_bound using systemBlockDiagActionEval`).
 
-This mirrors the operator norm definition: `‖A.toCLM v‖ = max_l ‖(A.toCLM v) l‖`,
+This mirrors the sup norm of the product space: `‖A.toCLM v‖ = max_l ‖(A.toCLM v) l‖`,
 reduced to evaluable finite sums by the block-diagonal support structure. -/
 lemma SystemBlockDiagData.norm_toCLM_apply_le [NeZero L]
     (A : SystemBlockDiagData L N) (v : XL1 ν L)
@@ -139,12 +143,15 @@ end ArrayElements
 The Z₀ and ‖A‖ bounds reduce to `finWeightedMatrixNorm` (for L=1) or
 `finiteBlockMatrixNorm` (for general L), computed via column norms.
 
-Key bridge lemmas from `lpWeighted.lean` (used directly, no re-export):
-- `matrixColNorm_le_of_arrayColNormIccSum`: array bounds → column norm bounds
-- `finWeightedMatrixNorm_le_of_matrixColNorm_le`: column bounds → matrix norm bound
+Key bridge lemmas from `Operators/Matrix/WeightedNorm.lean` (used directly, no re-export):
+- `FiniteWeightedNorm.matrixColNorm_le_of_arrayColNormIccSum`: array bounds → column norm
+  bounds
+- `FiniteWeightedNorm.finWeightedMatrixNorm_le_of_matrixColNorm_le`: column bounds → matrix
+  norm bound
 
 For general L, `finiteBlockMatrixNorm` = `max_l Σ_j blockEntryNorm l j` where each
-`blockEntryNorm l j = finWeightedMatrixNorm ν (A.finBlock l j)`. The column norm
+`blockEntryNorm ν A.finBlock l j = finWeightedMatrixNorm ν (A.finBlock l j)`
+(`Operators/BlockDiagonal/Basic.lean`). The column norm
 pipeline applies to each block entry independently. -/
 
 end RadiiPolynomial

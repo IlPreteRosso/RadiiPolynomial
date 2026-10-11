@@ -13,8 +13,9 @@ import RadiiPolynomial.Applications.IVP.Chebyshev.Standard
   of `c_{k+2} − c_k`, and the Chebyshev integration tail `chebyshevShiftDiv`
   on modes `> N`.
 
-All three are CLMs. Crude norm constants suffice for differentiability;
-`TCtail` carries the sharp `ν/2 + 1/(2ν)` constant reused by Z₂ bounds.
+`TA` and `TC` are CLMs (`constG p` is a constant vector). Crude norm constants
+suffice for differentiability; `TCtail` is built with the constant `ν/2 + 1/(2ν)`
+from `chebyshevShiftDiv_norm_le'`.
 
 The equation-generic rows (`FAseq`, `FCseq`, `constFseq`) and the tail
 operator `TCtail` live at the `ChebyshevIVP` level; everything that needs the
@@ -264,7 +265,7 @@ lemma TCtailElem_toSeq_neg (v : l1Chebyshev ν) (m : ℕ) :
   show lpAlgRingData.toReal _ (TCtailSeq N v (Int.negSucc m)) = _
   exact lpAlgRingData.toReal_zero _
 
-/-- Sharp norm bound for the tail component, from
+/-- Norm bound `(ν/2 + 1/(2ν)) ‖v‖` for the tail component, from
 `chebyshevShiftDiv_norm_le'`. -/
 lemma TCtailElem_norm_le (v : l1Chebyshev ν) :
     ‖TCtailElem N v‖ ≤ ((ν : ℝ) / 2 + 1 / (2 * (ν : ℝ))) * ‖v‖ := by
@@ -332,7 +333,7 @@ private lemma TCtailFun_norm_le (c : XCheb ν L) :
   exact (TCtailElem_norm_le N (c l)).trans
     (mul_le_mul_of_nonneg_left (norm_le_pi_norm c l) hpos)
 
-/-- The Chebyshev integration tail of TC as a CLM (sharp constant `ν/2 + 1/(2ν)`). -/
+/-- The Chebyshev integration tail of TC as a CLM (norm constant `ν/2 + 1/(2ν)`). -/
 def TCtail : XCheb ν L →L[ℝ] XCheb ν L :=
   LinearMap.mkContinuous
     { toFun := TCtailFun N

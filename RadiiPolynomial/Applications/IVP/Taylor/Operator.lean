@@ -52,8 +52,10 @@ variable {ν : PosReal} {L N : ℕ} [NeZero L]
 
 /-- IVP zero-finding coefficients (Ref: Eq. 8.15, p.195):
 `F(a)_l_0 = a_{l,0} - x_{0,l}` and `F(a)_l_{k+1} = (k+1)·a_{l,k+1} - φ_l(a)_k`.
-The factor `(k+1)` means `F(a) ∈ (ℓ¹_ω)^L` rather than `(ℓ¹_ν)^L`
-(Proposition 10.1.1), where `ω_k = ν^{k+1}/(k+1)`. -/
+Because of the factor `(k+1)`, the book places `F(a)` in `(ℓ¹_ω)^L` rather than `(ℓ¹_ν)^L`
+(Proposition 10.1.1), where `ω_k = ν^{k+1}/(k+1)`. That membership is not formalized here:
+`ivpCoeffs` returns the raw sequence `ℕ → ℝ`, and the approximate inverse brings it back to
+`ℓ¹_ν` (`ivpMap`). -/
 def ivpCoeffs (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (a : XL1 ν L) (l : Fin L) (n : ℕ) : ℝ :=
   match n with
@@ -69,7 +71,8 @@ The caller provides `hmem` proving ℓ¹_ν membership of each component.
 
 In practice, `hmem` follows from the tail structure: when `A.tailDiag = 1/n`,
 the tail term `(1/n)((n)a_n - φ_{n-1}) = a_n - φ_{n-1}/n` is ℓ¹_ν-summable.
-This is equation-specific (depends on the tail structure of A). -/
+It depends on the tail structure of `A`, not on the equation;
+`ivpMap_mem_of_tailDiag_inv` proves it. -/
 def ivpMap (A : SystemBlockDiagData L N) (φ : XL1 ν L → Fin L → l1Weighted ν)
     (x₀ : Fin L → ℝ)
     (hmem : ∀ a : XL1 ν L, ∀ l : Fin L,
@@ -91,7 +94,7 @@ lemma ivpMap_coeff (A : SystemBlockDiagData L N) (φ : XL1 ν L → Fin L → l1
 /-! ## 3. Tail Decomposition -/
 
 /-- The "tail" part of G: `a l - shiftDivN_CLM(φ(a) l)`.
-On modes n > N, this equals G exactly (up to the finite block structure of A).
+On modes n > N, this equals G when `A.tailDiag l n = 1/n` there (`ivpMap_tail_eq_ivpTail`).
 Manifestly differentiable when φ is differentiable. -/
 def ivpTail (φ : XL1 ν L → Fin L → l1Weighted ν)
     (a : XL1 ν L) : XL1 ν L := fun l =>
@@ -139,10 +142,10 @@ For the Z₁ bound, the difference `composedApprox.toCLM - fderiv G ā` satisfie
 
 The per-component norm is then bounded by `ν/(N+1) * ‖Dφ(h) l‖` via `shiftDivN_tailTsum_le_div`.
 
-This section provides the generic Z₁ component bound, parameterized by:
+This section provides the generic Z₁ bounds (recipe and exact-column), parameterized by:
 - `hfin`: finite modes agree (equation-specific, from composedApprox construction)
-- `htail_diff`: tail difference = shiftDivN(Dφ) (from `fderiv_ivpTail`)
-- `hcomp_tail`: composedApprox tail = identity -/
+- `htail`: tail difference = shiftDivN(Dφ) (from `fderiv_ivpTail` when the composedApprox
+  tail is the identity; that fact is not a separate parameter) -/
 
 /-- Generic Z₁ per-component bound.
 Given that finite modes cancel and the tail difference is `shiftDivN(Dφ(h) l)`,
@@ -237,7 +240,9 @@ private lemma Z₁_component_le_exact
 `‖composedApprox.toCLM - fderiv G ā‖ ≤ Z₁` from a per-component tail-tsum
 bound. Mirror of `ivp_Z₁_le` in which the recipe hypotheses `hK`/`hDφ`/`hZ₁`
 are replaced by:
-- `hDtail`: per-component `tailTsum N (shiftDivN (Dφ h l)) ≤ C * ‖h‖`
+- `hC`: `0 ≤ C`;
+- `hDtail`: per-component tail sum
+  `∑' n, |(shiftDivN (Dφ h l))_(n+N+1)| · ν^(n+N+1) ≤ C * ‖h‖`
   (instances discharge it through `shiftDivN_leftMul_tail_le_of_cols` after a
   structural rewrite of `Dφ` as a left multiplication);
 - `hZ₁`: `C ≤ Z₁`.
@@ -267,12 +272,13 @@ lemma ivp_Z₁_le_exact
 /-! ## 6. Generic Y₀ Bound
 
 The Y₀ bound `‖G(ā)‖ ≤ C` reduces to:
-1. `G(ā) = A.toCLM(F_abar)` where `F_abar = ofCoeff(ivpCoeffs ā)`
-2. `norm_toCLM_apply_le` reduces `‖A.toCLM(F_abar)‖` to per-component finite sums
-3. `finsum_bound` closes each component sum
+1. `‖G(ā)‖` is the sup over components `l` of `‖G(ā) l‖`
+2. beyond the support bound `S ≥ N` the action of `A` is the tail diagonal times a zero
+   coefficient, so `‖G(ā) l‖` is the finite sum `Σ_{n ≤ S} |A.action(ivpCoeffs ā) l n| ν^n`
+3. the caller bounds each component sum (e.g. by `finsum_bound`)
 
-The generic lemma packages step 1 (ivpMap → A.toCLM connection) so the caller
-just provides: ℚ bridge, support bound, A data bridges, and per-component bounds. -/
+The caller provides: the support bound `S` with its vanishing proof and the
+per-component finite-sum bounds. -/
 
 omit [NeZero L] in
 /-- **Generic Y₀ bound**: `‖ivpMap A φ x₀ hmem ā‖ ≤ C`.
@@ -281,10 +287,10 @@ Reduces to per-component finite sums of `|A.action(ivpCoeffs ā) l n| * ν^n`,
 which the caller closes via `finsum_bound using systemBlockDiagActionEval`.
 
 Takes:
-- `S`: support bound for `ivpCoeffs φ x₀ ā` (typically `2*N+1` for degree-2 φ)
+- `S` with `hSN : N ≤ S`: support bound for `ivpCoeffs φ x₀ ā` (typically `2*N+1` for
+  degree-2 φ)
 - `hsupport`: `ivpCoeffs` vanishes beyond S
-- `hmem_coeff`: membership proof for `ofCoeff`
-- `hcoeff_eq`: G(ā) = A.action(ivpCoeffs ā) at the sequence level
+- `hC`: `0 ≤ C`
 - `hcomp`: per-component bound (user closes with `finsum_bound`) -/
 lemma ivp_Y₀_le
     (A : SystemBlockDiagData L N) (φ : XL1 ν L → Fin L → l1Weighted ν)
@@ -537,7 +543,8 @@ where:
 - `ivpTail φ a l = a l - shiftDivN_CLM(φ a l)` (manifestly differentiable)
 - `ivpFinCorrection` is supported on modes 0..N (differentiable by finite support)
 
-This gives generic differentiability of `ivpMap` and the fderiv coefficient chain rule. -/
+This gives generic differentiability of `ivpMap` and its derivative on tail modes
+(`fderiv_ivpMap_tail`). -/
 
 omit [NeZero L] in
 /-- ℓ¹ membership for `ivpMap` when `A.tailDiag = 1/n` on tail modes.
@@ -709,9 +716,9 @@ end IVP
 
 /-! ## CLM Operator Norm Bound for shiftDivN
 
-Exposed here (rather than in `Analysis/SequenceSpace/Geometric/Omega.lean`) because the
-`Norm` instance for `ContinuousLinearMap` requires the operator-norm imports available
-in this file. -/
+Stated here, as a private lemma, rather than in `Analysis/SequenceSpace/Geometric/Omega.lean`
+because the `Norm` instance for `ContinuousLinearMap` requires the operator-norm imports
+available in this file. -/
 
 namespace l1Weighted
 

@@ -32,6 +32,9 @@ This framework supports:
 - Mean Value Theorem (via the metric structure)
 - Linear operator theory (via the vector space structure)
 
+The radii polynomial theorems below drop completeness of F (`omit [CompleteSpace F]`): only
+the domain E carries the fixed-point argument, and F need only be a real normed space.
+
 ## Local layers and faces (namespace `RadiiPolynomial`)
 
 Beside the global theorems, the file carries their local forms, with derivative data on the
@@ -212,7 +215,7 @@ Where:
 - Y₀: bound on ‖A(f(x̄))‖ (initial defect)
 - Z₀: bound on ‖I_E - AA†‖ (how close AA† is to identity)
 - Z₁: bound on ‖A[Df(x̄) - A†]‖ (how well A† approximates Df(x̄))
-- Z₂(r): bound on ‖A[Df(c) - Df(x̄)]‖ for c ∈ B̄ᵣ(x̄) (Lipschitz-type bound)
+- Z₂(r): Z₂(r)·r bounds ‖A[Df(c) - Df(x̄)]‖ for c ∈ B̄ᵣ(x̄) (Lipschitz-type bound)
 
 The simpler case (when E = F and A† = Df(x̄)) has Z₁ = 0.
 -/
@@ -238,7 +241,8 @@ def Z_bound_general (Z₀ Z₁ : ℝ) (Z₂ : ℝ → ℝ) (r : ℝ) : ℝ :=
 /-- Alternative formulation: p(r) = (Z(r) - 1)r + Y₀
 
     This connects the polynomial form to the contraction constant bound.
-    When p(r₀) < 0, we get Z(r₀) < 1, which means T is a contraction. -/
+    When p(r₀) < 0 with Y₀ ≥ 0 and r₀ > 0, we get Z(r₀) < 1
+    (`general_radii_poly_neg_implies_Z_lt_one`), which means T is a contraction. -/
 lemma generalRadiiPolynomial_alt_form (Y₀ Z₀ Z₁ : ℝ) (Z₂ : ℝ → ℝ) (r : ℝ) :
   generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r = (Z_bound_general Z₀ Z₁ Z₂ r - 1) * r + Y₀ := by
   unfold generalRadiiPolynomial Z_bound_general
@@ -246,7 +250,8 @@ lemma generalRadiiPolynomial_alt_form (Y₀ Z₀ Z₁ : ℝ) (Z₂ : ℝ → ℝ
 
 /-- Simple radii polynomial (when Z₁ = 0, corresponds to Theorem 2.4.1/2.4.2)
 
-    This is the special case when E = F or when A† = Df(x̄) exactly.
+    This is the special case Z₁ = 0 (`radiiPolynomial_is_special_case`), e.g. when
+    A† = Df(x̄) exactly.
 
     p(r) = Z₂(r)r² - (1 - Z₀)r + Y₀ -/
 def radiiPolynomial (Y₀ Z₀ : ℝ) (Z₂ : ℝ → ℝ) (r : ℝ) : ℝ :=
@@ -597,7 +602,7 @@ omit [CompleteSpace E] in
 lemma simple_maps_closedBall_to_itself
   {T : E → E} {xBar : E}
   {Y₀ : ℝ} {Z : ℝ → ℝ} {r₀ : ℝ}
-  (hT_diff : Differentiable ℝ T)            -- T ∈ C¹(E,E)
+  (hT_diff : Differentiable ℝ T)            -- T differentiable on E
   (hr₀ : 0 < r₀)                            -- r₀ > 0 (positive radius)
   (h_bound_Y : ‖T xBar - xBar‖ ≤ Y₀)        -- Initial displacement bound
   (h_bound_Z : ∀ c ∈ closedBall xBar r₀,    -- Derivative bound on B̄ᵣ₀(x̄)
@@ -629,8 +634,10 @@ The global theorems of the next sections (`general_fixed_point_theorem`,
 `general_radii_polynomial_theorem`, `simple_radii_polynomial_theorem_EtoF`) assume
 `Differentiable ℝ f` on the whole space. Their local forms below need derivative data
 `HasFDerivWithinAt f (Df x) (closedBall x̄ r₀) x` on the closed ball of the certified radius only,
-and each global theorem is one application of its local form. The local radii-polynomial theorems
-also locate the zero in the open ball and return the invertibility of `Df x̃`.
+and each global theorem is one application of its local form. The local forms
+`radii_polynomial_theorem_of_norm_id_sub_le_local` and
+`general_radii_polynomial_theorem_nondegenerate_local` also locate the zero in the open ball and
+return the invertibility of `Df x̃`.
 -/
 
 namespace RadiiPolynomial
@@ -830,11 +837,11 @@ If p(r₀) < 0, then there exists a unique fixed point x̃ ∈ B̄ᵣ₀(x̄).
 
     Let T : E → E be Fréchet differentiable and x̄ ∈ E. Suppose:
     - ‖T(x̄) - x̄‖ ≤ Y₀                      (eq. 7.27)
-    - ‖DT(x)‖ ≤ Z(r) for all x ∈ B̄ᵣ(x̄)     (eq. 7.28)
+    - ‖DT(x)‖ ≤ Z(r₀) for all x ∈ B̄ᵣ₀(x̄)   (eq. 7.28, needed at r = r₀ only)
 
     Define p(r) := (Z(r) - 1)r + Y₀.
 
-    If there exists r₀ > 0 such that p(r₀) < 0, then there exists a unique
+    If r₀ > 0 and p(r₀) < 0, then there exists a unique
     x̃ ∈ B̄ᵣ₀(x̄) such that T(x̃) = x̃.
 
     This is the Banach space version of Theorem 2.4.1. (which is in ℝⁿ)
@@ -876,21 +883,23 @@ If p(r₀) < 0, then there exists a unique zero x̃ ∈ B̄ᵣ₀(x̄).
 The proof strategy: Apply Theorem 7.6.1 to the Newton-like operator T(x) = x - A(f(x)),
 then use Proposition 2.3.1 to convert the fixed point to a zero.
 
-Note: We don't claim Df(x̃) is invertible in this general version without
-additional assumptions. The derivative Df(x̃) : E →L[ℝ] F may not have
-an inverse in the usual sense when E and F are different.
+Note: The global statement does not record invertibility of Df(x̃). Under the same
+hypotheses it holds: the local form
+`RadiiPolynomial.general_radii_polynomial_theorem_nondegenerate_local` proves that
+Df(x̃) : E →L[ℝ] F is invertible (a continuous linear equivalence E ≃ F).
 -/
 
 omit [CompleteSpace F] in
 /-- **Theorem 7.6.2**: General Radii Polynomial Theorem for E to F maps
 
-    Given f : E → F with E, F Banach spaces, approximate inverse A : F →L[ℝ] E,
+    Given a differentiable f : E → F with E a Banach space and F a real normed space
+    (no completeness of F is assumed), approximate inverse A : F →L[ℝ] E,
     and approximate derivative A† : E →L[ℝ] F satisfying:
 
     - ‖A(f(x̄))‖ ≤ Y₀                               (eq. 7.30: initial defect)
     - ‖I_E - A∘A†‖ ≤ Z₀                            (eq. 7.31: AA† close to identity)
     - ‖A∘[Df(x̄) - A†]‖ ≤ Z₁                        (eq. 7.32: A† approximates Df(x̄))
-    - ‖A∘[Df(c) - Df(x̄)]‖ ≤ Z₂(r)·r  for c ∈ B̄ᵣ(x̄) (eq. 7.33: Lipschitz bound)
+    - ‖A∘[Df(c) - Df(x̄)]‖ ≤ Z₂(r₀)·r₀ for c ∈ B̄ᵣ₀(x̄) (eq. 7.33: Lipschitz bound, at r₀)
 
     If p(r₀) < 0 where p(r) = Z₂(r)r² - (1-Z₀-Z₁)r + Y₀ (eq. 7.34),
     then there exists a unique x̃ ∈ B̄ᵣ₀(x̄) with f(x̃) = 0.
@@ -941,11 +950,11 @@ This still works for f : E → F with different spaces, but requires tighter bou
 omit [CompleteSpace F] in
 /-- **Theorem 2.4.2 (Generalized)**: Simple Radii Polynomial Theorem for E to F
 
-    Given f : E → F and approximate inverse A : F →L[ℝ] E satisfying:
+    Given a differentiable f : E → F and approximate inverse A : F →L[ℝ] E satisfying:
 
     - ‖A(f(x̄))‖ ≤ Y₀                               (eq. 2.14)
     - ‖I_E - A∘Df(x̄)‖ ≤ Z₀                         (eq. 2.15)
-    - ‖A∘[Df(c) - Df(x̄)]‖ ≤ Z₂(r)·r for c ∈ B̄ᵣ(x̄) (eq. 2.16)
+    - ‖A∘[Df(c) - Df(x̄)]‖ ≤ Z₂(r₀)·r₀ for c ∈ B̄ᵣ₀(x̄) (eq. 2.16, at r₀)
 
     If p(r₀) < 0 where p(r) = Z₂(r)r² - (1-Z₀)r + Y₀ (eq. 2.17),
     then there exists a unique x̃ ∈ B̄ᵣ₀(x̄) with f(x̃) = 0.

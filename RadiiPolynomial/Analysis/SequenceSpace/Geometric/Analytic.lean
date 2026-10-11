@@ -45,7 +45,8 @@ def complexEval (a : l1Weighted ν) (z : ℂ) : ℂ :=
 def complexOmegaEval (b : l1Omega ν) (z : ℂ) : ℂ :=
   ∑' n, (l1Omega.toSeq b n : ℂ) * z ^ n
 
-/-- The same coefficient sequence read over `ℂ` has the same radius. -/
+/-- The same coefficient sequence read over `ℂ` is a power series of `complexEval a` on the
+open complex disc of radius `ν`, as in the real case. -/
 theorem hasFPowerSeriesOnBall_complexEval (a : l1Weighted ν) :
     HasFPowerSeriesOnBall (complexEval a)
       (FormalMultilinearSeries.ofScalars ℂ (fun n => (l1Weighted.toSeq a n : ℂ)))

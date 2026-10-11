@@ -21,7 +21,7 @@ Parallel to `IVP.StdIVPData` for Taylor IVP, with:
 
 ## Certificate faces
 
-`composedApproxCLM` (§6: identity on negative modes, block action on non-negatives),
+`composedApproxCLM` (§6: identity on negative and tail modes, block action on modes 0..N),
 `Z₀_le` (§7), `defect_finBlockNorm_lt_one_of_radii` and `existsUnique` (§8) are all derived
 here from the bundle. A certificate written from one polynomial system does not call them
 directly: it calls the faces of `Chebyshev/Polynomial.lean`
@@ -190,7 +190,8 @@ lemma norm_abar_le_norm_symmetrize (l : Fin L) :
 
 /-! ## 5. Composed Map G (needs φ, p) -/
 
-/-- The composed Chebyshev IVP map G = A ∘ F. -/
+/-- The composed Chebyshev IVP map: `G = A ∘ F` on the modes `k ≥ 0`; the negative modes
+are not acted on and pass through from the argument (`embedWithPassThrough`). -/
 def G (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ) :
     XCheb ν L → XCheb ν L :=
   chebyshevIvpMap d.approxInverse φ p
@@ -241,7 +242,8 @@ lemma defect_finBlockNorm_lt_one_of_radii
 /-! ## 8. Main Existence/Uniqueness -/
 
 /-- Main existence/uniqueness theorem for standard Chebyshev IVP systems.
-The user provides equation-specific bounds; structural hypotheses are auto-derived. -/
+The user provides equation-specific bounds and the differentiability `hG_diff` of `G`; the
+structural hypotheses (tail cancellation, membership of `G(a)`) are auto-derived. -/
 theorem existsUnique
     (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ)
     (hG_diff : Differentiable ℝ (d.G φ p))

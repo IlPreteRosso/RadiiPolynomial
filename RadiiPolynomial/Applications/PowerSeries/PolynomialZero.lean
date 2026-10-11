@@ -10,8 +10,9 @@ truncation `N`, the finite block `Afin` of the approximate inverse `A`, its tail
 and the coefficients `dcoef` of `P′(x̄)`. From them:
 
 * `A` — the approximate inverse (finite block `Afin`, constant tail `tail`);
-* `Adag` — the approximate derivative `A† = DF^(N)(x̄)`: the lower-triangular Cauchy matrix of
-  `dcoef` with tail `dcoef 0`;
+* `Adag` — the approximate derivative `A†`: the lower-triangular Cauchy matrix of `dcoef`
+  with tail `dcoef 0`; it agrees with `DF(x̄)` on the finite modes when `dcoef` are the
+  coefficients of `P′(x̄)` (`fin_kill`);
 * `E` — the tail operator `-leftMul (P′(x̄) - dcoef 0 · 1)` that dominates `A† - DF(x̄)`.
 
 The bounds hold for any `ν`, `x̄`, `c`; the only link to `x̄` is the coefficient hypothesis
@@ -54,7 +55,9 @@ variable (d : PolyZeroReal)
 noncomputable def A : ScalarBlockDiagData d.N :=
   ScalarBlockDiagData.ofParts (fun i j => d.Afin i j) (fun _ => d.tail) |d.tail| (fun _ _ => le_rfl)
 
-/-- Approximate derivative `A† = DF^(N)(x̄)`: the Cauchy matrix of `dcoef`, tail `dcoef 0`. -/
+/-- Approximate derivative `A†`: the Cauchy matrix of `dcoef`, tail `dcoef 0`. The definition
+uses only `dcoef`; under the coefficient hypothesis `hD` it agrees with `DF(x̄)` on the finite
+modes (`fin_kill`). -/
 noncomputable def Adag : ScalarBlockDiagData d.N :=
   ScalarBlockDiagData.ofParts
     (fun i j => if (j : ℕ) ≤ i then d.dcoef ((i : ℕ) - j) else 0)

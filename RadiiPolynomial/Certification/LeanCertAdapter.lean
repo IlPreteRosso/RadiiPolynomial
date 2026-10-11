@@ -9,10 +9,13 @@ norm reductions to `finsum_bound`, `finmatrix_bound`, and `native_decide`.
 
 ## Contents
 
-1. `weightedTermEval` — per-term evaluator for weighted ℓ¹ norms
+1. `colNormTermEval` / `weightedTermEval` — per-term evaluators for column norms and weighted
+   ℓ¹ norms
 2. `defectMatQ` / `blockDefectMatQ` — exact ℚ I-AB defect computation; `defectCols` — its
    columns as arrays, for any block operator pair (`finiteBlockMatrixNorm_defect_le_of_Q`)
-3. `finWeightedMatrixNorm_le_of_Q_le` — single `native_decide` matrix norm bridge
+3. `FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le` — single `native_decide` matrix norm
+   bridge; `FiniteWeightedNorm.finWeightedMatrixNorm_le_of_dyadic` — its dyadic-interval variant
+   (`checkMatrixNormDyadic`)
 4. `finiteBlockMatrixNorm_le_of_Q_le` — system-level block matrix norm bridge
 5. `norm_toCLM_le_of_Q` / `norm_toScalarCLM_le_of_Q` — CLM norm bridges
 6. `scalarBlockDiagActionEval` — scalar block-diagonal action evaluator (Y₀)
@@ -25,7 +28,7 @@ norm reductions to `finsum_bound`, `finmatrix_bound`, and `native_decide`.
 
 ```lean
 -- Matrix norm via single native_decide:
-finmatrix_bound (finWeightedMatrixNorm_le_of_Q_le _ cols ν_q hcols hν)
+finmatrix_bound (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le _ cols ν_q hcols hν)
 
 -- Weighted norm via finsum_bound:
 finsum_bound using (weightedTermEval arr ν) (fun k _ _ => weightedTermEval_correct ...)
@@ -39,7 +42,8 @@ namespace RadiiPolynomial
 /-! ## Per-term evaluators -/
 
 /-- Per-term evaluator for column norm sums: computes `|col[k]| * ν^k / ν^j`
-as a dyadic interval. Used by `finmatrix_bound using` for per-column aggregation. -/
+as a dyadic interval. Used by the `finmatrix_dyadic` tactic (through LeanCert's `finsum_bound`)
+for per-column aggregation. -/
 def colNormTermEval (col : Array ℚ) (ν : ℚ) (j : ℕ) (k : ℕ)
     (cfg : DyadicConfig) : IntervalDyadic :=
   IntervalDyadic.ofIntervalRat
@@ -126,7 +130,7 @@ section Defect
 variable {L N : ℕ}
 
 /-- ℚ columns of the defect block `(l, j)`: column `k` of `δ_{lj} I − Σ_m A_{lm} B_{mj}`,
-where `A_col l m k` and `B_col m j k` store column `k` of the blocks. -/
+where `A_col l m k` and `DF_col m j k` store column `k` of the blocks. -/
 def defectCols (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ) (l j : Fin L)
     (k : Fin (N + 1)) : Array ℚ :=
   Array.ofFn fun (i : Fin (N + 1)) =>
@@ -246,7 +250,7 @@ def colNormQ (col : Array ℚ) (ν : ℚ) (N : ℕ) (j : ℕ) : ℚ :=
   ∑ i ∈ Finset.Icc (0 : ℕ) N, |col.getD i 0| * ν ^ i / ν ^ j
 
 /-- Matrix norm in ℚ: `max_j (colNormQ col_j ν N j)`. -/
-def finWeightedMatrixNormQ (cols : Fin (N + 1) → Array ℚ) (ν : ℚ) (N : ℕ) : ℚ :=
+def finWeightedMatrixNormQ {N : ℕ} (cols : Fin (N + 1) → Array ℚ) (ν : ℚ) : ℚ :=
   Finset.univ.sup' Finset.univ_nonempty fun j => colNormQ (cols j) ν N j
 
 /-- Bridge: if ℚ norm ≤ C (decidable), then ℝ norm ≤ C.
@@ -256,7 +260,7 @@ lemma FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le {N : ℕ} {ν : PosRea
     (cols : Fin (N + 1) → Array ℚ) (ν_q : ℚ) {C : ℚ}
     (hcols : ∀ j i : Fin (N + 1), M i j = ((cols j).getD (i : ℕ) 0 : ℝ))
     (hν : (ν : ℝ) = (ν_q : ℝ))
-    (hle : finWeightedMatrixNormQ cols ν_q N ≤ C) :
+    (hle : finWeightedMatrixNormQ cols ν_q ≤ C) :
     FiniteWeightedNorm.finWeightedMatrixNorm ν M ≤ (C : ℝ) := by
   -- Step 1: each matrixColNorm = (colNormQ : ℝ) via column bridge + cast
   have hcol : ∀ j : Fin (N + 1), FiniteWeightedNorm.matrixColNorm ν M j =
@@ -282,7 +286,7 @@ lemma FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le {N : ℕ} {ν : PosRea
 def finiteBlockMatrixNormQ (L N : ℕ) [NeZero L]
     (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν : ℚ) : ℚ :=
   Finset.univ.sup' Finset.univ_nonempty fun l =>
-    ∑ j : Fin L, finWeightedMatrixNormQ (blockCols l j) ν N
+    ∑ j : Fin L, finWeightedMatrixNormQ (blockCols l j) ν
 
 /-- `C_q · max_l (Σ_{j ∈ active} ‖A_{lj}‖ + [l ∈ active] · tail)`: the exact ℚ block norm of a
 block-diagonal operator restricted to the active columns, scaled by a caller-computed
@@ -291,7 +295,7 @@ def activeBlockNormQ (L N : ℕ) [NeZero L]
     (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν tailBound C_q : ℚ)
     (active : Finset (Fin L)) : ℚ :=
   C_q * Finset.univ.sup' Finset.univ_nonempty fun l =>
-    (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν N) +
+    (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν) +
     if l ∈ active then tailBound else 0
 
 /-- Per-component bridge of `activeBlockNormQ`. -/
@@ -310,19 +314,19 @@ theorem activeBlockNorm_component_le {L N : ℕ} [NeZero L] {ν : PosReal}
       if l ∈ active then A.tailBound else 0) ≤ (bound : ℝ) := by
   have hentry : ∀ j : Fin L,
       blockEntryNorm ν A.finBlock l j ≤
-        ((finWeightedMatrixNormQ (blockCols l j) ν_q N : ℚ) : ℝ) :=
+        ((finWeightedMatrixNormQ (blockCols l j) ν_q : ℚ) : ℝ) :=
     fun j => FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le
       (A.finBlock l j) (blockCols l j) ν_q (hcols l j) hν (le_refl _)
   have hrow : (∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
       (if l ∈ active then A.tailBound else (0 : ℝ)) ≤
-      ((((∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
+      ((((∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q) +
         if l ∈ active then tailBound_q else 0 : ℚ) : ℝ)) := by
     push_cast; exact add_le_add (Finset.sum_le_sum fun j _ => hentry j) (by split <;> simp [htail])
   have hC : (0 : ℝ) ≤ (C_q : ℝ) := by exact_mod_cast hC_nn
   have hsup := Finset.le_sup' (f := fun l =>
-    (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
+    (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q) +
     if l ∈ active then tailBound_q else 0) (Finset.mem_univ l)
-  have hX : C_q * ((∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q N) +
+  have hX : C_q * ((∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q) +
       if l ∈ active then tailBound_q else 0) ≤ bound :=
     (mul_le_mul_of_nonneg_left hsup hC_nn).trans hle
   refine (mul_le_mul_of_nonneg_left hrow hC).trans ?_
@@ -333,7 +337,7 @@ def Z₂_blockNormQ_gen (L N : ℕ) [NeZero L]
     (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν tailBound C_q : ℚ)
     (active : Finset (Fin L)) : ℚ :=
   C_q * ν * Finset.sup' Finset.univ Finset.univ_nonempty fun l =>
-    (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν N) +
+    (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν) +
     if l ∈ active then tailBound else 0
 
 /-- The weighted evaluator `Z₂_blockNormQ_gen` is `activeBlockNormQ` at `C_q := ν · C`. -/
@@ -345,7 +349,7 @@ theorem Z₂_blockNormQ_gen_eq (L N : ℕ) [NeZero L]
   unfold Z₂_blockNormQ_gen activeBlockNormQ; ring
 
 /-- Generalized Z₂ per-component bridge with variable factor.
-If `Z₂_blockNormQ_gen ... C_q ≤ bound`, then `C*ν*(∑ blockNorm + tail_if) ≤ bound` for each `l`.
+If `Z₂_blockNormQ_gen ... C_q ≤ bound`, then `C_q*ν*(∑ blockNorm + tail_if) ≤ bound` for each `l`.
 The instance at scale `ν_q * C_q` of `activeBlockNorm_component_le` (`Z₂_blockNormQ_gen_eq`). -/
 lemma Z₂_blockNorm_component_le_gen {L N : ℕ} [NeZero L] {ν : PosReal}
     (A : SystemBlockDiagData L N)
@@ -382,21 +386,21 @@ lemma finiteBlockMatrixNorm_le_of_Q_le {L N : ℕ} [NeZero L] {ν : PosReal}
   -- Per-block: reuse scalar bridge with C = finWeightedMatrixNormQ
   have hentry : ∀ l j : Fin L,
       blockEntryNorm ν A l j ≤
-        ((finWeightedMatrixNormQ (blockCols l j) ν_q N : ℚ) : ℝ) :=
+        ((finWeightedMatrixNormQ (blockCols l j) ν_q : ℚ) : ℝ) :=
     fun l j => FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le
       (A l j) (blockCols l j) ν_q (hcols l j) hν (le_refl _)
   -- Aggregate: sup'_l (∑_j blockEntryNorm) ≤ (C : ℝ)
   unfold finiteBlockMatrixNorm blockRowNorm
   apply Finset.sup'_le _ _ (fun l _ => ?_)
   calc ∑ j, blockEntryNorm ν A l j
-      ≤ ∑ j, ((finWeightedMatrixNormQ (blockCols l j) ν_q N : ℚ) : ℝ) :=
+      ≤ ∑ j, ((finWeightedMatrixNormQ (blockCols l j) ν_q : ℚ) : ℝ) :=
         Finset.sum_le_sum (fun j _ => hentry l j)
-    _ = ((∑ j, finWeightedMatrixNormQ (blockCols l j) ν_q N : ℚ) : ℝ) := by
+    _ = ((∑ j, finWeightedMatrixNormQ (blockCols l j) ν_q : ℚ) : ℝ) := by
         push_cast; rfl
     _ ≤ ((Finset.sup' Finset.univ Finset.univ_nonempty
-          (fun l => ∑ j, finWeightedMatrixNormQ (blockCols l j) ν_q N) : ℚ) : ℝ) := by
+          (fun l => ∑ j, finWeightedMatrixNormQ (blockCols l j) ν_q) : ℚ) : ℝ) := by
         exact_mod_cast Finset.le_sup'
-          (fun l => ∑ j, finWeightedMatrixNormQ (blockCols l j) ν_q N) (Finset.mem_univ l)
+          (fun l => ∑ j, finWeightedMatrixNormQ (blockCols l j) ν_q) (Finset.mem_univ l)
     _ ≤ (C : ℝ) := by exact_mod_cast hle
 
 /-- **Operator bridge, family-neutral**: for any block operator pair `(A, B)` whose finite
@@ -451,7 +455,7 @@ lemma norm_toScalarCLM_le_of_Q {N : ℕ} {ν : PosReal}
     (hcols : ∀ j i : Fin (N + 1), A.finBlock0 i j = ((cols j).getD (i : ℕ) 0 : ℝ))
     (hν : (ν : ℝ) = (ν_q : ℝ))
     (htail : A.tailBound = (tailBound_q : ℝ))
-    (hle : max (finWeightedMatrixNormQ cols ν_q N) tailBound_q ≤ C) :
+    (hle : max (finWeightedMatrixNormQ cols ν_q) tailBound_q ≤ C) :
     ‖A.toScalarCLM (ν := ν)‖ ≤ (C : ℝ) :=
   (ScalarBlockDiagData.norm_toScalarCLM_le_max (ν := ν) A).trans <|
     (max_le_max
