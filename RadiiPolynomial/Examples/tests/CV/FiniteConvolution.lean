@@ -9,9 +9,8 @@ import Mathlib.Data.Int.Basic
 # Validation witnesses for the finite-fiber convolution core
 
 Regression witnesses for `RadiiPolynomial/Algebra/Convolution/Finite.lean` (consensus
-`CONSENSUS_finite_convolution.md`, N6). Not imported by any library module; check with
-`lake env lean RadiiPolynomial/Examples/tests/CV/FiniteConvolution.lean` once the two imported
-modules are built.
+`CONSENSUS_finite_convolution.md`, N6). Not imported by any library module; build with
+`lake build RadiiPolynomial.Examples.tests.CV.FiniteConvolution`.
 
 1. additive index `ℕ`: the Cauchy product bridge, and the laws specialize;
 2. a multiplicative finite-fiber monoid, `Multiplicative ℕ`: two atoms and the unit atom;

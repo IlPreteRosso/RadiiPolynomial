@@ -7,12 +7,12 @@ import Mathlib.Analysis.Complex.Basic
 
 Compile probes for the `FiberTrivialization` refactor (consensus
 `CONSENSUS_fiber_trivialization.md` §1–§5, gates G2/G3). NOT imported by the root facade;
-check with `lake env lean RadiiPolynomial/Examples/tests/FiberTrivializationProbes.lean`.
+build with `lake build RadiiPolynomial.Examples.tests.FT.FiberTrivializationProbes`.
 -/
 
 noncomputable section
 
-namespace RadiiPolynomial.FiberTrivializationProbes
+namespace RadiiPolynomial.Tests.FT
 
 open RadiiPolynomial
 
@@ -348,7 +348,8 @@ example (j : ℕ) (x : ℝ) :
 -- The convolution product unfolds to the same term (coefficient = Cauchy/additive convolution).
 example (f g : l1Weighted ν) (k : ℕ) :
     (f * g) k = WeightedScalar.ofReal
-      (DiscreteConvolution.addRingConvolution (lpOneAlg.toRealSeq f) (lpOneAlg.toRealSeq g) k) :=
+      (_root_.DiscreteConvolution.addRingConvolution (lpOneAlg.toRealSeq f)
+        (lpOneAlg.toRealSeq g) k) :=
   rfl
 example (f : l1Weighted ν) (k : ℕ) : lpOneAlg.toRealSeq f k = WeightedScalar.toReal (f k) := rfl
 
@@ -364,6 +365,6 @@ example (r : ℝ) (f : l1Weighted ν) (k : ℕ) : (r • f) k = WeightedScalar.o
 
 end StandardModel
 
-end RadiiPolynomial.FiberTrivializationProbes
+end RadiiPolynomial.Tests.FT
 
 end

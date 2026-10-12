@@ -21,8 +21,11 @@ target and (ii) by rewriting (`rw` and `simp only`) with the named target.
 * ideal maps (DERIVED): I1/I2 via `Ideal.Quotient.eq_zero_iff_mem`, I3 via `Ideal.map_id`,
   I4 via `deltaU_mem_JN`.
 
-The zero-bearing targets (Z1–Z4, C1) are stored with the selected zero of `Euler`'s local instance
-selection; `ipw_zero_*` record the `rfl` witnesses between the default and the selected zero.
+The zero-bearing targets (Z1–Z4, C1) are stated in `Euler`'s `section Core` under the default
+instances of `U R`, so they carry the default zero; the local instance selection is confined to
+`section Selection` (`zero_selection_eq_existing` and the four operator-level identities).
+`ipw_zero_*` record the `rfl` witnesses between the default zero and the zero of the selected
+group `instUAddCommGroup`, which selection consumers (C2/C3 below) use.
 Outside the default build; run explicitly.
 -/
 

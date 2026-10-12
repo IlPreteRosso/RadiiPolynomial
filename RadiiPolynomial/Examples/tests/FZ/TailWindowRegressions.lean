@@ -1,3 +1,4 @@
+import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Algebra
 import RadiiPolynomial.Examples.tests.FZ.TailWindowTestSupport
 
 /-!
