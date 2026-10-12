@@ -58,12 +58,14 @@ variable {K : Type*} [DivisionRing K] [CharZero K]
 
 @[norm_cast] theorem derivativeBound_ratCast (p : CompPoly L) (R : Fin L → ℚ) :
     ((derivativeBound p R : ℚ) : K) = derivativeBound p (fun i => (R i : K)) := by
-  simp [derivativeBound, normBound_ratCast]
+  rw [derivativeBound_eq_two_mul, derivativeBound_eq_two_mul, Rat.cast_mul,
+    CompPoly.derivativeBound_ratCast, Rat.cast_ofNat]
 
 @[norm_cast] theorem derivativeLipschitzBound_ratCast (p : CompPoly L) (R : Fin L → ℚ) :
     ((derivativeLipschitzBound p R : ℚ) : K) =
       derivativeLipschitzBound p (fun i => (R i : K)) := by
-  simp [derivativeLipschitzBound, lipschitzBound_ratCast]
+  rw [derivativeLipschitzBound_eq_two_mul, derivativeLipschitzBound_eq_two_mul, Rat.cast_mul,
+    CompPoly.derivativeLipschitzBound_ratCast, Rat.cast_ofNat]
 
 end Cast
 
@@ -73,11 +75,11 @@ variable {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
 
 theorem derivativeBound_nonneg (p : CompPoly L) (R : Fin L → K) (hR : ∀ i, 0 ≤ R i) :
     0 ≤ derivativeBound p R :=
-  mul_nonneg (by norm_num) (Finset.sum_nonneg fun i _ => normBound_nonneg _ R hR)
+  mul_nonneg zero_le_two (CompPoly.derivativeBound_nonneg p R hR)
 
 theorem derivativeLipschitzBound_nonneg (p : CompPoly L) (R : Fin L → K)
     (hR : ∀ i, 0 ≤ R i) : 0 ≤ derivativeLipschitzBound p R :=
-  mul_nonneg (by norm_num) (Finset.sum_nonneg fun i _ => lipschitzBound_nonneg _ R hR)
+  mul_nonneg zero_le_two (CompPoly.derivativeLipschitzBound_nonneg p R hR)
 
 end Order
 
@@ -85,10 +87,8 @@ end Order
 theorem derivativeLipschitzBound_mono (p : CompPoly L) {R S : Fin L → ℝ}
     (hR : ∀ i, 0 ≤ R i) (hRS : ∀ i, R i ≤ S i) :
     CompPoly.Chebyshev.derivativeLipschitzBound p R ≤
-      CompPoly.Chebyshev.derivativeLipschitzBound p S := by
-  unfold CompPoly.Chebyshev.derivativeLipschitzBound
-  exact mul_le_mul_of_nonneg_left
-    (Finset.sum_le_sum fun _ _ => lipschitzBound_mono _ hR hRS) (by norm_num)
+      CompPoly.Chebyshev.derivativeLipschitzBound p S :=
+  mul_le_mul_of_nonneg_left (CompPoly.derivativeLipschitzBound_mono p hR hRS) zero_le_two
 
 @[deprecated derivativeLipschitzBound_mono (since := "2026-10-05")]
 alias chebDerivativeLipschitzBound_mono := derivativeLipschitzBound_mono
@@ -134,20 +134,17 @@ theorem norm_eval_sub_le_of_norm_sub (p : CompPoly L) (a b : Fin L → l1Chebysh
   rw [symmetrize_pi_sub]
   exact norm_symmetrize_pi_le (a - b)
 
-/-- The derivative applied to a direction, bounded by the syntactic constant. -/
+/-- The derivative applied to a direction, bounded by the syntactic constant: the
+geometry-free `CompPoly.norm_sum_pderiv_mul_le` at the symmetrized inputs, with the factor `2`
+of `‖symmetrize‖ ≤ 2` on the direction (`derivativeBound_eq_two_mul`). -/
 theorem norm_derivative_apply_le (p : CompPoly L) (a : Fin L → l1Chebyshev ν)
     (R : Fin L → ℝ) (ha : ∀ i, ‖l1Chebyshev.symmetrize (a i)‖ ≤ R i)
     (h : Fin L → l1Chebyshev ν) :
     ‖derivative p a h‖ ≤ derivativeBound p R * ‖h‖ := by
-  rw [derivative_apply]
-  refine (norm_sum_mul_pi_le _ fun i => l1Chebyshev.symmetrize (h i)).trans ?_
-  have h1 : ∑ i, ‖eval (p.pderiv i) a‖ ≤ ∑ i, (p.pderiv i).normBound R :=
-    Finset.sum_le_sum fun i _ => norm_eval_le _ a R ha
-  refine (mul_le_mul h1 (norm_symmetrize_pi_le h) (norm_nonneg _)
-    (Finset.sum_nonneg fun i _ => (norm_nonneg _).trans (norm_eval_le _ a R ha))).trans
-    (le_of_eq ?_)
-  rw [derivativeBound]
-  ring
+  rw [derivative_apply, derivativeBound_eq_two_mul]
+  refine (CompPoly.norm_sum_pderiv_mul_le p _ R ha _).trans ?_
+  nlinarith [mul_le_mul_of_nonneg_left (norm_symmetrize_pi_le h)
+    (CompPoly.derivativeBound_nonneg p R fun i => (norm_nonneg _).trans (ha i))]
 
 /-- Operator norm of the derivative from the syntactic constant. -/
 theorem norm_derivative_le (p : CompPoly L) (a : Fin L → l1Chebyshev ν)
@@ -157,7 +154,9 @@ theorem norm_derivative_le (p : CompPoly L) (a : Fin L → l1Chebyshev ν)
     (derivativeBound_nonneg p R fun i => (norm_nonneg _).trans (ha i))
     (norm_derivative_apply_le p a R ha)
 
-/-- The difference of two derivatives applied to a direction, symmetrized-displacement face. -/
+/-- The difference of two derivatives applied to a direction, symmetrized-displacement face:
+the geometry-free `CompPoly.norm_sum_pderiv_sub_mul_le` at the symmetrized inputs, with the factor
+`2` of `‖symmetrize‖ ≤ 2` on the direction (`derivativeLipschitzBound_eq_two_mul`). -/
 theorem norm_derivative_sub_apply_le (p : CompPoly L) (a b : Fin L → l1Chebyshev ν)
     (R : Fin L → ℝ) (d : ℝ)
     (ha : ∀ i, ‖l1Chebyshev.symmetrize (a i)‖ ≤ R i)
@@ -165,18 +164,12 @@ theorem norm_derivative_sub_apply_le (p : CompPoly L) (a b : Fin L → l1Chebysh
     (hd : ∀ i, ‖l1Chebyshev.symmetrize (a i) - l1Chebyshev.symmetrize (b i)‖ ≤ d)
     (hd0 : 0 ≤ d) (h : Fin L → l1Chebyshev ν) :
     ‖derivative p a h - derivative p b h‖ ≤ derivativeLipschitzBound p R * d * ‖h‖ := by
-  rw [derivative_apply, derivative_apply, ← Finset.sum_sub_distrib]
+  rw [derivative_apply, derivative_apply, ← Finset.sum_sub_distrib,
+    derivativeLipschitzBound_eq_two_mul]
   simp_rw [← sub_mul]
-  refine (norm_sum_mul_pi_le _ fun i => l1Chebyshev.symmetrize (h i)).trans ?_
-  have h1 : ∑ i, ‖eval (p.pderiv i) a - eval (p.pderiv i) b‖ ≤
-      ∑ i, (p.pderiv i).lipschitzBound R * d :=
-    Finset.sum_le_sum fun i _ => norm_eval_sub_le _ a b R d ha hb hd hd0
-  refine (mul_le_mul h1 (norm_symmetrize_pi_le h) (norm_nonneg _)
-    (Finset.sum_nonneg fun i _ => mul_nonneg
-      (lipschitzBound_nonneg _ R fun j => (norm_nonneg _).trans (ha j)) hd0)).trans
-    (le_of_eq ?_)
-  rw [← Finset.sum_mul, derivativeLipschitzBound]
-  ring
+  refine (CompPoly.norm_sum_pderiv_sub_mul_le p _ _ R d ha hb hd hd0 _).trans ?_
+  nlinarith [mul_le_mul_of_nonneg_left (norm_symmetrize_pi_le h) (mul_nonneg
+    (CompPoly.derivativeLipschitzBound_nonneg p R fun i => (norm_nonneg _).trans (ha i)) hd0)]
 
 /-- Operator-norm Lipschitz bound on the derivative, symmetrized-displacement face. -/
 theorem norm_derivative_sub_le (p : CompPoly L) (a b : Fin L → l1Chebyshev ν)
@@ -202,8 +195,8 @@ theorem norm_derivative_sub_le_of_norm_sub (p : CompPoly L) (a b : Fin L → l1C
     (le_of_eq (by ring))
   rw [← l1Chebyshev.symmetrize_CLM_apply, ← l1Chebyshev.symmetrize_CLM_apply, ← map_sub,
     l1Chebyshev.symmetrize_CLM_apply]
-  exact (l1Chebyshev.symmetrize_norm_le _).trans
-    (mul_le_mul_of_nonneg_left (norm_le_pi_norm (a - b) i) (by norm_num))
+  exact (norm_le_pi_norm (fun j => l1Chebyshev.symmetrize ((a - b) j)) i).trans
+    (norm_symmetrize_pi_le (a - b))
 
 /-- Ball-free raw-displacement face: the radii are the symmetrized inputs' own norms. -/
 theorem norm_derivative_sub_le_max (p : CompPoly L) (a b : Fin L → l1Chebyshev ν) :

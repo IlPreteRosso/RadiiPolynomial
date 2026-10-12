@@ -46,8 +46,8 @@ prescribed positive residual tolerance. No convergence assumption on the ring is
 theorem exists_finiteSupport_candidate_of_bezout
     (f b : ι → lpOneAlg M E) (hb : ∑ i, f i * b i = 1) {η : ℝ} (hη : 0 < η) :
     ∃ b₀ : ι → lpOneAlg M E,
-      (∀ i, Set.Finite {m | b₀ i m ≠ 0}) ∧ ‖residual f b₀‖ < η := by
-  exact exists_dense_candidate_of_bezout dense_lpOneAlg_finiteSupport f b hb hη
+      (∀ i, Set.Finite {m | b₀ i m ≠ 0}) ∧ ‖residual f b₀‖ < η :=
+  exists_dense_candidate_of_bezout dense_lpOneAlg_finiteSupport f b hb hη
 
 variable [HasSummableGeomSeries (lpOneAlg M E)]
 
@@ -56,7 +56,7 @@ some finite-support candidate has residual norm below one. -/
 theorem exists_bezout_iff_finiteSupport_certificate (f : ι → lpOneAlg M E) :
     (∃ b : ι → lpOneAlg M E, ∑ i, f i * b i = 1) ↔
       ∃ b₀ : ι → lpOneAlg M E,
-        (∀ i, Set.Finite {m | b₀ i m ≠ 0}) ∧ ‖residual f b₀‖ < 1 := by
-  exact exists_bezout_iff_dense_certificate dense_lpOneAlg_finiteSupport f
+        (∀ i, Set.Finite {m | b₀ i m ≠ 0}) ∧ ‖residual f b₀‖ < 1 :=
+  exists_bezout_iff_dense_certificate dense_lpOneAlg_finiteSupport f
 
 end RadiiPolynomial.Residual

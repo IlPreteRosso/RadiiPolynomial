@@ -31,6 +31,8 @@ Multiplicative half (over an additive index monoid `M`, target a Banach
 algebra `B`):
 * `lpOneAlg.single_mul_single`, `one_eq_single_zero`, `single_pow` — the unit
   singles are a copy of the index monoid inside the algebra.
+* `lpOneAlg.mulLeftCLM`, `mulRightCLM` — one-sided multiplication as continuous linear
+  maps, with operator norms at most `‖f‖` (`norm_mulLeftCLM_le`, `norm_mulRightCLM_le`).
 * `lpOneAlg.liftCLM_one`, `liftCLM_mul` — the lift of a weight-dominated monoid
   map `b : M → B` is unital and multiplicative.
 * `lpOneAlg.liftAlgHom` — the same lift bundled as `lpOneAlg M E →A[𝕜] B`,
@@ -54,6 +56,8 @@ open scoped BigOperators
 noncomputable section
 
 namespace RadiiPolynomial
+
+open _root_.DiscreteConvolution RadiiPolynomial.DiscreteConvolution
 
 /-! ### An archimedean gate on the reals
 
@@ -308,36 +312,10 @@ variable [lpAlgRingData 𝕜 M E] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E]
 /-- Singles multiply by convolution of point masses:
 `single i x * single j y = single (i+j) (x*y)`. -/
 theorem single_mul_single (i j : M) (x y : 𝕜) :
-    (single (E := E) i x) * single j y = single (i + j) (x * y) := by
-  apply ext_toRealSeq
-  funext k
-  rw [congr_fun (toRealSeq_mul_fun (single (E := E) i x) (single j y)) k,
-    toRealSeq_single, DiscreteConvolution.addRingConvolution_apply_eq]
-  by_cases hk : k = i + j
-  · subst hk
-    rw [ite_eq_left rfl]
-    rw [tsum_eq_single (⟨(i, j), by simp⟩ : DiscreteConvolution.addFiber (i + j))]
-    · rw [toRealSeq_single, toRealSeq_single, ite_eq_left rfl, ite_eq_left rfl]
-    · rintro ⟨⟨a, c⟩, hac⟩ hne
-      rw [toRealSeq_single, toRealSeq_single]
-      by_cases ha : a = i
-      · by_cases hc : c = j
-        · exact absurd (by simp [ha, hc]) hne
-        · rw [ite_eq_right hc, mul_zero]
-      · rw [ite_eq_right ha, zero_mul]
-  · rw [ite_eq_right hk]
-    have h0 : ∀ ac : DiscreteConvolution.addFiber k,
-        toRealSeq (single (E := E) i x) ac.1.1 *
-          toRealSeq (single (E := E) j y) ac.1.2 = 0 := by
-      rintro ⟨⟨a, c⟩, hac⟩
-      rw [DiscreteConvolution.mem_addFiber] at hac
-      rw [toRealSeq_single, toRealSeq_single]
-      by_cases ha : a = i
-      · by_cases hc : c = j
-        · exact absurd (by rw [← hac, ha, hc]) hk
-        · rw [ite_eq_right hc, mul_zero]
-      · rw [ite_eq_right ha, zero_mul]
-    rw [tsum_congr h0, tsum_zero]
+    (single (E := E) i x) * single j y = single (i + j) (x * y) :=
+  ext_toRealSeq <| by
+    rw [toRealSeq_mul_fun, toRealSeq_single_eq_piSingle, toRealSeq_single_eq_piSingle,
+      toRealSeq_single_eq_piSingle, single_addRingConvolution_single]
 
 omit [lpOneAlgConvCompat 𝕜 M E] in
 /-- The multiplicative unit is the single at index `0`. -/
@@ -345,7 +323,7 @@ theorem one_eq_single_zero : (1 : lpOneAlg M E) = single 0 (1 : 𝕜) := by
   apply ext_toRealSeq
   funext k
   rw [toRealSeq_single, congr_fun (toRealSeq_one_fun (E := E) (𝕜 := 𝕜)) k]
-  simp [DiscreteConvolution.addDelta, Pi.single_apply]
+  simp [addDelta, Pi.single_apply]
 
 /-- Powers of a unit single walk along the index monoid:
 `(single a 1)ⁿ = single (n • a) 1`. -/
@@ -392,6 +370,25 @@ def mulLeftCLM (f : lpOneAlg M E) : lpOneAlg M E →L[𝕜] lpOneAlg M E :=
     mulLeftCLM (𝕜 := 𝕜) f g = f * g := rfl
 
 end MulCLM
+
+section MulCLMNorm
+
+variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
+variable {M : Type*} [AddMonoid M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+variable [lpAlgRingData 𝕜 M E] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+
+/-- Left multiplication by `f` has operator norm at most `‖f‖`. -/
+theorem norm_mulLeftCLM_le (f : lpOneAlg M E) :
+    ‖(mulLeftCLM (𝕜 := 𝕜) f : lpOneAlg M E →L[𝕜] lpOneAlg M E)‖ ≤ ‖f‖ :=
+  LinearMap.mkContinuous_norm_le _ (norm_nonneg f) _
+
+/-- Right multiplication by `g` has operator norm at most `‖g‖`. -/
+theorem norm_mulRightCLM_le (g : lpOneAlg M E) :
+    ‖(mulRightCLM (𝕜 := 𝕜) g : lpOneAlg M E →L[𝕜] lpOneAlg M E)‖ ≤ ‖g‖ :=
+  LinearMap.mkContinuous_norm_le _ (norm_nonneg g) _
+
+end MulCLMNorm
 
 /-! ### The lift is multiplicative
 

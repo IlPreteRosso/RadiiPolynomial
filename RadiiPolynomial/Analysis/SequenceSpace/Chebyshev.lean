@@ -1,5 +1,6 @@
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Scalar
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Algebra
+import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Symmetrize
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UnitLift

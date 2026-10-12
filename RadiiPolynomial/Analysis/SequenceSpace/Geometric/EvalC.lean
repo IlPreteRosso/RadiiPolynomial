@@ -71,12 +71,11 @@ theorem evalC_ofReal (x : ℝ) (hx : |x| ≤ ν) (a : l1Weighted ν) :
 
 /-- **Gelfand contractivity of the transform**: the sup over the closed complex disc
 of radius `ν` of `|â|` is at most `‖a‖_ν`. Book Prop. 8.1.3 (p. 187) states exactly
-this on the complex disc (primary pin); cf. Kaniuth, Thm 2.2.7(i). In the audit
-(tmp/gelfand_design/Z_AUDIT.md) this is the *spectral floor*: the transform's sup is
-a certificate-independent lower bound on every element norm entering a bound. The
-trajectory bound `eval_traj_in_closedBall` (Applications/IVP/Taylor/Trajectory.lean)
-is this inequality on the real segment plus the triangle inequality on the certified
-ball. -/
+this on the complex disc (primary pin); cf. Kaniuth, Thm 2.2.7(i). This is the
+*spectral floor*: the supremum of the transform over the disc is a certificate-independent
+lower bound on the norm of every element entering a bound. The trajectory bound
+`eval_traj_in_closedBall` (Applications/IVP/Taylor/Trajectory.lean) is this inequality on
+the real segment plus the triangle inequality on the certified ball. -/
 theorem norm_evalC_le (a : l1Weighted ν) : ‖evalC ν z hz a‖ ≤ ‖a‖ :=
   norm_aeval_of_norm_le_apply_le ν z hz a
 
@@ -86,8 +85,7 @@ section Classification
 
 variable {ν : PosReal}
 
-/-- NEW theorem (not a promotion of the tmp complex-carrier classification, whose
-domain is the ℂ-carrier): the continuous ℝ-algebra homomorphisms of the real ℓ¹_ν
+/-- The continuous ℝ-algebra homomorphisms of the real ℓ¹_ν
 into ℂ are exactly the evaluations at the points of the closed complex disc of radius
 `ν` — the Gelfand spectrum of the complexification, stated as a hom identity without
 a `Spec` object. The disc membership is the generator gate `norm_gen_le`; the

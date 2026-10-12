@@ -1,17 +1,15 @@
 import RadiiPolynomial.Applications.IVP.Taylor.Analyticity
-import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Analytic
 
 /-!
 # Complex-time reading of the Taylor IVP
 
 IVP layer on top of `Geometric/Analytic.lean`: the same real coefficient arrays
 that make the canonical Taylor trajectory real-analytic on `(-ν, ν)`
-(`IVP.analyticOnNhd_x_analytic`, now in `Applications/IVP/Taylor/Analyticity.lean`)
+(`IVP.analyticOnNhd_x_analytic`, `Applications/IVP/Taylor/Analyticity.lean`)
 synthesize a holomorphic `complexTrajectory` on the open complex disc `|z| < ν`
 which solves the complexified polynomial vector field `complexVectorField` and
 restricts to the real trajectory on `[-ν, ν]`.
 
-Before this module production stated the real derivative identity on `(-ν, ν)` only.
 The coefficient carrier, the certificate, and `IVP.IsAnalyticSolution` are all
 unchanged: only the target algebra of the evaluation character moves from `ℝ` to `ℂ`.
 Complex-time *uniqueness* is not stated.

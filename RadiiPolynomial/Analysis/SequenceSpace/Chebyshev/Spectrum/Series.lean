@@ -12,8 +12,6 @@ boundary and `ν = 1` included. The production weighted-ℓ¹ universal lift
 `synthesis : l1Chebyshev ν →L[ℝ] (Ellipse ν →ᵇ ℂ)`, identified with the classified
 character (`synthesis_eq_character`) and giving continuity in the ellipse parameter
 plus the exact bilateral series formula `character_apply_eq_tsum`.
-
-Closes the "series description of the spectrum" part of the spectrum gap.
 -/
 
 noncomputable section

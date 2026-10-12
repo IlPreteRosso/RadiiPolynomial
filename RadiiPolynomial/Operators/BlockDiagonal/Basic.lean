@@ -1,10 +1,11 @@
-import RadiiPolynomial.Core.Bounds
-import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
+import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Scalar
 import RadiiPolynomial.Analysis.Norm.FiniteSum
-import RadiiPolynomial.Operators.Matrix.OperatorNorm
+import RadiiPolynomial.Operators.Matrix.WeightedNorm
+import Mathlib.Analysis.Calculus.FDeriv.Add
+import Mathlib.Analysis.Calculus.FDeriv.Mul
 
 /-!
-# BlockDiagSystem Base
+# Block-diagonal operator data (coefficient level)
 
 Core structural layer for Section 8.2 operators:
 - finite `L×L` block norm aggregation
@@ -20,8 +21,6 @@ open Metric Set Filter ContinuousLinearMap
 noncomputable section
 
 namespace RadiiPolynomial
-
-variable {Seq : PosReal → Type*}
 
 /-! ## 1. Finite Block-Matrix Norm Aggregation -/
 
@@ -91,31 +90,23 @@ def FiniteBlockMatrix.toMatrix (A : FiniteBlockMatrix L N) :
     (l j : Fin L) (n k : Fin (N + 1)) :
     A.toMatrix (l, n) (j, k) = A l j n k := rfl
 
-/-- Block identity flattens to matrix identity. -/
+/-- The flattening is Mathlib's `Matrix.comp` (definitionally). -/
+lemma FiniteBlockMatrix.toMatrix_eq_comp (A : FiniteBlockMatrix L N) :
+    A.toMatrix = Matrix.comp (Fin L) (Fin L) (Fin (N + 1)) (Fin (N + 1)) ℝ A := rfl
+
+/-- Block identity flattens to matrix identity (`Matrix.comp_one`). -/
 lemma FiniteBlockMatrix.toMatrix_blockId :
     FiniteBlockMatrix.toMatrix
       (fun l j => if l = j then (1 : Matrix (Fin (N+1)) (Fin (N+1)) ℝ) else 0 :
-        FiniteBlockMatrix L N) = 1 := by
-  ext ⟨l, n⟩ ⟨j, k⟩
-  simp only [FiniteBlockMatrix.toMatrix, Matrix.one_apply, Prod.mk.injEq]
-  by_cases hl : l = j
-  · subst hl
-    simp only [true_and]
-    exact ite_congr rfl (fun _ => rfl) (fun _ => rfl)
-  · simp only [hl, ite_false, Matrix.zero_apply, false_and, ite_false]
+        FiniteBlockMatrix L N) = 1 :=
+  Matrix.comp_one
 
-/-- Block-matrix product flattens to matrix product. -/
+/-- Block-matrix product flattens to matrix product (`Matrix.compRingEquiv`). -/
 lemma FiniteBlockMatrix.toMatrix_blockMul (A B : FiniteBlockMatrix L N) :
     FiniteBlockMatrix.toMatrix
       (fun l j => ∑ m : Fin L, A l m * B m j : FiniteBlockMatrix L N) =
-    A.toMatrix * B.toMatrix := by
-  ext ⟨l, n⟩ ⟨j, k⟩
-  -- LHS: (∑ m, A l m * B m j) n k
-  -- RHS: ∑ (x : Fin L × Fin (N+1)), A l x.1 n x.2 * B x.1 j x.2 k
-  show (∑ m, A l m * B m j) n k =
-    ∑ x : Fin L × Fin (N + 1), A l x.1 n x.2 * B x.1 j x.2 k
-  simp only [Matrix.sum_apply, Matrix.mul_apply]
-  rw [← Fintype.sum_prod_type']
+    A.toMatrix * B.toMatrix :=
+  (Matrix.compRingEquiv (Fin L) (Fin (N + 1)) ℝ).map_mul (Matrix.of A) (Matrix.of B)
 
 end FiniteBlockMatrix
 

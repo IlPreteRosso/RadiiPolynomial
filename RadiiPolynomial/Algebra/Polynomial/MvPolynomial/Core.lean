@@ -5,12 +5,19 @@ import Mathlib.Algebra.MvPolynomial.CommRing
 /-!
 # Generic MvPolynomial Derivative Bounds
 
-Degree-drop and constant-second-derivative lemmas independent of the weighted sequence model.
+Degree-drop and constant-second-derivative lemmas independent of the weighted sequence model,
+and the simp lemma `C_ofNat_eq` normalizing numeral constants `C n` to the numeral `n`.
 -/
 
 open MvPolynomial (C X pderiv)
 
 namespace MvPolynomial
+
+/-- `C` sends a numeral `n ≥ 2` to the same numeral of `MvPolynomial σ R`; stated in Mathlib's
+`ofNat(n)` form (as `Polynomial.C_ofNat`), so that `simp` fires on literal numerals. -/
+@[simp] theorem C_ofNat_eq {σ R : Type*} [CommSemiring R] (n : ℕ) [n.AtLeastTwo] :
+    MvPolynomial.C (ofNat(n) : R) = (ofNat(n) : MvPolynomial σ R) :=
+  map_ofNat MvPolynomial.C n
 
 variable {σ : Type*} {R : Type*} [CommSemiring R]
 
@@ -55,24 +62,5 @@ theorem pderiv_pderiv_eq_C_of_totalDegree_le_two [DecidableEq σ] (i j : σ)
     ∃ c : R, pderiv i (pderiv j p) = C c := by
   have h := totalDegree_pderiv_pderiv_eq_zero i j p hp
   exact ⟨(pderiv i (pderiv j p)).coeff 0, (totalDegree_eq_zero_iff_eq_C).mp h⟩
-
-lemma totalDegree_C_le (a : R) : (C a : MvPolynomial σ R).totalDegree ≤ 0 :=
-  le_of_eq (totalDegree_C a)
-
-lemma totalDegree_X_le [Nontrivial R] (i : σ) :
-    (X i : MvPolynomial σ R).totalDegree ≤ 1 :=
-  le_of_eq (totalDegree_X i)
-
-lemma totalDegree_add_le (p q : MvPolynomial σ R) :
-    (p + q).totalDegree ≤ p.totalDegree + q.totalDegree :=
-  (totalDegree_add _ _).trans (max_le (Nat.le_add_right _ _) (Nat.le_add_left _ _))
-
-lemma totalDegree_sub_le {R : Type*} [CommRing R] (p q : MvPolynomial σ R) :
-    (p - q).totalDegree ≤ p.totalDegree + q.totalDegree :=
-  (totalDegree_sub _ _).trans (max_le (Nat.le_add_right _ _) (Nat.le_add_left _ _))
-
-lemma totalDegree_neg_le {R : Type*} [CommRing R] (p : MvPolynomial σ R) :
-    (-p).totalDegree ≤ p.totalDegree :=
-  le_of_eq (totalDegree_neg _)
 
 end MvPolynomial

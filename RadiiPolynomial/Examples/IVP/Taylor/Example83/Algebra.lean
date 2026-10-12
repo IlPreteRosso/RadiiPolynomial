@@ -1,5 +1,6 @@
 import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Certification.LeanCertAdapter
+import RadiiPolynomial.Certification.IVP.Taylor
 import RadiiPolynomial.Tactic.AutoPolyFDeriv
 import RadiiPolynomial.Algebra.Polynomial
 import RadiiPolynomial.Examples.IVP.Taylor.Example83.Numbers
@@ -86,8 +87,7 @@ lemma f_eq_spec (a : XL1 ν_val L) (l : Fin L) :
 the IVP Taylor recurrence `IVP.ivpCoeffs`:
   `F(a)_l(0) = a_l(0) − x₀(l)`,
   `F(a)_l(n+1) = (n+1)·a_l(n+1) − f(a)_l(n)`.
-Codomain is the raw coefficient sequence `SystemCoeff L = Fin L → ℕ → ℝ`
-(see `project_ivp_codomain_design`). -/
+Codomain is the raw coefficient sequence `SystemCoeff L = Fin L → ℕ → ℝ`. -/
 def F (a : XL1 ν_val L) : SystemCoeff L :=
   fun l n => IVP.ivpCoeffs f x₀ a l n
 
@@ -176,50 +176,33 @@ lemma F_bridge (l : Fin L) (n : ℕ) :
 
 private lemma abar_toSeq_zero (l : Fin L) (k : ℕ) (hk : N < k) :
     l1Weighted.toSeq (data.abar l) k = 0 := by
-  rw [data.abar_toSeq_eq]; show ((abar_Q l).getD k 0 : ℝ) = 0
-  have hsz : (abar_Q l).size = N + 1 := by
-    fin_cases l <;> simp [abar_Q, abar_0, abar_1, abar_2]
-  have : ¬(k < (abar_Q l).size) := by omega
-  simp [Array.getD, this]
+  rw [data.abar_toSeq_eq, data.abar_Q_getD_eq_zero l k hk, Rat.cast_zero]
+
+/-- The support index of `F(ā)` read off the syntax: `supportM f_cpoly N = 2N + 1`. -/
+private lemma supportM_eq : IVP.supportM f_cpoly N = 2 * N + 1 := by decide
 
 lemma f_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N < n) :
     l1Weighted.toSeq (f data.abar l) n = 0 := by
-  have ha' : ∀ i : Fin L, ∀ k, N < k → l1Weighted.toSeq (data.abar i) k = 0 :=
-    fun i k hk => abar_toSeq_zero i k hk
-  have h02 : l1Weighted.toSeq (data.abar 0 * data.abar 2) n = 0 := by
-    rw [l1Weighted.toSeq_mul]; exact CauchyProduct.zero_of_support (ha' 0) (ha' 2) n hn
-  have h01 : l1Weighted.toSeq (data.abar 0 * data.abar 1) n = 0 := by
-    rw [l1Weighted.toSeq_mul]; exact CauchyProduct.zero_of_support (ha' 0) (ha' 1) n hn
-  fin_cases l
-  · show σ_val * (l1Weighted.toSeq (data.abar 1) n - l1Weighted.toSeq (data.abar 0) n) = 0
-    rw [ha' 0 n (by omega), ha' 1 n (by omega)]; ring
-  · show ρ_val * l1Weighted.toSeq (data.abar 0) n - l1Weighted.toSeq (data.abar 1) n -
-        l1Weighted.toSeq (data.abar 0 * data.abar 2) n = 0
-    rw [ha' 0 n (by omega), ha' 1 n (by omega), h02]; ring
-  · show -(β_val * l1Weighted.toSeq (data.abar 2) n) +
-        l1Weighted.toSeq (data.abar 0 * data.abar 1) n = 0
-    rw [ha' 2 n (by omega), h01]; ring
+  have h := data.ivpCoeffs_abar_eq_zero_of_compPoly f_cpoly x₀ l (n + 1)
+    (by rw [supportM_eq]; omega)
+  change ((n : ℝ) + 1) * l1Weighted.toSeq (data.abar l) (n + 1) -
+    l1Weighted.toSeq (f data.abar l) n = 0 at h
+  rwa [abar_toSeq_zero l (n + 1) (by omega), mul_zero, zero_sub, neg_eq_zero] at h
 
 lemma F_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
-    IVP.ivpCoeffs f x₀ data.abar l n = 0 := by
-  obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
-  show ((m : ℝ) + 1) * l1Weighted.toSeq (data.abar l) (m + 1) -
-    l1Weighted.toSeq (f data.abar l) m = 0
-  rw [abar_toSeq_zero l (m + 1) (by omega), f_abar_support l m (by omega)]; ring
+    IVP.ivpCoeffs f x₀ data.abar l n = 0 :=
+  data.ivpCoeffs_abar_eq_zero_of_compPoly f_cpoly x₀ l n (supportM_eq ▸ hn)
 
 lemma F_abar_mem (l : Fin L) :
-    l1Weighted.Mem ν_val (F data.abar l) := by
-  rw [l1Weighted.mem_iff]
-  exact summable_of_ne_finset_zero (s := Finset.Icc 0 (2 * N + 1)) fun n hn => by
-    simp only [Finset.mem_Icc, not_and_or, not_le] at hn
-    simp [F, F_abar_support l n (by omega)]
+    l1Weighted.Mem ν_val (F data.abar l) :=
+  data.ivpCoeffs_abar_mem_of_compPoly f_cpoly x₀ l
 
 /-! ## 8. Norm bounds for ā components -/
 
 lemma abar_norm_0_le : ‖data.abar 0‖ ≤ (20 : ℝ) := by
   rw [l1Weighted.norm_eq_Icc_sum_of_support _ N
     (fun n hn => abar_toSeq_zero 0 n hn)]
-  -- `finsum_bound` now requires a literal range endpoint, so unfold `N` first.
+  -- `finsum_bound` requires a literal range endpoint, so unfold `N` first.
   simp only [N]
   show _ ≤ ((20 : ℚ) : ℝ); finsum_bound using
     (weightedTermEval (abar_Q 0) ν_q)

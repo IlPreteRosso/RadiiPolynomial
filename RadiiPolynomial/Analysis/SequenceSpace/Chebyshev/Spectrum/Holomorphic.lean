@@ -14,8 +14,7 @@ coefficient radius. Scalar restriction then gives real analyticity of the *produ
 evaluator on a neighbourhood of the closed interval, endpoints included, whenever
 `1 < ν` (`analyticOnNhd_eval_Icc`, `analyticAt_eval_endpoints`).
 
-Closes the Chebyshev analyticity gap: the production predicate asserted continuity and
-a one-sided derivative only.
+`Applications/IVP/Chebyshev/Analyticity.lean` consumes `analyticOnNhd_eval_Icc`.
 -/
 
 noncomputable section

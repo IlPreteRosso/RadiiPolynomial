@@ -96,7 +96,7 @@ lemma R_traj_contractive_le_one : R_traj_contractive ≤ 1 := by
   linarith
 
 /-- **Example 14.2.1 at radius `1`.** The contractive evaluation bound at `ν = 2`
-halves the previous round trajectory ball. -/
+gives the round trajectory radius `1` (`R_traj_contractive_le_one`). -/
 theorem main_solution_existsUnique_radius_one :
     ∃ g : ℝ → Fin L → ℝ, ChebyshevIVP.IsSolution (IVP.vectorField f_cpoly) p₀ 1 g ∧
       ∀ g' : ℝ → Fin L → ℝ, ChebyshevIVP.IsSolution (IVP.vectorField f_cpoly) p₀ 1 g' →

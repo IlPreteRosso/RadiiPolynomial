@@ -6,9 +6,17 @@ import RadiiPolynomial.Certification.PowerSeries.PolynomialZero
 /-!
 # Example 7.7 — Certificate
 
-Computer-assisted proof for `x² - λ = 0`.
-To switch parameters: comment/uncomment the numerical input blocks below.
-All proof code below is **identical** regardless of which parameter set is active.
+Computer-assisted proof for `x² - λ = 0` at `λ₀ = 1/3`.
+
+`main_theorem` goes through `data : PolyZeroData` (the member `P = X·X` of the
+polynomial-zero family) and `PolyZeroData.existsUnique`; `data_checks` checks every
+bound in `ℚ` with one `decide +kernel`. `data` refers to `ā₀ ā₁ ā₂`, `lam0`, `ν_q` and `r₀`
+by name and writes the `A` columns and the four bounds as literals (equal to `A_colOf` and
+`Y₀_bound` … `Z₂_bound`).
+
+The lemmas `Y₀_le`, `Z₀_le`, `Z₁_le`, `A_norm_le`, `Z₂_le`, `radii_neg` and `A_injective`
+are the hand route over `ScalarBlockDiagData` (`finsum_bound`, `finmatrix_bound`,
+`leancert`) for the same constants; `main_theorem` does not consume them.
 
 All parameter defs are ℚ. Lean auto-coerces ℚ → ℝ wherever ℝ is expected.
 -/
@@ -20,9 +28,8 @@ noncomputable section
 
 namespace Example77.Cert
 
-/-! ## Numerical Input — swap this block to change parameters -/
+/-! ## Numerical input (λ₀ = 1/3) -/
 
--- Parameter set 1: λ₀ = 1/3
 def ā₀ : ℚ := 5774/10000
 def ā₁ : ℚ := 8660/10000
 def ā₂ : ℚ := -6495/10000
@@ -37,22 +44,7 @@ def Z₀_bound : ℚ := 2/1000
 def Z₁_bound : ℚ := 46/100
 def Z₂_bound : ℚ := 28/10
 
--- -- Parameter set 2: λ₀ = 1/2
--- def ā₀ : ℚ := 7071/10000
--- def ā₁ : ℚ := 7071/10000
--- def ā₂ : ℚ := -3536/10000
--- def lam0 : ℚ := 1/2
--- def r₀ : ℚ := 5/100
--- def A_diag : ℚ := 7071/10000
--- def A_sub1 : ℚ := -7071/10000
--- def A_sub2 : ℚ := 10607/10000
--- def Y₀_bound : ℚ := 7/1000
--- def Z₀_bound : ℚ := 1/1000
--- def Z₁_bound : ℚ := 3/10
--- def Z₂_bound : ℚ := 2
-
-
-/-! ## Derived Definitions — identical for any input -/
+/-! ## Derived definitions -/
 
 noncomputable def ν_val : PosReal := ⟨ν_q, by unfold ν_q; norm_num⟩
 
@@ -161,7 +153,10 @@ private lemma A_tailDiag_eq (n : ℕ) :
   simp [A_inv, approxInverse, ScalarBlockDiagData.ofParts, ScalarBlockDiagData.tailDiag0,
     A_tail_coeff, sol, ā₀]
 
-/-! ## Bound Proofs — finsum_bound / leancert discharge all numerical steps -/
+/-! ## Hand route (not consumed by `main_theorem`)
+
+Bounds over `ScalarBlockDiagData`; `finsum_bound`, `finmatrix_bound` and `leancert`
+discharge the numerical steps. -/
 
 /-! ### Y₀ -/
 
@@ -287,9 +282,12 @@ lemma A_injective :
 /-! ## Main Theorem
 
 The equation is the member `P = X·X` of the polynomial-zero family, with the same `x̄`, `A`
-columns, radius and bounds as above; one `decide +kernel` checks every bound in `ℚ`. -/
+columns, radius and bounds as above (the `A` columns and bounds written as literals in
+`data`); one `decide +kernel`
+checks every bound in `ℚ`. `main_theorem` goes through `data` and does not use the hand
+route above. -/
 
-/-- The certificate data of parameter set 1 as a `PolyZeroData`. -/
+/-- The certificate data (`λ₀ = 1/3`) as a `PolyZeroData`. -/
 def data : PolyZeroData where
   P := .mul (.X 0) (.X 0)
   N := 2

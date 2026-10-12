@@ -130,29 +130,17 @@ variable (f : (Fin L → ℝ) → Fin L → ℝ) (xTilde : XCheb ν L)
 lemma x_sol_mem_closedBall {r₀ R : ℝ}
     (hball : xTilde ∈ closedBall (abar d) r₀) (hR : 2 * (‖abar d‖ + r₀) ≤ R)
     {t : ℝ} (ht : t ∈ Icc (-1 : ℝ) 1) :
-    x_sol xTilde t ∈ closedBall (0 : Fin L → ℝ) R := by
-  have hnorm : ‖xTilde‖ ≤ ‖abar d‖ + r₀ := by
-    have h := mem_closedBall.mp hball
-    rw [dist_eq_norm] at h
-    have := norm_add_le (abar d) (xTilde - abar d)
-    rw [add_sub_cancel] at this
-    linarith
-  exact closedBall_subset_closedBall (by linarith)
-    (eval_traj_in_closedBall xTilde ht)
+    x_sol xTilde t ∈ closedBall (0 : Fin L → ℝ) R :=
+  closedBall_subset_closedBall
+    (by linarith [norm_le_of_mem_closedBall hball]) (eval_traj_in_closedBall xTilde ht)
 
 /-- At weights `ν ≥ 2`, the trajectory of a point of the certificate ball stays in
 `closedBall 0 R` as soon as `R` dominates `‖ā‖ + r₀`. -/
 lemma x_sol_mem_closedBall_of_two_le (hν : (2 : ℝ) ≤ (ν : ℝ)) {r₀ R : ℝ}
     (hball : xTilde ∈ closedBall (abar d) r₀) (hR : ‖abar d‖ + r₀ ≤ R)
     {t : ℝ} (ht : t ∈ Icc (-1 : ℝ) 1) :
-    x_sol xTilde t ∈ closedBall (0 : Fin L → ℝ) R := by
-  have hnorm : ‖xTilde‖ ≤ ‖abar d‖ + r₀ := by
-    have h := mem_closedBall.mp hball
-    rw [dist_eq_norm] at h
-    have := norm_add_le (abar d) (xTilde - abar d)
-    rw [add_sub_cancel] at this
-    linarith
-  exact closedBall_subset_closedBall (hnorm.trans hR)
+    x_sol xTilde t ∈ closedBall (0 : Fin L → ℝ) R :=
+  closedBall_subset_closedBall ((norm_le_of_mem_closedBall hball).trans hR)
     (eval_traj_in_closedBall_of_two_le hν xTilde ht)
 
 /-- **Existence**: the T-series of a certified zero solves the IVP on `[-1, 1]`. -/

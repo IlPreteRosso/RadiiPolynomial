@@ -18,42 +18,6 @@ noncomputable section
 
 namespace RadiiPolynomial
 
-/-! ### Bridge lemma for downstream use -/
-
-/-- The fiber norm of `lpAlgRingData.ofReal k r` for ScaledRealZ equals `|r| * ν^{|k|}`. -/
-@[simp] theorem ScaledRealZ.norm_lpAlgRingData_ofReal (ν : PosReal) (k : ℤ) (r : ℝ) :
-    ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) k r‖ = |r| * (ν : ℝ) ^ k.natAbs :=
-  WeightedScalar.norm_ofReal r
-
-/-! ### Bilateral finite-support norm (index ℤ, any fibers) -/
-
-/-- The norm of an element supported in `|k| ≤ N` as a finite bilateral sum. -/
-theorem lpOneAlg.norm_eq_bilatFinSum {E : ℤ → Type*} [∀ k, NormedAddCommGroup (E k)]
-    (f : lpOneAlg ℤ E) (N : ℕ)
-    (h_tail : ∀ n : ℕ, N < n → ‖f (↑n : ℤ)‖ = 0)
-    (h_negtail : ∀ n : ℕ, N < n + 1 → ‖f (Int.negSucc n)‖ = 0) :
-    ‖f‖ = (∑ n : Fin (N + 1), ‖f (↑(n : ℕ) : ℤ)‖)
-      + ∑ n : Fin N, ‖f (Int.negSucc (n : ℕ))‖ := by
-  set g : ℤ → ℝ := fun k => ‖f k‖ with hg_def
-  have hg_summ : Summable g := lpOneAlg.summable_norm f
-  have h_nat : Summable (fun n : ℕ => g ↑n) :=
-    hg_summ.comp_injective fun _ _ h => by omega
-  have h_neg : Summable (fun n : ℕ => g (-(↑n + 1))) :=
-    hg_summ.comp_injective fun _ _ h => by omega
-  rw [lpOneAlg.norm_eq_tsum f, tsum_of_nat_of_neg_add_one h_nat h_neg]
-  congr 1
-  · rw [tsum_eq_sum (s := Finset.range (N + 1))
-      (fun n hn => h_tail n (by simp [Finset.mem_range] at hn; omega))]
-    rw [← Fin.sum_univ_eq_sum_range]
-  · rw [tsum_eq_sum (s := Finset.range N) (fun n hn => by
-      show ‖f (-(↑n + 1 : ℤ))‖ = 0
-      rw [show -(↑n + 1 : ℤ) = Int.negSucc n from by omega]
-      exact h_negtail n (by simp [Finset.mem_range] at hn; omega))]
-    rw [← Fin.sum_univ_eq_sum_range]
-    exact Finset.sum_congr rfl fun n _ => by
-      show ‖f (-(↑(n : ℕ) + 1 : ℤ))‖ = _
-      rw [show -(↑(n : ℕ) + 1 : ℤ) = Int.negSucc n from by omega]
-
 /-! ### l1Chebyshev: the Chebyshev Banach algebra -/
 
 /-- Chebyshev ℓ¹ Banach algebra: ℤ-indexed sequences with norm `∑|a_k|·ν^{|k|}`
@@ -66,6 +30,9 @@ variable {ν : PosReal}
 
 /-- Extract underlying ℝ-valued sequence. -/
 def toSeq (f : l1Chebyshev ν) : ℤ → ℝ := lpOneAlg.toRealSeq f
+
+/-- The Chebyshev coefficient map is the generic `lpOneAlg.toRealSeq` (definitionally). -/
+lemma toSeq_eq_toRealSeq (a : l1Chebyshev ν) : toSeq a = lpOneAlg.toRealSeq a := rfl
 
 @[simp] lemma toSeq_add (f g : l1Chebyshev ν) (m : ℤ) :
     toSeq (f + g) m = toSeq f m + toSeq g m :=
@@ -81,14 +48,6 @@ def toSeq (f : l1Chebyshev ν) : ℤ → ℝ := lpOneAlg.toRealSeq f
 example [Fact (1 ≤ (ν : ℝ))] : NormedRing (l1Chebyshev ν) := inferInstance
 example [Fact (1 ≤ (ν : ℝ))] : NormedCommRing (l1Chebyshev ν) := inferInstance
 example [Fact (1 ≤ (ν : ℝ))] : NormedAlgebra ℝ (l1Chebyshev ν) := inferInstance
-
-/-- Left multiplication CLM. -/
-noncomputable abbrev leftMul [Fact (1 ≤ (ν : ℝ))] (a : l1Chebyshev ν) :
-    l1Chebyshev ν →L[ℝ] l1Chebyshev ν :=
-  letI : Algebra ℝ (l1Chebyshev ν) := lpOneAlg.instAlgebra
-  letI : IsScalarTower ℝ (l1Chebyshev ν) (l1Chebyshev ν) := IsScalarTower.right
-  letI : SMulCommClass ℝ (l1Chebyshev ν) (l1Chebyshev ν) := Algebra.to_smulCommClass
-  ContinuousLinearMap.mul ℝ (l1Chebyshev ν) a
 
 /-! ### toSeq bridges -/
 
@@ -107,11 +66,39 @@ noncomputable abbrev leftMul [Fact (1 ≤ (ν : ℝ))] (a : l1Chebyshev ν) :
     toSeq (r • f) m = r * toSeq f m :=
   congr_fun (lpOneAlg.toRealSeq_smul r f) m
 
+/-- Extensionality split along `ℤ = ℕ ⊔ negSucc ℕ`: two elements with the same coefficients
+at the nonnegative and at the strictly negative modes are equal. -/
+theorem ext_natCast_negSucc {f g : l1Chebyshev ν}
+    (hn : ∀ n : ℕ, toSeq f n = toSeq g n)
+    (hm : ∀ m : ℕ, toSeq f (Int.negSucc m) = toSeq g (Int.negSucc m)) : f = g :=
+  lpOneAlg.ext_toRealSeq (funext fun k => by
+    cases k with
+    | ofNat n => exact hn n
+    | negSucc m => exact hm m)
+
 /-- The fiber norm in `toSeq` form: `‖a k‖ = |toSeq a k| · ν^{|k|}`. -/
 lemma norm_fiber (a : l1Chebyshev ν) (k : ℤ) :
     ‖a k‖ = |toSeq a k| * (ν : ℝ) ^ k.natAbs := by
   rw [lpOneAlg.norm_eq_abs_toReal_mul_weight]
   simp [Real.norm_eq_abs, toSeq]
+
+end l1Chebyshev
+
+/-! ### Nonnegative modes -/
+
+/-- Norm sums restricted to nonnegative modes are summable. -/
+lemma summable_norm_natCast {ν : PosReal} (c : l1Chebyshev ν) :
+    Summable (fun n : ℕ => ‖c (↑n : ℤ)‖) :=
+  (lpOneAlg.summable_norm c).comp_injective Nat.cast_injective
+
+/-- Fiber norm at a nonnegative mode: `‖c_m‖ = |c_m|·ν^m` (`l1Chebyshev.norm_fiber` at `k = m`). -/
+lemma norm_fiber_natCast {ν : PosReal} (c : l1Chebyshev ν) (m : ℕ) :
+    ‖c (↑m : ℤ)‖ = |l1Chebyshev.toSeq c ↑m| * (ν : ℝ) ^ m := by
+  rw [l1Chebyshev.norm_fiber, Int.natAbs_natCast]
+
+namespace l1Chebyshev
+
+variable {ν : PosReal}
 
 /-! ### Singles -/
 
@@ -170,13 +157,21 @@ lemma finsum_norm_le_of_cols (W : l1Chebyshev ν →L[ℝ] l1Chebyshev ν) (N : 
 
 /-! ### Finite sums -/
 
-/-- `toSeq` commutes with finite sums. -/
+/-- `toSeq` commutes with finite sums: the generic `lpOneAlg.toRealSeq_finset_sum` read through
+`toSeq_eq_toRealSeq`. -/
 theorem toSeq_finset_sum {ι : Type*} (s : Finset ι) (x : ι → l1Chebyshev ν) (k : ℤ) :
-    l1Chebyshev.toSeq (∑ i ∈ s, x i) k = ∑ i ∈ s, l1Chebyshev.toSeq (x i) k := by
-  classical
-  induction s using Finset.induction_on with
-  | empty => simp
-  | insert a s ha ih => rw [Finset.sum_insert ha, Finset.sum_insert ha, l1Chebyshev.toSeq_add, ih]
+    l1Chebyshev.toSeq (∑ i ∈ s, x i) k = ∑ i ∈ s, l1Chebyshev.toSeq (x i) k :=
+  lpOneAlg.toRealSeq_finset_sum s x k
+
+/-- Nonnegative-mode subseries bound: `∑_{k ≤ N} |a_k| ν^k ≤ ‖a‖`, for every `ν`. -/
+theorem finSum_le_norm {N : ℕ} (f : l1Chebyshev ν) :
+    ∑ k : Fin (N + 1), |toSeq f (↑(k : ℕ) : ℤ)| * (ν : ℝ) ^ (k : ℕ) ≤ ‖f‖ := by
+  simp_rw [← norm_fiber_natCast]
+  calc ∑ k : Fin (N + 1), ‖f (↑(k : ℕ) : ℤ)‖
+      = ∑' k : Fin (N + 1), ‖f (↑(k : ℕ) : ℤ)‖ := (tsum_fintype _).symm
+    _ ≤ ∑' m : ℤ, ‖f m‖ := tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm f)
+        (fun _ => norm_nonneg _) fun a b h => Fin.ext (Nat.cast_injective h)
+    _ = ‖f‖ := (lpOneAlg.norm_eq_tsum f).symm
 
 /-- Fiberwise triangle inequality over a finite sum. -/
 theorem norm_fiber_sum_le {ι : Type*} (s : Finset ι) (x : ι → l1Chebyshev ν) (k : ℤ) :

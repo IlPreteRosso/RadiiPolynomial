@@ -27,16 +27,13 @@ nonlinearity `Φ ∈ 𝕜[X₀]`, `Φ̂(a) = aeval a Φ`, in six layers:
    `r = 0` on the head);
 5. the degree window `(d − 1) N + max (N + 1) K₀`, equal to `d N + 1` when `d ≥ 1` and
    `K₀ ≤ N + 1` (`window_deg_eq`);
-6. the Γ majorant `‖DG(ā) − B₀‖ ≤ (‖M P Γ‖ + C) ‖β‖` over the L004 Γ diagonal (`𝕜` a normed
+6. the Γ majorant `‖DG(ā) − B₀‖ ≤ (‖M P Γ‖ + C) ‖β‖` over the Γ diagonal of `Fourier/GammaLeakage` (`𝕜` a normed
    `ℝ`-algebra).
 
 The Γ majorant is a universal head bound: it is NOT the exact window norm of layer 4. The
 first-order family `λ_k = i k` (first-tail bound `1/(N + 1)`, `K₀ = 1`, window `N + m + 1`) is the
 specialization in `Applications/Fourier/SemilinearFirstOrder.lean`; no first-tail bound or
 first-tail window is assumed here.
-
-Promoted from the S028b `FourierSemilinear` / `FourierSemilinearGamma` sources by unit
-L005-FourierSemilinear (see `RENAMES.md`).
 -/
 
 noncomputable section
@@ -97,19 +94,22 @@ def headDiag {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal} (N : ℕ) (lam : �
 section
 variable {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal}
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ 𝕜 ν)
+local notation "𝓟[" N "]" => (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : 𝓔 →L[𝕜] 𝓔)
+
 /-- Coefficient face of the head diagonal. -/
-theorem toRealSeq_headDiag (N : ℕ) (lam : ℤ → 𝕜) (a : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (k : ℤ) :
-    lpOneAlg.toRealSeq ((headDiag N lam : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) a) k = lamHead N lam k * lpOneAlg.toRealSeq a k :=
+theorem toRealSeq_headDiag (N : ℕ) (lam : ℤ → 𝕜) (a : 𝓔) (k : ℤ) :
+    lpOneAlg.toRealSeq ((headDiag N lam : 𝓔 →L[𝕜] 𝓔) a) k = lamHead N lam k * lpOneAlg.toRealSeq a k :=
   lpOneAlg.toRealSeq_diagCLM _ _ _ a k
 
 /-- Atom face of the head diagonal. -/
 theorem headDiag_single (N : ℕ) (lam : ℤ → 𝕜) (k : ℤ) (x : 𝕜) :
-    (headDiag N lam : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lpOneAlg.single k x) = (lpOneAlg.single k (lamHead N lam k * x) : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :=
+    (headDiag N lam : 𝓔 →L[𝕜] 𝓔) (lpOneAlg.single k x) = (lpOneAlg.single k (lamHead N lam k * x) : 𝓔) :=
   lpOneAlg.diagCLM_single _ _ _ k x
 
 /-- `P Λ_H = Λ_H`. -/
 theorem headProj_comp_headDiag (N : ℕ) (lam : ℤ → 𝕜) :
-    (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) ∘L (headDiag N lam : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) = (headDiag N lam : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) := by
+    𝓟[N] ∘L (headDiag N lam : 𝓔 →L[𝕜] 𝓔) = (headDiag N lam : 𝓔 →L[𝕜] 𝓔) := by
   refine ContinuousLinearMap.ext fun a => lpOneAlg.ext_toRealSeq (funext fun k => ?_)
   rw [ContinuousLinearMap.comp_apply, lpOneAlg.toRealSeq_headProj, toRealSeq_headDiag]
   by_cases hk : k ∈ winZ N
@@ -118,7 +118,7 @@ theorem headProj_comp_headDiag (N : ℕ) (lam : ℤ → 𝕜) :
 
 /-- `Λ_H P = Λ_H`. -/
 theorem headDiag_comp_headProj (N : ℕ) (lam : ℤ → 𝕜) :
-    (headDiag N lam : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) ∘L (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) = (headDiag N lam : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) := by
+    (headDiag N lam : 𝓔 →L[𝕜] 𝓔) ∘L 𝓟[N] = (headDiag N lam : 𝓔 →L[𝕜] 𝓔) := by
   refine ContinuousLinearMap.ext fun a => lpOneAlg.ext_toRealSeq (funext fun k => ?_)
   rw [ContinuousLinearMap.comp_apply, toRealSeq_headDiag, toRealSeq_headDiag,
     lpOneAlg.toRealSeq_headProj]
@@ -126,25 +126,18 @@ theorem headDiag_comp_headProj (N : ℕ) (lam : ℤ → 𝕜) :
   · rw [ite_eq_left hk]
   · simp only [lamHead, ite_eq_right hk, zero_mul]
 
-/-- A bounded diagonal vanishing on the head window annihilates the head: `D_r P = 0`. -/
+/-- A bounded diagonal vanishing on the head window annihilates the head: `D_r P = 0` (the
+`winZ N` instance of `lpOneAlg.diagCLM_comp_headProj`). -/
 theorem diagCLM_comp_headProj_of_head_zero (N : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C)
     (hr0 : ∀ k : ℤ, k.natAbs ≤ N → r k = 0) :
-    (lpOneAlg.diagCLM (G := geomFiberZ 𝕜 ν) r C hr : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) ∘L (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) = 0 := by
-  refine ContinuousLinearMap.ext fun a => lpOneAlg.ext_toRealSeq (funext fun k => ?_)
-  rw [ContinuousLinearMap.comp_apply, lpOneAlg.toRealSeq_diagCLM, lpOneAlg.toRealSeq_headProj,
-    zero_apply, lpOneAlg.toRealSeq_zero, Pi.zero_apply]
-  by_cases hk : k ∈ winZ N
-  · rw [hr0 k (mem_winZ.mp hk), zero_mul]
-  · rw [ite_eq_right hk, mul_zero]
+    (lpOneAlg.diagCLM (G := geomFiberZ 𝕜 ν) r C hr : 𝓔 →L[𝕜] 𝓔) ∘L 𝓟[N] = 0 :=
+  lpOneAlg.diagCLM_comp_headProj (winZ N) r C hr fun k hk => hr0 k (mem_winZ.mp hk)
 
-/-- Coefficient extraction commutes with a finite sum. -/
-theorem toRealSeq_finset_sum {ι : Type*} (s : Finset ι) (a : ι → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (k : ℤ) :
-    lpOneAlg.toRealSeq (∑ i ∈ s, a i) k = ∑ i ∈ s, lpOneAlg.toRealSeq (a i) k := by
-  classical
-  induction s using Finset.induction_on with
-  | empty => simp only [Finset.sum_empty, lpOneAlg.toRealSeq_zero, Pi.zero_apply]
-  | @insert i s hi ih =>
-    simp only [Finset.sum_insert hi, lpOneAlg.toRealSeq_add, Pi.add_apply, ih]
+/-- Coefficient extraction commutes with a finite sum (the carrier instance of
+`lpOneAlg.toRealSeq_finset_sum`). -/
+theorem toRealSeq_finset_sum {ι : Type*} (s : Finset ι) (a : ι → 𝓔) (k : ℤ) :
+    lpOneAlg.toRealSeq (∑ i ∈ s, a i) k = ∑ i ∈ s, lpOneAlg.toRealSeq (a i) k :=
+  lpOneAlg.toRealSeq_finset_sum s a k
 
 end
 
@@ -155,9 +148,11 @@ def headEmbed {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal} (N : ℕ) (y : �
 section
 variable {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal}
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ 𝕜 ν)
+
 /-- Coefficient face of the head embedding. -/
 theorem toRealSeq_headEmbed (N : ℕ) (y : ℤ → 𝕜) (k : ℤ) :
-    lpOneAlg.toRealSeq (headEmbed N y : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) k = if k ∈ winZ N then y k else 0 := by
+    lpOneAlg.toRealSeq (headEmbed N y : 𝓔) k = if k ∈ winZ N then y k else 0 := by
   simp only [headEmbed, toRealSeq_finset_sum, lpOneAlg.toRealSeq_single, Finset.sum_ite_eq]
 
 end
@@ -185,10 +180,13 @@ def beta {𝕜 : Type*} [NormedField 𝕜] [CompleteSpace 𝕜] {ν : PosReal} [
 section
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ 𝕜 ν)
+local notation "𝓛[" b "]" => (lpOneAlg.mulLeftCLM (𝕜 := 𝕜) b : 𝓔 →L[𝕜] 𝓔)
+
 /-- The polynomial nonlinearity has derivative `L_{Φ̂′(ā)}` at `ā`. -/
-theorem hasFDerivAt_phiHat (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
-    HasFDerivAt (phiHat Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lpOneAlg.mulLeftCLM (𝕜 := 𝕜) (phiHatDeriv Φ abar) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar := by
-  let diagonal : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] (Fin 1 → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :=
+theorem hasFDerivAt_phiHat (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔) :
+    HasFDerivAt (phiHat Φ : 𝓔 → 𝓔) 𝓛[phiHatDeriv Φ abar] abar := by
+  let diagonal : 𝓔 →L[𝕜] (Fin 1 → 𝓔) :=
     ContinuousLinearMap.pi (fun _ : Fin 1 => ContinuousLinearMap.id 𝕜 _)
   have hlinear : (MvPolynomial.polynomialDerivative (𝕜 := 𝕜) Φ (fun _ : Fin 1 => abar)) ∘L
       diagonal = lpOneAlg.mulLeftCLM (𝕜 := 𝕜) (phiHatDeriv Φ abar) := by
@@ -207,8 +205,10 @@ end
 section
 variable {𝕜 : Type*} [NormedField 𝕜] [CompleteSpace 𝕜] {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ 𝕜 ν)
+
 /-- Under a band-`N` centre and `deg q ≤ e`, `q(ā)` has band `e N`. -/
-theorem band_aeval (N e : ℕ) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
+theorem band_aeval (N e : ℕ) (abar : 𝓔)
     (habar : ∀ i : ℤ, N < i.natAbs → lpOneAlg.toRealSeq abar i = 0)
     (q : MvPolynomial (Fin 1) 𝕜) (hdeg : q.totalDegree ≤ e) :
     ∀ k : ℤ, e * N < k.natAbs →
@@ -228,7 +228,7 @@ theorem band_aeval (N e : ℕ) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
     band_pow N abar habar (mon 0) k ((Nat.mul_le_mul_right N he).trans_lt hk), smul_zero]
 
 /-- Under a band-`N` centre and `deg ∂₀Φ ≤ d − 1`, `β` has band `(d − 1) N`. -/
-theorem band_beta (N d : ℕ) (τ : 𝕜) (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
+theorem band_beta (N d : ℕ) (τ : 𝕜) (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔)
     (habar : ∀ i : ℤ, N < i.natAbs → lpOneAlg.toRealSeq abar i = 0)
     (hdeg : (MvPolynomial.pderiv 0 Φ).totalDegree ≤ d - 1) :
     ∀ i : ℤ, (d - 1) * N < i.natAbs → lpOneAlg.toRealSeq (beta τ Φ abar) i = 0 := by
@@ -256,30 +256,38 @@ def modelDeriv {𝕜 : Type*} [NormedField 𝕜] [CompleteSpace 𝕜] {ν : PosR
 section
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ 𝕜 ν)
+local notation "𝓟[" N "]" => (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : 𝓔 →L[𝕜] 𝓔)
+local notation "𝓠[" N "]" => (lpOneAlg.tailProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : 𝓔 →L[𝕜] 𝓔)
+local notation "𝓛[" b "]" => (lpOneAlg.mulLeftCLM (𝕜 := 𝕜) b : 𝓔 →L[𝕜] 𝓔)
+
 /-- The derivative of the preconditioned map. -/
-theorem hasFDerivAt_precondMap (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
-    HasFDerivAt (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν))
-      (M ∘L ((headDiag N lam : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - τ • ((lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) ∘L (lpOneAlg.mulLeftCLM (𝕜 := 𝕜) (phiHatDeriv Φ abar) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)))) + (lpOneAlg.tailProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) -
-        τ • ((lpOneAlg.diagCLM (G := geomFiberZ 𝕜 ν) r C hr : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) ∘L (lpOneAlg.mulLeftCLM (𝕜 := 𝕜) (phiHatDeriv Φ abar) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)))) abar := by
+theorem hasFDerivAt_precondMap (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔) :
+    HasFDerivAt (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔)
+      (M ∘L ((headDiag N lam : 𝓔 →L[𝕜] 𝓔) - τ • (𝓟[N] ∘L 𝓛[phiHatDeriv Φ abar])) + 𝓠[N] -
+        τ • ((lpOneAlg.diagCLM (G := geomFiberZ 𝕜 ν) r C hr : 𝓔 →L[𝕜] 𝓔) ∘L 𝓛[phiHatDeriv Φ abar])) abar := by
   have hphi := hasFDerivAt_phiHat Φ abar
   have hp := (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) :
-    lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)).hasFDerivAt.comp abar hphi
+    𝓔 →L[𝕜] 𝓔).hasFDerivAt.comp abar hphi
   have hm := M.hasFDerivAt.comp abar
-    ((headDiag N lam : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)).hasFDerivAt.sub
+    ((headDiag N lam : 𝓔 →L[𝕜] 𝓔).hasFDerivAt.sub
       (hp.const_smul τ))
   have hR := (lpOneAlg.diagCLM (G := geomFiberZ 𝕜 ν) r C hr :
-    lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)).hasFDerivAt.comp abar hphi
+    𝓔 →L[𝕜] 𝓔).hasFDerivAt.comp abar hphi
   have hq := (lpOneAlg.tailProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) :
-    lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)).hasFDerivAt (x := abar)
+    𝓔 →L[𝕜] 𝓔).hasFDerivAt (x := abar)
   convert (hm.add hq).sub (hR.const_smul τ) using 1
   rfl
 
 /-- `DG(ā) − B₀ = −defect` for every bounded `M` and every bounded `r`. -/
-theorem fderiv_sub_modelDeriv (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
-    (fderiv 𝕜 (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) = -(defect N M r C hr (beta τ Φ abar) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) := by
-  rw [(hasFDerivAt_precondMap N M lam r C hr τ Φ abar).fderiv, modelDeriv, defect]
+theorem fderiv_sub_modelDeriv (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔) :
+    (fderiv 𝕜 (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[𝕜] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[𝕜] 𝓔) = -(defect N M r C hr (beta τ Φ abar) : 𝓔 →L[𝕜] 𝓔) := by
+  rw [(hasFDerivAt_precondMap N M lam r C hr τ Φ abar).fderiv, modelDeriv, defect_eq,
+    show defectHead N M (beta τ Φ abar) = M ∘L 𝓟[N] ∘L 𝓛[beta τ Φ abar] ∘L 𝓠[N] from rfl,
+    show defectTail r C hr (beta τ Φ abar) = (lpOneAlg.diagCLM (G := geomFiberZ 𝕜 ν) r C hr : 𝓔 →L[𝕜] 𝓔) ∘L
+      𝓛[beta τ Φ abar] from rfl]
   refine ContinuousLinearMap.ext fun a => ?_
   simp only [beta, sub_apply, add_apply, neg_apply, ContinuousLinearMap.comp_apply, smul_apply,
     lpOneAlg.tailProj_eq_one_sub, one_apply_eq_self, lpOneAlg.mulLeftCLM_apply, smul_mul_assoc,
@@ -288,20 +296,20 @@ theorem fderiv_sub_modelDeriv (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) �
 
 /-- The transport form of `DG(ā) − B₀` (composition identity), under `r = 0` on the head
 (`D_r P = 0`). -/
-theorem fderiv_sub_modelDeriv_hZ (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
+theorem fderiv_sub_modelDeriv_hZ (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔)
     (hr0 : ∀ k : ℤ, k.natAbs ≤ N → r k = 0) :
-    (fderiv 𝕜 (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) = (-1 : 𝕜) •
-      ((M ∘L (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) + (lpOneAlg.diagCLM (G := geomFiberZ 𝕜 ν) r C hr : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))) ∘L
-        ((lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) ∘L (lpOneAlg.mulLeftCLM (𝕜 := 𝕜) (beta τ Φ abar) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) ∘L (1 - (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))) + (1 - (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))) ∘L (lpOneAlg.mulLeftCLM (𝕜 := 𝕜) (beta τ Φ abar) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)))) := by
+    (fderiv 𝕜 (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[𝕜] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[𝕜] 𝓔) = (-1 : 𝕜) •
+      ((M ∘L 𝓟[N] + (lpOneAlg.diagCLM (G := geomFiberZ 𝕜 ν) r C hr : 𝓔 →L[𝕜] 𝓔)) ∘L
+        (𝓟[N] ∘L 𝓛[beta τ Φ abar] ∘L (1 - 𝓟[N]) + (1 - 𝓟[N]) ∘L 𝓛[beta τ Φ abar])) := by
   rw [HeadTail.composition_identity _ M _ _ (lpOneAlg.isIdempotentElem_headProj (winZ N))
     (diagCLM_comp_headProj_of_head_zero N r C hr hr0)]
   exact (fderiv_sub_modelDeriv N M lam r C hr τ Φ abar).trans (neg_one_smul 𝕜 _).symm
 
 /-- `‖DG(ā) − B₀‖ = ‖defect‖`. -/
-theorem norm_fderiv_sub_modelDeriv (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
-    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖ = ‖(defect N M r C hr (beta τ Φ abar) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖ := by
+theorem norm_fderiv_sub_modelDeriv (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔) :
+    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[𝕜] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[𝕜] 𝓔)‖ = ‖(defect N M r C hr (beta τ Φ abar) : 𝓔 →L[𝕜] 𝓔)‖ := by
   rw [fderiv_sub_modelDeriv, norm_neg]
 
 end
@@ -313,9 +321,12 @@ def rawMap {𝕜 : Type*} [NormedField 𝕜] [CompleteSpace 𝕜] {ν : PosReal}
 section
 variable {𝕜 : Type*} [NormedField 𝕜] [CompleteSpace 𝕜] {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ 𝕜 ν)
+local notation "𝓟[" N "]" => (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : 𝓔 →L[𝕜] 𝓔)
+
 /-- The head embedding of the raw map is the head part of the preconditioned map. -/
-theorem headEmbed_rawMap (N : ℕ) (lam : ℤ → 𝕜) (τ : 𝕜) (Φ : MvPolynomial (Fin 1) 𝕜) (a : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
-    (headEmbed N (rawMap lam τ Φ a) : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) = (headDiag N lam : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) a - τ • (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (phiHat Φ a) := by
+theorem headEmbed_rawMap (N : ℕ) (lam : ℤ → 𝕜) (τ : 𝕜) (Φ : MvPolynomial (Fin 1) 𝕜) (a : 𝓔) :
+    (headEmbed N (rawMap lam τ Φ a) : 𝓔) = (headDiag N lam : 𝓔 →L[𝕜] 𝓔) a - τ • 𝓟[N] (phiHat Φ a) := by
   refine lpOneAlg.ext_toRealSeq (funext fun k => ?_)
   rw [toRealSeq_headEmbed, lpOneAlg.toRealSeq_sub, Pi.sub_apply, toRealSeq_headDiag,
     lpOneAlg.toRealSeq_smul, Pi.smul_apply, lpOneAlg.toRealSeq_headProj]
@@ -325,8 +336,8 @@ theorem headEmbed_rawMap (N : ℕ) (lam : ℤ → 𝕜) (τ : 𝕜) (Φ : MvPoly
 
 /-- The coefficients of `G(a)` are the raw preconditioner applied to the raw map, when `r = 0` on the
 head and `r_k lam_k = 1` off it. -/
-theorem toRealSeq_precondMap (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (a : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
+theorem toRealSeq_precondMap (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (a : 𝓔)
     (hr0 : ∀ k : ℤ, k.natAbs ≤ N → r k = 0) (hrlam : ∀ k : ℤ, N < k.natAbs → r k * lam k = 1) :
     lpOneAlg.toRealSeq (precondMap N M lam r C hr τ Φ a) = rawPrecond N M r (rawMap lam τ Φ a) := by
   funext k
@@ -341,8 +352,8 @@ theorem toRealSeq_precondMap (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) �
 
 /-- The raw identification at the tail inverse, under tail nonvanishing; the uniform bound `hC` of the
 tail inverse is separate data (nonvanishing alone does not bound it). -/
-theorem toRealSeq_precondMap_tailInv (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam : ℤ → 𝕜) (C : ℝ)
-    (hC : ∀ k, ‖tailInv N lam k‖ ≤ C) (τ : 𝕜) (Φ : MvPolynomial (Fin 1) 𝕜) (a : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
+theorem toRealSeq_precondMap_tailInv (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam : ℤ → 𝕜) (C : ℝ)
+    (hC : ∀ k, ‖tailInv N lam k‖ ≤ C) (τ : 𝕜) (Φ : MvPolynomial (Fin 1) 𝕜) (a : 𝓔)
     (hlam : ∀ k : ℤ, N < k.natAbs → lam k ≠ 0) :
     lpOneAlg.toRealSeq (precondMap N M lam (tailInv N lam) C hC τ Φ a) =
       rawPrecond N M (tailInv N lam) (rawMap lam τ Φ a) :=
@@ -354,56 +365,59 @@ end
 section
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ 𝕜 ν)
+local notation "𝓟[" N "]" => (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : 𝓔 →L[𝕜] 𝓔)
+
 /-- The exact finite window, column-ratio form: under the band `B` of `β` and moduli `‖r‖` two-ray
 nonincreasing from `max (N + 1) K₀`, `‖DG(ā) − B₀‖` is the maximum of the column ratios over
 `|j| ≤ B + max (N + 1) K₀`. -/
-theorem norm_fderiv_sub_modelDeriv_eq_sup' (N B K₀ : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
+theorem norm_fderiv_sub_modelDeriv_eq_sup' (N B K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔)
     (hβ : ∀ i : ℤ, B < i.natAbs → lpOneAlg.toRealSeq (beta τ Φ abar) i = 0)
     (hmono : ∀ n : ℕ, max (N + 1) K₀ ≤ n →
       ‖r ((n : ℤ) + 1)‖ ≤ ‖r (n : ℤ)‖ ∧ ‖r (-((n : ℤ) + 1))‖ ≤ ‖r (-(n : ℤ))‖) :
-    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖ =
-      (winZ (B + max (N + 1) K₀)).sup' (winZ_nonempty _) (fun j => lpOneAlg.colRatio (defect N M r C hr (beta τ Φ abar) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) j) := by
+    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[𝕜] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[𝕜] 𝓔)‖ =
+      (winZ (B + max (N + 1) K₀)).sup' (winZ_nonempty _) (fun j => lpOneAlg.colRatio (defect N M r C hr (beta τ Φ abar) : 𝓔 →L[𝕜] 𝓔) j) := by
   rw [norm_fderiv_sub_modelDeriv]
   exact opNorm_defect_eq_sup' N B K₀ M r C hr (beta τ Φ abar) hβ hmono
 
 /-- The exact finite window, explicit form `max (a_j + s_j)`, under `P M = M` and `r = 0` on the
 head. -/
-theorem norm_fderiv_sub_modelDeriv_eq_sup'_explicit (N B K₀ : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
+theorem norm_fderiv_sub_modelDeriv_eq_sup'_explicit (N B K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔)
     (hβ : ∀ i : ℤ, B < i.natAbs → lpOneAlg.toRealSeq (beta τ Φ abar) i = 0)
-    (hPM : (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) ∘L M = M) (hr0 : ∀ k : ℤ, k.natAbs ≤ N → r k = 0)
+    (hPM : 𝓟[N] ∘L M = M) (hr0 : ∀ k : ℤ, k.natAbs ≤ N → r k = 0)
     (hmono : ∀ n : ℕ, max (N + 1) K₀ ≤ n →
       ‖r ((n : ℤ) + 1)‖ ≤ ‖r (n : ℤ)‖ ∧ ‖r (-((n : ℤ) + 1))‖ ≤ ‖r (-(n : ℤ))‖) :
-    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖ =
+    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[𝕜] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[𝕜] 𝓔)‖ =
       (winZ (B + max (N + 1) K₀)).sup' (winZ_nonempty _)
         (fun j => headCol N M (beta τ Φ abar) j + tailCol B r (beta τ Φ abar) j) := by
   rw [norm_fderiv_sub_modelDeriv]
   exact opNorm_defect_eq_sup'_explicit N B K₀ M r C hr (beta τ Φ abar) hβ hPM hr0 hmono
 
 /-- The norm of `DG(ā) − B₀` is attained as a weighted column ratio at an atom of the window. -/
-theorem fderiv_sub_modelDeriv_attained (N B K₀ : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
+theorem fderiv_sub_modelDeriv_attained (N B K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔)
     (hβ : ∀ i : ℤ, B < i.natAbs → lpOneAlg.toRealSeq (beta τ Φ abar) i = 0)
     (hmono : ∀ n : ℕ, max (N + 1) K₀ ≤ n →
       ‖r ((n : ℤ) + 1)‖ ≤ ‖r (n : ℤ)‖ ∧ ‖r (-((n : ℤ) + 1))‖ ≤ ‖r (-(n : ℤ))‖) :
     ∃ j ∈ winZ (B + max (N + 1) K₀),
-      ‖((fderiv 𝕜 (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))) (lpOneAlg.single j 1)‖ =
-        ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖ * (ν : ℝ) ^ j.natAbs := by
+      ‖((fderiv 𝕜 (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[𝕜] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[𝕜] 𝓔)) (lpOneAlg.single j 1)‖ =
+        ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[𝕜] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[𝕜] 𝓔)‖ * (ν : ℝ) ^ j.natAbs := by
   obtain ⟨j, hj, h⟩ := defect_attained N B K₀ M r C hr (beta τ Φ abar) hβ hmono
   refine ⟨j, hj, ?_⟩
   rw [fderiv_sub_modelDeriv, neg_apply, norm_neg, norm_neg]
   exact h
 
 /-- The degree window `(d − 1) N + max (N + 1) K₀`, column-ratio form. -/
-theorem norm_fderiv_sub_modelDeriv_eq_sup'_deg (N d K₀ : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
+theorem norm_fderiv_sub_modelDeriv_eq_sup'_deg (N d K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔)
     (habar : ∀ i : ℤ, N < i.natAbs → lpOneAlg.toRealSeq abar i = 0)
     (hdeg : (MvPolynomial.pderiv 0 Φ).totalDegree ≤ d - 1)
     (hmono : ∀ n : ℕ, max (N + 1) K₀ ≤ n →
       ‖r ((n : ℤ) + 1)‖ ≤ ‖r (n : ℤ)‖ ∧ ‖r (-((n : ℤ) + 1))‖ ≤ ‖r (-(n : ℤ))‖) :
-    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖ =
-      (winZ ((d - 1) * N + max (N + 1) K₀)).sup' (winZ_nonempty _) (fun j => lpOneAlg.colRatio (defect N M r C hr (beta τ Φ abar) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) j) :=
+    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[𝕜] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[𝕜] 𝓔)‖ =
+      (winZ ((d - 1) * N + max (N + 1) K₀)).sup' (winZ_nonempty _) (fun j => lpOneAlg.colRatio (defect N M r C hr (beta τ Φ abar) : 𝓔 →L[𝕜] 𝓔) j) :=
   norm_fderiv_sub_modelDeriv_eq_sup' N ((d - 1) * N) K₀ M lam r C hr τ Φ abar
     (band_beta N d τ Φ abar habar hdeg) hmono
 
@@ -424,15 +438,18 @@ end
 section
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ 𝕜 ν)
+local notation "𝓟[" N "]" => (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : 𝓔 →L[𝕜] 𝓔)
+
 /-- The degree window, explicit form, under `P M = M` and `r = 0` on the head. -/
-theorem norm_fderiv_sub_modelDeriv_eq_sup'_deg_explicit (N d K₀ : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν))
+theorem norm_fderiv_sub_modelDeriv_eq_sup'_deg_explicit (N d K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔)
     (habar : ∀ i : ℤ, N < i.natAbs → lpOneAlg.toRealSeq abar i = 0)
     (hdeg : (MvPolynomial.pderiv 0 Φ).totalDegree ≤ d - 1)
-    (hPM : (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) ∘L M = M) (hr0 : ∀ k : ℤ, k.natAbs ≤ N → r k = 0)
+    (hPM : 𝓟[N] ∘L M = M) (hr0 : ∀ k : ℤ, k.natAbs ≤ N → r k = 0)
     (hmono : ∀ n : ℕ, max (N + 1) K₀ ≤ n →
       ‖r ((n : ℤ) + 1)‖ ≤ ‖r (n : ℤ)‖ ∧ ‖r (-((n : ℤ) + 1))‖ ≤ ‖r (-(n : ℤ))‖) :
-    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖ =
+    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[𝕜] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[𝕜] 𝓔)‖ =
       (winZ ((d - 1) * N + max (N + 1) K₀)).sup' (winZ_nonempty _)
         (fun j => headCol N M (beta τ Φ abar) j + tailCol ((d - 1) * N) r (beta τ Φ abar) j) :=
   norm_fderiv_sub_modelDeriv_eq_sup'_explicit N ((d - 1) * N) K₀ M lam r C hr τ Φ abar
@@ -443,12 +460,15 @@ end
 section
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] [NormedAlgebra ℝ 𝕜] {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ 𝕜 ν)
+local notation "𝓟[" N "]" => (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : 𝓔 →L[𝕜] 𝓔)
+
 /-- The Γ majorant `‖DG(ā) − B₀‖ ≤ (‖M P Γ‖ + C) ‖β‖` with `C` the uniform bound of `r`. This universal
 head bound is not the exact window norm (`norm_fderiv_sub_modelDeriv_eq_sup'`). -/
-theorem norm_fderiv_sub_modelDeriv_le_gamma (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
-    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
-    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) → lpOneAlg ℤ (geomFiberZ 𝕜 ν)) abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖ ≤
-      (‖M ∘L (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν)) ∘L (gammaDiag N : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖ + C) * ‖(beta τ Φ abar : lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖ := by
+theorem norm_fderiv_sub_modelDeriv_le_gamma (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (lam r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (τ : 𝕜)
+    (Φ : MvPolynomial (Fin 1) 𝕜) (abar : 𝓔) :
+    ‖(fderiv 𝕜 (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[𝕜] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[𝕜] 𝓔)‖ ≤
+      (‖M ∘L 𝓟[N] ∘L (gammaDiag N : 𝓔 →L[𝕜] 𝓔)‖ + C) * ‖(beta τ Φ abar : 𝓔)‖ := by
   rw [norm_fderiv_sub_modelDeriv]
   exact norm_defect_le_gamma N M r C hr (beta τ Φ abar)
 
@@ -457,11 +477,13 @@ end
 section
 variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ ℂ ν)
+
 /-- At `𝕜 = ℂ` the real-linear norm of `DG(ā) − B₀` is its complex-linear norm. -/
-theorem norm_restrictScalars_fderiv_sub_modelDeriv (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν)) (lam r : ℤ → ℂ) (C : ℝ)
-    (hr : ∀ k, ‖r k‖ ≤ C) (τ : ℂ) (Φ : MvPolynomial (Fin 1) ℂ) (abar : lpOneAlg ℤ (geomFiberZ ℂ ν)) :
-    ‖((fderiv ℂ (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ ℂ ν) → lpOneAlg ℤ (geomFiberZ ℂ ν)) abar : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν))).restrictScalars ℝ‖ =
-      ‖(fderiv ℂ (precondMap N M lam r C hr τ Φ : lpOneAlg ℤ (geomFiberZ ℂ ν) → lpOneAlg ℤ (geomFiberZ ℂ ν)) abar : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν)) - (modelDeriv N M lam τ Φ abar : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν))‖ :=
+theorem norm_restrictScalars_fderiv_sub_modelDeriv (N : ℕ) (M : 𝓔 →L[ℂ] 𝓔) (lam r : ℤ → ℂ) (C : ℝ)
+    (hr : ∀ k, ‖r k‖ ≤ C) (τ : ℂ) (Φ : MvPolynomial (Fin 1) ℂ) (abar : 𝓔) :
+    ‖((fderiv ℂ (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[ℂ] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[ℂ] 𝓔)).restrictScalars ℝ‖ =
+      ‖(fderiv ℂ (precondMap N M lam r C hr τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[ℂ] 𝓔) - (modelDeriv N M lam τ Φ abar : 𝓔 →L[ℂ] 𝓔)‖ :=
   ContinuousLinearMap.norm_restrictScalars (𝕜' := ℝ) _
 
 end

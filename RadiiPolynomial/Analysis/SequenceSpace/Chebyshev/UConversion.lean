@@ -2,28 +2,21 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Algebra
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
 
 /-!
-# Chebyshev T→U conversion and U-integration
+# Chebyshev T↔U conversion and U-integration on raw bilateral storage
 
-The two halves of the Chebyshev integration tail operator:
+- `chebyshevToU : l1Chebyshev ν → l1Weighted ν`, `(chebyshevToU c)_m = (c_m - c_{m+2})/2`
+  (DLMF 18.9.9), bound `(1 + ν⁻²)/2` for every `ν > 0` (`chebyshevToU_norm_le_sharp`; its
+  attainment is not proved), `≤ 1` for `ν ≥ 1` (`chebyshevToU_norm_le`).
+- `uIntegrate : l1Weighted ν → l1Chebyshev ν`, `(uIntegrate b)_k = b_{k-1}/k` (`k ≥ 1`),
+  `‖uIntegrate b‖ ≤ ν‖b‖`.
+- `chebyshevFromU` (section `ChebyshevFromU`, `Fact (1 < ν)`):
+  `(chebyshevFromU b)_k = 2Σ_{j≥0} b_{k+2j}` (`k ≥ 0`), the telescoping inverse:
+  `chebyshevToU ∘ chebyshevFromU = id`, `chebyshevFromU ∘ chebyshevToU = id` on nonnegative modes,
+  `‖chebyshevFromU b‖ ≤ 2ν²/(ν²-1)‖b‖`, conditioning `≤ (ν²+1)/(ν²-1) = coth(log ν)`.
 
-- `chebyshevToU : l1Chebyshev ν → l1Weighted ν`, `(chebyshevToU c)_m = (c_m - c_{m+2})/2`.
-  Coefficient-level form of the basis conversion `T_m = (U_m - U_{m-2})/2` (DLMF 18.9.9):
-  a Chebyshev-T series with coefficients `c` has U-expansion coefficients `chebyshevToU c`.
-- `uIntegrate : l1Weighted ν → l1Chebyshev ν`, `(uIntegrate b)_k = b_{k-1}/k` for `k ≥ 1`,
-  `0` otherwise. Coefficient-level form of `∫ U_{k-1} = T_k / k`.
-
-The U-coefficient carrier is `l1Weighted ν` — the same type as the Taylor coefficient
-space, reused as a module of U-coefficients (no algebra structure is used or wanted).
-
-Norm bounds: `‖chebyshevToU c‖ ≤ ‖c‖` and `‖uIntegrate b‖ ≤ ν·‖b‖`, so the composition
-is `≤ ν`-bounded; the factorization `chebyshevShiftDiv = -(uIntegrate ∘ chebyshevToU)`
-and the resulting sharper bound `‖chebyshevShiftDiv c‖ ≤ (ν/2 + 1/(2ν))·‖c‖` live in
-`Applications/IVP/Chebyshev/Operator.lean` (where `chebyshevShiftDiv` is defined).
-
-Convention note: both maps use the repo's raw bilateral storage (no separate zero-mode
-weighting for `T_0`/`U_0`). An asymmetric zero-mode convention only matters for a
-two-sided T↔U transport between storages, which this file does not build; the bordered
-carrier of `Chebyshev/Bordered.lean` is the library's version of it.
+The U-carrier `l1Weighted ν` is used as a module only. `chebyshevShiftDiv = -(uIntegrate ∘
+chebyshevToU)` lives in `Applications/IVP/Chebyshev/Operator.lean`; the storage-level two-sided
+isomorphism is the bordered carrier (`Chebyshev/Bordered.lean`).
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -34,25 +27,15 @@ namespace RadiiPolynomial
 
 variable {ν : PosReal}
 
-/-! ### Fiber-norm and subseries helpers for `l1Chebyshev` at nonnegative modes -/
+/-! ### Fiber-norm and subseries helpers for `l1Chebyshev` at nonnegative modes
 
-/-- Norm sums restricted to nonnegative modes are summable. -/
-lemma summable_norm_natCast (c : l1Chebyshev ν) :
-    Summable (fun n : ℕ => ‖c (↑n : ℤ)‖) :=
-  (lpOneAlg.summable_norm c).comp_injective (fun n m h => by omega)
+The public faces `summable_norm_natCast` and `norm_fiber_natCast` live in
+`Chebyshev/Algebra.lean`. -/
 
 /-- Norm sums restricted to shifted nonnegative modes are summable. -/
 private lemma summable_norm_natCast_add (c : l1Chebyshev ν) (s : ℤ) :
     Summable (fun n : ℕ => ‖c (↑n + s)‖) :=
   (lpOneAlg.summable_norm c).comp_injective (fun n m h => by omega)
-
-/-- Fiber norm at a nonnegative mode: `‖c_m‖ = |c_m|·ν^m`. -/
-lemma norm_fiber_natCast (c : l1Chebyshev ν) (m : ℕ) :
-    ‖c (↑m : ℤ)‖ = |l1Chebyshev.toSeq c ↑m| * (ν : ℝ) ^ m := by
-  rw [lpOneAlg.norm_eq_abs_toReal_mul_weight c (↑m : ℤ)]
-  simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul, Real.norm_eq_abs,
-    Int.natAbs_natCast]
-  rfl
 
 /-- Fiber norm at mode `m + 2`: `‖c_{m+2}‖ = |c_{m+2}|·ν^{m+2}`. -/
 private lemma norm_fiber_natCast_add_two (c : l1Chebyshev ν) (m : ℕ) :
@@ -269,9 +252,9 @@ def uIntegrate (b : l1Weighted ν) : l1Chebyshev ν :=
   ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k (uIntegrate_seq b k),
     uIntegrate_memℓp b⟩⟩
 
--- Internal bridge (private RHS — for in-file use; external files use the
--- per-mode simp lemmas below).
-lemma uIntegrate_toSeq (b : l1Weighted ν) (k : ℤ) :
+-- Internal bridge (private, like its right-hand side); external files use the per-mode simp
+-- lemmas below.
+private lemma uIntegrate_toSeq (b : l1Weighted ν) (k : ℤ) :
     lpOneAlg.toRealSeq (uIntegrate b) k = uIntegrate_seq b k := by
   simp [uIntegrate, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
 
@@ -529,8 +512,9 @@ def chebyshevFromU (b : l1Weighted ν) : l1Chebyshev ν :=
   ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k (chebyshevFromU_seq b k),
     chebyshevFromU_memℓp b⟩⟩
 
--- Internal bridge (private RHS); external files use the per-mode lemmas below.
-lemma chebyshevFromU_toSeq (b : l1Weighted ν) (k : ℤ) :
+-- Internal bridge (private, like its right-hand side); external files use the per-mode lemmas
+-- below.
+private lemma chebyshevFromU_toSeq (b : l1Weighted ν) (k : ℤ) :
     lpOneAlg.toRealSeq (chebyshevFromU b) k = chebyshevFromU_seq b k := by
   simp [chebyshevFromU, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
 

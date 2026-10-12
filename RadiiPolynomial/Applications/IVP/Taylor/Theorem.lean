@@ -32,23 +32,18 @@ variable {ν : PosReal} {L N : ℕ} [NeZero L]
 
 /-! ## 1. Z₀ Bound -/
 
-/-- Z₀ bound: `‖I - composedApprox.toCLM‖ ≤ finBlockMatrixNorm(defect)`.
-Since the defect has `tailBound = 0` (from tail cancellation), the bound is purely
-from finite block norms.
+/-- Z₀ bound: `‖I - composedApprox.toCLM‖ ≤ Z₀` from the finite block norm of the defect
+(the defect's tail bound is `0` by tail cancellation).
 
-TODO (unify with `SystemBlockDiagData.Z₀_le_of_tailCancel`): this lemma
-exists as a sibling because A† for IVPs has unbounded tail (`Λ_n = n`)
-and cannot be a `SystemBlockDiagData L N` against the single weight `ν`.
-We therefore take `A_dag : BlockDiagOp L N` and bound the composed
-operator `A.composedApprox A_dag htail_cancel` (which IS a
-`SystemBlockDiagData` thanks to tail cancellation producing zero tail).
-A future two-weight `SystemBlockDiagData ν₁ ν₂` mapping
-`XL1 ν₁ L → XL1 ν₂ L` with a `ν₂`-tail bound would let A† live as
-`SystemBlockDiagData ν ω` (ω-weighted space, see
-`Analysis/SequenceSpace/Geometric/Omega.lean`)
-and reduce this to a direct application of
-`Z₀_le_of_tailCancel`. See the `project_ivp_codomain_design` memory
-note for the rationale of the current "compile-away-ω" design. -/
+Design note. This lemma (`A†` a `BlockDiagOp` with unbounded tail) and
+`SystemBlockDiagData.Z₀_le_of_tailCancel` (both factors bounded) are faces of the carrier-generic
+`BlockDiagLift.composedApprox_Z₀`; on `XL1`,
+`(A.composedApprox B h).toCLM = BlockDiagLift.composedApproxCLM (defectOfBlockDiagOp A B)`
+(`SystemBlockDiagData.composedApprox_toCLM_eq_lift`). `A†` stays `BlockDiagOp` data: its tail
+`Λ_n = n` is unbounded on `ℓ¹_ν`. Typing `A†` as a bounded map `ℓ¹_ν → ℓ¹_ω` would need block
+realizations over a general weight function: `ω_n = ν^(n+1)/(n+1)` is not geometric, and
+`l1Omega ν = lp (OmegaScaledReal ν) 1` (`Analysis/SequenceSpace/Geometric/Omega.lean`) is not an
+`XL1` at another `PosReal`. -/
 lemma ivp_Z₀_le
     (A : SystemBlockDiagData L N) (A_dag : BlockDiagOp L N)
     (htail_cancel : ∀ l : Fin L, ∀ n, N < n →
@@ -56,11 +51,9 @@ lemma ivp_Z₀_le
     {Z₀ : ℝ} (hZ₀ : finiteBlockMatrixNorm ν (defectOfBlockDiagOp A A_dag).finBlock ≤ Z₀) :
     Z₀_norm (ContinuousLinearMap.id ℝ (XL1 ν L))
       ((A.composedApprox A_dag htail_cancel).toCLM (ν := ν)) ≤ Z₀ := by
-  show ‖ContinuousLinearMap.id ℝ _ -
-    (A.composedApprox A_dag htail_cancel).toCLM (ν := ν)‖ ≤ _
-  rw [A.composedApprox_defect_eq]
-  exact ((defectOfBlockDiagOp A A_dag).norm_toCLM_le (ν := ν)).trans
-    (by simp [defectOfBlockDiagOp, add_zero]; exact hZ₀)
+  show ‖_ - _‖ ≤ _
+  rw [SystemBlockDiagData.composedApprox_toCLM_eq_lift]
+  exact BlockDiagLift.composedApprox_Z₀ (X := XL1 ν L) _ hZ₀
 
 /-! ## 2. Z₁ Finite-Mode Identity -/
 

@@ -9,8 +9,9 @@ This file keeps the norm-level and invertibility-level results:
 - matrix invertibility transfer from `toWeightedCLM`
 - Neumann-style criterion via `‖I - M‖ < 1`
 
-The matrix-to-CLM construction API (`toWeightedCLM`, multiplication/subtraction
-transport, apply lemmas) lives in `Operators/Matrix/Continuous.lean`.
+The matrix-to-CLM construction API (`toWeightedCLM`, the algebra equivalence
+`toWeightedCLMAlgEquiv`, multiplication/subtraction transport, apply lemmas) lives in
+`Operators/Matrix/Continuous.lean`.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal Matrix
@@ -60,42 +61,8 @@ theorem finWeightedMatrixNorm_eq_opNorm
 lemma matrix_isUnit_of_toWeightedCLM_isUnit
     (M : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
     (h : IsUnit (toWeightedCLM (ν := ν) M)) :
-    IsUnit M := by
-  rw [Matrix.isUnit_iff_isUnit_det _, isUnit_iff_ne_zero]
-  intro h_det
-  obtain ⟨u, hu⟩ := h
-  have h_inj : Function.Injective (toWeightedCLM (ν := ν) M) := by
-    rw [← hu]
-    have h_left_inv :
-        Function.LeftInverse
-          (fun y => (u⁻¹).val y)
-          (fun x => u.val x) := fun x => by
-      have hx := congrFun (congrArg DFunLike.coe u.inv_mul) x
-      simpa only [mul_apply_eq_comp, one_apply_eq_self] using hx
-    exact h_left_inv.injective
-  have h_det_lin : LinearMap.det (Matrix.toLin' M) = 0 := by
-    rw [LinearMap.det_toLin']
-    exact h_det
-  have h_ker_nontrivial := LinearMap.bot_lt_ker_of_det_eq_zero h_det_lin
-  rw [bot_lt_iff_ne_bot, ne_eq, Submodule.eq_bot_iff] at h_ker_nontrivial
-  push Not at h_ker_nontrivial
-  obtain ⟨v, hv_ker, hv_ne⟩ := h_ker_nontrivial
-  rw [LinearMap.mem_ker] at hv_ker
-  have hv_mulVec : M *ᵥ v = 0 := by
-    simpa only [Matrix.toLin'_apply] using hv_ker
-  -- toVec is injective (ofVec_toVec is its left inverse)
-  have toVec_inj : Function.Injective (toVec (ν := ν) (N := N)) :=
-    Function.LeftInverse.injective ofVec_toVec
-  -- Construct an element of Space ν N from v
-  let x : FinWeighted.Space ν N := ofVec v
-  have hx_ne : x ≠ 0 := by
-    intro hx; exact hv_ne (show v = 0 from toVec_ofVec v ▸ congrArg toVec hx)
-  have hx_zero : toWeightedCLM (ν := ν) M x = 0 := by
-    apply toVec_inj
-    show M *ᵥ toVec (ofVec v) = toVec 0
-    rw [toVec_ofVec]; exact hv_mulVec
-  rw [← map_zero (toWeightedCLM (ν := ν) M)] at hx_zero
-  exact hx_ne (h_inj hx_zero)
+    IsUnit M :=
+  (isUnit_toWeightedCLM_iff M).mp h
 
 /-- Neumann criterion for weighted finite matrices. -/
 lemma matrix_invertible_of_norm_lt_one

@@ -8,11 +8,9 @@ The canonical Taylor trajectory `IVP.x_analytic` of a coefficient vector is
 `AnalyticOnNhd ℝ` on the whole open interval `(-ν, ν)`, not merely a power series
 centred at zero.
 
-This is the real-variable half of what used to live in
-`Applications/IVP/Taylor/ComplexTime.lean`; it is separated so that an example
-asking only for real analyticity (`Example81/Analyticity.lean`,
-`Example83/Analyticity.lean`) does not have to import the complex-time layer.
-`ComplexTime.lean` imports this module and adds the holomorphic trajectory on the
+Separate from `ComplexTime.lean` so that an example asking only for real analyticity
+(`Example81/Analyticity.lean`, `Example83/Analyticity.lean`) does not import the complex-time
+layer; `ComplexTime.lean` imports this module and adds the holomorphic trajectory on the
 complex disc.
 -/
 

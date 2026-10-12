@@ -16,6 +16,7 @@ This file provides:
 - Key embedding/summability lemmas connecting `l1Weighted` and `l1Omega`
 - the operators `shift`, `shiftDivN`, `lambdaN` on `l1Weighted ν` and their tail and column
   bounds, the derivative shift `derivShift : ℓ¹_ν → ℓ¹_ω`, and the evaluation `l1Omega.eval`
+- the absolute derivative series `l1Weighted.summable_abs_mul_pow_pred` (`0 ≤ r < ν`)
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -75,8 +76,6 @@ namespace l1Omega
 
 variable {ν : PosReal}
 
--- instance : Fact (1 ≤ (1 : ℝ≥0∞)) := ⟨le_rfl⟩
-
 -- UniformSpace and CompleteSpace are inherited from lp's NormedAddCommGroup.
 
 /-- Underlying real sequence. -/
@@ -94,6 +93,7 @@ def Mem (ν : PosReal) (a : ℕ → ℝ) : Prop :=
 def mk (a : ℕ → ℝ) (ha : Mem ν a) : l1Omega ν :=
   ⟨fun n => OmegaScaledReal.ofReal (a n), ha⟩
 
+/-- Coefficient evaluation agrees with the underlying coordinate. -/
 @[simp] lemma toSeq_apply (a : l1Omega ν) (n : ℕ) : toSeq a n = a n := rfl
 @[simp] lemma mk_apply (a : ℕ → ℝ) (ha : Mem ν a) (n : ℕ) : toSeq (mk a ha) n = a n := rfl
 @[simp] lemma zero_toSeq (n : ℕ) : toSeq (0 : l1Omega ν) n = 0 := rfl
@@ -214,16 +214,13 @@ noncomputable def shift (a : l1Weighted ν) : l1Weighted ν :=
   l1Weighted.mk (shift_seq a) (shift_mem a)
 
 @[simp] lemma shift_zero_mode (a : l1Weighted ν) :
-    l1Weighted.toSeq (shift a) 0 = 0 := by
-  simp [shift, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
+    l1Weighted.toSeq (shift a) 0 = 0 := rfl
 
 @[simp] lemma shift_succ_mode (a : l1Weighted ν) (n : ℕ) :
-    l1Weighted.toSeq (shift a) (n + 1) = l1Weighted.toSeq a n := by
-  simp [shift, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
+    l1Weighted.toSeq (shift a) (n + 1) = l1Weighted.toSeq a n := rfl
 
 private lemma shift_toSeq (a : l1Weighted ν) (n : ℕ) :
-    l1Weighted.toSeq (shift a) n = shift_seq a n := by
-  simp [shift, l1Weighted.toSeq, l1Weighted.mk]; rfl
+    l1Weighted.toSeq (shift a) n = shift_seq a n := rfl
 
 lemma shift_linear_add (a b : l1Weighted ν) :
     shift (a + b) = shift a + shift b := by
@@ -312,8 +309,7 @@ noncomputable def shiftDivN (b : l1Weighted ν) : l1Weighted ν :=
   l1Weighted.mk (shiftDivN_seq b) (shiftDivN_mem b)
 
 @[simp] lemma shiftDivN_zero_mode (b : l1Weighted ν) :
-    l1Weighted.toSeq (shiftDivN b) 0 = 0 := by
-  simp [shiftDivN, l1Weighted.toSeq, l1Weighted.toSeq, l1Weighted.mk]; rfl
+    l1Weighted.toSeq (shiftDivN b) 0 = 0 := rfl
 
 @[simp] lemma shiftDivN_succ_mode (b : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (shiftDivN b) (n + 1) =
@@ -322,8 +318,7 @@ noncomputable def shiftDivN (b : l1Weighted ν) : l1Weighted ν :=
   simp [shiftDivN_seq]
 
 private lemma shiftDivN_toSeq (b : l1Weighted ν) (n : ℕ) :
-    l1Weighted.toSeq (shiftDivN b) n = shiftDivN_seq b n := by
-  simp [shiftDivN, l1Weighted.toSeq, l1Weighted.mk]; rfl
+    l1Weighted.toSeq (shiftDivN b) n = shiftDivN_seq b n := rfl
 
 lemma shiftDivN_linear_add (b c : l1Weighted ν) :
     shiftDivN (b + c) = shiftDivN b + shiftDivN c := by
@@ -426,31 +421,6 @@ cutoff the columns are antitone (`shiftDivN_leftMul_tail_col_antitone`), so a
 certificate only has to check the finite range `M ≤ N`. Hygiene: `ν : PosReal`
 only. -/
 
-/-- Coefficients of `b * single M 1`: the Cauchy product against a monomial is
-the `M`-fold right shift, `(b · δ_M)_k = b_{k-M}` for `M ≤ k`, else `0`. -/
-lemma l1Weighted.toSeq_mul_single (b : l1Weighted ν) (M k : ℕ) :
-    l1Weighted.toSeq (b * l1Weighted.single M 1) k =
-      if M ≤ k then l1Weighted.toSeq b (k - M) else 0 := by
-  rw [l1Weighted.toSeq_mul, CauchyProduct.apply_range]
-  simp only [l1Weighted.single_toSeq]
-  by_cases hM : M ≤ k
-  · rw [ite_eq_left hM, Finset.sum_eq_single M
-      (fun j _ hne => by rw [ite_eq_right hne, mul_zero])
-      (fun hM' => absurd (Finset.mem_range.mpr (by omega)) hM')]
-    rw [ite_eq_left rfl, mul_one]
-  · rw [ite_eq_right hM]
-    refine Finset.sum_eq_zero fun j hj => ?_
-    rw [ite_eq_right (by have := Finset.mem_range.mp hj; omega), mul_zero]
-
-/-- The norm of the tail projection is the tail of the weighted norm series. -/
-lemma l1Weighted.norm_tailProj_eq_tailTsum (N : ℕ) (x : l1Weighted ν) :
-    ‖l1Weighted.tailProj N x‖ =
-      ∑' n, |l1Weighted.toSeq x (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) := by
-  rw [l1Weighted.norm_eq_tailTsum_of_fin_zero (l1Weighted.tailProj N x) (N + 1)
-    (fun n hn => by rw [l1Weighted.coeff_tailProj, ite_eq_right (by omega)])]
-  exact tsum_congr fun n => by
-    rw [l1Weighted.coeff_tailProj, ite_eq_left (by omega)]
-
 /-- The tail mass of `shiftDivN` is subadditive over finite sums. -/
 theorem tail_shiftDivN_sum_le {N : ℕ} {ι : Type*} (s : Finset ι) (x : ι → l1Weighted ν) :
     ∑' n, |l1Weighted.toSeq (shiftDivN (∑ i ∈ s, x i)) (n + (N + 1))| *
@@ -463,21 +433,6 @@ theorem tail_shiftDivN_sum_le {N : ℕ} {ι : Type*} (s : Finset ι) (x : ι →
     shiftDivN_CLM_apply] at hmap
   rw [hmap]
   exact norm_sum_le _ _
-
-/-- Fiber-norm bridge for the geometric carrier: the `lpAlgRingData` weight at
-index `n` is `ν^n`. -/
-private lemma scaledReal_norm_ofReal (ν : PosReal) (n : ℕ) (x : ℝ) :
-    ‖lpAlgRingData.ofReal (E := ScaledReal ν) n x‖ = |x| * (ν : ℝ) ^ n :=
-  WeightedScalar.norm_ofReal x
-
-/-- The geometric `single` IS the generic `lpOneAlg.single`. -/
-private lemma l1Weighted_single_eq (ν : PosReal) (n : ℕ) (x : ℝ) :
-    l1Weighted.single (ν := ν) n x = lpOneAlg.single n x := by
-  apply lpOneAlg.ext_toRealSeq
-  funext m
-  rw [lpOneAlg.toRealSeq_single]
-  show l1Weighted.toSeq (l1Weighted.single (ν := ν) n x) m = _
-  rw [l1Weighted.single_toSeq]
 
 /-- **Column completeness for the Z₁ tail operator** (tightening B). If every
 column of `π_{>N} ∘ shiftDivN ∘ leftMul b` at a basis vector `single M 1` has
@@ -507,7 +462,8 @@ lemma shiftDivN_leftMul_tail_le_of_cols (b : l1Weighted ν) (N : ℕ) {C : ℝ}
         (shiftDivN_CLM.comp (l1Weighted.leftMul b))) (lpOneAlg.single m 1)‖ ≤
         C * ‖lpAlgRingData.ofReal (E := ScaledReal ν) m (1 : ℝ)‖ := by
     intro m
-    rw [scaledReal_norm_ofReal, abs_one, one_mul, ← l1Weighted_single_eq, hnormW]
+    rw [ScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul,
+      ← l1Weighted.single_eq_lpOneAlg_single, hnormW]
     exact hcol m
   have hlift := lpOneAlg.eq_liftCLM_of_cols
     ((l1Weighted.tailProj_CLM N).comp (shiftDivN_CLM.comp (l1Weighted.leftMul b))) hv
@@ -621,8 +577,7 @@ noncomputable def lambdaN (N : ℕ) (a : l1Weighted ν) : l1Weighted ν :=
   simp [lambdaN_seq, hn]
 
 private lemma lambdaN_toSeq (N : ℕ) (a : l1Weighted ν) (n : ℕ) :
-    l1Weighted.toSeq (lambdaN N a) n = lambdaN_seq N a n := by
-  simp [lambdaN, l1Weighted.toSeq, l1Weighted.mk]; rfl
+    l1Weighted.toSeq (lambdaN N a) n = lambdaN_seq N a n := rfl
 
 lemma lambdaN_linear_add (N : ℕ) (a b : l1Weighted ν) :
     lambdaN N (a + b) = lambdaN N a + lambdaN N b := by
@@ -785,6 +740,24 @@ theorem l1Omega.summable_abs_eval (b : l1Omega ν) {t : ℝ} (ht : |t| < ν) :
   have h := l1Omega.summable_eval b (t := |t|) (by rwa [abs_abs])
   refine (h.abs).congr fun n => ?_
   rw [abs_mul, abs_pow, abs_abs]
+
+/-- **Absolute derivative series.** For `a ∈ ℓ¹_ν` and `0 ≤ r < ν` the series
+`∑ₙ |aₙ| · n · r ^ (n - 1)` converges; the endpoint `r = 0` is included. It dominates the
+termwise derivative of `l1Weighted.eval a` on `[-r, r]`, and it is `l1Omega.summable_abs_eval`
+for `derivShift a` shifted by one index. -/
+theorem l1Weighted.summable_abs_mul_pow_pred (a : l1Weighted ν) {r : ℝ} (hr : 0 ≤ r)
+    (hrν : r < (ν : ℝ)) :
+    Summable (fun n : ℕ => |l1Weighted.toSeq a n| * (n : ℝ) * r ^ (n - 1)) := by
+  have hs := l1Omega.summable_abs_eval (derivShift a)
+    (show |r| < (ν : ℝ) by simpa only [abs_of_nonneg hr] using hrν)
+  have ht : Summable (fun n : ℕ =>
+      |l1Weighted.toSeq a (n + 1)| * ((n : ℝ) + 1) * r ^ n) := by
+    refine hs.congr fun n => ?_
+    rw [derivShift_apply, abs_mul, abs_of_pos (by positivity : 0 < (n : ℝ) + 1),
+      abs_of_nonneg hr]
+    ring
+  exact (summable_nat_add_iff 1).mp (by simpa only [Nat.cast_add, Nat.cast_one,
+    Nat.add_sub_cancel] using ht)
 
 /-- Evaluate an `ℓ¹_ω` sequence as a power series at `t ∈ ℝ` (defined for every `t` by
 `tsum`; convergence is proved for `|t| < ν`, `l1Omega.summable_eval`).

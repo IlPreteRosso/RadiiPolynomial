@@ -106,6 +106,11 @@ noncomputable def compPolyDerivative (f : Fin L → CompPoly L) (a : XCheb ν L)
   ContinuousLinearMap.pi fun l => CompPoly.Chebyshev.derivative (f l) a
 
 omit [NeZero L] in
+/-- Computation face of the system derivative: component `l` is the derivative of `f l`. -/
+lemma compPolyDerivative_apply (f : Fin L → CompPoly L) (a h : XCheb ν L) (l : Fin L) :
+    compPolyDerivative f a h l = CompPoly.Chebyshev.derivative (f l) a h := rfl
+
+omit [NeZero L] in
 lemma hasFDerivAt_compPoly (f : Fin L → CompPoly L) (a : XCheb ν L) :
     HasFDerivAt (banachField f) (compPolyDerivative f a) a := by
   rw [hasFDerivAt_pi']
@@ -198,13 +203,7 @@ lemma StdChebIVPData.rawDerivative_single_eq_cast_of_compPoly
         split_ifs <;> push_cast <;> rfl
       · simp [hl, FAseq, l1Chebyshev.toSeq_zero]
   | succ row =>
-      change FAseq ((Pi.single m (l1Chebyshev.single (ν := ν) (col : ℤ) 1) : XCheb ν L) l)
-        (row + 1) +
-        (l1Chebyshev.toSeq (CompPoly.Chebyshev.derivative (f l) d.abar
-          (Pi.single m (l1Chebyshev.single (col : ℤ) 1))) (↑(row + 2) : ℤ) -
-        l1Chebyshev.toSeq (CompPoly.Chebyshev.derivative (f l) d.abar
-          (Pi.single m (l1Chebyshev.single (col : ℤ) 1))) (row : ℤ)) = _
-      rw [hcol, hcol]
+      rw [FCseq, compPolyDerivative_apply, hcol, hcol]
       by_cases hl : l = m
       · subst l
         simp only [Pi.single_eq_same, FAseq_single, compPolyDFQ, true_and]
@@ -243,12 +242,7 @@ lemma StdChebIVPData.fderiv_G_single_fin_eq_cast_of_compPoly
   rw [d.fderiv_G_fin_toSeq_of_compPoly f p d.abar _ l (n : ℕ) (Fin.is_le n)]
   simp_rw [d.rawDerivative_single_eq_cast_of_compPoly]
   push_cast
-  apply Finset.sum_congr rfl
-  intro j _
-  apply Finset.sum_congr rfl
-  intro k _
   rfl
-
 
 /-! ## Certificate constants from syntax
 
@@ -259,9 +253,9 @@ These are the system (`Fin L`-valued) faces of the componentwise lemmas in
 (`chebyshev_Z₁_le_relaxed`) uses `norm_derivative_apply_le` directly. -/
 
 /-- Operator norm of the system derivative, from the per-component syntactic constants.
-System face kept for a future system-level `Z₁` theorem: today's certificates bound `Z₁`
-componentwise (`chebyshev_Z₁_le_relaxed` with `CompPoly.Chebyshev.norm_derivative_apply_le`),
-so this lemma has no consumer yet. -/
+System face for a system-level `Z₁` theorem. The certification layer bounds `Z₁`
+componentwise instead (`Z₁_le_of_Q` through `Z₁_hDφ`, i.e.
+`CompPoly.Chebyshev.norm_derivative_apply_le`), so this lemma has no consumer at present. -/
 theorem norm_compPolyDerivative_le (f : Fin L → CompPoly L) (a : XCheb ν L) (R : Fin L → ℝ)
     (ha : ∀ i, ‖l1Chebyshev.symmetrize (a i)‖ ≤ R i) (B : ℝ)
     (hB : ∀ l, CompPoly.Chebyshev.derivativeBound (f l) R ≤ B) :
@@ -270,7 +264,7 @@ theorem norm_compPolyDerivative_le (f : Fin L → CompPoly L) (a : XCheb ν L) (
     fun i => (norm_nonneg _).trans (ha i)).trans (hB 0)
   refine ContinuousLinearMap.opNorm_le_bound _ hB0 fun h => ?_
   refine (pi_norm_le_iff_of_nonneg (mul_nonneg hB0 (norm_nonneg _))).mpr fun l => ?_
-  rw [compPolyDerivative, ContinuousLinearMap.pi_apply]
+  rw [compPolyDerivative_apply]
   exact (CompPoly.Chebyshev.norm_derivative_apply_le (f l) a R ha h).trans
     (mul_le_mul_of_nonneg_right (hB l) (norm_nonneg _))
 
@@ -289,7 +283,7 @@ theorem norm_compPolyDerivative_sub_le (f : Fin L → CompPoly L) (a b : XCheb �
   refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun h => ?_
   refine (pi_norm_le_iff_of_nonneg (by positivity)).mpr fun l => ?_
   show ‖compPolyDerivative f a h l - compPolyDerivative f b h l‖ ≤ _
-  simp only [compPolyDerivative, ContinuousLinearMap.pi_apply]
+  rw [compPolyDerivative_apply, compPolyDerivative_apply]
   have h1 := CompPoly.Chebyshev.norm_derivative_sub_le_of_norm_sub (f l) a b R ha hb
   have h2 := (CompPoly.Chebyshev.derivative (f l) a
     - CompPoly.Chebyshev.derivative (f l) b).le_opNorm h
@@ -316,9 +310,10 @@ expects; `existsUnique_of_compPoly` takes the four bounds (`Z₀` in the finite-
 the certificate proves) and the radii-polynomial inequality. The function-level faces
 (`solution_existsUnique_of_compPoly`, `solution_existsUnique_of_two_le_of_compPoly`,
 `analytic_solution_existsUnique_of_two_le_of_compPoly`) live in
-`Chebyshev/AnalyticPolynomial.lean`. There is no `Z₁` face yet: a certificate's `Z₁`
-theorem is componentwise (`chebyshev_Z₁_le_relaxed` + `norm_derivative_apply_le`), see
-`norm_compPolyDerivative_le`. -/
+`Chebyshev/AnalyticPolynomial.lean`. The `Z₁` face lives in the certification layer:
+`StdChebIVPData.Z₁_le_of_Q` (and its kernel-scale form `Z₁_le_of_checksK`) in
+`Certification/IVP/Chebyshev.lean` applies `chebyshev_Z₁_le_relaxed` with the componentwise
+derivative bound `CompPoly.Chebyshev.norm_derivative_apply_le`. -/
 
 /-- `Z₂` from syntax: with `C` a bound for the linear-in-`c` operator `TC` and `B` a
 bound, over the certificate ball `closedBall ā r₀`, for twice the syntactic derivative
@@ -345,33 +340,18 @@ theorem StdChebIVPData.Z₂_le_of_compPoly_max
       ‖fderiv ℝ (d.G (banachField f) p) c
         - fderiv ℝ (d.G (banachField f) p) d.abar‖ ≤ (C * B) * r₀ := by
   intro c hc
-  have hcball : ‖c - d.abar‖ ≤ r₀ := by
-    rw [← dist_eq_norm]; exact Metric.mem_closedBall.mp hc
-  have hB0 : 0 ≤ B := by
-    have := hB d.abar (Metric.mem_closedBall_self hr₀) 0
-    refine le_trans (mul_nonneg zero_le_two
-      (CompPoly.Chebyshev.derivativeLipschitzBound_nonneg (f 0) _
-        (fun i => le_max_of_le_left (norm_nonneg _)))) this
-  rw [d.fderiv_G_of_compPoly f p, d.fderiv_G_of_compPoly f p]
-  have hdiff : (d.TA + d.TC.comp (compPolyDerivative f c))
-      - (d.TA + d.TC.comp (compPolyDerivative f d.abar))
-      = d.TC.comp (compPolyDerivative f c - compPolyDerivative f d.abar) := by
-    rw [ContinuousLinearMap.comp_sub]; abel
-  rw [hdiff]
-  refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun h => ?_
-  show ‖d.TC ((compPolyDerivative f c - compPolyDerivative f d.abar) h)‖ ≤ _
-  have hop : ‖compPolyDerivative f c - compPolyDerivative f d.abar‖ ≤ B * ‖c - d.abar‖ :=
-    norm_compPolyDerivative_sub_le_max f c d.abar B (hB c hc)
-  have hwnorm : ‖(compPolyDerivative f c - compPolyDerivative f d.abar) h‖
-      ≤ B * ‖c - d.abar‖ * ‖h‖ :=
-    ((compPolyDerivative f c - compPolyDerivative f d.abar).le_opNorm h).trans
-      (mul_le_mul_of_nonneg_right hop (norm_nonneg h))
-  refine le_trans (hTC _) ?_
-  refine le_trans (mul_le_mul_of_nonneg_left hwnorm hC) ?_
-  have h1 : B * ‖c - d.abar‖ * ‖h‖ ≤ B * r₀ * ‖h‖ :=
-    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hcball hB0) (norm_nonneg h)
-  have h2 := mul_le_mul_of_nonneg_left h1 hC
-  linarith [h2]
+  have hB0 : 0 ≤ B := (mul_nonneg zero_le_two
+    (CompPoly.Chebyshev.derivativeLipschitzBound_nonneg (f 0) _
+      fun _ => le_max_of_le_left (norm_nonneg _))).trans
+    (hB d.abar (Metric.mem_closedBall_self hr₀) 0)
+  rw [d.fderiv_G_of_compPoly f p, d.fderiv_G_of_compPoly f p, add_sub_add_left_eq_sub,
+    ← ContinuousLinearMap.comp_sub]
+  refine ((ContinuousLinearMap.opNorm_comp_le _ _).trans
+    (mul_le_mul_of_nonneg_right (d.TC.opNorm_le_bound hC hTC) (norm_nonneg _))).trans ?_
+  rw [mul_assoc]
+  refine mul_le_mul_of_nonneg_left ?_ hC
+  exact (norm_compPolyDerivative_sub_le_max f c d.abar B (hB c hc)).trans
+    (mul_le_mul_of_nonneg_left (by rw [← dist_eq_norm]; exact Metric.mem_closedBall.mp hc) hB0)
 
 /-- Existence and uniqueness of the coefficient zero for a polynomial system. The
 Chebyshev counterpart of `IVP.StdIVPData.existsUnique_of_compPoly`: differentiability of

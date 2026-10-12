@@ -28,9 +28,7 @@ private lemma polynomialOmega_mem (σ : PosReal) (p : ℝ[X]) :
     l1Omega.Mem σ p.coeff := by
   rw [l1Omega.mem_iff]
   refine summable_of_ne_finset_zero (s := p.support) fun n hn => ?_
-  have hcoeff : p.coeff n = 0 := by
-    exact Classical.not_not.mp (fun hne => hn (Polynomial.mem_support_iff.mpr hne))
-  rw [hcoeff, abs_zero, zero_mul]
+  rw [Polynomial.notMem_support_iff.mp hn, abs_zero, zero_mul]
 
 /-- The coefficient realization of the integer-indexed Chebyshev polynomial
 `Uₙ` in the omega-weighted Taylor range.  In particular, `U₋₁` is represented

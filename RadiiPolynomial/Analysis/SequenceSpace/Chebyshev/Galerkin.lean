@@ -28,15 +28,12 @@ namespace Galerkin
 
 /-! ### The finite weighted-ℓ¹ carrier -/
 
-/-- The Chebyshev weight on stored modes: `1` at mode `0`, `2 ν^k` at mode `k ≥ 1`. -/
-def wt (ν : PosReal) (k : ℕ) : ℝ := if k = 0 then 1 else 2 * (ν : ℝ) ^ k
+/-- The Chebyshev weight on stored modes: `1` at mode `0`, `2 ν^k` at mode `k ≥ 1` — the
+bordered weight `borderedWeight ν` of `Chebyshev/Bordered.lean`, i.e. `FνN ν N` is the finite
+section of `l1Bordered ν`. -/
+abbrev wt (ν : PosReal) (k : ℕ) : ℝ := borderedWeight ν k
 
-theorem wt_pos (ν : PosReal) (k : ℕ) : 0 < wt ν k := by
-  unfold wt
-  split_ifs
-  · exact one_pos
-  · have := ν.2
-    positivity
+theorem wt_pos (ν : PosReal) (k : ℕ) : 0 < wt ν k := borderedWeight_pos ν k
 
 set_option linter.unusedVariables false in
 /-- The finite weighted-ℓ¹ carrier on `Fin (N+1)`.  A `def`, not an `abbrev`: instance
@@ -107,7 +104,7 @@ theorem norm_eq (x : FνN ν N) :
   congr 1
   · simp [wt]
   · refine Finset.sum_congr rfl fun k _ => ?_
-    simp only [wt, Fin.val_succ, Nat.add_one_ne_zero, ite_false]
+    simp only [wt, Fin.val_succ, borderedWeight_succ]
     ring
 
 /-- The norm of a single stored mode: `‖c e_k‖ = |c| wt ν k`. -/

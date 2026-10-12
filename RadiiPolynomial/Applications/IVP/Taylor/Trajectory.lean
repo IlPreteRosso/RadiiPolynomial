@@ -1,12 +1,10 @@
 import RadiiPolynomial.Applications.IVP.Taylor.Operator
 import RadiiPolynomial.Applications.IVP.VectorField
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.WeightedL1
-import RadiiPolynomial.Algebra.Polynomial.CompPoly.Bounds
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.EvaluationDerivative
 import Mathlib.Analysis.ODE.ExistUnique
 import Mathlib.Analysis.ODE.Gronwall
 import Mathlib.Analysis.Calculus.Deriv.Prod
-import Mathlib.Analysis.Calculus.ContDiff.RCLike
 
 /-!
 # f-F Bridge: Sequence-Space Zeros to Function-Space Solutions
@@ -58,52 +56,6 @@ nonlinearity `φ` of `Applications/IVP/Taylor/Operator.lean`. -/
 noncomputable def banachField (φ_cpoly : Fin L → CompPoly L) (a : XL1 ν L) (l : Fin L) :
     l1Weighted ν :=
   (φ_cpoly l).evalBanach a
-
-/-- The vector field `vectorField φ_cpoly : ℝ^L → ℝ^L` is `ContDiff ℝ ⊤`, i.e. of class
-`C^ω` (analytic) on all of `ℝ^L`, in particular `C^∞`.
-Polynomial maps are smooth; smoothness is what the analytic-solution side needs, while
-the Lipschitz constant for the uniqueness argument is read off the syntax
-(`lipschitzOnWith_vectorField_closedBall`). -/
-theorem contDiff_vectorField (φ_cpoly : Fin L → CompPoly L) (l : Fin L) :
-    ContDiff ℝ ⊤ (fun x : Fin L → ℝ => vectorField φ_cpoly x l) :=
-  MvPolyBridge.contDiff_evalBanach (φ_cpoly l)
-
-/-- The full vector field `vectorField φ_cpoly : ℝ^L → (Fin L → ℝ)` is `ContDiff ℝ ⊤`
-(class `C^ω`). -/
-theorem contDiff_vectorField_pi (φ_cpoly : Fin L → CompPoly L) :
-    ContDiff ℝ ⊤ (fun x : Fin L → ℝ => vectorField φ_cpoly x) :=
-  contDiff_pi.mpr (contDiff_vectorField φ_cpoly)
-
-/-- The vector field is differentiable. (Via `MvPolyBridge.differentiable_evalBanach`, which
-derives it from the same smoothness fact as `contDiff_vectorField`.) -/
-theorem differentiable_vectorField (φ_cpoly : Fin L → CompPoly L) (l : Fin L) :
-    Differentiable ℝ (fun x : Fin L → ℝ => vectorField φ_cpoly x l) :=
-  MvPolyBridge.differentiable_evalBanach (φ_cpoly l)
-
-/-- The full vector field is differentiable. -/
-theorem differentiable_vectorField_pi (φ_cpoly : Fin L → CompPoly L) :
-    Differentiable ℝ (fun x : Fin L → ℝ => vectorField φ_cpoly x) :=
-  differentiable_pi.mpr (differentiable_vectorField φ_cpoly)
-
-/-- On any closed ball in `ℝ^L`, the polynomial vector field is Lipschitz with some
-constant. Existence form via `ContDiffOn.exists_lipschitzOnWith` on the (compact, convex)
-closed ball — the fallback for non-polynomial fields; the polynomial route is the explicit
-`lipschitzOnWith_vectorField_closedBall` below. -/
-theorem exists_lipschitz_vectorField_closedBall
-    (φ_cpoly : Fin L → CompPoly L) (R : ℝ) :
-    ∃ K : NNReal, LipschitzOnWith K (fun x : Fin L → ℝ => vectorField φ_cpoly x)
-                  (Metric.closedBall (0 : Fin L → ℝ) R) :=
-  (contDiff_vectorField_pi φ_cpoly).contDiffOn.exists_lipschitzOnWith
-    (by decide) (convex_closedBall _ _) (isCompact_closedBall _ _)
-
-/-- Explicit form: the Lipschitz constant on the closed ball is read off the polynomial
-syntax (`CompPoly.lipschitzBound`), so a certificate can state it as a number; this is the
-constant `analytic_solution_unique` uses. -/
-theorem lipschitzOnWith_vectorField_closedBall (φ_cpoly : Fin L → CompPoly L) (R : ℝ)
-    {K : NNReal} (hK : ∀ l, (φ_cpoly l).lipschitzBound (fun _ => R) ≤ (K : ℝ)) :
-    LipschitzOnWith K (fun x : Fin L → ℝ => vectorField φ_cpoly x)
-      (Metric.closedBall (0 : Fin L → ℝ) R) :=
-  CompPoly.lipschitzOnWith_evalBanach_pi φ_cpoly R hK
 
 /-- **Forward bridge** (book Lemma 8.1.4, forward direction).
 
@@ -170,14 +122,14 @@ there too (`hf_in_R`). Analyticity of `g` or of `t ↦ eval(a · , t)` is not as
 
 Where the Lipschitz constant comes from: on `closedBall 0 R` the polynomial vector field
 is Lipschitz with the explicit syntactic constant `Σ_l |lipschitzBound (φ_cpoly l) R|`
-(`lipschitzOnWith_vectorField_closedBall`, no compactness or mean-value argument). The
+(`exists_lipschitz_vectorField_closedBall`, no compactness or mean-value argument). The
 user only supplies the radius `R`, typically `‖ā‖_ν + r₀` from the radii polynomial output
 (so that both `eval(a, ·)` and the candidate solution `g` provably stay inside).
 
 The proof composes:
 - `solves_ODE_of_F_zero` (forward bridge): `eval(a, ·)` is a solution.
 - `hasDerivAt_pi`: assemble per-component derivatives into a Pi-type derivative.
-- `lipschitzOnWith_vectorField_closedBall`: the syntactic Lipschitz K on the closed ball.
+- `exists_lipschitz_vectorField_closedBall`: the syntactic Lipschitz K on the closed ball.
 - `ODE_solution_unique_of_mem_Ioo` (Mathlib's Grönwall-based uniqueness theorem): two
   solutions on the same Lipschitz domain agree if they agree at one point. -/
 theorem analytic_solution_unique
@@ -197,14 +149,7 @@ theorem analytic_solution_unique
   have hν : (0 : ℝ) < ν := ν.2
   have h_zero_mem : (0 : ℝ) ∈ Set.Ioo (-(ν : ℝ)) ν := ⟨by linarith, hν⟩
   -- Lipschitz constant on the closed ball, read off the polynomial syntax
-  obtain ⟨K, hLip⟩ : ∃ K : NNReal, LipschitzOnWith K (fun x : Fin L → ℝ => vectorField φ_cpoly x)
-      (Metric.closedBall (0 : Fin L → ℝ) R) :=
-    ⟨Real.toNNReal (∑ l, |(φ_cpoly l).lipschitzBound (fun _ => R)|),
-      lipschitzOnWith_vectorField_closedBall φ_cpoly R fun l => by
-        rw [Real.coe_toNNReal']
-        exact le_max_of_le_left ((le_abs_self _).trans
-          (Finset.single_le_sum (f := fun j => |(φ_cpoly j).lipschitzBound (fun _ => R)|)
-            (fun j _ => abs_nonneg _) (Finset.mem_univ l)))⟩
+  obtain ⟨K, hLip⟩ := exists_lipschitz_vectorField_closedBall φ_cpoly R
   -- Forward bridge: eval(a, ·) is a solution
   have h_eval_solves : ∀ t ∈ Set.Ioo (-(ν : ℝ)) ν,
       HasDerivAt (fun s => fun l => l1Weighted.eval (a l) s)

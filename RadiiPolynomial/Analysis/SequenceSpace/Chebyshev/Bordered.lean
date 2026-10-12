@@ -1,4 +1,5 @@
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion
+import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Symmetrize
 
 /-!
 # Bordered Chebyshev carrier and the storage-level T↔U transport
@@ -10,13 +11,21 @@ storage as an honest one-sided weighted space and certifies its T↔U transport:
 - `borderedWeight ν` — `1` at mode 0, `2ν^n` at modes `n ≥ 1`: the pushforward of the
   bilateral weight `ν^{|k|}` along the index cover `k ↦ |k|`, ramified at `0`.
 - `l1Bordered ν` — the physical one-sided T-coefficient space.
+- `nonnegRestrict : l1Chebyshev ν → l1Bordered ν` — restriction to the nonnegative modes,
+  `2`-bounded (`nonnegRestrict_norm_le`) and isometric on symmetric storage
+  (`nonnegRestrict_norm_of_isSymmetric`); its bundles `nonnegRestrictCLM` and
+  `physicalBorderedEquiv` live in `Chebyshev/SymmetricSubalgebra.lean`.
 - `borderedToU` / `borderedFromU` — a genuine two-sided Banach isomorphism
   (`borderedTU_equiv`) with `‖P‖ ≤ 1` and `‖P⁻¹‖ ≤ 2ν²/(ν²-1)`, so the transport
   conditioning is `κ_repo ≤ 2ν²/(ν²-1) = 1 + coth(log ν)`
-  (`borderedToU_CLM_norm_mul_borderedFromU_CLM_norm_le`). The `+1` over the clean pair's
-  `coth(log ν)` is exactly the ramification of the cover at the zero mode.
-- `nonnegRestrict` + `l1Chebyshev.IsSymmetric` — the isometric bridge from symmetric
-  bilateral storage, and compatibility `borderedToU ∘ nonnegRestrict = 2 • chebyshevToU`.
+  (`borderedToU_CLM_norm_mul_borderedFromU_CLM_norm_le`, on the bundle
+  `norm_borderedTU_equiv_mul_norm_symm_le`). The `+1` over the clean pair's `coth(log ν)` is
+  exactly the ramification of the cover at the zero mode.
+- compatibility with the bilateral pair: `borderedToU ∘ nonnegRestrict = 2 • chebyshevToU`
+  (`borderedToU_nonnegRestrict`) and `nonnegRestrict ∘ chebyshevFromU = 2 • borderedFromU`
+  (`nonnegRestrict_chebyshevFromU`).
+
+`l1Chebyshev.IsSymmetric`, `symmetrize` and `natEmbed` live in `Chebyshev/Symmetrize.lean`.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -30,9 +39,10 @@ namespace RadiiPolynomial
 `borderedWeight ν` is the pushforward of the bilateral weight `ν^{|k|}` along the
 quotient `k ↦ |k|`: each unramified fiber `{±m}` contributes `2ν^m`, the ramified
 fiber `{0}` contributes `1`. Restriction to the nonnegative modes maps the symmetric
-subspace of `l1Chebyshev ν` (physical T-series `a₀ + 2Σ_{k≥1} a_k T_k`) isometrically into
-`l1Bordered ν` (`nonnegRestrict_norm_of_isSymmetric`; surjectivity is not stated here), an
-honest one-sided weighted space — the "bordering" datum as a weight.
+subspace of `l1Chebyshev ν` (physical T-series `a₀ + 2Σ_{k≥1} a_k T_k`) isometrically onto
+`l1Bordered ν` (`nonnegRestrict_norm_of_isSymmetric`; the bundled linear isometry equivalence is
+`l1Chebyshev.physicalBorderedEquiv` in `Chebyshev/SymmetricSubalgebra.lean`), an honest one-sided
+weighted space — the "bordering" datum as a weight.
 
 On this carrier the T↔U transport `borderedToU`/`borderedFromU` is a genuine
 two-sided Banach isomorphism with `‖P‖ ≤ 1` and `‖P⁻¹‖ ≤ 2ν²/(ν²-1)`, so
@@ -129,6 +139,129 @@ private lemma l1Bordered_norm_fiber (a : l1Bordered ν) (n : ℕ) :
     Real.norm_eq_abs]
 
 end BorderedWeight
+
+/-! #### Restriction of bilateral storage to the nonnegative modes -/
+
+section SymmetricBridge
+
+variable {ν : PosReal}
+
+private lemma nonnegRestrict_fiber_le (a : l1Chebyshev ν) (n : ℕ) :
+    |lpOneAlg.toRealSeq a (↑n : ℤ)| * borderedWeight ν n ≤ 2 * ‖a (↑n : ℤ)‖ := by
+  rw [norm_fiber_natCast]
+  have he : |l1Chebyshev.toSeq a (↑n : ℤ)| = |lpOneAlg.toRealSeq a (↑n : ℤ)| := rfl
+  rw [he]
+  refine (mul_le_mul_of_nonneg_left (borderedWeight_le_two_mul ν n) (abs_nonneg _)).trans
+    (le_of_eq ?_)
+  ring
+
+private lemma nonnegRestrict_mem (a : l1Chebyshev ν) :
+    Memℓp (fun n : ℕ => lpAlgRingData.ofReal (E := BorderedScaledReal ν) n
+      (lpOneAlg.toRealSeq a (↑n : ℤ))) 1 := by
+  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
+  simp only [ENNReal.toReal_one, Real.rpow_one]
+  refine Summable.of_nonneg_of_le (fun n => norm_nonneg _) (fun n => ?_)
+    ((summable_norm_natCast a).mul_left 2)
+  rw [BorderedScaledReal.norm_lpAlgRingData_ofReal]
+  exact nonnegRestrict_fiber_le a n
+
+/-- Restriction of a bilateral sequence to its nonnegative modes, viewed in the
+bordered carrier. On symmetric sequences this is an isometry
+(`nonnegRestrict_norm_of_isSymmetric`). -/
+def nonnegRestrict (a : l1Chebyshev ν) : l1Bordered ν :=
+  ⟨⟨fun n => lpAlgRingData.ofReal (E := BorderedScaledReal ν) n
+      (lpOneAlg.toRealSeq a (↑n : ℤ)),
+    nonnegRestrict_mem a⟩⟩
+
+@[simp] lemma nonnegRestrict_toSeq (a : l1Chebyshev ν) (n : ℕ) :
+    lpOneAlg.toRealSeq (nonnegRestrict a) n = lpOneAlg.toRealSeq a (↑n : ℤ) := by
+  simp [nonnegRestrict, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
+
+/-- On symmetric sequences the bordered restriction is an isometry:
+`‖nonnegRestrict a‖ = ‖a‖` — the bordered weight is exactly the pushforward of the
+bilateral weight along `k ↦ |k|`. -/
+theorem nonnegRestrict_norm_of_isSymmetric (a : l1Chebyshev ν)
+    (ha : l1Chebyshev.IsSymmetric a) : ‖nonnegRestrict a‖ = ‖a‖ := by
+  rw [lpOneAlg.norm_eq_tsum, lpOneAlg.norm_eq_tsum]
+  have hpos : Summable (fun n : ℕ => ‖a (↑n : ℤ)‖) := summable_norm_natCast a
+  have hsplit : (∑' k : ℤ, ‖a k‖) =
+      (∑' n : ℕ, ‖a (↑n : ℤ)‖) + ∑' n : ℕ, ‖a (Int.negSucc n)‖ := by
+    rw [← lpOneAlg.norm_eq_tsum]
+    exact lpOneAlg.norm_eq_tsum_natCast_add_tsum_neg a
+  have hsym : ∀ n : ℕ, ‖a (Int.negSucc n)‖ = ‖a (↑(n + 1) : ℤ)‖ := by
+    intro n
+    have hval : lpOneAlg.toRealSeq a (Int.negSucc n) =
+        lpOneAlg.toRealSeq a (↑(n + 1) : ℤ) := by
+      have h := ha (↑(n + 1) : ℤ)
+      rwa [show -(↑(n + 1) : ℤ) = Int.negSucc n from by omega] at h
+    rw [lpOneAlg.norm_eq_abs_toReal_mul_weight a (Int.negSucc n),
+      lpOneAlg.norm_eq_abs_toReal_mul_weight a (↑(n + 1) : ℤ), hval]
+    simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+    have hna : (Int.negSucc n).natAbs = ((↑(n + 1) : ℤ)).natAbs := by omega
+    rw [hna]
+  have hnegeq : (∑' n : ℕ, ‖a (Int.negSucc n)‖) = ∑' n : ℕ, ‖a (↑(n + 1) : ℤ)‖ :=
+    tsum_congr hsym
+  have hz : (∑' n : ℕ, ‖a (↑n : ℤ)‖) =
+      ‖a ((0 : ℕ) : ℤ)‖ + ∑' n : ℕ, ‖a (↑(n + 1) : ℤ)‖ := hpos.tsum_eq_zero_add
+  have hLfib : (∑' n : ℕ, ‖(nonnegRestrict a) n‖) =
+      ∑' n : ℕ, |lpOneAlg.toRealSeq a (↑n : ℤ)| * borderedWeight ν n :=
+    tsum_congr fun n => by rw [l1Bordered_norm_fiber, nonnegRestrict_toSeq]
+  have sL : Summable (fun n : ℕ =>
+      |lpOneAlg.toRealSeq a (↑n : ℤ)| * borderedWeight ν n) :=
+    (lpOneAlg.summable_norm (nonnegRestrict a)).congr (fun n => by
+      rw [l1Bordered_norm_fiber, nonnegRestrict_toSeq])
+  have hzL : (∑' n : ℕ, |lpOneAlg.toRealSeq a (↑n : ℤ)| * borderedWeight ν n) =
+      |lpOneAlg.toRealSeq a ((0 : ℕ) : ℤ)| * borderedWeight ν 0 +
+        ∑' n : ℕ, |lpOneAlg.toRealSeq a (↑(n + 1) : ℤ)| * borderedWeight ν (n + 1) :=
+    sL.tsum_eq_zero_add
+  have hz0 : |lpOneAlg.toRealSeq a ((0 : ℕ) : ℤ)| * borderedWeight ν 0 =
+      ‖a ((0 : ℕ) : ℤ)‖ := by
+    rw [borderedWeight_zero, mul_one, norm_fiber_natCast]
+    rw [pow_zero, mul_one]
+    rfl
+  have hterm : ∀ n : ℕ, |lpOneAlg.toRealSeq a (↑(n + 1) : ℤ)| * borderedWeight ν (n + 1) =
+      2 * ‖a (↑(n + 1) : ℤ)‖ := by
+    intro n
+    rw [borderedWeight_succ, norm_fiber_natCast]
+    have he : |l1Chebyshev.toSeq a (↑(n + 1) : ℤ)| =
+        |lpOneAlg.toRealSeq a (↑(n + 1) : ℤ)| := rfl
+    rw [he]
+    ring
+  have hw2 : (∑' n : ℕ, |lpOneAlg.toRealSeq a (↑(n + 1) : ℤ)| * borderedWeight ν (n + 1)) =
+      2 * ∑' n : ℕ, ‖a (↑(n + 1) : ℤ)‖ := by
+    rw [tsum_congr hterm, tsum_mul_left]
+  linarith [hLfib, hzL, hz0, hw2, hsplit, hnegeq, hz]
+
+/-- Restriction to the nonnegative modes is `2`-bounded on all of `l1Chebyshev ν`, for every
+`ν`: each stored mode `n ≥ 1` carries the bordered weight `2νⁿ`. -/
+theorem nonnegRestrict_norm_le (a : l1Chebyshev ν) : ‖nonnegRestrict a‖ ≤ 2 * ‖a‖ := by
+  have hfib : ∀ n : ℕ, ‖(nonnegRestrict a) n‖ ≤ 2 * ‖a (n : ℤ)‖ := fun n => by
+    rw [l1Bordered_norm_fiber, nonnegRestrict_toSeq]
+    exact nonnegRestrict_fiber_le a n
+  rw [lpOneAlg.norm_eq_tsum, lpOneAlg.norm_eq_tsum]
+  refine (Summable.tsum_le_tsum hfib (lpOneAlg.summable_norm _)
+    ((summable_norm_natCast a).mul_left 2)).trans ?_
+  rw [tsum_mul_left]
+  exact mul_le_mul_of_nonneg_left (tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm a)
+    (fun _ => norm_nonneg _) Nat.cast_injective) zero_le_two
+
+namespace l1Chebyshev
+
+/-- Restriction after symmetrization is the plain restriction. -/
+lemma nonnegRestrict_symmetrize (a : l1Chebyshev ν) :
+    nonnegRestrict (symmetrize a) = nonnegRestrict a := by
+  apply lpOneAlg.ext_toRealSeq
+  funext n
+  show lpOneAlg.toRealSeq (nonnegRestrict (symmetrize a)) n
+    = lpOneAlg.toRealSeq (nonnegRestrict a) n
+  rw [nonnegRestrict_toSeq, nonnegRestrict_toSeq]
+  show toSeq (symmetrize a) (↑n : ℤ) = toSeq a (↑n : ℤ)
+  rw [symmetrize_toSeq]
+  simp
+
+end l1Chebyshev
+
+end SymmetricBridge
 
 section BorderedTransport
 
@@ -269,6 +402,19 @@ noncomputable def borderedToU_CLM [Fact (1 ≤ (ν : ℝ))] :
 @[simp] lemma borderedToU_CLM_apply [Fact (1 ≤ (ν : ℝ))] (a : l1Bordered ν) :
     borderedToU_CLM a = borderedToU a := rfl
 
+/-- Compatibility with the certified bilateral pair: on the bordered carrier the
+conversion is exactly twice `chebyshevToU` (the `1/2` was absorbed by the storage
+convention). Holds for every `a`, symmetric or not. -/
+theorem borderedToU_nonnegRestrict (a : l1Chebyshev ν) :
+    borderedToU (nonnegRestrict a) = (2 : ℝ) • chebyshevToU a := by
+  apply l1Weighted.ext; intro m
+  simp only [borderedToU_toSeq, nonnegRestrict_toSeq, l1Weighted.smul_toSeq,
+    chebyshevToU_toSeq]
+  rw [show ((↑(m + 2) : ℤ)) = (↑m : ℤ) + 2 from by omega]
+  have he : ∀ k : ℤ, lpOneAlg.toRealSeq a k = l1Chebyshev.toSeq a k := fun _ => rfl
+  rw [he, he]
+  ring
+
 /-! #### U→T on the bordered carrier: `(Q b)_m = Σ_j b_{m+2j}`, `‖Q‖ ≤ 2ν²/(ν²-1)` -/
 
 variable [Fact (1 < (ν : ℝ))]
@@ -335,64 +481,34 @@ lemma borderedFromU_smul (r : ℝ) (b : l1Weighted ν) :
     tsum_congr fun j => l1Weighted.smul_toSeq r b (m + 2 * j)
   rw [hcong, tsum_mul_left]
 
-/-- `‖borderedFromU b‖ ≤ (2ν²/(ν²-1))·‖b‖`. -/
+/-- **Compatibility of the two U→T conversions**: restricted to its nonnegative modes, the
+bilateral `chebyshevFromU` is exactly twice the bordered `borderedFromU` (the `2` that the bordered
+storage moved into its weight). Sibling of `borderedToU_nonnegRestrict`. -/
+theorem nonnegRestrict_chebyshevFromU (b : l1Weighted ν) :
+    nonnegRestrict (chebyshevFromU b) = (2 : ℝ) • borderedFromU b := by
+  apply lpOneAlg.ext_toRealSeq; funext n
+  rw [lpOneAlg.toRealSeq_smul, Pi.smul_apply, smul_eq_mul, nonnegRestrict_toSeq,
+    chebyshevFromU_toSeq_natCast, borderedFromU_toSeq]
+
+/-- `‖borderedFromU b‖ ≤ (2ν²/(ν²-1))·‖b‖`: the bilateral bound `chebyshevFromU_norm_le` read
+through `nonnegRestrict_chebyshevFromU` and `nonnegRestrict_norm_le`. -/
 lemma borderedFromU_norm_le (b : l1Weighted ν) :
     ‖borderedFromU b‖ ≤ 2 * (ν : ℝ) ^ 2 / ((ν : ℝ) ^ 2 - 1) * ‖b‖ := by
-  rw [lpOneAlg.norm_eq_tsum]
-  have hfib : (∑' m : ℕ, ‖(borderedFromU b) m‖) ≤
-      ∑' m : ℕ, 2 * ∑' j : ℕ, |l1Weighted.toSeq b (m + 2 * j)| * (ν : ℝ) ^ m := by
-    refine Summable.tsum_le_tsum (fun m => ?_)
-      (lpOneAlg.summable_norm (borderedFromU b)) ((fromU_marginal_summable b).mul_left 2)
-    show ‖lpAlgRingData.ofReal (E := BorderedScaledReal ν) m
-        (∑' j : ℕ, l1Weighted.toSeq b (m + 2 * j))‖ ≤ _
-    exact borderedFromU_fiber_le b m
-  refine hfib.trans ?_
-  rw [tsum_mul_left]
-  have hu : Summable (Function.uncurry fun j k : ℕ =>
-      |l1Weighted.toSeq b (k + 2 * j)| * (ν : ℝ) ^ k) := fromU_prod_summable b
-  have hcomm : (∑' k : ℕ, ∑' j : ℕ, |l1Weighted.toSeq b (k + 2 * j)| * (ν : ℝ) ^ k) =
-      ∑' j : ℕ, ∑' k : ℕ, |l1Weighted.toSeq b (k + 2 * j)| * (ν : ℝ) ^ k :=
-    Summable.tsum_comm hu
-  rw [hcomm]
-  have hrows : Summable (fun j : ℕ =>
-      ∑' k : ℕ, |l1Weighted.toSeq b (k + 2 * j)| * (ν : ℝ) ^ k) :=
-    ((summable_prod_of_nonneg
-      (fun p => mul_nonneg (abs_nonneg _) (pow_nonneg ν.2.le _))).mp
-      (fromU_prod_summable b)).2
-  have hgeom : Summable (fun j : ℕ => (((ν : ℝ) ^ 2)⁻¹) ^ j * ‖b‖) :=
-    (summable_geometric_of_lt_one (invsq_nonneg (ν := ν))
-      (invsq_lt_one (ν := ν))).mul_right ‖b‖
-  have hstep2 : (∑' j : ℕ, ∑' k : ℕ, |l1Weighted.toSeq b (k + 2 * j)| * (ν : ℝ) ^ k) ≤
-      ∑' j : ℕ, (((ν : ℝ) ^ 2)⁻¹) ^ j * ‖b‖ :=
-    Summable.tsum_le_tsum (fun j => fromU_row_le b j) hrows hgeom
-  refine (mul_le_mul_of_nonneg_left hstep2 (by norm_num : (0 : ℝ) ≤ 2)).trans
-    (le_of_eq ?_)
-  have hgeo_eq : (∑' j : ℕ, (((ν : ℝ) ^ 2)⁻¹) ^ j * ‖b‖) =
-      (1 - ((ν : ℝ) ^ 2)⁻¹)⁻¹ * ‖b‖ := by
-    rw [tsum_mul_right,
-      tsum_geometric_of_lt_one (invsq_nonneg (ν := ν)) (invsq_lt_one (ν := ν))]
-  rw [hgeo_eq]
-  have h1 : ((ν : ℝ) ^ 2) ≠ 0 := (pow_pos ν.2 2).ne'
-  have h2 : ((ν : ℝ) ^ 2) - 1 ≠ 0 := sub_ne_zero.mpr (one_lt_nusq (ν := ν)).ne'
-  field_simp
+  have h := (nonnegRestrict_norm_le (chebyshevFromU b)).trans
+    (mul_le_mul_of_nonneg_left (chebyshevFromU_norm_le b) zero_le_two)
+  rw [nonnegRestrict_chebyshevFromU, norm_smul, Real.norm_two] at h
+  linarith
 
 /-! #### Round trips: a genuine Banach isomorphism -/
 
-/-- U-side round trip on the bordered carrier: exact. -/
+/-- U-side round trip on the bordered carrier: exact (the bilateral round trip
+`chebyshevToU_chebyshevFromU` through `borderedToU_nonnegRestrict` and
+`nonnegRestrict_chebyshevFromU`). -/
 theorem borderedToU_borderedFromU (b : l1Weighted ν) :
     borderedToU (borderedFromU b) = b := by
-  apply l1Weighted.ext; intro m
-  rw [borderedToU_toSeq, borderedFromU_toSeq, borderedFromU_toSeq]
-  have hkey : (∑' j : ℕ, l1Weighted.toSeq b (m + 2 * j)) =
-      l1Weighted.toSeq b m + ∑' j : ℕ, l1Weighted.toSeq b ((m + 2) + 2 * j) := by
-    have hshift : (∑' j : ℕ, l1Weighted.toSeq b (m + 2 * (j + 1))) =
-        ∑' j : ℕ, l1Weighted.toSeq b ((m + 2) + 2 * j) :=
-      tsum_congr fun j => by
-        rw [show m + 2 * (j + 1) = (m + 2) + 2 * j from by omega]
-    rw [(summable_toSeq_shift b m).tsum_eq_zero_add, hshift,
-      show m + 2 * 0 = m from by omega]
-  rw [hkey]
-  ring
+  have h := borderedToU_nonnegRestrict (chebyshevFromU b)
+  rw [nonnegRestrict_chebyshevFromU, borderedToU_smul, chebyshevToU_chebyshevFromU] at h
+  exact smul_right_injective _ two_ne_zero h
 
 /-- T-side round trip on the bordered carrier: exact (both spaces are one-sided,
 so unlike `chebyshevFromU ∘ chebyshevToU` there is no truncation caveat). -/
@@ -420,19 +536,11 @@ theorem borderedFromU_borderedToU (a : l1Bordered ν) :
   rw [hza, show m + 2 * 0 = m from by omega]
   ring
 
-/-- The bordered T↔U transport as a continuous linear equivalence — the certified
-conjugation between physical T-storage and U-coefficients. -/
-noncomputable def borderedTU_equiv [Fact (1 ≤ (ν : ℝ))] :
-    l1Bordered ν ≃L[ℝ] l1Weighted ν :=
-  ContinuousLinearEquiv.equivOfInverse borderedToU_CLM
-    (LinearMap.mkContinuous
-      { toFun := borderedFromU
-        map_add' := borderedFromU_add
-        map_smul' := fun r b => by simp [borderedFromU_smul] }
-      (2 * (ν : ℝ) ^ 2 / ((ν : ℝ) ^ 2 - 1))
-      (fun b => borderedFromU_norm_le b))
-    (fun a => by simp [borderedFromU_borderedToU])
-    (fun b => by simp [borderedToU_borderedFromU])
+/-- `Fact (1 ≤ ν)` from the section's `Fact (1 < ν)`; a local instance of this section only
+(never a global instance). -/
+private theorem fact_one_le_of_one_lt : Fact (1 ≤ (ν : ℝ)) := ⟨(Fact.out : (1 : ℝ) < ν).le⟩
+
+attribute [local instance] fact_one_le_of_one_lt
 
 /-- The bordered U→T conversion as a CLM. -/
 noncomputable def borderedFromU_CLM : l1Weighted ν →L[ℝ] l1Bordered ν :=
@@ -446,6 +554,26 @@ noncomputable def borderedFromU_CLM : l1Weighted ν →L[ℝ] l1Bordered ν :=
 @[simp] lemma borderedFromU_CLM_apply (b : l1Weighted ν) :
     borderedFromU_CLM b = borderedFromU b := rfl
 
+/-- The bordered T↔U transport as a continuous linear equivalence — the certified
+conjugation between physical T-storage and U-coefficients, built from the two named CLMs. -/
+noncomputable def borderedTU_equiv : l1Bordered ν ≃L[ℝ] l1Weighted ν :=
+  ContinuousLinearEquiv.equivOfInverse borderedToU_CLM borderedFromU_CLM
+    (fun a => by simp [borderedFromU_borderedToU])
+    (fun b => by simp [borderedToU_borderedFromU])
+
+@[simp] theorem borderedTU_equiv_apply (a : l1Bordered ν) :
+    borderedTU_equiv a = borderedToU a := rfl
+
+@[simp] theorem borderedTU_equiv_symm_apply (b : l1Weighted ν) :
+    borderedTU_equiv.symm b = borderedFromU b := rfl
+
+theorem coe_borderedTU_equiv :
+    (borderedTU_equiv (ν := ν) : l1Bordered ν →L[ℝ] l1Weighted ν) = borderedToU_CLM := rfl
+
+theorem coe_borderedTU_equiv_symm :
+    ((borderedTU_equiv (ν := ν)).symm : l1Weighted ν →L[ℝ] l1Bordered ν) = borderedFromU_CLM :=
+  rfl
+
 /-- **κ_repo**: conditioning of the physical-storage T↔U transport,
 `‖P‖·‖P⁻¹‖ ≤ 2ν²/(ν²-1) = 1 + coth(log ν)`.
 
@@ -455,7 +583,7 @@ index cover `k ↦ |k|` at the zero mode — the bordered weight is `1` there in
 of `2`, so the `e₀` column of `P` attains norm `1`, while the columns `e_n`, `n ≥ 2`,
 cost `(1+ν⁻²)/2` and `e₁` costs `1/2`. Only the product bound is proved here; the column
 norms are not. -/
-theorem borderedToU_CLM_norm_mul_borderedFromU_CLM_norm_le [Fact (1 ≤ (ν : ℝ))] :
+theorem borderedToU_CLM_norm_mul_borderedFromU_CLM_norm_le :
     ‖borderedToU_CLM (ν := ν)‖ * ‖borderedFromU_CLM (ν := ν)‖ ≤
       2 * (ν : ℝ) ^ 2 / ((ν : ℝ) ^ 2 - 1) := by
   have hden : (0 : ℝ) < (ν : ℝ) ^ 2 - 1 := by linarith [one_lt_nusq (ν := ν)]
@@ -466,424 +594,15 @@ theorem borderedToU_CLM_norm_mul_borderedFromU_CLM_norm_le [Fact (1 ≤ (ν : �
   have := mul_le_mul h1 h2 (norm_nonneg _) zero_le_one
   rwa [one_mul] at this
 
+/-- κ_repo stated on the bundled equivalence `borderedTU_equiv`. -/
+theorem norm_borderedTU_equiv_mul_norm_symm_le :
+    ‖(borderedTU_equiv (ν := ν) : l1Bordered ν →L[ℝ] l1Weighted ν)‖ *
+      ‖((borderedTU_equiv (ν := ν)).symm : l1Weighted ν →L[ℝ] l1Bordered ν)‖ ≤
+      2 * (ν : ℝ) ^ 2 / ((ν : ℝ) ^ 2 - 1) := by
+  rw [coe_borderedTU_equiv, coe_borderedTU_equiv_symm]
+  exact borderedToU_CLM_norm_mul_borderedFromU_CLM_norm_le
+
 end BorderedTransport
-
-/-! #### Bridge to bilateral storage: symmetric sequences and the isometry -/
-
-section SymmetricBridge
-
-variable {ν : PosReal}
-
-/-- Symmetric bilateral sequences `a_{-k} = a_k`: the physical T-series inside
-`l1Chebyshev ν`. -/
-def l1Chebyshev.IsSymmetric (a : l1Chebyshev ν) : Prop :=
-  ∀ k : ℤ, lpOneAlg.toRealSeq a (-k) = lpOneAlg.toRealSeq a k
-
-private lemma nonnegRestrict_fiber_le (a : l1Chebyshev ν) (n : ℕ) :
-    |lpOneAlg.toRealSeq a (↑n : ℤ)| * borderedWeight ν n ≤ 2 * ‖a (↑n : ℤ)‖ := by
-  rw [norm_fiber_natCast]
-  have he : |l1Chebyshev.toSeq a (↑n : ℤ)| = |lpOneAlg.toRealSeq a (↑n : ℤ)| := rfl
-  rw [he]
-  refine (mul_le_mul_of_nonneg_left (borderedWeight_le_two_mul ν n) (abs_nonneg _)).trans
-    (le_of_eq ?_)
-  ring
-
-private lemma nonnegRestrict_mem (a : l1Chebyshev ν) :
-    Memℓp (fun n : ℕ => lpAlgRingData.ofReal (E := BorderedScaledReal ν) n
-      (lpOneAlg.toRealSeq a (↑n : ℤ))) 1 := by
-  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
-  simp only [ENNReal.toReal_one, Real.rpow_one]
-  refine Summable.of_nonneg_of_le (fun n => norm_nonneg _) (fun n => ?_)
-    ((summable_norm_natCast a).mul_left 2)
-  rw [BorderedScaledReal.norm_lpAlgRingData_ofReal]
-  exact nonnegRestrict_fiber_le a n
-
-/-- Restriction of a bilateral sequence to its nonnegative modes, viewed in the
-bordered carrier. On symmetric sequences this is an isometry
-(`nonnegRestrict_norm_of_isSymmetric`). -/
-def nonnegRestrict (a : l1Chebyshev ν) : l1Bordered ν :=
-  ⟨⟨fun n => lpAlgRingData.ofReal (E := BorderedScaledReal ν) n
-      (lpOneAlg.toRealSeq a (↑n : ℤ)),
-    nonnegRestrict_mem a⟩⟩
-
-@[simp] lemma nonnegRestrict_toSeq (a : l1Chebyshev ν) (n : ℕ) :
-    lpOneAlg.toRealSeq (nonnegRestrict a) n = lpOneAlg.toRealSeq a (↑n : ℤ) := by
-  simp [nonnegRestrict, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
-
-/-- On symmetric sequences the bordered restriction is an isometry:
-`‖nonnegRestrict a‖ = ‖a‖` — the bordered weight is exactly the pushforward of the
-bilateral weight along `k ↦ |k|`. -/
-theorem nonnegRestrict_norm_of_isSymmetric (a : l1Chebyshev ν)
-    (ha : l1Chebyshev.IsSymmetric a) : ‖nonnegRestrict a‖ = ‖a‖ := by
-  rw [lpOneAlg.norm_eq_tsum, lpOneAlg.norm_eq_tsum]
-  have hpos : Summable (fun n : ℕ => ‖a (↑n : ℤ)‖) := summable_norm_natCast a
-  have hneg : Summable (fun n : ℕ => ‖a (Int.negSucc n)‖) :=
-    (lpOneAlg.summable_norm a).comp_injective (by intro x y h; omega)
-  have hsplit : (∑' k : ℤ, ‖a k‖) =
-      (∑' n : ℕ, ‖a (↑n : ℤ)‖) + ∑' n : ℕ, ‖a (Int.negSucc n)‖ := by
-    rw [← tsum_int_rec hpos hneg]
-    exact tsum_congr fun k => by cases k <;> rfl
-  have hsym : ∀ n : ℕ, ‖a (Int.negSucc n)‖ = ‖a (↑(n + 1) : ℤ)‖ := by
-    intro n
-    have hval : lpOneAlg.toRealSeq a (Int.negSucc n) =
-        lpOneAlg.toRealSeq a (↑(n + 1) : ℤ) := by
-      have h := ha (↑(n + 1) : ℤ)
-      rwa [show -(↑(n + 1) : ℤ) = Int.negSucc n from by omega] at h
-    rw [lpOneAlg.norm_eq_abs_toReal_mul_weight a (Int.negSucc n),
-      lpOneAlg.norm_eq_abs_toReal_mul_weight a (↑(n + 1) : ℤ), hval]
-    simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
-    have hna : (Int.negSucc n).natAbs = ((↑(n + 1) : ℤ)).natAbs := by omega
-    rw [hna]
-  have hnegeq : (∑' n : ℕ, ‖a (Int.negSucc n)‖) = ∑' n : ℕ, ‖a (↑(n + 1) : ℤ)‖ :=
-    tsum_congr hsym
-  have hz : (∑' n : ℕ, ‖a (↑n : ℤ)‖) =
-      ‖a ((0 : ℕ) : ℤ)‖ + ∑' n : ℕ, ‖a (↑(n + 1) : ℤ)‖ := hpos.tsum_eq_zero_add
-  have hLfib : (∑' n : ℕ, ‖(nonnegRestrict a) n‖) =
-      ∑' n : ℕ, |lpOneAlg.toRealSeq a (↑n : ℤ)| * borderedWeight ν n :=
-    tsum_congr fun n => by rw [l1Bordered_norm_fiber, nonnegRestrict_toSeq]
-  have sL : Summable (fun n : ℕ =>
-      |lpOneAlg.toRealSeq a (↑n : ℤ)| * borderedWeight ν n) :=
-    (lpOneAlg.summable_norm (nonnegRestrict a)).congr (fun n => by
-      rw [l1Bordered_norm_fiber, nonnegRestrict_toSeq])
-  have hzL : (∑' n : ℕ, |lpOneAlg.toRealSeq a (↑n : ℤ)| * borderedWeight ν n) =
-      |lpOneAlg.toRealSeq a ((0 : ℕ) : ℤ)| * borderedWeight ν 0 +
-        ∑' n : ℕ, |lpOneAlg.toRealSeq a (↑(n + 1) : ℤ)| * borderedWeight ν (n + 1) :=
-    sL.tsum_eq_zero_add
-  have hz0 : |lpOneAlg.toRealSeq a ((0 : ℕ) : ℤ)| * borderedWeight ν 0 =
-      ‖a ((0 : ℕ) : ℤ)‖ := by
-    rw [borderedWeight_zero, mul_one, norm_fiber_natCast]
-    rw [pow_zero, mul_one]
-    rfl
-  have hterm : ∀ n : ℕ, |lpOneAlg.toRealSeq a (↑(n + 1) : ℤ)| * borderedWeight ν (n + 1) =
-      2 * ‖a (↑(n + 1) : ℤ)‖ := by
-    intro n
-    rw [borderedWeight_succ, norm_fiber_natCast]
-    have he : |l1Chebyshev.toSeq a (↑(n + 1) : ℤ)| =
-        |lpOneAlg.toRealSeq a (↑(n + 1) : ℤ)| := rfl
-    rw [he]
-    ring
-  have hw2 : (∑' n : ℕ, |lpOneAlg.toRealSeq a (↑(n + 1) : ℤ)| * borderedWeight ν (n + 1)) =
-      2 * ∑' n : ℕ, ‖a (↑(n + 1) : ℤ)‖ := by
-    rw [tsum_congr hterm, tsum_mul_left]
-  linarith [hLfib, hzL, hz0, hw2, hsplit, hnegeq, hz]
-
-/-- Compatibility with the certified bilateral pair: on the bordered carrier the
-conversion is exactly twice `chebyshevToU` (the `1/2` was absorbed by the storage
-convention). Holds for every `a`, symmetric or not. -/
-theorem borderedToU_nonnegRestrict (a : l1Chebyshev ν) :
-    borderedToU (nonnegRestrict a) = (2 : ℝ) • chebyshevToU a := by
-  apply l1Weighted.ext; intro m
-  simp only [borderedToU_toSeq, nonnegRestrict_toSeq, l1Weighted.smul_toSeq,
-    chebyshevToU_toSeq]
-  rw [show ((↑(m + 2) : ℤ)) = (↑m : ℤ) + 2 from by omega]
-  have he : ∀ k : ℤ, lpOneAlg.toRealSeq a k = l1Chebyshev.toSeq a k := fun _ => rfl
-  rw [he, he]
-  ring
-
-/-! #### Symmetrization: the section `l1Bordered`-style storage → symmetric bilateral
-
-`symmetrize a = (a_{|k|})_k`: symmetric output, reads only non-negative input
-modes. Promoted from Example 14.2.1 (2026-08-25), where it is the correct way
-to write a physical Chebyshev nonlinearity on the bilateral carrier. -/
-
-namespace l1Chebyshev
-
-private lemma summable_nonneg_fibers (a : l1Chebyshev ν) :
-    Summable (fun n : ℕ => |toSeq a (n : ℤ)| * (ν : ℝ) ^ n) := by
-  refine (summable_norm_natCast a).congr fun n => ?_
-  rw [norm_fiber]
-  simp
-
-private lemma summable_shift_fibers (a : l1Chebyshev ν) :
-    Summable (fun n : ℕ => |toSeq a (((n + 1 : ℕ)) : ℤ)| * (ν : ℝ) ^ (n + 1)) :=
-  (summable_nonneg_fibers a).comp_injective (fun n m h => by simpa using h)
-
-private lemma symmetrizeSeq_norm (a : l1Chebyshev ν) (k : ℤ) :
-    ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) k (toSeq a (k.natAbs : ℤ))‖
-      = |toSeq a (k.natAbs : ℤ)| * (ν : ℝ) ^ k.natAbs := by
-  simp
-
-private lemma symmetrize_memℓp (a : l1Chebyshev ν) :
-    Memℓp (fun k : ℤ => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
-      (toSeq a (k.natAbs : ℤ))) 1 := by
-  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
-  simp only [ENNReal.toReal_one, Real.rpow_one]
-  apply Summable.of_nat_of_neg_add_one
-  · refine (summable_nonneg_fibers a).congr fun n => ?_
-    rw [symmetrizeSeq_norm]
-    simp
-  · refine (summable_shift_fibers a).congr fun n => ?_
-    rw [symmetrizeSeq_norm]
-    have h1 : ((-(n + 1) : ℤ)).natAbs = n + 1 := by omega
-    rw [h1]
-
-/-- Symmetrization `(symmetrize a)_k = a_{|k|}`: symmetric output, reads only
-non-negative input modes. `‖symmetrize a‖ ≤ 2‖a‖` (`symmetrize_norm_le`). -/
-def symmetrize (a : l1Chebyshev ν) : l1Chebyshev ν :=
-  ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k (toSeq a (k.natAbs : ℤ)),
-    symmetrize_memℓp a⟩⟩
-
-@[simp] lemma symmetrize_toSeq (a : l1Chebyshev ν) (k : ℤ) :
-    toSeq (symmetrize a) k = toSeq a (k.natAbs : ℤ) :=
-  lpAlgRingData.toReal_ofReal k _
-
-lemma symmetrize_add (a b : l1Chebyshev ν) :
-    symmetrize (a + b) = symmetrize a + symmetrize b := by
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  show toSeq _ k = toSeq _ k
-  rw [symmetrize_toSeq, toSeq_add, toSeq_add, symmetrize_toSeq, symmetrize_toSeq]
-
-lemma symmetrize_smul (r : ℝ) (a : l1Chebyshev ν) :
-    symmetrize (r • a) = r • symmetrize a := by
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  show toSeq _ k = toSeq _ k
-  rw [symmetrize_toSeq, toSeq_smul, toSeq_smul, symmetrize_toSeq]
-
-/-- `‖symmetrize a‖ ≤ 2‖a‖`: each non-zero output mode charges its source
-mode twice (once per sign), mode 0 once. -/
-lemma symmetrize_norm_le (a : l1Chebyshev ν) : ‖symmetrize a‖ ≤ 2 * ‖a‖ := by
-  have hfib : ∀ k : ℤ,
-      ‖(symmetrize a) k‖ = |toSeq a (k.natAbs : ℤ)| * (ν : ℝ) ^ k.natAbs := by
-    intro k
-    rw [norm_fiber, symmetrize_toSeq]
-  have hs1 : Summable (fun n : ℕ => ‖(symmetrize a) (n : ℤ)‖) := by
-    refine (summable_nonneg_fibers a).congr fun n => ?_
-    rw [hfib]
-    simp
-  have hs2 : Summable (fun n : ℕ => ‖(symmetrize a) (-(n + 1) : ℤ)‖) := by
-    refine (summable_shift_fibers a).congr fun n => ?_
-    rw [hfib]
-    have h1 : ((-(n + 1) : ℤ)).natAbs = n + 1 := by omega
-    rw [h1]
-  have hnorm : ‖symmetrize a‖ = (∑' n : ℕ, ‖(symmetrize a) (n : ℤ)‖)
-      + ∑' n : ℕ, ‖(symmetrize a) (-(n + 1) : ℤ)‖ := by
-    rw [lpOneAlg.norm_eq_tsum]
-    exact tsum_of_nat_of_neg_add_one hs1 hs2
-  have hinj₁ : Function.Injective ((↑) : ℕ → ℤ) := fun n m h => by exact_mod_cast h
-  have hleg1 : (∑' n : ℕ, ‖(symmetrize a) (n : ℤ)‖) ≤ ‖a‖ := by
-    rw [lpOneAlg.norm_eq_tsum]
-    refine hs1.tsum_le_tsum_of_inj ((↑) : ℕ → ℤ) hinj₁ (fun k _ => norm_nonneg _)
-      (fun n => le_of_eq ?_) (lpOneAlg.summable_norm a)
-    rw [hfib, norm_fiber]
-    simp
-  have hinj₂ : Function.Injective (fun n : ℕ => ((n : ℤ) + 1)) :=
-    fun n m h => by simpa using h
-  have hleg2 : (∑' n : ℕ, ‖(symmetrize a) (-(n + 1) : ℤ)‖) ≤ ‖a‖ := by
-    rw [lpOneAlg.norm_eq_tsum]
-    refine hs2.tsum_le_tsum_of_inj (fun n : ℕ => ((n : ℤ) + 1)) hinj₂
-      (fun k _ => norm_nonneg _) (fun n => le_of_eq ?_) (lpOneAlg.summable_norm a)
-    rw [hfib, norm_fiber]
-    have h1 : ((-(n + 1) : ℤ)).natAbs = n + 1 := by omega
-    have h2 : (((n : ℤ) + 1)).natAbs = n + 1 := by omega
-    rw [h1, h2]
-    have h3 : (((n + 1 : ℕ) : ℤ)) = ((n : ℤ) + 1) := by push_cast; ring
-    rw [h3]
-  linarith [hnorm, hleg1, hleg2]
-
-/-- The symmetrization as a CLM (`symmetrize_CLM_norm_le : ‖·‖ ≤ 2`). -/
-def symmetrize_CLM : l1Chebyshev ν →L[ℝ] l1Chebyshev ν :=
-  LinearMap.mkContinuous
-    { toFun := symmetrize
-      map_add' := symmetrize_add
-      map_smul' := symmetrize_smul }
-    2 (fun a => by
-      show ‖symmetrize a‖ ≤ 2 * ‖a‖
-      exact symmetrize_norm_le a)
-
-@[simp] lemma symmetrize_CLM_apply (a : l1Chebyshev ν) :
-    symmetrize_CLM a = symmetrize a := rfl
-
-lemma symmetrize_CLM_norm_le :
-    ‖(symmetrize_CLM : l1Chebyshev ν →L[ℝ] l1Chebyshev ν)‖ ≤ 2 :=
-  LinearMap.mkContinuous_norm_le _ (by norm_num) _
-
-/-- The symmetrized element is symmetric. -/
-lemma symmetrize_isSymmetric (a : l1Chebyshev ν) : (symmetrize a).IsSymmetric := by
-  intro k
-  show toSeq (symmetrize a) (-k) = toSeq (symmetrize a) k
-  rw [symmetrize_toSeq, symmetrize_toSeq, Int.natAbs_neg]
-
-/-- Symmetric elements are fixed by symmetrization. -/
-lemma symmetrize_eq_self_of_isSymmetric (a : l1Chebyshev ν) (ha : a.IsSymmetric) :
-    symmetrize a = a := by
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  show toSeq (symmetrize a) k = toSeq a k
-  rw [symmetrize_toSeq]
-  rcases Int.natAbs_eq k with h | h
-  · rw [← h]
-  · rw [show ((k.natAbs : ℤ)) = -k from by omega]
-    exact ha k
-
-/-- Symmetrization annihilates strictly negative singles. -/
-lemma symmetrize_single_negSucc (m : ℕ) (x : ℝ) :
-    symmetrize (single (ν := ν) (Int.negSucc m) x) = 0 := by
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  show toSeq (symmetrize (single (ν := ν) (Int.negSucc m) x)) k
-    = toSeq (0 : l1Chebyshev ν) k
-  rw [symmetrize_toSeq, toSeq_single, toSeq_zero, ite_eq_right (by omega)]
-
-private theorem symmetrize_single_toSeq (k : ℕ) (n : ℤ) :
-    l1Chebyshev.toSeq (l1Chebyshev.symmetrize
-      (l1Chebyshev.single (ν := ν) (k : ℤ) 1)) n =
-      if n.natAbs = k then 1 else 0 := by
-  rw [l1Chebyshev.symmetrize_toSeq, l1Chebyshev.toSeq_single]
-  by_cases h : n.natAbs = k
-  · rw [ite_eq_left (by exact_mod_cast h), ite_eq_left h]
-  · rw [ite_eq_right (fun hc => h (by exact_mod_cast hc)), ite_eq_right h]
-
-/-- The stored zero mode is single; a positive mode has both Laurent directions. -/
-theorem mul_symmetrize_single_toSeq [Fact (1 ≤ (ν : ℝ))] (c : l1Chebyshev ν) (k : ℕ) (n : ℤ) :
-    l1Chebyshev.toSeq
-      (c * l1Chebyshev.symmetrize (l1Chebyshev.single (k : ℤ) 1)) n =
-      if k = 0 then l1Chebyshev.toSeq c n
-      else l1Chebyshev.toSeq c (n - k) + l1Chebyshev.toSeq c (n + k) := by
-  cases k with
-  | zero =>
-      rw [l1Chebyshev.toSeq_mul_eq_finsum _ _ _ ({(0 : ℤ)} : Finset ℤ)
-        (fun i hi => by
-          rw [symmetrize_single_toSeq, ite_eq_right (fun hc => hi (by
-            simp only [Finset.mem_singleton]
-            omega))])]
-      rw [Finset.sum_singleton, symmetrize_single_toSeq]
-      simp
-  | succ k =>
-      rw [l1Chebyshev.toSeq_mul_eq_finsum _ _ _
-        ({((k + 1 : ℕ) : ℤ), -((k + 1 : ℕ) : ℤ)} : Finset ℤ)
-        (fun i hi => by
-          rw [symmetrize_single_toSeq, ite_eq_right (fun hc => hi (by
-            simp only [Finset.mem_insert, Finset.mem_singleton]
-            omega))])]
-      rw [Finset.sum_pair (by omega)]
-      rw [symmetrize_single_toSeq, ite_eq_left (show (((k + 1 : ℕ) : ℤ)).natAbs = k + 1
-        from by omega), symmetrize_single_toSeq,
-        ite_eq_left (show (-((k + 1 : ℕ) : ℤ)).natAbs = k + 1 from by omega)]
-      simp only [mul_one, Nat.succ_ne_zero, ite_false, sub_neg_eq_add]
-
-/-- Restriction after symmetrization is the plain restriction. -/
-lemma nonnegRestrict_symmetrize (a : l1Chebyshev ν) :
-    nonnegRestrict (symmetrize a) = nonnegRestrict a := by
-  apply lpOneAlg.ext_toRealSeq
-  funext n
-  show lpOneAlg.toRealSeq (nonnegRestrict (symmetrize a)) n
-    = lpOneAlg.toRealSeq (nonnegRestrict a) n
-  rw [nonnegRestrict_toSeq, nonnegRestrict_toSeq]
-  show toSeq (symmetrize a) (↑n : ℤ) = toSeq a (↑n : ℤ)
-  rw [symmetrize_toSeq]
-  simp
-
-end l1Chebyshev
-
-end SymmetricBridge
-
-end RadiiPolynomial
-
-end
-
-open scoped BigOperators Topology
-
-noncomputable section
-
-namespace RadiiPolynomial
-
-namespace l1Chebyshev
-
-variable {ν : PosReal}
-
-section NatEmbed
-
-/-- The ℕ-supported coefficient family has finite bilateral weighted norm. -/
-private theorem natEmbed_memℓp (a : l1Weighted ν) :
-    Memℓp (fun k : ℤ => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
-      (if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0)) 1 := by
-  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ENNReal).toReal)]
-  simp only [ENNReal.toReal_one, Real.rpow_one]
-  apply Summable.of_nat_of_neg_add_one
-  · refine (l1Weighted.summable_weighted a).congr fun n => ?_
-    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, ite_eq_left (by omega), Int.toNat_natCast,
-      Int.natAbs_natCast]
-  · refine summable_zero.congr fun n => ?_
-    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, ite_eq_right (by omega), abs_zero, zero_mul]
-
-/-- The ℕ-supported embedding as an element (`natEmbed` is its linear map). -/
-private def natEmbedFun (a : l1Weighted ν) : l1Chebyshev ν :=
-  ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
-      (if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0), natEmbed_memℓp a⟩⟩
-
-/-- Coefficients of `natEmbedFun`. -/
-private theorem natEmbedFun_toSeq (a : l1Weighted ν) (k : ℤ) :
-    toSeq (natEmbedFun a) k = if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0 :=
-  lpAlgRingData.toReal_ofReal k _
-
-/-- `natEmbedFun` preserves the norm. -/
-private theorem norm_natEmbedFun (a : l1Weighted ν) : ‖natEmbedFun a‖ = ‖a‖ := by
-  have hpos : ∀ n : ℕ, ‖natEmbedFun a (n : ℤ)‖ = |l1Weighted.toSeq a n| * (ν : ℝ) ^ n :=
-    fun n => by
-      rw [norm_fiber_natCast, natEmbedFun_toSeq, ite_eq_left (by omega), Int.toNat_natCast]
-  have hneg : ∀ n : ℕ, ‖natEmbedFun a (-((n : ℤ) + 1))‖ = 0 := fun n => by
-    rw [norm_fiber, natEmbedFun_toSeq, ite_eq_right (by omega), abs_zero, zero_mul]
-  rw [lpOneAlg.norm_eq_tsum, tsum_of_nat_of_neg_add_one
-    ((l1Weighted.summable_weighted a).congr fun n => (hpos n).symm)
-    (summable_zero.congr fun n => (hneg n).symm), tsum_congr hpos, tsum_congr hneg, tsum_zero,
-    add_zero, ← l1Weighted.norm_eq_tsum]
-
-/-- **The ℕ-supported embedding** `ℓ¹_ν(ℕ) → ℓ¹_ν(ℤ)`: `(natEmbed a)_k = a_k` for `k ≥ 0`
-and `0` for `k < 0`. It is an isometry for every `ν : PosReal` (`norm_natEmbed`), because the
-bilateral weight `ν^{|k|}` restricts to `νⁿ` on the nonnegative modes. Built by
-`LinearMap.mkContinuous` on the coefficient map. -/
-def natEmbed : l1Weighted ν →L[ℝ] l1Chebyshev ν :=
-  LinearMap.mkContinuous
-    { toFun := natEmbedFun
-      map_add' := fun a b => lpOneAlg.ext_toRealSeq (funext fun k => by
-        show toSeq (natEmbedFun (a + b)) k = toSeq (natEmbedFun a + natEmbedFun b) k
-        rw [toSeq_add, natEmbedFun_toSeq, natEmbedFun_toSeq, natEmbedFun_toSeq]
-        split_ifs <;> simp)
-      map_smul' := fun r a => lpOneAlg.ext_toRealSeq (funext fun k => by
-        show toSeq (natEmbedFun (r • a)) k = toSeq (r • natEmbedFun a) k
-        rw [toSeq_smul, natEmbedFun_toSeq, natEmbedFun_toSeq]
-        split_ifs <;> simp) }
-    1 (fun a => (norm_natEmbedFun a).trans_le (one_mul _).ge)
-
-/-- Coefficients of the ℕ-supported embedding. -/
-theorem natEmbed_toSeq (a : l1Weighted ν) (k : ℤ) :
-    toSeq (natEmbed a) k = if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0 :=
-  natEmbedFun_toSeq a k
-
-/-- The ℕ-supported embedding at a nonnegative mode. -/
-@[simp] theorem natEmbed_toSeq_natCast (a : l1Weighted ν) (n : ℕ) :
-    toSeq (natEmbed a) (n : ℤ) = l1Weighted.toSeq a n := by
-  rw [natEmbed_toSeq, ite_eq_left (by omega), Int.toNat_natCast]
-
-/-- The ℕ-supported embedding vanishes at the negative modes. -/
-@[simp] theorem natEmbed_toSeq_negSucc (a : l1Weighted ν) (n : ℕ) :
-    toSeq (natEmbed a) (Int.negSucc n) = 0 := by
-  rw [natEmbed_toSeq, ite_eq_right (by omega)]
-
-/-- The ℕ-supported embedding is an isometry, for every `ν : PosReal`. -/
-@[simp] theorem norm_natEmbed (a : l1Weighted ν) : ‖natEmbed a‖ = ‖a‖ :=
-  norm_natEmbedFun a
-
-/-- The ℕ-supported embedding sends the one-sided single at `n` to the bilateral single at
-`n`. -/
-theorem natEmbed_single (n : ℕ) (x : ℝ) :
-    natEmbed (lpOneAlg.single n x : l1Weighted ν) = single (n : ℤ) x :=
-  lpOneAlg.ext_toRealSeq (funext fun k => by
-    show toSeq _ k = toSeq _ k
-    rw [natEmbed_toSeq, toSeq_single]
-    split_ifs with h1 h2 h2
-    · show lpOneAlg.toRealSeq (lpOneAlg.single n x : l1Weighted ν) k.toNat = x
-      rw [lpOneAlg.toRealSeq_single, ite_eq_left (by omega)]
-    · show lpOneAlg.toRealSeq (lpOneAlg.single n x : l1Weighted ν) k.toNat = 0
-      rw [lpOneAlg.toRealSeq_single, ite_eq_right (by omega)]
-    · omega
-    · rfl)
-
-end NatEmbed
-
-end l1Chebyshev
 
 end RadiiPolynomial
 

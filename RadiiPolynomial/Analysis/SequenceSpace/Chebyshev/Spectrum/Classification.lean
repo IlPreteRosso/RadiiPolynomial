@@ -10,9 +10,6 @@ Joukowski preimage and an exponential-growth bound on the symmetric power sums
 (`norm_le_of_power_sum_bound`). Two consequences: every physical character is
 automatically contractive (`norm_character_apply_le`), and Laurent characters restrict
 onto physical characters surjectively over `ℂ` (`restriction_surjective`).
-
-Closes the Chebyshev half of the "no Gelfand theory for this geometry" gap: production
-had only the single point-evaluation constructor `l1Chebyshev.symmetricEvalCharacter`.
 -/
 
 noncomputable section
@@ -108,8 +105,8 @@ theorem norm_character_apply_le (χ : Character ν) (a : Physical ν) : ‖χ a�
   exact l1Chebyshev.norm_evalLaurentC_apply_le ν z hz a.val
 
 /-- The restriction map from Laurent characters onto physical characters is
-surjective over ℂ, although the corresponding real map is not (that contrast is not
-proved here). -/
+surjective over ℂ. The corresponding real map is not:
+`CrossGeometry.physical_zero_character_has_no_real_extension`. -/
 theorem restriction_surjective :
     Function.Surjective (fun χ : l1Chebyshev ν →A[ℝ] ℂ =>
       χ.comp (l1Chebyshev.symmetricSubalgebra ν).valA) := by

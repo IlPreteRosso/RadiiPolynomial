@@ -22,7 +22,7 @@ with `C₂ = 1 + 2ν⁻²`, which is exact (for `1 ≤ ν`, `C₂ ≤ 3`, below 
 in (13.12)).
 
 Main declarations:
-* `l1Chebyshev.natEmbed` (declared in `Chebyshev/Bordered.lean`) — the ℕ-supported embedding
+* `l1Chebyshev.natEmbed` (declared in `Chebyshev/Symmetrize.lean`) — the ℕ-supported embedding
   `ℓ¹_ν(ℕ) → ℓ¹_ν(ℤ)`, an isometry.
 * `OneSided.symExt` — the symmetric extension `(E a)_k = a_{|k|}`, defined as
   `symmetrize_CLM ∘L natEmbed`, with `‖E a‖ ≤ 2‖a‖` inherited from `symmetrize_CLM_norm_le`.
@@ -63,12 +63,9 @@ problems; their cube-shaped faces (such as `‖restr (E a ^ 3)‖ ≤ C₃ ‖a�
 `norm_cosMul₃_le` and belong with those consumers. Nothing here concerns the book's printed
 constants `Z^(2)`, `Z^(3)`.
 
-Placement. Target module `Chebyshev/OneSided.lean`, exported by `Chebyshev.lean`, importing
-`Chebyshev.SymmetricSubalgebra`, `Geometric.Basic`, `WeightedL1.Multilinear` and
-`Mathlib.Analysis.Normed.Operator.Mul`; namespace `RadiiPolynomial.l1Chebyshev.OneSided`, so
-that `restr`, `t`, `C₂`, `C₃` do not become ambient names. The ℕ-supported embedding
-`l1Chebyshev.natEmbed` lives in `Chebyshev/Bordered.lean` (the first module that sees both
-carriers together with `symmetrize`).
+Placement. Namespace `RadiiPolynomial.l1Chebyshev.OneSided`, so that `restr`, `t`, `C₂`, `C₃`
+do not become ambient names; the ℕ-supported embedding `l1Chebyshev.natEmbed` is declared with
+`symmetrize` (`Chebyshev/Symmetrize.lean`).
 -/
 
 open scoped BigOperators Topology

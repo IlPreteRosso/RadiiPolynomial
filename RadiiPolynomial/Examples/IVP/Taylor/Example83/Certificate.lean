@@ -1,5 +1,4 @@
 import RadiiPolynomial.Examples.IVP.Taylor.Example83.Algebra
-import RadiiPolynomial.Tactic.PDerivSimp
 import RadiiPolynomial.Certification
 import RadiiPolynomial.Certification.IVP.Taylor
 import RadiiPolynomial.Tactic.FinMatrixBound
@@ -30,9 +29,9 @@ namespace Example83.Cert
 
 /-! ## Z₀ -/
 
-/-- The ν-free record of `data` (`dataQ.toStdIVPData ν_val ν_val_eq_q = data` by `rfl`). -/
-private def dataQ : IVP.StdIVPDataQ L N :=
-  ⟨Example83.A_col, Example83.DF_col, Example83.abar_Q, ν_q, data.habar_size⟩
+/-- The ν-free record of `data`; its realization at `ν_val` is `data`
+(`IVP.StdIVPDataQ.toStdIVPData_ofStd`). -/
+private def dataQ : IVP.StdIVPDataQ L N := IVP.StdIVPDataQ.ofStd data
 
 /-- The `Z₀` clause at the grid slot, grid denominator `10⁶⁰`. -/
 private theorem z0_grid10 : dataQ.ChecksZ₀By .grid (10 ^ 60) Z₀_bound := by decide +kernel
@@ -58,21 +57,6 @@ lemma A_norm_le :
 
 /-! ## Y₀ bound -/
 
-private noncomputable def F_abar : XL1 ν_val L :=
-  ofCoeff (F data.abar) F_abar_mem
-
-private lemma G_eq_toCLM_F_abar :
-    data.G f x₀ data.abar = data.approxInverse.toCLM (ν := ν_val) F_abar := by
-  funext l; apply l1Weighted.ext; intro n
-  exact (data.G_coeff f x₀ data.abar l n).trans (by
-    have := SystemBlockDiagData.toCoeff_toCLM (ν := ν_val) data.approxInverse F_abar l n
-    simp only [toCoeff] at this; exact this.symm)
-
-private lemma F_abar_toCoeff_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
-    toCoeff (ν := ν_val) F_abar l n = 0 := by
-  simp [F_abar, toCoeff, ofCoeff, F,
-    F_abar_support l n hn]
-
 private def Y₀_eval (l : Fin L) :=
   systemBlockDiagActionEval ABlockCols (fun l n => F_Q l n)
     (fun _l n => 1 / (n : ℚ)) ν_q l
@@ -91,15 +75,11 @@ lemma Y₀_le :
     Y₀_norm (data.G f x₀) data.abar
       (ContinuousLinearMap.id ℝ (XL1 ν_val L)) ≤ (Y₀_bound : ℝ) := by
   show ‖data.G f x₀ data.abar‖ ≤ _
-  rw [G_eq_toCLM_F_abar]
-  have hc : toCoeff (ν := ν_val) F_abar = F data.abar := by
-    ext l n; simp [F_abar, toCoeff_ofCoeff]
-  refine data.approxInverse.norm_toCLM_apply_le F_abar (2 * N + 1) (by omega)
-    F_abar_toCoeff_support (by unfold Y₀_bound; positivity)
-    (fun l => ?_)
-  simp_rw [hc]; unfold Y₀_bound
+  refine IVP.ivp_Y₀_le data.approxInverse f x₀ _ data.abar (2 * N + 1) (by omega)
+    F_abar_support (by unfold Y₀_bound; positivity) (fun l => ?_)
+  unfold Y₀_bound
   fin_cases l
-  -- `finsum_bound` now requires a literal range endpoint, so unfold `N` first.
+  -- `finsum_bound` requires a literal range endpoint, so unfold `N` first.
   all_goals simp only [N]
   all_goals finsum_bound using (Y₀_eval _) (fun k _ _ => Y₀_eval_correct _ k)
 
@@ -107,8 +87,7 @@ lemma Y₀_le :
 
 /-- The Z₁ operator constant is the syntactic `CompPoly.derivativeBound` of the Lorenz
 polynomial at the certified radii `(20, 26, 11)` of `ā`: per component `2σ`, `ρ + 1 + 20 + 11`,
-`β + 20 + 26`, all `≤ Z₁_bound·(N+1)/ν = 62` — the same numbers the former hand proof produced
-term by term. -/
+`β + 20 + 26`, all `≤ Z₁_bound·(N+1)/ν = 62`. -/
 private lemma Df_norm_le (h : XL1 ν_val L) (l : Fin L) :
     ‖Df h l‖ ≤ (Z₁_bound * ((N : ℚ) + 1) / ν_q) * ‖h‖ := by
   rw [Df_eq_fderiv]

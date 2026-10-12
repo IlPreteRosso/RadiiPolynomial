@@ -674,3 +674,1222 @@ Scratch declarations of the S028b unit (`tmp/units/S028b-FourierSemilinearZ1/fre
 | `RadiiPolynomial.FiltrationProbe.FourierSemilinear.norm_DG_sub_B0_le_gamma` | `RadiiPolynomial.Fourier.Semilinear.norm_fderiv_sub_modelDeriv_le_gamma` | `Applications/Fourier/Semilinear.lean` | L005 | generalized (MIGRATION_TABLE.md) |
 | `MvPolyBridge.CompPoly.Chebyshev.chebDerivativeLipschitzBound_mono` | `MvPolyBridge.CompPoly.Chebyshev.derivativeLipschitzBound_mono` | `Algebra/Polynomial/CompPoly/Chebyshev/Bounds.lean` | WB-1 | sibling naming (R-CHa-2); deprecated alias kept |
 | `IVP.tail_shiftDivN_sum_le` | `RadiiPolynomial.tail_shiftDivN_sum_le` | `Analysis/SequenceSpace/Geometric/Omega.lean` (from `Certification/IVP/Taylor.lean`) | WB-1 | moved to the lower layer beside `l1Weighted.norm_tailProj_eq_tailTsum`; deprecated alias kept |
+
+## Adoption of Mathlib's `DiscreteConvolution` module (2026-10-12)
+
+The library's namespace `DiscreteConvolution` (`Algebra/Convolution/{Basic,Ring}.lean`) duplicated `Mathlib.Topology.Algebra.InfiniteSum.DiscreteConvolution` (pinned Mathlib v4.34.1), so `import Mathlib` together with `import RadiiPolynomial` failed with "environment already contains 'DiscreteConvolution.addConvolution'". `Basic.lean` now imports the Mathlib module; the duplicates are deleted, and the library-owned remainder moves to the namespace `RadiiPolynomial.DiscreteConvolution` (no compatibility aliases into `DiscreteConvolution`). Consumers cite moved library names as `RadiiPolynomial.DiscreteConvolution.<name>` and Mathlib names as `_root_.DiscreteConvolution.<name>`. Design: `exterior/tmp/discrete_convolution_design_20261011/CONSENSUS_adopt_mathlib_dc.md` (A1–A9).
+
+### (i) RENAMED (namespace move; additive twins and nested `HasSum` helpers included)
+
+| old | new | file | note |
+|---|---|---|---|
+| `DiscreteConvolution.mulFiberEquiv` | `RadiiPolynomial.DiscreteConvolution.mulFiberEquiv` | `Algebra/Convolution/Basic.lean` | namespace move; statement against Mathlib's `DiscreteConvolution.mulFiber`/`addFiber` (same FQN and statement as the deleted library fiber) |
+| `DiscreteConvolution.addFiberEquiv` | `RadiiPolynomial.DiscreteConvolution.addFiberEquiv` | `Algebra/Convolution/Basic.lean` | namespace move; statement against Mathlib's `DiscreteConvolution.mulFiber`/`addFiber` (same FQN and statement as the deleted library fiber) |
+| `DiscreteConvolution.sigmaMulFiberEquiv` | `RadiiPolynomial.DiscreteConvolution.sigmaMulFiberEquiv` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.sigmaAddFiberEquiv` | `RadiiPolynomial.DiscreteConvolution.sigmaAddFiberEquiv` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.delta` | `RadiiPolynomial.DiscreteConvolution.delta` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.addDelta` | `RadiiPolynomial.DiscreteConvolution.addDelta` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.delta_one_eq` | `RadiiPolynomial.DiscreteConvolution.delta_one_eq` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.addDelta_zero_eq` | `RadiiPolynomial.DiscreteConvolution.addDelta_zero_eq` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.delta_ne` | `RadiiPolynomial.DiscreteConvolution.delta_ne` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.addDelta_ne` | `RadiiPolynomial.DiscreteConvolution.addDelta_ne` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.delta_ringConvolution'` | `RadiiPolynomial.DiscreteConvolution.delta_ringConvolution'` | `Algebra/Convolution/Ring.lean` | namespace move; the convolution in the statement is now Mathlib's `ringConvolution`/`addRingConvolution`, whose coefficient instance is `NonUnitalNonAssocSemiring R` (here the projection of the same `CommSemiring`/`NormedCommRing` instance); same function |
+| `DiscreteConvolution.addDelta_addRingConvolution'` | `RadiiPolynomial.DiscreteConvolution.addDelta_addRingConvolution'` | `Algebra/Convolution/Ring.lean` | namespace move; the convolution in the statement is now Mathlib's `ringConvolution`/`addRingConvolution`, whose coefficient instance is `NonUnitalNonAssocSemiring R` (here the projection of the same `CommSemiring`/`NormedCommRing` instance); same function |
+| `DiscreteConvolution.ringConvolution_delta'` | `RadiiPolynomial.DiscreteConvolution.ringConvolution_delta'` | `Algebra/Convolution/Ring.lean` | namespace move; the convolution in the statement is now Mathlib's `ringConvolution`/`addRingConvolution`, whose coefficient instance is `NonUnitalNonAssocSemiring R` (here the projection of the same `CommSemiring`/`NormedCommRing` instance); same function |
+| `DiscreteConvolution.addRingConvolution_addDelta'` | `RadiiPolynomial.DiscreteConvolution.addRingConvolution_addDelta'` | `Algebra/Convolution/Ring.lean` | namespace move; the convolution in the statement is now Mathlib's `ringConvolution`/`addRingConvolution`, whose coefficient instance is `NonUnitalNonAssocSemiring R` (here the projection of the same `CommSemiring`/`NormedCommRing` instance); same function |
+| `DiscreteConvolution.tripleMulMap` | `RadiiPolynomial.DiscreteConvolution.tripleMulMap` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.tripleAddMap` | `RadiiPolynomial.DiscreteConvolution.tripleAddMap` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.tripleMulFiber` | `RadiiPolynomial.DiscreteConvolution.tripleMulFiber` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.tripleAddFiber` | `RadiiPolynomial.DiscreteConvolution.tripleAddFiber` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.mem_tripleMulFiber` | `RadiiPolynomial.DiscreteConvolution.mem_tripleMulFiber` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.mem_tripleAddFiber` | `RadiiPolynomial.DiscreteConvolution.mem_tripleAddFiber` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.leftMulAssocEquiv` | `RadiiPolynomial.DiscreteConvolution.leftMulAssocEquiv` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.leftAddAssocEquiv` | `RadiiPolynomial.DiscreteConvolution.leftAddAssocEquiv` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.rightMulAssocEquiv` | `RadiiPolynomial.DiscreteConvolution.rightMulAssocEquiv` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.rightAddAssocEquiv` | `RadiiPolynomial.DiscreteConvolution.rightAddAssocEquiv` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.HasSum.leftMulAssocEquiv_sigma` | `RadiiPolynomial.DiscreteConvolution.HasSum.leftMulAssocEquiv_sigma` | `Algebra/Convolution/Ring.lean` | nested `HasSum` helper; namespace move, statement unchanged up to the moved names |
+| `DiscreteConvolution.HasSum.leftAddAssocEquiv_sigma` | `RadiiPolynomial.DiscreteConvolution.HasSum.leftAddAssocEquiv_sigma` | `Algebra/Convolution/Ring.lean` | nested `HasSum` helper; namespace move, statement unchanged up to the moved names |
+| `DiscreteConvolution.HasSum.rightMulAssocEquiv_sigma` | `RadiiPolynomial.DiscreteConvolution.HasSum.rightMulAssocEquiv_sigma` | `Algebra/Convolution/Ring.lean` | nested `HasSum` helper; namespace move, statement unchanged up to the moved names |
+| `DiscreteConvolution.HasSum.rightAddAssocEquiv_sigma` | `RadiiPolynomial.DiscreteConvolution.HasSum.rightAddAssocEquiv_sigma` | `Algebra/Convolution/Ring.lean` | nested `HasSum` helper; namespace move, statement unchanged up to the moved names |
+| `DiscreteConvolution.TripleConvolutionSummable` | `RadiiPolynomial.DiscreteConvolution.TripleConvolutionSummable` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.AddTripleConvolutionSummable` | `RadiiPolynomial.DiscreteConvolution.AddTripleConvolutionSummable` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.ringConvolution_assoc_left` | `RadiiPolynomial.DiscreteConvolution.ringConvolution_assoc_left` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.addRingConvolution_assoc_left` | `RadiiPolynomial.DiscreteConvolution.addRingConvolution_assoc_left` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.ringConvolution_assoc_right` | `RadiiPolynomial.DiscreteConvolution.ringConvolution_assoc_right` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.addRingConvolution_assoc_right` | `RadiiPolynomial.DiscreteConvolution.addRingConvolution_assoc_right` | `Algebra/Convolution/Ring.lean` | namespace move; statement unchanged up to the moved names |
+| `DiscreteConvolution.ringConvolution_assoc` | `RadiiPolynomial.DiscreteConvolution.ringConvolution_assoc` | `Algebra/Convolution/Ring.lean` | namespace move; the convolution in the statement is now Mathlib's `ringConvolution`/`addRingConvolution`, whose coefficient instance is `NonUnitalNonAssocSemiring R` (here the projection of the same `CommSemiring`/`NormedCommRing` instance); same function |
+| `DiscreteConvolution.addRingConvolution_assoc` | `RadiiPolynomial.DiscreteConvolution.addRingConvolution_assoc` | `Algebra/Convolution/Ring.lean` | namespace move; the convolution in the statement is now Mathlib's `ringConvolution`/`addRingConvolution`, whose coefficient instance is `NonUnitalNonAssocSemiring R` (here the projection of the same `CommSemiring`/`NormedCommRing` instance); same function |
+| `RadiiPolynomial.CauchyProduct.eq_addRingConvolution` | unchanged FQN | `Algebra/Convolution/Ring.lean` | retyped: the right-hand side is Mathlib's `DiscreteConvolution.addRingConvolution` (coefficient instance `NonUnitalNonAssocSemiring R` projected from `[Semiring R]`); same function |
+
+### (ii) DELETED duplicates (replacement = the Mathlib declaration)
+
+| old | replacement | hypothesis note |
+|---|---|---|
+| `DiscreteConvolution.mulFiber` | `DiscreteConvolution.mulFiber` | same FQN and statement |
+| `DiscreteConvolution.addFiber` | `DiscreteConvolution.addFiber` | same |
+| `DiscreteConvolution.mem_mulFiber` | `DiscreteConvolution.mem_mulFiber` | attribute `[grind =]`, not `[simp]`: consumers cite it explicitly |
+| `DiscreteConvolution.mem_addFiber` | `DiscreteConvolution.mem_addFiber` | idem |
+| `DiscreteConvolution.convolution` | `DiscreteConvolution.convolution` | same definition |
+| `DiscreteConvolution.addConvolution` | `DiscreteConvolution.addConvolution` | same definition |
+| `DiscreteConvolution.ringConvolution` | `DiscreteConvolution.ringConvolution` | coefficient class `[NonUnitalNonAssocSemiring R]` (was `[Semiring R]`), taken before `[Monoid M]`; same function |
+| `DiscreteConvolution.addRingConvolution` | `DiscreteConvolution.addRingConvolution` | idem |
+| notations `⋆[L]`, `⋆₊[L]`, `⋆ᵣ`, `⋆ᵣ₊` | Mathlib's scoped notations (scope `DiscreteConvolution`) | same tokens and precedences |
+| `DiscreteConvolution.ringConvolution_apply_eq` | `DiscreteConvolution.ringConvolution_apply` | `rfl`, `[simp]`; coefficient class `NonUnitalNonAssocSemiring` |
+| `DiscreteConvolution.addRingConvolution_apply_eq` | `DiscreteConvolution.addRingConvolution_apply` | idem |
+| `DiscreteConvolution.zero_ringConvolution` | `DiscreteConvolution.zero_ringConvolution` | `[NonUnitalNonAssocSemiring R]` (was `[CommSemiring R]`) |
+| `DiscreteConvolution.zero_addRingConvolution` | `DiscreteConvolution.zero_addRingConvolution` | idem |
+| `DiscreteConvolution.ringConvolution_zero` | `DiscreteConvolution.ringConvolution_zero` | idem |
+| `DiscreteConvolution.addRingConvolution_zero` | `DiscreteConvolution.addRingConvolution_zero` | idem |
+| `DiscreteConvolution.ringConvolution_add` | `DiscreteConvolution.ringConvolution_add` | witnesses `ConvolutionExists (.mul ℕ R) f g`, which unfold to the old `∀ x, Summable fun ab : mulFiber x => f ab.1.1 * g ab.1.2`; consumers pass the old witness unchanged (definitional) |
+| `DiscreteConvolution.addRingConvolution_add` | `DiscreteConvolution.addRingConvolution_add` | `AddConvolutionExists` witnesses; idem |
+| `DiscreteConvolution.add_ringConvolution` | `DiscreteConvolution.add_ringConvolution` | `ConvolutionExists` witnesses; idem |
+| `DiscreteConvolution.add_addRingConvolution` | `DiscreteConvolution.add_addRingConvolution` | `AddConvolutionExists` witnesses; idem |
+| `DiscreteConvolution.smul_ringConvolution` | `DiscreteConvolution.smul_ringConvolution` | external scalar `c : S` with `[DistribSMul S R] [IsScalarTower S R R] [ContinuousConstSMul S R]` and a `ConvolutionExists` witness; consumers use `S := R` |
+| `DiscreteConvolution.smul_addRingConvolution` | `DiscreteConvolution.smul_addRingConvolution` | idem |
+| `DiscreteConvolution.ringConvolution_smul` | `DiscreteConvolution.ringConvolution_smul` | external scalar with `[SMulCommClass S R R]`; consumers use `S := R` |
+| `DiscreteConvolution.addRingConvolution_smul` | `DiscreteConvolution.addRingConvolution_smul` | idem |
+| `DiscreteConvolution.ringConvolution_comm` | `DiscreteConvolution.ringConvolution_comm` | `[CommMonoid M] [NonUnitalNonAssocCommSemiring R]` |
+| `DiscreteConvolution.addRingConvolution_comm` | `DiscreteConvolution.addRingConvolution_comm` | `[AddCommMonoid M]`; idem |
+| private `DiscreteConvolution.mulFiber_eq_finset_mulAntidiagonal` / `addFiber_eq_finset_antidiagonal` | Mathlib's private `mulFiber_eq_mulAntidiagonal` (internal to the module) | none (was private) |
+
+### (iii) Intentional deletions (no Mathlib replacement; no in-repository consumer)
+
+Recorded as intentional deletions with no needed in-repository consumer migration, not as Mathlib replacements and not as proof that no external user exists: `DiscreteConvolution.mulMap`, `DiscreteConvolution.addMap`, `DiscreteConvolution.mulMap_apply`, `DiscreteConvolution.addMap_apply`, `DiscreteConvolution.mulFiber_eq_preimage`, `DiscreteConvolution.addFiber_eq_preimage`. (`tripleMulMap`/`tripleAddMap` are kept, see (i).)
+
+### (iv) Finite-sum lemma replacements
+
+| old | replacement |
+|---|---|
+| `DiscreteConvolution.convolution_eq_sum_finset_mulAntidiagonal` | `DiscreteConvolution.convolution_eq_sum_mulAntidiagonal` (Mathlib; same statement over `Finset.mulAntidiagonal`) |
+| `DiscreteConvolution.addConvolution_eq_sum_finset_antidiagonal` | `DiscreteConvolution.addConvolution_eq_sum_antidiagonal` (Mathlib; same statement over `Finset.antidiagonal`) |
+
+### ADDED
+
+| name | statement | file | axioms |
+|---|---|---|---|
+| `RadiiPolynomial.DiscreteConvolution.delta_eq_single` | `delta e = Pi.single (1 : M) e` (`rfl`) | `Algebra/Convolution/Ring.lean` | none |
+| `RadiiPolynomial.DiscreteConvolution.addDelta_eq_single` | `addDelta e = Pi.single (0 : M) e` (`to_additive` twin) | `Algebra/Convolution/Ring.lean` | none |
+
+## Bundled power-series bridge `CauchyProduct.toPowerSeriesLinearEquiv` (2026-10-12)
+
+Consensus `CONSENSUS_toPowerSeries_equiv.md` (E2). File `Algebra/Convolution/CauchyProduct.lean`. The raw map
+`toPowerSeries` and `toPowerSeries_injective` are unchanged; the three map laws are deleted in favour of the
+generic laws of the new `S`-linear equivalence `toPowerSeriesLinearEquiv S : (ℕ → R) ≃ₗ[S] PowerSeries R`
+(`[Semiring S] [AddCommMonoid R] [Module S R]`), whose forward map is `toPowerSeries`
+(`toPowerSeriesLinearEquiv_apply`, `rfl`). Type-checked replacements: `Examples/tests/CV/PowerSeriesBridge.lean` §3.
+
+| deleted | replacement |
+|---|---|
+| `RadiiPolynomial.CauchyProduct.toPowerSeries_add` | `map_add (toPowerSeriesLinearEquiv S) a b`; the old raw statement is `by simpa only [toPowerSeriesLinearEquiv_apply] using map_add (toPowerSeriesLinearEquiv R) a b` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeries_zero` | `map_zero (toPowerSeriesLinearEquiv S)`; the old raw statement is `by simpa only [toPowerSeriesLinearEquiv_apply] using map_zero (toPowerSeriesLinearEquiv R)` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeries_smul` | `map_smul (toPowerSeriesLinearEquiv S) c a` (any scalar semiring `S`; the old `c : R` is `S := R`); the old raw statement is `by simpa only [toPowerSeriesLinearEquiv_apply] using map_smul (toPowerSeriesLinearEquiv R) c a` |
+
+## API campaign 2026-10-12 — cohort A
+
+Clusters C1, C2, C3-A, C5, C6 and C7-A of the 2026-10-12 API campaign, accepted by the Codex review for the
+source generation bound by `p3/cohortA/COHORT_A_SOURCES_v2.SHA256SUMS` (`p3/cohortA/CODEX_AGREEMENT.md`).
+Each cluster subsection opens with a ledger, one row per migration: old FQN | new FQN or replacement | kind |
+evidence. Kinds: `moved`, `retired`, `weakened hypotheses`, `level-rename`, `de-simp`, `docstring`, and, where
+a fragment records them, `renamed`, `statement changed`, `redefined`, `added`, `import change`, `proof only`,
+`hygiene`. The detail under each ledger is the cluster's fragment. For C2 the final record
+`p3/cohortA/CODEX_FINAL_C2_RECORD.md` replaces `RENAMES_C2.md` and `ARCHITECTURE_C2.md` where they differ; for
+C7-A the final overlay of `p3/evidence_C7A/REPORT_C7A.md` replaces the six-de-simp inventory.
+
+Evidence paths starting with `p3/` are relative to `exterior/tmp/api_campaign_20261012/`; paths starting with
+`codex/` are relative to `tmp/agents_bus/checks/session_registration/codex/COHORT-A-20261012/` (Codex's
+independent checks). Both lie in the outer repository, outside the Lake root.
+
+ReferenceBook consumers: the cohort introduces no ReferenceBook migration. The four remaining ReferenceBook uses of
+`DiscreteConvolution.addRingConvolution_apply_eq` (deleted by the Mathlib adoption above, table (ii); replacement
+`DiscreteConvolution.addRingConvolution_apply`) in `Ch07/Sec4` (two), `Ch07/Sec8b` and `Spine/A2_MonoidAlgebra` are
+a user-side migration (`p3/cohortA/CODEX_F4_AMENDMENT.md`).
+
+### C1 — Convolution cleanup (`Algebra/Convolution`)
+
+Triage rows P1-S00-1-1, -2, -3, -5, -6, -14, -24 (Codex AGREE, `CODEX_batch1.md` §C1). No declaration is
+renamed, added or deleted. Statements change only by weaker instance hypotheses; every weakened statement
+still instantiates at its old interface (evidence: `p3/evidence_C1/`).
+
+#### Ledger (C1)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.DiscreteConvolution.delta_ringConvolution'`, `RadiiPolynomial.DiscreteConvolution.ringConvolution_delta'` (+ `addDelta_addRingConvolution'`, `addRingConvolution_addDelta'`) | unchanged FQN; `[CommSemiring R]` → `[NonUnitalNonAssocSemiring R]` | weakened hypotheses | `p3/evidence_C1/step2/MIGRATED_TYPES.md`; `p3/evidence_C1/probes/OldInterface.lean` |
+| `RadiiPolynomial.DiscreteConvolution.TripleConvolutionSummable` (+ `AddTripleConvolutionSummable`, `.eq_1`) | unchanged FQN; `[CommSemiring R]` → `[Mul R] [AddCommMonoid R]` | weakened hypotheses | `p3/evidence_C1/step2/MIGRATED_TYPES.md`; `p3/evidence_C1/probes/DefeqWitness.lean` |
+| `RadiiPolynomial.DiscreteConvolution.HasSum.leftMulAssocEquiv_sigma` (+ `HasSum.leftAddAssocEquiv_sigma`) | unchanged FQN; `[NormedCommRing R]` → `[AddCommMonoid R] [TopologicalSpace R] [Mul R]` | weakened hypotheses | `p3/evidence_C1/step2/MIGRATED_TYPES.md`; `p3/evidence_C1/probes/OldInterface.lean` |
+| `RadiiPolynomial.DiscreteConvolution.HasSum.rightMulAssocEquiv_sigma` (+ `HasSum.rightAddAssocEquiv_sigma`) | unchanged FQN; `[NormedCommRing R]` → `[AddCommMonoid R] [TopologicalSpace R] [Semigroup R]` | weakened hypotheses | `p3/evidence_C1/step2/MIGRATED_TYPES.md`; `p3/evidence_C1/probes/NoncommLibrary.lean` |
+| `RadiiPolynomial.DiscreteConvolution.ringConvolution_assoc_left`, `…_assoc_right`, `…ringConvolution_assoc` (+ `addRingConvolution_assoc_left`, `_right`, `addRingConvolution_assoc`) | unchanged FQN; `[NormedCommRing R]` → `[NonUnitalSemiring R] [TopologicalSpace R] [IsTopologicalSemiring R] [T3Space R]` | weakened hypotheses | `p3/evidence_C1/step2/MIGRATED_TYPES.md`; `p3/evidence_C1/probes/NoncommLibrary.lean`; `codex/C1_Noncomm.out` |
+| `RadiiPolynomial.lpOneMulAlgConvCompat.tripleMulConvSummable`, `RadiiPolynomial.lpOneAlgConvCompat.tripleConvSummable` (+ `mk`, `mk._flat_ctor`, `rec`, `recOn`, `casesOn` of both classes) | unchanged FQN and statement text; elaborated instance path `Semifield.toCommSemiring` → `Distrib.toMul`/`Semiring.toAddCommMonoid` | weakened hypotheses (induced) | `p3/evidence_C1/step2/MIGRATED_TYPES.md`; `p3/evidence_C1/probes/DefeqWitness.lean`; `codex/C1_Witness.out` |
+| `Algebra/Convolution/Ring.lean`: `import Mathlib.Analysis.Normed.Ring.Lemmas` | dropped; importers that need `IsTopologicalSemiring` of a normed ring or `Module ℚ ℝ` import `Mathlib.Analysis.Normed.Ring.Lemmas` / `Mathlib.Algebra.Algebra.Rat` themselves | import change | `p3/evidence_C1/probes/ProbeRing_plusNormedImport.lean`; `p3/evidence_C1/probes/PowerSeriesBridge_repair.lean` |
+| `RadiiPolynomial.CauchyProduct.eq_addRingConvolution` | statement unchanged; term proof (S00-5) | proof only | `p3/evidence_C1/step4/C1.diff` |
+| `Algebra/Convolution/Ring.lean`: `noncomputable section` | removed; `Lean.isNoncomputable` flags and compiled code unchanged (S00-6) | hygiene | `p3/evidence_C1/REPORT_C1.md` (flags before = after) |
+| ten `RadiiPolynomial.CauchyProduct` lemmas (S00-14); facade `Algebra/Convolution.lean` (S00-24) | docstrings added; seven `lemma` → `theorem`; one facade sentence | docstring | `p3/evidence_C1/step4/C1.diff` |
+| module docstring of `Algebra/Convolution/Ring.lean` | per-section hypotheses paragraph; the associativity set is "the topological hypotheses of Mathlib's `tsum_mul_tsum` together with associativity of `R` (`NonUnitalSemiring`)" | docstring | `p3/evidence_C1/CRITIC_C1.md` (FIX-1) |
+
+#### Hypothesis changes (`Algebra/Convolution/Ring.lean`, namespace `RadiiPolynomial.DiscreteConvolution`)
+
+| declaration (+ `to_additive` twin) | old classes on `R` | new classes on `R` | row |
+|---|---|---|---|
+| `delta_ringConvolution'` (`addDelta_addRingConvolution'`), `ringConvolution_delta'` (`addRingConvolution_addDelta'`) | `[CommSemiring R] [TopologicalSpace R]` | `[NonUnitalNonAssocSemiring R] [TopologicalSpace R]` | S00-1 |
+| `TripleConvolutionSummable` (`AddTripleConvolutionSummable`), incl. `.eq_1` | `[CommSemiring R] [TopologicalSpace R]` | `[Mul R] [AddCommMonoid R] [TopologicalSpace R]` | S00-2 |
+| `HasSum.leftMulAssocEquiv_sigma` (`HasSum.leftAddAssocEquiv_sigma`) | `[NormedCommRing R]` | `[AddCommMonoid R] [TopologicalSpace R] [Mul R]` | S00-3 |
+| `HasSum.rightMulAssocEquiv_sigma` (`HasSum.rightAddAssocEquiv_sigma`) | `[NormedCommRing R]` | `[AddCommMonoid R] [TopologicalSpace R] [Semigroup R]` | S00-3 |
+| `ringConvolution_assoc_left`, `ringConvolution_assoc_right`, `ringConvolution_assoc` (`addRingConvolution_assoc_left`, `_right`, `addRingConvolution_assoc`) | `[NormedCommRing R]` | `[NonUnitalSemiring R] [TopologicalSpace R] [IsTopologicalSemiring R] [T3Space R]` | S00-3 |
+
+The index hypotheses (`[Monoid M]`, `[DecidableEq M]`) are unchanged. The summability meaning of
+`TripleConvolutionSummable f g h x` is unchanged: `Summable` of `f a * g b * h c` over `tripleMulFiber x`.
+
+Migrated types (elaborated type changes, statement text unchanged): the class fields
+`RadiiPolynomial.lpOneMulAlgConvCompat.tripleMulConvSummable` and `RadiiPolynomial.lpOneAlgConvCompat.tripleConvSummable`
+(`Analysis/SequenceSpace/WeightedL1/Algebra.lean`) now apply the predicate through the instances
+`Distrib.toMul`/`Semiring.toAddCommMonoid` of the `NormedField 𝕜` instead of `Semifield.toCommSemiring`.
+Their structure auxiliaries (`mk`, `mk._flat_ctor`, `rec`, `recOn`, `casesOn`) change with them. No source change
+in that file; the old meaning is witnessed by unfolding plus `with_reducible_and_instances rfl`.
+
+#### Import drop
+
+`Algebra/Convolution/Ring.lean` no longer imports `Mathlib.Analysis.Normed.Ring.Lemmas`. Importers that used it
+transitively must import it themselves. In particular, `IsTopologicalSemiring R` for a normed ring
+(`NonUnitalSeminormedRing.toIsTopologicalRing`) and `Module ℚ ℝ` (`DivisionRing.toRatAlgebra`,
+`Mathlib.Algebra.Algebra.Rat`) are no longer visible through `Ring.lean` or the facade `Algebra/Convolution.lean`.
+
+#### Other changes
+
+- `RadiiPolynomial.CauchyProduct.eq_addRingConvolution`: statement unchanged; the proof is now the term
+  `funext fun n => (_root_.DiscreteConvolution.addRingConvolution_eq_sum_antidiagonal a b n).symm` (S00-5).
+- `noncomputable section` removed from `Ring.lean` (S00-6). Executability is unchanged:
+  `Lean.isNoncomputable` was already `false` and compiled code was already present for `delta`, `addDelta`,
+  `sigmaMulFiberEquiv`, `tripleMulMap`, `leftMulAssocEquiv`, `rightMulAssocEquiv` and their twins, both before and after.
+- Docstrings added to ten `CauchyProduct` lemmas, which are now declared with `theorem` (S00-14), and one
+  sentence added to the facade docstring (S00-24).
+
+### C2 — Core engine (`Core/Theorem.lean`, `Core/Bounds.lean`, `Core.lean`)
+
+Triage rows S03-1 … S03-17. Authoritative record: `p3/cohortA/CODEX_FINAL_C2_RECORD.md` (final `Core/Bounds.lean`
+sha256 `2640b50b…`). S03-15 (generic index for `X`/`Y`, dropping the `Geometric.Scalar` import of `Core/Bounds`) is
+rolled back; the generic-index/arity rows and the axiom-contraction addendum of `RENAMES_C2.md` are withdrawn.
+Final migrated set: three completeness drops and six level-rename-only rows. No public declaration is renamed,
+moved to another file, retired or deleted.
+
+#### Ledger (C2)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.injective_left_of_norm_id_sub_comp_lt_one` | unchanged FQN; drops `[CompleteSpace E]`, keeps `[NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E]` | weakened hypotheses | `p3/evidence_C2/probes/OldInterfacePins.lean`; `codex/C2_FinalPins.out` |
+| `RadiiPolynomial.isUnit_right_of_norm_id_sub_comp_lt_one` | idem | weakened hypotheses | idem |
+| `RadiiPolynomial.isUnit_left_of_norm_id_sub_comp_lt_one` | idem | weakened hypotheses | idem |
+| `RadiiPolynomial.X` | unchanged FQN and PosReal-specific interface (no extra implicit index, same arity); universe label `u_2` → `u_1` | level-rename | `codex/C2_LEVEL_CHECK.json`; `codex/C2_FinalPins.out` |
+| `RadiiPolynomial.Y` | idem | level-rename | idem |
+| `RadiiPolynomial.Y₀_norm` | unchanged FQN; universe labels `u_2, u_3` → `u_1, u_2` (same order) | level-rename | `codex/C2_LEVEL_CHECK.json`; `p3/evidence_C2/tools/level_rename_check.py` |
+| `RadiiPolynomial.Z₀_norm` | idem | level-rename | idem |
+| `RadiiPolynomial.Z₁_norm` | idem | level-rename | idem |
+| `RadiiPolynomial.Z₂_norm` | idem | level-rename | idem |
+
+#### Detail (C2)
+
+| Declarations | Final migration | Verification |
+|---|---|---|
+| injective_left_of_norm_id_sub_comp_lt_one; isUnit_right_of_norm_id_sub_comp_lt_one; isUnit_left_of_norm_id_sub_comp_lt_one | Drop CompleteSpace E; retain NormedAddCommGroup E, NormedSpace ℝ E and FiniteDimensional ℝ E | Old-interface pins passed; completeness is inferred from finite dimensionality |
+| RadiiPolynomial.X; RadiiPolynomial.Y | u_2 → u_1 only; same PosReal-specific interface, no extra implicit index type or arity | Types/values equal after positional level mapping; axioms unchanged |
+| RadiiPolynomial.Y₀_norm; Z₀_norm; Z₁_norm; Z₂_norm | u_2,u_3 → u_1,u_2, same order | Types/values equal after positional level mapping and identified hygienic binder numbers; axioms unchanged |
+
+- The level renames come from deleting the dead `variable {Seq : PosReal → Type*} …` block of `Core/Bounds.lean`
+  (S03-14). An explicit universe instantiation such as `Y₀_norm.{u, v}` keeps its positional meaning.
+- The three completeness drops (S03-3): `CompleteSpace E` is an instance from `FiniteDimensional ℝ E`, so every old
+  call site elaborates unchanged (ReferenceBook `Ch02/Sec7.lean:3776` calls without `@`).
+- In-file relocation, FQN and type unchanged: `RadiiPolynomial.norm_id_sub_comp_le_Z_bound` moves from section
+  `LocalTheorems` to section `OperatorBounds` of `Core/Theorem.lean` (S03-2).
+- Deleted non-declaration text: the 37-line commented-out `construct_derivative_inverse` (S03-4) and the dead `Seq`
+  variable block (S03-14).
+- Generated name: `RadiiPolynomial.Z_bound.eq_1` is now realized in `Core/Theorem.lean` by a `simpa [Z_bound]`
+  (`p3/evidence_C2/REPORT_C2.md`).
+- Imports: unchanged. `Core/Bounds` imports `Core/Theorem` and `Analysis/SequenceSpace/Geometric/Scalar`; the
+  closure of `Core` and `Core/AlgebraZ2` is unchanged.
+
+### C3-A — Polynomials (`Algebra/Polynomial/{CompPoly,MvPolynomial}`)
+
+#### Ledger (C3-A)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `MvPolynomial.contDiff_aeval` | unchanged FQN; `Algebra/Polynomial/CompPoly/Core.lean` → `Algebra/Polynomial/MvPolynomial/Calculus.lean` | moved | `p3/evidence_C3A/step2/CROSS_MODULE_MOVES.txt` |
+| `MvPolynomial.C_ofNat_eq` | unchanged FQN; `Algebra/Polynomial/CompPoly/Core.lean` → `Algebra/Polynomial/MvPolynomial/Core.lean`; numerals now `ofNat(n)` (`no_index`) | moved; statement changed | `p3/evidence_C3A/step2/CROSS_MODULE_MOVES.txt`; `p3/evidence_C3A/step2/probes/C3A_RwOfNat.lean` |
+| `MvPolynomial.C_natCast_eq` | `MvPolynomial.C_eq_coe_nat` (same statement, rfl) / `map_natCast MvPolynomial.C` (`@[simp]`) | retired (simp cast normalizer) | `p3/evidence_C3A/step2/probes/C3A_Replacements.lean` |
+| `MvPolynomial.C_intCast_eq` | `map_intCast MvPolynomial.C` (`@[simp]`) | retired (simp cast normalizer) | idem |
+| `MvPolyBridge.seqToPowerSeries` | `RadiiPolynomial.CauchyProduct.toPowerSeries` (rfl) | retired (intermediate constructor) | idem |
+| `MvPolyBridge.mvPolyToPowerSeries` | `MvPolynomial.aeval` (rfl) | retired (intermediate constructor) | idem |
+| private `MvPolyBridge.coeff_C_eq` | `PowerSeries.coeff_C` | retired (private coefficient helper) | idem |
+| `MvPolynomial.totalDegree_C_le` | `(MvPolynomial.totalDegree_C a).le` | retired (degree wrapper) | idem |
+| `MvPolynomial.totalDegree_X_le` | `(MvPolynomial.totalDegree_X i).le` | retired (degree wrapper) | idem |
+| `MvPolynomial.totalDegree_add_le` | `(totalDegree_add p q).trans (max_le_add_of_nonneg (Nat.zero_le _) (Nat.zero_le _))` | retired (degree wrapper) | idem |
+| `MvPolynomial.totalDegree_sub_le` | `(totalDegree_sub p q).trans (max_le_add_of_nonneg (Nat.zero_le _) (Nat.zero_le _))` | retired (degree wrapper) | idem |
+| `MvPolynomial.totalDegree_neg_le` | `(MvPolynomial.totalDegree_neg p).le` | retired (degree wrapper) | idem |
+| `MvPolyBridge.mvPolyCoeff` | unchanged FQN and lemma statements; body `PowerSeries.coeff n (aeval (fun i => CauchyProduct.toPowerSeries (seqs i)) p)` (rfl-equal) | redefined | `p3/evidence_C3A/REPORT_C3A.md` |
+| `MvPolyBridge.mvPolyCoeff.eq_1` | generated equation lemma; statement follows the new body (0 consumers) | statement changed | `p3/evidence_C3A/REPORT_C3A.md`; `p3/cohortA/CODEX_cohortA_review.md` |
+| `MvPolyBridge.arrayToPowerSeries` | unchanged FQN; body `CauchyProduct.toPowerSeries fun n => arr.getD n 0` (rfl-equal) | redefined (superseded by cohort B (C3-B): retired) | `p3/evidence_C3A/REPORT_C3A.md` |
+| `Algebra/Polynomial/CompPoly/{Core,WeightedL1}.lean` imports | `CompPoly/Core` imports `MvPolynomial.Core` and `Mathlib.Analysis.Normed.Module.Basic` instead of `Mathlib.Analysis.Calculus.ContDiff.Operations`; `CompPoly/WeightedL1` imports `MvPolynomial.Calculus` | import change | `p3/evidence_C3A/RENAMES_C3A.md` |
+
+#### Detail (C3-A, fragment)
+
+##### RENAMED
+None.
+
+##### MOVED (FQN unchanged; new home file)
+| declaration | old file | new file | item | type |
+|---|---|---|---|---|
+| `MvPolynomial.contDiff_aeval` (paper main.tex:812, 1520) | `Algebra/Polynomial/CompPoly/Core.lean` | `Algebra/Polynomial/MvPolynomial/Calculus.lean` | S01-3 | unchanged (scope-erased type tree identical; raw differs only in hygienic binder names carrying the module name; levels/axioms same) |
+| `MvPolynomial.C_ofNat_eq` | `Algebra/Polynomial/CompPoly/Core.lean` | `Algebra/Polynomial/MvPolynomial/Core.lean` | S01-3 (+S01-1) | CHANGED, see below |
+
+CompPoly/Core now imports `MvPolynomial.Core` (C_ofNat_eq stays in simp scope of every CompPoly importer) and
+`Mathlib.Analysis.Normed.Module.Basic` instead of `Mathlib.Analysis.Calculus.ContDiff.Operations`;
+CompPoly/WeightedL1 imports `MvPolynomial.Calculus` (for `contDiff_aeval`).
+
+##### SIGNATURE CHANGE (name kept)
+| declaration | old | new | item |
+|---|---|---|---|
+| `MvPolynomial.C_ofNat_eq` | `C (OfNat.ofNat n : R) = (OfNat.ofNat n : MvPolynomial σ R)` | `C (ofNat(n) : R) = (ofNat(n) : MvPolynomial σ R)` (= `no_index (OfNat.ofNat n)`, Mathlib `Polynomial.C_ofNat` form) | S01-1 |
+
+Same binders `{σ R : Type*} [CommSemiring R] (n : ℕ) [n.AtLeastTwo]`, same proof `map_ofNat C n`; the type trees differ only by two
+`noindex` mdata wrappers. Effect: the simp lemma now fires on literal numerals (`C 2 * p` normalizes to `2 * p`).
+
+##### RETIRED (no alias)
+| declaration | replacement | item |
+|---|---|---|
+| `MvPolynomial.C_natCast_eq` | `MvPolynomial.C_eq_coe_nat` (same statement, rfl) / `map_natCast MvPolynomial.C` (`@[simp]`) | S01-2 |
+| `MvPolynomial.C_intCast_eq` | `map_intCast MvPolynomial.C` (`@[simp]`) | S01-2 |
+| `MvPolyBridge.seqToPowerSeries` | `RadiiPolynomial.CauchyProduct.toPowerSeries` (rfl) | S01-4 |
+| `MvPolyBridge.mvPolyToPowerSeries` | `MvPolynomial.aeval` (rfl) | S01-4 |
+| private `MvPolyBridge.coeff_C_eq` | `PowerSeries.coeff_C` | S01-4 |
+| `MvPolynomial.totalDegree_C_le` | `(MvPolynomial.totalDegree_C a).le` | S01-6 |
+| `MvPolynomial.totalDegree_X_le` | `(MvPolynomial.totalDegree_X i).le` | S01-6 |
+| `MvPolynomial.totalDegree_add_le` | `(totalDegree_add p q).trans (max_le_add_of_nonneg (Nat.zero_le _) (Nat.zero_le _))` | S01-6 |
+| `MvPolynomial.totalDegree_sub_le` | `(totalDegree_sub p q).trans (max_le_add_of_nonneg (Nat.zero_le _) (Nat.zero_le _))` | S01-6 |
+| `MvPolynomial.totalDegree_neg_le` | `(MvPolynomial.totalDegree_neg p).le` | S01-6 |
+
+Each replacement is checked at the ORIGINAL proposition in `step2/probes/C3A_Replacements.lean` (rc 0).
+Roles of the retired declarations: `C_natCast_eq`, `C_intCast_eq`: simp cast normalizers (superseded by Mathlib
+`map_natCast`/`map_intCast`/`C_eq_coe_nat`); `totalDegree_{C,X,add,sub,neg}_le`: weaker degree wrappers (sum/le forms
+of Mathlib's max-bound facts); private `coeff_C_eq`: coefficient helper (= `PowerSeries.coeff_C`);
+`seqToPowerSeries`, `mvPolyToPowerSeries`: intermediate constructors (rfl-equal to `CauchyProduct.toPowerSeries` and
+`MvPolynomial.aeval`).
+
+##### REDEFINED (name and every lemma statement kept)
+- `MvPolyBridge.mvPolyCoeff p seqs n := PowerSeries.coeff n (aeval (fun i => CauchyProduct.toPowerSeries (seqs i)) p)`
+  (S01-4; rfl-equal to the old body; still noncomputable). Its generated equation lemma `mvPolyCoeff.eq_1` changes
+  statement accordingly (0 consumers anywhere).
+- `MvPolyBridge.arrayToPowerSeries` body now `CauchyProduct.toPowerSeries fun n => arr.getD n 0` (rfl-equal; S01-5 cluster kept).
+  Superseded by cohort B (C3-B): the S01-5 cluster is retired.
+
+### C5 — Transport namespace (`Core/Transport.lean`)
+
+No aliases. Module unchanged (`RadiiPolynomial.Core.Transport`); statements unchanged
+(strict compare PASS: types `exact`, or `S1` = identical after this map; `gateQ` value `exact`).
+
+#### Ledger (C5)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `transported_radii_identity` | `RadiiPolynomial.transported_radii_identity` | renamed (namespace) | `p3/evidence_C5/step2/STRICT_COMPARE.md` |
+| `transport_radii_polynomial` | `RadiiPolynomial.transport_radii_polynomial` | renamed (namespace) | idem |
+| `transport_radii_polynomial_of_margin` | `RadiiPolynomial.transport_radii_polynomial_of_margin` | renamed (namespace) | idem |
+| `gateQ` | `RadiiPolynomial.gateQ` | renamed (namespace) | idem; `p3/evidence_C5/step2/OldNamesGone.lean` |
+| `gateQ_sound` | `RadiiPolynomial.gateQ_sound` | renamed (namespace) | idem |
+| `KappaToy.gateQ` (Examples) | deleted → `RadiiPolynomial.gateQ` (byte-identical copy) | retired (duplicate) | `p3/evidence_C5/step2/STRICT_COMPARE.md` |
+| `KappaToy.gateQ_sound` (Examples) | deleted → `RadiiPolynomial.gateQ_sound` (byte-identical copy) | retired (duplicate) | idem |
+
+Fragment table (items): the five renames are S03-11, the two `KappaToy` deletions S03-12.
+
+Consumers: `open RadiiPolynomial` short names keep resolving (KappaToy, TwinTransport);
+KappaToy:188 `_root_.gateQ_sound` → `gateQ_sound`. ReferenceBook source: 0 uses.
+Companion `exterior/Unformalization/Core/Transport.tex` cites both halves of the module by short name
+(`\lean{gateQ}`, `\lean{transported_radii_identity}`, `\lean{Z₂_transport}`, `\lean{rp_transport_local}`), so its
+`.tex` text needs no change. The FQN-indexed sidecars `exterior/Unformalization/_sidecar/Core/Transport.sig.tsv`
+(rows 1–5) and `_sidecar/ALL_FQNS.txt` still list the root names and need the P4 re-pin
+(`p3/evidence_C5/CRITIC_C5.md`, item 6).
+
+### C6 — Small files (`Certification/Residual.lean`, `Analysis/Calculus/Pi.lean`, `Analysis/SequenceSpace/CharacterTopology.lean`)
+
+No public name changes. No declaration added, deleted, renamed or moved.
+
+#### Ledger (C6)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.Residual.norm_correction_le` | unchanged; docstring "The corrected coefficient has norm at most `‖b₀ i‖ / (1 - ε)`." | docstring | `p3/cohortA/CORRECTION_PACKET_cohortA.md` (F2) |
+| `RadiiPolynomial.Residual.norm_correction_sub_le`, `…sum_norm_correction_le`, `…sum_norm_correction_sub_le`, `…residual_add` | unchanged; docstrings added (S00-15) | docstring | `p3/evidence_C6/step2/STRICT_COMPARE.md`; `p3/evidence_C6/REPORT_C6.md` |
+| `Certification/Residual.lean` (one `rw` merge, whitespace) | statements unchanged (S00-15) | proof only | `p3/evidence_C6/step3/C6.diff` |
+| `fderiv_pi_apply` | statement and `@[simp]` unchanged; body `(hasFDerivAt_apply i x).fderiv` (S00-17) | proof only | `p3/evidence_C6/step2/STRICT_COMPARE.md` |
+| `Analysis/SequenceSpace/CharacterTopology.lean`: `noncomputable section` | dropped; `Lean.isNoncomputable` flags unchanged (all `false`) (S00-20) | hygiene | `p3/evidence_C6/step2/FLAGS_C6_candidate.txt` |
+
+- `differentiable_pi_apply` is KEPT (its retirement S00-16 is cohort B; its RENAMES row
+  "retired → `differentiable_apply`" lands with that unit, not here).
+  Superseded by cohorts B (round 2) and C (C6 tail): `differentiable_pi_apply` is retired → Mathlib `differentiable_apply`.
+- Evidence: strict compare PASS, 45/45 rows `exact`, 0 new, 0 deleted, 0 axiom changes
+  (`p3/evidence_C6/step2/STRICT_COMPARE.md`).
+
+### C7-A — Geometric prefix (`Analysis/SequenceSpace/Geometric/{Scalar,Basic,Omega}.lean`, `Analysis/SequenceSpace/Chebyshev/UnitLift.lean`)
+
+Consumer searches: `p3/evidence_C7A/step1/CONSUMER_SEARCH_retirements.txt` (Lake root incl. Examples and tests,
+exterior/Unformalization companions, ReferenceBook).
+
+#### Ledger (C7-A)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.l1Weighted.instFactLeENNRealOfNat` | Mathlib's global instance `fact_one_le_one_ennreal` | retired | `p3/evidence_C7A/step2/Witness_FactInst.lean`; `codex/C7_Witness.out` |
+| `RadiiPolynomial.l1Weighted.toLpWeighted` | `RadiiPolynomial.lpOneAlg.toLp` (`a.toLp`) | retired | `p3/evidence_C7A/step2/STRICT_COMPARE.md` |
+| `RadiiPolynomial.l1Weighted.toSeq_mul_single` | unchanged FQN; `Geometric/Omega.lean` → `Geometric/Basic.lean` | moved | `p3/evidence_C7A/step2/MOVED_CHECK.txt` |
+| `RadiiPolynomial.l1Weighted.norm_tailProj_eq_tailTsum` | unchanged FQN; `Geometric/Omega.lean` → `Geometric/Basic.lean` | moved | idem |
+| `RadiiPolynomial.lpWeighted.toSeq_apply` | lemma kept; `@[simp]` removed | de-simp | `codex/C7_Simp.out` |
+| `RadiiPolynomial.l1Weighted.toSeq_apply` | lemma kept; `@[simp]` removed | de-simp | idem |
+| `RadiiPolynomial.lpOneAlg.geomUnitLift_gen` | lemma kept; `@[simp]` removed | de-simp | idem |
+| `RadiiPolynomial.lpOneAlg.evalLaurent_gen` | lemma kept; `@[simp]` removed | de-simp | idem |
+| `RadiiPolynomial.l1Chebyshev.evalLaurentC_gen` | lemma kept; `@[simp]` removed | de-simp | idem |
+| `RadiiPolynomial.l1Omega.toSeq_apply` | lemma and `@[simp]` kept; docstring "Coefficient evaluation agrees with the underlying coordinate." | docstring | `p3/evidence_C7A/REPORT_C7A.md` (final overlay); `codex/C7_Simp.out` |
+| — | `RadiiPolynomial.l1Weighted.toSeq_eq_toRealSeq : toSeq a = lpOneAlg.toRealSeq a := rfl` (not simp) | added | `p3/evidence_C7A/step2/STRICT_COMPARE.md` |
+
+#### Detail (C7-A, fragment with the final overlay)
+
+##### Retirements (public removal with replacement)
+
+| Old FQN | Replacement | Row | Consumers (Lake / companions / RB build sources) |
+|---|---|---|---|
+| `RadiiPolynomial.l1Weighted.instFactLeENNRealOfNat` (anonymous global `instance : Fact (1 ≤ (1 : ℝ≥0∞))`, Geometric/Basic.lean:88) | Mathlib's `fact_one_le_one_ennreal` (global instance; `#synth` now returns it). S2 pair witnessed (step2/Witness_FactInst.lean, `with_reducible_and_instances rfl`) | S04-4 (+ S04-10: commented copy Omega:78 deleted) | 0 / Basic.tex:134, :641 / 0 (RB hits only in ledger evidence copies) |
+| `RadiiPolynomial.l1Weighted.toLpWeighted` | `RadiiPolynomial.lpOneAlg.toLp` (`a.toLp`; identical type `lp (ScaledReal ν) 1`) | S04-5 | 0 / Basic.tex:139, :642 / 0 (RB hits only in ledger evidence copies) |
+
+The retired instance occurs in the types of `derivShift_CLM` and `derivShift_CLM_apply` (argument of
+`lp.normedAddCommGroup`); there it is replaced by `fact_one_le_one_ennreal`, witnessed definitionally equal.
+
+##### Module moves, FQN unchanged
+
+| FQN | From | To | Row |
+|---|---|---|---|
+| `RadiiPolynomial.l1Weighted.toSeq_mul_single` | Analysis/SequenceSpace/Geometric/Omega.lean | Analysis/SequenceSpace/Geometric/Basic.lean | S04-7 |
+| `RadiiPolynomial.l1Weighted.norm_tailProj_eq_tailTsum` | Analysis/SequenceSpace/Geometric/Omega.lean | Analysis/SequenceSpace/Geometric/Basic.lean | S04-7 |
+
+Type, levels, axioms identical across the move (step2/MOVED_CHECK.txt). Every importer of Omega imports Basic.
+
+##### Attribute changes (lemmas kept; `@[simp]` removed)
+
+`RadiiPolynomial.lpWeighted.toSeq_apply`, `RadiiPolynomial.l1Weighted.toSeq_apply` (S04-3, partial);
+`RadiiPolynomial.lpOneAlg.geomUnitLift_gen`, `RadiiPolynomial.lpOneAlg.evalLaurent_gen`, `RadiiPolynomial.l1Chebyshev.evalLaurentC_gen` (S04-17).
+Five de-simps in all. `RadiiPolynomial.l1Omega.toSeq_apply` keeps `@[simp]`: the ReferenceBook proof
+`Spine/A5_Differential.lean:208` relies on that simp normal form (campaign ruling). The archived C7-A report and
+`step2/SIMP_INVENTORY_DIFF.txt`, which list six de-simps, predate this ruling.
+
+##### New public declaration
+
+`RadiiPolynomial.l1Weighted.toSeq_eq_toRealSeq : toSeq a = lpOneAlg.toRealSeq a := rfl` (S04-14, l1Weighted half; not simp).
+
+##### Not public-API changes (recorded for completeness)
+
+- Private Omega duplicates deleted (S04-8): `scaledReal_norm_ofReal` → `ScaledReal.norm_lpAlgRingData_ofReal`; `l1Weighted_single_eq` → `l1Weighted.single_eq_lpOneAlg_single`.
+- Generated reserved names no longer realized inside Omega (realized on demand anywhere): `shift.eq_1`, `shiftDivN.eq_1`, `lambdaN.eq_1`, `l1Weighted.mk.eq_1`, `l1Weighted.toSeq.eq_1`, `lpWeighted.mk.congr_simp`.
+- In-module relocation, statement identical: `l1Weighted.single_eq_lpOneAlg_single` (end of Basic → `section Single`, S04-11); `ScaledReal.norm_lpAlgRingData_ofReal` (reopened namespace folded, S04-19).
+
+## API campaign 2026-10-12 — cohort B
+
+Clusters C8, C10-A, C3-B, R10a, R10b, R10c, R10d, C9-A and C9-B of the 2026-10-12 API campaign. Each cluster was
+accepted by its independent critic, with the critic's fixes applied, and stands pending the serialized cohort-B
+library, test and ReferenceBook builds (`DECISIONS.md` of the campaign, entries 11:10Z to 14:55Z). The R10d rows are
+recorded before its critic verdict and are marked "(critic ACCEPT ~15:10Z)". Coordinator rulings in `DECISIONS.md` override
+fragment text where they differ.
+
+Each cluster subsection opens with a ledger, one row per migration: old FQN | new FQN or replacement | kind |
+evidence. Kinds: `retired`, `moved`, `renamed (no alias)`, `binder drop`, `binder drop (induced)`,
+`class-field drop`, `level-rename`, `redefined`, `statement changed`, `consumer-compat face`, `added`,
+`added (test)`, `proof only`, `import change`, `test import`, `docstring`. The detail under each ledger is the
+cluster's fragment. For the Mathlib-bound R10 layer (`Algebra/Convolution`) the detail carries the full
+new-declaration tables.
+
+Evidence paths starting with `p3/` are relative to `exterior/tmp/api_campaign_20261012/`, in the outer repository,
+outside the Lake root.
+
+ReferenceBook consumers: no ReferenceBook source is edited by this cohort. The two `norm_sum_mul_pi_le` names keep
+their ReferenceBook call sites (C3-B); the C9-A faces `toSeq_radiusRestrict`, `aeval_of_norm_le_comp_radiusRestrict`
+and `exists_eval_eq_of_analyticAt` are optional ReferenceBook adoptions.
+
+### C8 — Operators (`Operators/Matrix`, `Operators/BlockDiagonal`, `Operators/HeadTail.lean`)
+
+Triage rows S05-1 … S05-25 (KEEP: S05-7, -10, -16, -17). All FQNs are under `RadiiPolynomial.` unless written
+otherwise. S05-20 and the S05-21 design-note clause that cites it are conditional on C12's `ivp_Z₀_le` rewiring
+(cohort C): if C12 declines it, the theorem and its three docstring citations (Lift.lean, Composition.lean, the
+WeightedL1 design note) are dropped together.
+Resolved by cohorts B (round 2) and C (C12, S09-1-10/-11): `IVP.ivp_Z₀_le` is rewired through `composedApprox_toCLM_eq_lift`; the
+condition is met.
+
+#### Ledger (C8)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.SystemBlockDiagData.norm_id_sub_comp_le_of_eq_defect` | `RadiiPolynomial.SystemBlockDiagData.Z₀_norm_le_of_eq_defect` (identical statement) (S05-5) | retired (duplicate) | `p3/evidence_C8/probes/OldInterfacePins.lean`; `p3/evidence_C8/step1/CONSUMER_SEARCH_baseline.txt` |
+| `RadiiPolynomial.SystemBlockDiagData.norm_toCLM_apply_le_norm` | `(A.toCLM (ν := ν)).le_of_opNorm_le (A.norm_toCLM_le (ν := ν)) x` (S05-8) | retired (operator-norm wrapper) | idem |
+| `RadiiPolynomial.norm_le_of_pi_component_bound` | `ContinuousLinearMap.opNorm_le_bound _ hC fun h => (pi_norm_le_iff_of_nonneg (mul_nonneg hC (norm_nonneg h))).2 (hcomp h)` (S05-9) | retired (operator-norm wrapper) | idem |
+| `RadiiPolynomial.norm_const_XL1_fin1` | Mathlib `pi_norm_const a` (S05-15) | retired (norm wrapper) | idem |
+| `RadiiPolynomial.BlockDiagLift.extractCoeff` (class field) | none (the field had no reader; coefficient maps stay instance-side: `toCoeff`, `ChebyshevIVP.toCoeffCheb`); both constructor assignments (`instBlockDiagLiftXL1`, `ChebyshevIVP.instBlockDiagLiftXCheb`) removed in the same generation (S05-25) | class-field drop | `p3/evidence_C8/step2/INVENTORY_DIFF.txt`; `p3/evidence_C8/step2/MIGRATED_CHECK.txt` |
+| `RadiiPolynomial.BlockDiagLift.mk`, `.rec`, `.casesOn`, `.recOn`, `.noConfusion*`, `.mk._flat_ctor`, `.liftDefect` | unchanged FQNs; `mk` takes one explicit argument fewer, the recursors' minor premise has no `extractCoeff`, the `liftDefect` projection index is 1 → 0 (S05-25) | class-field drop (induced) | idem |
+| `RadiiPolynomial.l1Weighted.opNorm_le_of_fin_kill_tail_eq` | unchanged FQN; `Operators/BlockDiagonal/Scalar.lean` → `Analysis/SequenceSpace/Geometric/Basic.lean` (§NormSplitting, after `norm_le_of_fin_zero_tail_eq`) (S05-14 ≡ S04-6) | moved | `p3/evidence_C8/step2/MOVED_CHECK.txt`; `p3/evidence_C8/probes/OldInterfacePins.lean` |
+| `RadiiPolynomial.defectOfBlockDiagOp` (+ `.eq_1`) | unchanged FQN; `[NeZero L]` dropped (S05-23) | binder drop | `p3/evidence_C8/step2/MIGRATED_CHECK.txt`; `p3/evidence_C8/probes/OldInterfacePins.lean` |
+| `RadiiPolynomial.SystemBlockDiagData.defectOfTailCancel` | unchanged FQN; `[NeZero L]` dropped (S05-23) | binder drop | idem |
+| `RadiiPolynomial.SystemBlockDiagData.seq_zero_of_action_zero` | unchanged FQN; `[NeZero L]` dropped (S05-23) | binder drop | idem |
+| `RadiiPolynomial.toCLM_ext_of_toCoeff_eq` | unchanged FQN; `[NeZero L]` dropped (S05-23) | binder drop | idem |
+| `RadiiPolynomial.XL1.opNorm_le_of_fin_kill_tail_eq` | unchanged FQN; `[NeZero L]` dropped (S05-23) | binder drop | idem |
+| `RadiiPolynomial.composedApprox_defect_eq`, `…SystemBlockDiagData.Z₀_le_of_tailCancel`, `…SystemBlockDiagData.id_sub_comp_eq_defect_toCLM`, `…defectOfBlockDiagOp_toCLM_eq`, `…defect_of_composed_toCLM_eq`, `…finite_block_injective_of_defect_norm_lt_one` (+ 2 private lemmas) | unchanged FQN and printed statement; the instance argument disappears inside the `defectOfBlockDiagOp`/`defectOfTailCancel` subterms | binder drop (induced) | `p3/evidence_C8/step2/MIGRATED_CHECK.txt` |
+| `IVP.ivp_Z₀_le`, `IVP.ivp_system_theorem`, `IVP.ivp_system_theorem_local`, `ChebyshevIVP.StdChebIVPData.Z₀_le`, `ChebyshevIVP.StdChebIVPData.composed_toSeq_nat`, `ChebyshevIVP.StdChebIVPData.defect_actionFinite_single`, `RadiiPolynomial.finiteBlockMatrixNorm_defect_le_of_Q` | unchanged FQN and printed statement; raw type loses the instance argument (no `@`-application or named instance argument in Lake or ReferenceBook) | binder drop (induced, downstream) | `p3/evidence_C8/step2/IMPLICIT_CONSUMERS.txt` |
+| `RadiiPolynomial.SystemBlockDiagData.defectOfTailCancel` | body `defectOfBlockDiagOp A B` (the old structure literal is `rfl`-equal; pinned) (S05-6) | redefined | `p3/evidence_C8/probes/OldInterfacePins.lean` |
+| `RadiiPolynomial.SystemBlockDiagData.differentiable_actionFinite` | unchanged FQN; universe label `u_2` → `u_1` (dead `Seq` variable removed) (S05-2) | level-rename | `p3/evidence_C8/step2/MIGRATED_CHECK.txt`; `p3/evidence_C8/REPORT_C8.md` |
+| `RadiiPolynomial.SystemBlockDiagData.differentiable_action_fin` | idem | level-rename | idem |
+| `RadiiPolynomial.SystemBlockDiagData.fderiv_action_fin` | idem | level-rename | idem |
+| — | `RadiiPolynomial.FiniteBlockMatrix.toMatrix_eq_comp` (`rfl`) (S05-1) | added | `p3/evidence_C8/step2/STRICT_COMPARE.md` |
+| — | `RadiiPolynomial.FinWeighted.vecEquiv`, `RadiiPolynomial.FinWeightedMatrix.toWeightedCLMAlgEquiv`, `…toWeightedCLMAlgEquiv_apply`, `…isUnit_toWeightedCLM_iff` (S05-19) | added | idem |
+| — | `RadiiPolynomial.ScalarBlockDiagData.toScalarCLM_eq_conj`, `…id_sub_comp_toScalarCLM_eq_conj` (S05-18) | added | idem |
+| — | `RadiiPolynomial.SystemBlockDiagData.composedApprox_toCLM_eq_lift` (S05-20; conditional on C12) | added (condition met: C12, cohorts B (round 2) and C) | idem |
+| short names (FQNs in `REPORT_C8.md`): `matrix_isUnit_of_toWeightedCLM_isUnit` (now `(isUnit_toWeightedCLM_iff).mp`), `toWeightedCLM_one`/`_mul`/`_one_sub` (`map_*` corollaries), `injective_toCLM_of_finite_part_injective` (from `seq_zero_of_action_zero`), `applyX_add`/`applyX_smul`, `id_sub_comp_toScalarCLM_apply_eq` (via `…_eq_conj`), `isUnit_toMatrix_of_blockNorm_lt_one` (110 → 41 lines) | names and statements unchanged; re-proved (S05-11, -12, -18, -19, -24) | proof only | `p3/evidence_C8/REPORT_C8.md`; `p3/evidence_C8/step2/STRICT_COMPARE.md`; `p3/evidence_C8/probes/P24_golf.lean` |
+| `Operators/BlockDiagonal/{Basic,WeightedL1,Scalar}.lean` imports | `Basic` imports `Geometric.Scalar`, `Norm.FiniteSum`, `Matrix.WeightedNorm`, `Mathlib.Analysis.Calculus.FDeriv.Add`/`.Mul` (no longer `Core.Bounds`, `Geometric.Basic`, `Matrix.OperatorNorm`); `WeightedL1` adds `Core.Bounds` and `Geometric.Basic`; `Scalar` adds `Matrix.OperatorNorm` (S05-3) | import change | `p3/evidence_C8/step3/C8_vs_baseline.diff`; `p3/evidence_C8/step1/DIRECT_IMPORTERS.txt` |
+| `Operators/HeadTail.lean` run-ledger tags `(T37, L001.)`, `(T37b, L001; optional.)`, `(T38a, L001.)` and the `(T38b, L001.)` line comment | stripped (S05-22); provenance: ledger L001 / S027 `HeadTailColumns.lean:284–291`; no diary line added to the module | docstring | `p3/evidence_C8/step3/C8_vs_baseline.diff` |
+
+#### Detail (C8, fragment)
+
+- Retirements: consumer search over the Lake root (incl. Examples/tests), ReferenceBook (excl. ledger) and paper v6.3
+  gives 0 uses of each retired name. Companions still cite them (WeightedL1.tex:306/325/511/645/647/661,
+  Scalar.tex:180/350): P4 companion refresh.
+- Move (S05-14): raw type and axioms identical (`MOVED_CHECK.txt`; `type_of%` gate in `probes/OldInterfacePins.lean`);
+  now proved through `norm_le_of_fin_zero_tail_eq`.
+- S05-25: the class `BlockDiagLift` is now a norm-bounded linear defect action with no coefficient law; the zero lift
+  satisfies its axioms (pinned in Lift.lean). No replacement for `extractCoeff`.
+- S05-23: the five `[NeZero L]` binders were measured unused; old interfaces (with the binder) are restated verbatim and
+  discharged by the new declarations in `probes/OldInterfacePins.lean`. Full old and new types:
+  `step2/INVENTORY_DIFF.txt`.
+- S05-2: the three level-renames come from deleting the dead `variable {Seq …}` block of `BlockDiagonal/Basic.lean`; an
+  explicit universe instantiation keeps its positional meaning.
+- S05-19: `toWeightedCLMAlgEquiv : Matrix ≃ₐ[ℝ] (Space →L[ℝ] Space)` has the forward map `toWeightedCLM` (`rfl`) and
+  sends multiplication to composition in the same order; `toWeightedCLM`'s `mkContinuous` body and bound are kept, and
+  the norm statement stays `finWeightedMatrixNorm_eq_opNorm`.
+
+### C10-A — Chebyshev side of Station 4 (`Analysis/SequenceSpace/Chebyshev/{Algebra,Scalar,UnitLift}.lean`, `Fourier/Support.lean`)
+
+Triage rows S04-1, S04-2, S04-14 (l1Chebyshev half), S04-15, S04-18, S04-24. Final generation per the coordinator
+overlay (S04-1 landed, ~11:00Z) and the critic's fresh final-state strict compare (PASS, 196 rows, 0 failures,
+0 axiom changes).
+
+#### Ledger (C10-A)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.l1Chebyshev.leftMul` (abbrev) | `RadiiPolynomial.lpOneAlg.mulLeftCLM (𝕜 := ℝ) a` (definitionally equal, `rfl`) (S04-15) | retired (duplicate abbrev) | `p3/evidence_C10A/step2/Witness_Retirements.lean`; `p3/evidence_C10A/step1/CONSUMER_SEARCH_retirements.txt` |
+| `RadiiPolynomial.ScaledRealZ.toReal` (abbrev) | `RadiiPolynomial.WeightedScalar.toReal` (identical body) (S04-18) | retired (duplicate abbrev) | idem |
+| `RadiiPolynomial.ScaledRealZ.norm_lpAlgRingData_ofReal` (`@[simp]` kept) | unchanged FQN; `Chebyshev/Algebra.lean` → `Chebyshev/Scalar.lean` (S04-2) | moved | `p3/evidence_C10A/step2/MOVED_CHECK.txt`; `p3/evidence_C10A/step2/SIMP_INVENTORY_DIFF.txt` |
+| `RadiiPolynomial.geomFiberZ` (`abbrev`) | unchanged FQN; `Chebyshev/UnitLift.lean` → `Chebyshev/Scalar.lean`; `[NormedField 𝕜]` kept (the binder drop S04-24 is declined: KEEP) (S04-1) | moved | `p3/evidence_C10A/step1/full_S04-1_applied/MOVED_CHECK.txt`; `p3/evidence_C10A/CRITIC_C10A.md` |
+| `RadiiPolynomial.geomFiberZ_weight` (not simp) | unchanged FQN; `Chebyshev/UnitLift.lean` → `Chebyshev/Scalar.lean`, with its `example … rfl`; `[NormedField 𝕜]` kept (S04-24 KEEP) (S04-1) | moved | idem |
+| `Analysis/SequenceSpace/Fourier/Support.lean` imports | `Chebyshev.Scalar` + `WeightedL1.UniversalProperty` instead of `Chebyshev.UnitLift`; import closures Support 19 → 12, Fourier hub 26 → 19, `Applications/Fourier` 31 → 24 modules (S04-1) | import change | `p3/evidence_C10A/step1/full_S04-1_applied/CLOSURE_DIFF.txt` |
+| `Examples/tests/FZ/TailWindowRegressions.lean` | `+import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Algebra` (line 1; it reached `l1Chebyshev` only transitively before; coordinator-authorized) (S04-1) | test import | `p3/evidence_C10A/step1/Repair_TailWindowRegressions.lean` |
+| — | `RadiiPolynomial.l1Chebyshev.toSeq_eq_toRealSeq (a : l1Chebyshev ν) : toSeq a = lpOneAlg.toRealSeq a := rfl` (not simp; twin of cohort A's `l1Weighted.toSeq_eq_toRealSeq`) (S04-14) | added | `p3/evidence_C10A/step2/NEW_DELETED.txt` |
+
+#### Detail (C10-A, fragment with the final overlay)
+
+- Consumers of the two retired abbrevs: Lake 0, ReferenceBook build sources 0, environment scan under
+  `import RadiiPolynomial` 0 (`step1/USAGE_SCAN_env_root.txt`); companions Chebyshev/Algebra.tex:48, :113, :285 and
+  Chebyshev/Scalar.tex:36, :106, :118 (+ the two `_sidecar` sig rows): P4 companion refresh.
+- `l1Weighted.leftMul` (Geometric/Basic) is NOT retired (S04-15 KEEP; ReferenceBook Ch07/Sec4 docstrings refer to it).
+- Moves: kind, levels, raw and scope-erased type, axioms identical; every consumer of
+  `ScaledRealZ.norm_lpAlgRingData_ofReal` imports Chebyshev/Algebra, which imports Chebyshev/Scalar.
+- Not public-API changes: generated auxiliaries `l1Chebyshev.leftMul._proof_1 … _proof_8` and compiler names
+  `ScaledRealZ.toReal._boxed`, `._redArg`, `._redArg._boxed` are gone with their heads.
+
+### C3-B — Polynomials tail (`Algebra/Polynomial/{CompPoly,MvPolynomial}`, `Analysis/Norm/FiniteSum.lean`)
+
+Triage rows S01-5 + S06-8 (paired retirement of the array-adapter cluster), S01-10 + S06-12 (one proof home, ruled
+wrapper form), S07-2-2 (generic faces). This supersedes the cohort-A C3-A rows that kept the S01-5 cluster
+(`MvPolyBridge.arrayToPowerSeries`, "redefined"; both rows now carry a pointer here). The `Array` grep gate reads "no
+`mvPolyCoeffQ`/`arrayToPowerSeries`": `CompPoly.evalCoeff` (and `CompPoly.toSeq_evalBanach`) is the live certificate
+path and keeps `Array` (coordinator ruling, ~12:40Z).
+
+#### Ledger (C3-B)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `MvPolyBridge.arrayToPowerSeries` | `RadiiPolynomial.CauchyProduct.toPowerSeries fun n => arr.getD n 0` (its body) (S01-5) | retired (array adapter) | `p3/evidence_C3B/step3/probes/C3B_Controls.lean`; `p3/evidence_C3B/step2/STRICT_COMPARE.md` |
+| `MvPolyBridge.mvPolyCoeffQ` (+ `.eq_1`) | `MvPolyBridge.mvPolyCoeff p (fun i k => (arrs i).getD k 0) n` (its body) (S01-5) | retired (array adapter) | idem |
+| `MvPolyBridge.mvPolyCoeffQ_{C,zero,X,add,neg,sub,mul,one,X_fun,C_fun,C_mul}` (11 `@[simp]` lemmas) | the same-suffix `MvPolyBridge.mvPolyCoeff_*` lemma at `seqs := fun i k => (arrs i).getD k 0` (S01-5) | retired (array adapter) | idem |
+| `MvPolyBridge.CompPoly.evalCoeff_eq_mvPolyCoeffQ` | `MvPolyBridge.CompPoly.evalCoeffSeq_eq_mvPolyCoeff p (fun i k => (arrs i).getD k 0) n` (`evalCoeff` unfolds to `evalCoeffSeq` at those sequences); live path `CompPoly.evalCoeff` + `CompPoly.toSeq_evalBanach` (S01-5) | retired (array adapter) | idem |
+| `MvPolyBridge.toSeq_evalInBanach` | `MvPolyBridge.toSeq_evalInBanach_of_coeffs p a (fun i n => (arrs i).getD n 0) ha` (its body); live path `CompPoly.toSeq_evalBanach` (S06-8) | retired (array adapter) | idem |
+| — | `RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le {A ι : Type*} [NonUnitalSeminormedRing A] [Fintype ι] (f h : ι → A) : ‖∑ i, f i * h i‖ ≤ (∑ i, ‖f i‖) * ‖h‖` in `Analysis/Norm/FiniteSum.lean` (the single proof) (S01-10) | added | `p3/evidence_C3B/step2/STRICT_COMPARE.md` |
+| `MvPolyBridge.CompPoly.norm_sum_mul_pi_le` (CompPoly/Bounds) | unchanged name, statement, binders and attributes; body `RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le f h` (`rfl`-equal); not deprecated (S01-10) | consumer-compat face | `p3/evidence_C3B/step2/STRICT_COMPARE.md`; `p3/evidence_C3B/step3/CONSUMERS_post.txt` |
+| `MvPolyBridge.norm_sum_mul_pi_le` (MvPolynomial/WeightedL1) | unchanged name, statement, binders and attributes; body `NormHelpers.norm_sum_mul_pi_le f h` (`rfl`-equal); not deprecated (S06-12) | consumer-compat face | idem |
+| — | `MvPolyBridge.CompPoly.norm_sum_pderiv_mul_le`, `MvPolyBridge.CompPoly.norm_sum_pderiv_sub_mul_le` (CompPoly/Bounds, section `Normed`; geometry-free) (S07-2-2) | added | `p3/evidence_C3B/step2/STRICT_COMPARE.md`; `p3/evidence_C3B/step3/probes/C3B_Controls.lean` |
+| `Analysis/Norm/FiniteSum.lean`, `Algebra/Polynomial/CompPoly/Bounds.lean` imports | FiniteSum gains `Mathlib.Analysis.Normed.Ring.Basic` and `Mathlib.Analysis.Normed.Group.Constructions`; CompPoly/Bounds gains `RadiiPolynomial.Analysis.Norm.FiniteSum` (closure 3289 → 3290) | import change | `p3/evidence_C3B/step3/closure_Bounds_delta.txt`; `p3/evidence_C3B/step3/closure_FiniteSum_delta.txt` |
+
+#### Detail (C3-B, fragment)
+
+- Generated: `MvPolyBridge.mvPolyCoeffQ.eq_1` goes with its def. `MvPolyBridge.CompPoly.evalCoeff.eq_1` is no longer
+  realized in `CompPoly/Core` (it was produced only by the retired theorem's `simpa`); it is the on-demand equation
+  lemma of the kept `CompPoly.evalCoeff` and is regenerated by any `unfold`/`simp [evalCoeff]` (0 explicit uses, Lake
+  and ReferenceBook). Its disappearance from the export is not a deletion of interface (coordinator ruling, ~12:40Z).
+- Consumers of the retired cluster (word-boundary search; Lake incl. Examples/tests, ReferenceBook excl. ledger,
+  companions, paper v6.3): Lean code 0 outside the cluster, before and after; ReferenceBook 0; paper 0.
+- `NormHelpers.norm_sum_mul_pi_le` keeps the binder order of the live CompPoly copy and is `type_of%`-equal to it
+  (definitionally equal at reducible transparency, not syntactically: in the generic face `‖h‖` goes through
+  `Pi.seminormedAddCommGroup`, in the CompPoly copy through `Pi.nonUnitalSeminormedRing`).
+- Wrapper call sites (7 in 5 files: Jacobian:223, Face:126, Chebyshev/Bounds:143, :170, CompPoly/WeightedL1:95,
+  MvPolynomial/WeightedL1 ×2; ReferenceBook Ch10/Sec2BoundsZ2:309, :417 and Ch08/Sec2Theorem:516) are unchanged.
+  Strict compare: both wrapper rows `exact` (type, levels, axioms).
+- S07-2-2: statements as in REVIEW_P1-S07-2 item 2 / Probe1b, axioms standard; the Chebyshev corollaries (C10 phase C)
+  are not edited here and are `type_of%`-equal to the Probe1b corollaries over these faces.
+
+### R10a — finite-fiber convolution wrapper (`Algebra/Convolution/{Finite,FiniteFiber}.lean`)
+
+Contract `r10/CONSENSUS_r10.FINAL_8c6d01a0.md` (D1–D3, S00-12, S00-21); brief `p3/BRIEF_R10a_finitefiber.md`. No
+declaration is renamed, deleted or re-stated: `Finite.lean` gains six theorems (existing declarations byte-identical,
+strict compare EXACT + `new_ok`), and the new module `FiniteFiber.lean` adds the wrapper. `CauchyProduct.lean` and
+`Ring.lean` are unchanged by this unit (strict compare EXACT). Coordinator rulings (~11:10Z): the additive carrier is
+generated by `@[to_additive FiniteFiberAddConvolution, to_additive_dont_translate]` on the def (identical body
+`M → R`); explicit additive names are dropped where the linter says they are autogenerated; the pinned instance names
+are `Semiring.toNatAlgebra`, `Ring.toIntAlgebra`, `NSMul.toSMul`, `ZSMul.toSMul`; `coeff_one` is simp in the
+Kronecker form (as `MvPowerSeries.coeff_one`).
+
+#### Ledger (R10a)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| — | `RadiiPolynomial.finiteMulConvolution.single_one_left_apply`, `…single_one_right_apply`, `RadiiPolynomial.map_finiteMulConvolution` (+ additive twins `finiteAddConvolution.single_zero_left_apply`, `…single_zero_right_apply`, `map_finiteAddConvolution`) (S00-12) | added | `p3/evidence_R10a/step2/compare_Finite.log`; `p3/evidence_R10a/step2/rules_Finite.json` |
+| — | new module `RadiiPolynomial.Algebra.Convolution.FiniteFiber` (54 public declarations per twin, table below) | added | `p3/evidence_R10a/step2/strict_cand_FiniteFiber.json`; `p3/evidence_R10a/step2/selfcheck_FiniteFiber.log`; `p3/evidence_R10a/step2/frozen_types.txt`; `p3/evidence_R10a/step2/additive_generated.txt` |
+| `Algebra/Convolution.lean` (facade) | `+import RadiiPolynomial.Algebra.Convolution.FiniteFiber` and one docstring sentence | import change | `p3/evidence_R10a/step2/compare_Facade.log` |
+| — | test module `RadiiPolynomial.Examples.tests.CV.FiniteFiberConvolution` | added (test) | `p3/evidence_R10a/step1/targeted_build.log` |
+
+#### New declarations (`Finite.lean`)
+
+| FQN | kind | hypotheses | simp? | computable? |
+|---|---|---|---|---|
+| `RadiiPolynomial.finiteMulConvolution.single_one_left_apply` | theorem | `[MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M] [AddCommMonoid R] [Mul R]` + `(hzero_mul : ∀ r : R, 0 * r = 0)` | — | n/a (Prop) |
+| `RadiiPolynomial.finiteAddConvolution.single_zero_left_apply` | theorem | `[AddZeroClass M] [HasAntidiagonal M] [DecidableEq M] [AddCommMonoid R] [Mul R]` + `(hzero_mul : ∀ r : R, 0 * r = 0)` | — | n/a (Prop) |
+| `RadiiPolynomial.finiteMulConvolution.single_one_right_apply` | theorem | `[MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M] [AddCommMonoid R] [Mul R]` + `(hmul_zero : ∀ r : R, r * 0 = 0)` | — | n/a (Prop) |
+| `RadiiPolynomial.finiteAddConvolution.single_zero_right_apply` | theorem | `[AddZeroClass M] [HasAntidiagonal M] [DecidableEq M] [AddCommMonoid R] [Mul R]` + `(hmul_zero : ∀ r : R, r * 0 = 0)` | — | n/a (Prop) |
+| `RadiiPolynomial.map_finiteMulConvolution` | theorem | `[Mul M] [HasMulAntidiagonal M] [AddCommMonoid R] [Mul R] [AddCommMonoid R'] [Mul R']` + `(φ : R →+ R') (hφ : ∀ x y, φ (x * y) = φ x * φ y)` | — | n/a (Prop) |
+| `RadiiPolynomial.map_finiteAddConvolution` | theorem | `[Add M] [HasAntidiagonal M] [AddCommMonoid R] [Mul R] [AddCommMonoid R'] [Mul R']` + `(φ : R →+ R') (hφ : …)` | — | n/a (Prop) |
+
+#### New declarations (`FiniteFiber.lean`; both twins; auxiliaries `eq_1`, `_proof_n`, `single.congr_simp` omitted)
+
+Universe variables: `M : Type u`, `R : Type v`, `S : Type w`. The additive twin translates only the index class.
+
+| FQN | kind | hypotheses | simp? | computable? |
+|---|---|---|---|---|
+| `RadiiPolynomial.FiniteFiberConvolution` | def (type) | none (`M : Type u`, `R : Type v`) | — | computable (no IR: type) |
+| `RadiiPolynomial.FiniteFiberAddConvolution` | def (type) | none (`M : Type u`, `R : Type v`) | — | computable (no IR: type) |
+| `RadiiPolynomial.FiniteFiberConvolution.ofFun` | def (`Equiv`) | none | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.ofFun` | def (`Equiv`) | none | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.toFun` | def (`Equiv`) | none | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.toFun` | def (`Equiv`) | none | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff` | def | none | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff` | def | none | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.ofFun_symm` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.ofFun_symm` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.toFun_symm` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.toFun_symm` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.toFun_ofFun` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.toFun_ofFun` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.ofFun_toFun` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.ofFun_toFun` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_ofFun` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_ofFun` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.toFun_apply` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.toFun_apply` | theorem | none | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.ext` | theorem (`@[ext]`) | none | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.ext` | theorem (`@[ext]`) | none | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.ext_iff` | theorem (generated by `@[ext]`) | none | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.ext_iff` | theorem (generated by `@[ext]`) | none | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.single` | def | `[DecidableEq M] [Zero R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.single` | def | `[DecidableEq M] [Zero R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_single` | theorem | `[DecidableEq M] [Zero R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_single` | theorem | `[DecidableEq M] [Zero R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.instZero` | instance | `[Zero R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instZero` | instance | `[Zero R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instAdd` | instance | `[Add R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instAdd` | instance | `[Add R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instNeg` | instance | `[Neg R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instNeg` | instance | `[Neg R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instSub` | instance | `[Sub R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instSub` | instance | `[Sub R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instSMul` | instance | `[SMul S R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instSMul` | instance | `[SMul S R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instAddCommMonoid` | instance | `[AddCommMonoid R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instAddCommMonoid` | instance | `[AddCommMonoid R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instAddCommGroup` | instance | `[AddCommGroup R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instAddCommGroup` | instance | `[AddCommGroup R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instModule` | instance | `[Semiring S] [AddCommMonoid R] [Module S R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instModule` | instance | `[Semiring S] [AddCommMonoid R] [Module S R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_zero` | theorem | `[Zero R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_zero` | theorem | `[Zero R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_add` | theorem | `[Add R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_add` | theorem | `[Add R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_neg` | theorem | `[Neg R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_neg` | theorem | `[Neg R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_sub` | theorem | `[Sub R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_sub` | theorem | `[Sub R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_smul` | theorem | `[SMul S R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_smul` | theorem | `[SMul S R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.instMul` | instance | `[Mul M] [HasMulAntidiagonal M] [AddCommMonoid R] [Mul R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instMul` | instance | `[Add M] [HasAntidiagonal M] [AddCommMonoid R] [Mul R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instOne` | instance | `[One M] [DecidableEq M] [Zero R] [One R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instOne` | instance | `[Zero M] [DecidableEq M] [Zero R] [One R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.toFun_mul` | theorem | `[Mul M] [HasMulAntidiagonal M] [AddCommMonoid R] [Mul R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.toFun_mul` | theorem | `[Add M] [HasAntidiagonal M] [AddCommMonoid R] [Mul R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_mul` | theorem | `[Mul M] [HasMulAntidiagonal M] [AddCommMonoid R] [Mul R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_mul` | theorem | `[Add M] [HasAntidiagonal M] [AddCommMonoid R] [Mul R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.one_def` | theorem | `[One M] [DecidableEq M] [Zero R] [One R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.one_def` | theorem | `[Zero M] [DecidableEq M] [Zero R] [One R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_one` | theorem | `[One M] [DecidableEq M] [Zero R] [One R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_one` | theorem | `[Zero M] [DecidableEq M] [Zero R] [One R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.single_mul_single` | theorem | `[Mul M] [HasMulAntidiagonal M] [DecidableEq M] [NonUnitalNonAssocSemiring R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.single_mul_single` | theorem | `[Add M] [HasAntidiagonal M] [DecidableEq M] [NonUnitalNonAssocSemiring R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_single_one_mul` | theorem | `[MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M] [NonUnitalNonAssocSemiring R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_single_zero_mul` | theorem | `[AddZeroClass M] [HasAntidiagonal M] [DecidableEq M] [NonUnitalNonAssocSemiring R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.coeff_mul_single_one` | theorem | `[MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M] [NonUnitalNonAssocSemiring R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_mul_single_zero` | theorem | `[AddZeroClass M] [HasAntidiagonal M] [DecidableEq M] [NonUnitalNonAssocSemiring R]` | simp | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.instNonUnitalNonAssocSemiring` | instance | `[Mul M] [HasMulAntidiagonal M] [NonUnitalNonAssocSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instNonUnitalNonAssocSemiring` | instance | `[Add M] [HasAntidiagonal M] [NonUnitalNonAssocSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instNonUnitalSemiring` | instance | `[Semigroup M] [HasMulAntidiagonal M] [NonUnitalSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instNonUnitalSemiring` | instance | `[AddSemigroup M] [HasAntidiagonal M] [NonUnitalSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instNonAssocSemiring` | instance | `[MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M] [NonAssocSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instNonAssocSemiring` | instance | `[AddZeroClass M] [HasAntidiagonal M] [DecidableEq M] [NonAssocSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instSemiring` | instance | `[Monoid M] [HasMulAntidiagonal M] [DecidableEq M] [Semiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instSemiring` | instance | `[AddMonoid M] [HasAntidiagonal M] [DecidableEq M] [Semiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instNonUnitalNonAssocCommSemiring` | instance | `[CommMagma M] [HasMulAntidiagonal M] [NonUnitalNonAssocCommSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instNonUnitalNonAssocCommSemiring` | instance | `[AddCommMagma M] [HasAntidiagonal M] [NonUnitalNonAssocCommSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instNonUnitalCommSemiring` | instance | `[CommSemigroup M] [HasMulAntidiagonal M] [NonUnitalCommSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instNonUnitalCommSemiring` | instance | `[AddCommSemigroup M] [HasAntidiagonal M] [NonUnitalCommSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instCommSemiring` | instance | `[CommMonoid M] [HasMulAntidiagonal M] [DecidableEq M] [CommSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instCommSemiring` | instance | `[AddCommMonoid M] [HasAntidiagonal M] [DecidableEq M] [CommSemiring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.natCast_def` | theorem | `[MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M] [NonAssocSemiring R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.natCast_def` | theorem | `[AddZeroClass M] [HasAntidiagonal M] [DecidableEq M] [NonAssocSemiring R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.instNonUnitalNonAssocRing` | instance | `[Mul M] [HasMulAntidiagonal M] [NonUnitalNonAssocRing R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instNonUnitalNonAssocRing` | instance | `[Add M] [HasAntidiagonal M] [NonUnitalNonAssocRing R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instNonUnitalRing` | instance | `[Semigroup M] [HasMulAntidiagonal M] [NonUnitalRing R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instNonUnitalRing` | instance | `[AddSemigroup M] [HasAntidiagonal M] [NonUnitalRing R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instNonAssocRing` | instance | `[MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M] [NonAssocRing R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instNonAssocRing` | instance | `[AddZeroClass M] [HasAntidiagonal M] [DecidableEq M] [NonAssocRing R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instRing` | instance | `[Monoid M] [HasMulAntidiagonal M] [DecidableEq M] [Ring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instRing` | instance | `[AddMonoid M] [HasAntidiagonal M] [DecidableEq M] [Ring R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.instCommRing` | instance | `[CommMonoid M] [HasMulAntidiagonal M] [DecidableEq M] [CommRing R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instCommRing` | instance | `[AddCommMonoid M] [HasAntidiagonal M] [DecidableEq M] [CommRing R]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.intCast_def` | theorem | `[MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M] [NonAssocRing R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.intCast_def` | theorem | `[AddZeroClass M] [HasAntidiagonal M] [DecidableEq M] [NonAssocRing R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.instIsScalarTower` | instance (Prop) | `[Mul M] [HasMulAntidiagonal M] [AddCommMonoid R] [Mul R] [DistribSMul S R] [IsScalarTower S R R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instIsScalarTower` | instance (Prop) | `[Add M] [HasAntidiagonal M] [AddCommMonoid R] [Mul R] [DistribSMul S R] [IsScalarTower S R R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.instSMulCommClass` | instance (Prop) | `[Mul M] [HasMulAntidiagonal M] [AddCommMonoid R] [Mul R] [DistribSMul S R] [SMulCommClass S R R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instSMulCommClass` | instance (Prop) | `[Add M] [HasAntidiagonal M] [AddCommMonoid R] [Mul R] [DistribSMul S R] [SMulCommClass S R R]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberConvolution.instAlgebra` | instance | `[CommSemiring S] [Semiring R] [Algebra S R] [Monoid M] [HasMulAntidiagonal M] [DecidableEq M]` | — | computable |
+| `RadiiPolynomial.FiniteFiberAddConvolution.instAlgebra` | instance | `[CommSemiring S] [Semiring R] [Algebra S R] [AddMonoid M] [HasAntidiagonal M] [DecidableEq M]` | — | computable |
+| `RadiiPolynomial.FiniteFiberConvolution.algebraMap_apply` | theorem | `[CommSemiring S] [Semiring R] [Algebra S R] [Monoid M] [HasMulAntidiagonal M] [DecidableEq M]` | — | n/a (Prop) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.algebraMap_apply` | theorem | `[CommSemiring S] [Semiring R] [Algebra S R] [AddMonoid M] [HasAntidiagonal M] [DecidableEq M]` | — | n/a (Prop) |
+
+`Finite` and `FiniteFiber` import no topology, no `Ring`, no `Analysis`
+(`p3/evidence_R10a/step3/import_closure_FiniteFiber.txt`: `Mathlib.Topology.*` = 0 modules, `Real` absent).
+
+### R10b — power-series connections and the tsum/finite operation equality (`Algebra/Convolution/{Ring,FiniteFiber/PowerSeries}.lean`)
+
+Contract `r10/CONSENSUS_r10.FINAL_8c6d01a0.md` (C1, C2, C4 first half; S00-4, S00-13, S02-9); brief
+`p3/BRIEF_R10b_powerseries.md`. Coordinator rulings (~13:15Z): `single_ringConvolution_single` and its twin are
+`@[simp]` (consistent with Mathlib's `single_ringConvolution`/`MonoidAlgebra.single_mul_single`; simp fires at the
+function level only, since Mathlib's `ringConvolution_apply` pre-empts the applied form); `toMvPowerSeriesRingEquiv`
+is computable; the `_smul` faces stay simp. Under `Classical.decEq` the wrapper and `MvPowerSeries` products are
+plain-`rfl` definitional (critic, ~14:15Z).
+
+#### Ledger (R10b)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.DiscreteConvolution.HasSum.leftMulAssocEquiv_sigma` | `RadiiPolynomial.DiscreteConvolution.hasSum_sigma_leftMulAssoc` (S00-4) | renamed (no alias) | `p3/evidence_R10b/step2/compare_Ring.log`; `p3/evidence_R10b/step2/rules_Ring.json`; `p3/evidence_R10b/step0/oldname_consumers.txt` |
+| `RadiiPolynomial.DiscreteConvolution.HasSum.leftAddAssocEquiv_sigma` (generated) | `RadiiPolynomial.DiscreteConvolution.hasSum_sigma_leftAddAssoc` (generated by `to_additive`) (S00-4) | renamed (no alias) | idem |
+| `RadiiPolynomial.DiscreteConvolution.HasSum.rightMulAssocEquiv_sigma` | `RadiiPolynomial.DiscreteConvolution.hasSum_sigma_rightMulAssoc` (S00-4) | renamed (no alias) | idem |
+| `RadiiPolynomial.DiscreteConvolution.HasSum.rightAddAssocEquiv_sigma` (generated) | `RadiiPolynomial.DiscreteConvolution.hasSum_sigma_rightAddAssoc` (generated) (S00-4) | renamed (no alias) | idem |
+| — | `RadiiPolynomial.DiscreteConvolution.ringConvolution_eq_finiteMulConvolution` (+ `addRingConvolution_eq_finiteAddConvolution`) (S00-13; T3) | added | `p3/evidence_R10b/step2/compare_Ring.log` |
+| — | `RadiiPolynomial.DiscreteConvolution.single_ringConvolution_single` (+ `single_addRingConvolution_single`), `@[simp]` (S02-9; T4) | added | `p3/evidence_R10b/step2/compare_Ring.log`; `p3/evidence_R10b/step3/up_reproof.out` |
+| — | new module `RadiiPolynomial.Algebra.Convolution.FiniteFiber.PowerSeries` (9 public declarations) (C1, C2) | added | `p3/evidence_R10b/step2/strict_cand_PowerSeries.json`; `p3/evidence_R10b/step2/selfcheck_PowerSeries.log`; `p3/evidence_R10b/step2/frozen_types.txt` |
+| `Algebra/Convolution.lean` (facade) | `+import RadiiPolynomial.Algebra.Convolution.FiniteFiber.PowerSeries` and one docstring sentence | import change | `p3/evidence_R10b/HUB_R10b.md` |
+| — | test modules `RadiiPolynomial.Examples.tests.CV.FiniteFiberPowerSeries`, `RadiiPolynomial.Examples.tests.CV.RingConvolutionFinite` | added (test) | `p3/evidence_R10b/step1/targeted_build.log` |
+
+#### S00-4 renames (no deprecated alias; binder order unchanged)
+
+| old FQN | new FQN | binder order (unchanged) | consumers |
+|---|---|---|---|
+| `RadiiPolynomial.DiscreteConvolution.HasSum.leftMulAssocEquiv_sigma` | `RadiiPolynomial.DiscreteConvolution.hasSum_sigma_leftMulAssoc` | `{M R} [Monoid M] [AddCommMonoid R] [TopologicalSpace R] [Mul R] {f g h : M → R} {x : M} {a : R} (hs : HasSum …)` | Ring.lean `ringConvolution_assoc_left` (call site updated); 0 elsewhere |
+| `RadiiPolynomial.DiscreteConvolution.HasSum.leftAddAssocEquiv_sigma` (generated) | `RadiiPolynomial.DiscreteConvolution.hasSum_sigma_leftAddAssoc` (generated by `to_additive`) | same with `[AddMonoid M]` | Ring.lean `addRingConvolution_assoc_left` (generated); 0 elsewhere |
+| `RadiiPolynomial.DiscreteConvolution.HasSum.rightMulAssocEquiv_sigma` | `RadiiPolynomial.DiscreteConvolution.hasSum_sigma_rightMulAssoc` | `{M R} [Monoid M] [AddCommMonoid R] [TopologicalSpace R] [Semigroup R] {f g h : M → R} {x : M} {a : R} (hs : HasSum …)` | Ring.lean `ringConvolution_assoc_right` (call site updated); 0 elsewhere |
+| `RadiiPolynomial.DiscreteConvolution.HasSum.rightAddAssocEquiv_sigma` (generated) | `RadiiPolynomial.DiscreteConvolution.hasSum_sigma_rightAddAssoc` (generated) | same with `[AddMonoid M]` | Ring.lean `addRingConvolution_assoc_right` (generated); 0 elsewhere |
+| auxiliaries `HasSum.right{Mul,Add}AssocEquiv_sigma.match_1_1` | `hasSum_sigma_right{Mul,Add}Assoc.match_1_1` | — | internal |
+
+Hypotheses preserved exactly: left `[Mul R]`, right `[Semigroup R]` (asymmetric); bodies unchanged; strict compare
+PASS with these four `renames` (types and values equal after erasing binder macro scopes); the control with empty
+rules FAILS with exactly the 4 deletions + 8 additions (`p3/evidence_R10b/step2/compare_Ring_emptyrules_control.log`).
+`ringConvolution_assoc_left`/`_right` change only by the renamed call site (types exact). Consumers: library, Examples
+and tests only the two Ring.lean call sites; ReferenceBook 0; paper v6.3 0. The live companion
+`Algebra/Convolution/Ring.tex` (lines 198, 211, 316–319) and the sidecars `_sidecar/ALL_FQNS.txt:1190–1193`,
+`_sidecar/Algebra/Convolution/Ring.sig.tsv:25–28` carry the old names: P4 companion refresh. The history rows of this
+file that name the old FQNs (Mathlib-adoption section, cohort-A C1 ledger) stay as history.
+
+#### New declarations (`Ring.lean`, `FiniteFiber/PowerSeries.lean`)
+
+| FQN | kind | hypotheses | simp? | computable? |
+|---|---|---|---|---|
+| `RadiiPolynomial.DiscreteConvolution.ringConvolution_eq_finiteMulConvolution` | theorem | `[Monoid M] [NonUnitalNonAssocSemiring R] [TopologicalSpace R] [Finset.HasMulAntidiagonal M] (f g : M → R)` (= Mathlib's `ringConvolution_eq_sum_mulAntidiagonal`) | — | n/a |
+| `RadiiPolynomial.DiscreteConvolution.addRingConvolution_eq_finiteAddConvolution` | theorem (generated) | `[AddMonoid M] … [Finset.HasAntidiagonal M]` | — | n/a |
+| `RadiiPolynomial.DiscreteConvolution.single_ringConvolution_single` | theorem | `[Monoid M] [DecidableEq M] [NonUnitalNonAssocSemiring R] [TopologicalSpace R] (i j : M) (x y : R)` | simp (coordinator ruling ~13:15Z; `to_additive (attr := simp)`) | n/a |
+| `RadiiPolynomial.DiscreteConvolution.single_addRingConvolution_single` | theorem (generated) | `[AddMonoid M] [DecidableEq M] …` | simp (coordinator ruling ~13:15Z; `to_additive (attr := simp)`) | n/a |
+| `RadiiPolynomial.FiniteFiberAddConvolution.toPowerSeriesRingEquiv` | def (`R` explicit) | `[Semiring R]` | — | `noncomputable` (cause: `CauchyProduct.toPowerSeriesLinearEquiv` ← `Finsupp.uniqueEquiv`) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.toPowerSeriesRingEquiv_apply` | theorem (`rfl`) | `[Semiring R]` | — | n/a |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_toPowerSeriesRingEquiv` | theorem | `[Semiring R]` | simp | n/a |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_toPowerSeriesRingEquiv_symm` | theorem | `[Semiring R]` | simp | n/a |
+| `RadiiPolynomial.FiniteFiberAddConvolution.toPowerSeriesRingEquiv_smul` | theorem | `[Semiring R] {S} [Semiring S] [Module S R]` | simp | n/a |
+| `RadiiPolynomial.FiniteFiberAddConvolution.toMvPowerSeriesRingEquiv` | def (`σ R` explicit) | `[DecidableEq σ] [Semiring R]` | — | computable (compiled code present; stores only `toFun`/`invFun`) |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_toMvPowerSeriesRingEquiv` | theorem (`rfl`) | `[DecidableEq σ] [Semiring R]` | simp | n/a |
+| `RadiiPolynomial.FiniteFiberAddConvolution.coeff_toMvPowerSeriesRingEquiv_symm` | theorem (`rfl`) | `[DecidableEq σ] [Semiring R]` | simp | n/a |
+| `RadiiPolynomial.FiniteFiberAddConvolution.toMvPowerSeriesRingEquiv_smul` | theorem (`rfl`) | `[DecidableEq σ] [Semiring R] {S} [Semiring S] [Module S R]` | simp | n/a |
+
+`FiniteFiber/PowerSeries` imports no topology, no `Ring`, no `Analysis`
+(`p3/evidence_R10b/step3/import_closure_PowerSeries.txt`: `Mathlib.Topology.*` = 0 modules); after R10d, `Real` is
+absent from its closure as well. `Ring` gains no import.
+
+### R10c — the MonoidAlgebra connection (`Algebra/Convolution/FiniteFiber/MonoidAlgebra.lean`)
+
+Contract `r10/CONSENSUS_r10.FINAL_8c6d01a0.md` (C3, test requirements 3, 8, 9); brief
+`p3/BRIEF_R10c_monoidalgebra.md`. No declaration is renamed, deleted or re-stated: one new module and one new test;
+`Finite.lean` and `FiniteFiber.lean` are unchanged (strict compare EXACT). Coordinator rulings (~12:55Z): the explicit
+twin name `ofAddMonoidAlgebra_smul` is accepted (`to_additive` would produce `…_vadd`); no `AlgHom` in this unit.
+
+#### Ledger (R10c)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| — | new module `RadiiPolynomial.Algebra.Convolution.FiniteFiber.MonoidAlgebra` (14 public declarations per twin, table below) | added | `p3/evidence_R10c/step2/frozen_types.txt`; `p3/evidence_R10c/step2/additive_generated.txt`; `p3/evidence_R10c/step2/axioms_per_declaration.txt` |
+| `Algebra/Convolution.lean` (facade) | `+import RadiiPolynomial.Algebra.Convolution.FiniteFiber.MonoidAlgebra` and one docstring sentence | import change | `p3/evidence_R10c/HUB_R10c.md` |
+| — | test module `RadiiPolynomial.Examples.tests.CV.FiniteFiberMonoidAlgebra` | added (test) | `p3/evidence_R10c/step1/targeted_build_final.log`; `p3/evidence_R10c/step3/tests_outcome.txt` |
+
+#### New declarations (14 per twin; generated twins in `RadiiPolynomial.FiniteFiberAddConvolution`)
+
+| FQN (multiplicative; `RadiiPolynomial.FiniteFiberConvolution.`) | additive twin (`RadiiPolynomial.FiniteFiberAddConvolution.`) | kind | hypotheses | simp? | computable? |
+|---|---|---|---|---|---|
+| `toMonoidAlgebra` | `toAddMonoidAlgebra` | def | `[Semiring R]`, `hf : (support fun m => coeff m f).Finite` | — | noncomputable (`Finsupp.ofSupportFinite`) |
+| `coeff_toMonoidAlgebra` | `coeff_toAddMonoidAlgebra` | theorem | `[Semiring R]` | simp | — |
+| `ofMonoidAlgebra` (explicit `R M`) | `ofAddMonoidAlgebra` | def (`→+*`) | `[Semiring R] [Monoid M] [HasMulAntidiagonal M] [DecidableEq M]` / `[Semiring R] [AddMonoid M] [HasAntidiagonal M] [DecidableEq M]` | — | computable (IR present) |
+| `ofMonoidAlgebra_apply` | `ofAddMonoidAlgebra_apply` | theorem (rfl) | as `ofMonoidAlgebra` | no | — |
+| `coeff_ofMonoidAlgebra` | `coeff_ofAddMonoidAlgebra` | theorem (rfl) | as `ofMonoidAlgebra` | simp | — |
+| `ofMonoidAlgebra_single` | `ofAddMonoidAlgebra_single` | theorem | as `ofMonoidAlgebra` | simp | — |
+| `ofMonoidAlgebra_injective` | `ofAddMonoidAlgebra_injective` | theorem | as `ofMonoidAlgebra` | no | — |
+| `ofMonoidAlgebra_smul` | `ofAddMonoidAlgebra_smul` (explicit name; the generated one would be `…_vadd`) | theorem (rfl) | as `ofMonoidAlgebra` + `{S : Type w} [SMulZeroClass S R]` | simp | — |
+| `ofMonoidAlgebra_toMonoidAlgebra` | `ofAddMonoidAlgebra_toAddMonoidAlgebra` | theorem (rfl) | as `ofMonoidAlgebra` | simp | — |
+| `toMonoidAlgebra_ofMonoidAlgebra` | `toAddMonoidAlgebra_ofAddMonoidAlgebra` | theorem | as `ofMonoidAlgebra` (any proof `hx`) | simp | — |
+| `mem_rangeS_ofMonoidAlgebra` | `mem_rangeS_ofAddMonoidAlgebra` | theorem (iff) | as `ofMonoidAlgebra` | no | — |
+| `ofMonoidAlgebraEquivRangeS` (explicit `R M`) | `ofAddMonoidAlgebraEquivRangeS` | def (`≃+*` onto `(ofMonoidAlgebra R M).rangeS`) | as `ofMonoidAlgebra` | — | noncomputable |
+| `ofMonoidAlgebraEquivRangeS_apply` | `ofAddMonoidAlgebraEquivRangeS_apply` | theorem (rfl) | as `ofMonoidAlgebra` | simp | — |
+| `ofMonoidAlgebraEquivRangeS_symm_apply` | `ofAddMonoidAlgebraEquivRangeS_symm_apply` | theorem (rfl) | as `ofMonoidAlgebra` | simp | — |
+
+Exact types: `p3/evidence_R10c/step2/frozen_types.txt`; generated bodies: `step2/additive_generated.txt`; flags:
+`step2/decls_flags.txt`; axioms (all 28: `propext, Classical.choice, Quot.sound`): `step2/axioms_per_declaration.txt`.
+Name-clash check (0 hits in library, Mathlib pin, ReferenceBook, book/paper/companions; the one Mathlib hit
+`DirectSum.toAddMonoidAlgebra` is in another namespace): `step0/newname_grep.txt`. `FiniteFiber/MonoidAlgebra`
+imports no topology, no `Ring`, no `CauchyProduct`, no `Analysis` (`p3/evidence_R10c/step3/import_closure.txt`).
+
+### R10d — the `CauchyProductReal` adapter (`Algebra/Convolution/{CauchyProduct,CauchyProductReal}.lean`) (critic ACCEPT ~15:10Z)
+
+Contract `r10/CONSENSUS_r10.FINAL_8c6d01a0.md` routed item S00-11; brief `p3/BRIEF_R10d_cauchyproductreal.md`. The
+unit's strict compares were taken with the frozen v2 tool copy; the cohort-B gate re-runs under the v3 driver
+(coordinator, ~14:40Z). All rows of this subsection are recorded before the R10d critic verdict.
+
+#### Ledger (R10d)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.CauchyProduct.ratCast` | unchanged FQN, type, body, docstring and axioms; module `RadiiPolynomial.Algebra.Convolution.CauchyProduct` → `RadiiPolynomial.Algebra.Convolution.CauchyProductReal` (S00-11) (critic ACCEPT ~15:10Z) | moved | `p3/evidence_R10d/step2/ratcast_row_identity.txt` |
+| `Algebra/Convolution/CauchyProduct.lean`: `import Mathlib.Basic.Real.Basic` | dropped (closure 2893 → 2884 modules; `Real` absent); modules that obtained ℝ only through `CauchyProduct` import the adapter or another real-number source (S00-11) (critic ACCEPT ~15:10Z) | import change | `p3/evidence_R10d/step3/closure_compare.txt`; `p3/evidence_R10d/step3/ClosureCP_after.txt` |
+| `Algebra/Polynomial/MvPolynomial/WeightedL1.lean` imports | `+import RadiiPolynomial.Algebra.Convolution.CauchyProductReal` (its `toSeq_evalInBanach_of_coeffs` rewrites with `ratCast`) (critic ACCEPT ~15:10Z) | import change | `p3/evidence_R10d/step2/consumer_resolve.txt` |
+| `Algebra/Convolution.lean` (facade) | `+import RadiiPolynomial.Algebra.Convolution.CauchyProductReal` and one docstring sentence; repairs the hub-only consumer `Examples/tests/CV/PowerSeriesBridge.lean` (critic ACCEPT ~15:10Z) | import change | `p3/evidence_R10d/HUB_R10d.md`; `p3/evidence_R10d/step3/control_PowerSeriesBridge_current_hub.txt` |
+
+#### Moved declaration (critic ACCEPT ~15:10Z)
+
+| FQN | type | body | docstring | axioms |
+|---|---|---|---|---|
+| `RadiiPolynomial.CauchyProduct.ratCast` | `∀ (a b : ℕ → ℚ) (n : ℕ), CauchyProduct (fun k => ↑(a k)) (fun k => ↑(b k)) n = ↑(CauchyProduct a b n)` | `CauchyProduct.map_CauchyProduct (Rat.castHom ℝ) a b n` | "Cauchy product with `ℚ → ℝ` cast." | `[propext, Classical.choice, Quot.sound]` |
+
+Row identity IDENTICAL (name tree, kind, levels, raw and normalized type tree, mdata, axioms, theorem value tree; no
+auxiliary constants on either side). Consumers: `Algebra/Polynomial/MvPolynomial/WeightedL1.lean` (the only user,
+`rw` at :112, now importing the owning adapter); facade access through `Algebra/Convolution.lean`; ReferenceBook live
+sources 0; paper v6.3 0. Reusable modules that need `CauchyProduct.ratCast` import the adapter, not the hub.
+
+### C9-A — Taylor analysis, Geometric side (`Analysis/SequenceSpace/Geometric/*`, `CharacterTopology.lean`)
+
+Triage rows S06-1, S06-3, S06-6, S06-16, S06-17, S06-18 and the C6 addendum S07-2-9. Strict compare PASS (227
+surviving rows exact; 12 retired incl. generated auxiliaries; 5 new). Coordinator ruling (~14:00Z): the simp-set
+delta below is accepted. Every replacement is checked in `p3/evidence_C9A/step3/PositiveControls_C9A.lean`.
+
+#### Ledger (C9-A)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `l1Weighted.toPowerSeries` (root namespace; def) | `RadiiPolynomial.CauchyProduct.toPowerSeries (l1Weighted.toSeq a)`, the computable raw constructor (`rfl`; the bundled `toPowerSeriesLinearEquiv ℝ` is also `rfl`-equal but is not the replacement) (S06-1) | retired | `p3/evidence_C9A/step3/PositiveControls_C9A.lean`; `p3/evidence_C9A/step1/CONSUMER_SEARCH_retirements_before.txt` |
+| `l1Weighted.coeff_toPowerSeries` (root; `@[simp]`) | `RadiiPolynomial.CauchyProduct.coeff_toPowerSeries (l1Weighted.toSeq a) n` (also `@[simp]`) (S06-1) | retired | idem |
+| `l1Weighted.coeff_mul_eq_cauchyProduct` (root) | `(RadiiPolynomial.CauchyProduct.eq_coeff_mul (toSeq a) (toSeq b) n).symm` (S06-1) | retired | idem |
+| `l1Weighted.evalAlgHomQ` (root; def) | `(l1Weighted.evalAlgHom z hz).restrictScalars ℚ` (Mathlib `AlgHom.restrictScalars`; `rfl` to the retired body) (S06-3) | retired | idem |
+| `l1Weighted.evalAlgHomQ_apply` (root; `@[simp]`) | `rfl` / `simp` on `((evalAlgHom z hz).restrictScalars ℚ) a = eval a z` (S06-3) | retired | idem |
+| private `l1Weighted.summable_diff_bound` (EvaluationDerivative) | `RadiiPolynomial.l1Weighted.summable_abs_mul_pow_pred a hν'_pos.le hν'_lt_ν` (S06-6) | retired (private) | `p3/evidence_C9A/step2/NEW_DELETED.txt` |
+| private `RadiiPolynomial.l1Weighted.summable_derivative_bound` (Analytic) | `RadiiPolynomial.l1Weighted.summable_abs_mul_pow_pred a hr.le hrν` (S06-6) | retired (private) | idem |
+| — | `RadiiPolynomial.l1Weighted.summable_abs_mul_pow_pred (a) {r} (hr : 0 ≤ r) (hrν : r < ν)` (Geometric/Omega.lean, beside `l1Omega.summable_abs_eval`) (S06-6) | added | `p3/evidence_C9A/step2/STRICT_COMPARE.md` |
+| — | `@[simp] RadiiPolynomial.l1Weighted.toSeq_radiusRestrict : toSeq (radiusRestrict hσr a) n = toSeq a n` (Geometric/RadiusRestriction.lean) (S06-16) | added | `p3/evidence_C9A/step2/STRICT_COMPARE.md`; `p3/evidence_C9A/step2/LINT_NEW.txt` |
+| — | `RadiiPolynomial.l1Weighted.aeval_of_norm_le_comp_radiusRestrict` (every complete normed ℝ-algebra target with `NormOneClass`) (S06-17) | added | `p3/evidence_C9A/step2/STRICT_COMPARE.md` |
+| `RadiiPolynomial.l1Weighted.evalContinuousAlgHom_comp_radiusRestrict` | statement unchanged; re-proved as a corollary of `aeval_of_norm_le_comp_radiusRestrict` via `aeval_eq_evalContinuousAlgHom` (ReferenceBook Spine/A10_Geometry:256 unchanged) (S06-17) | proof only | `p3/evidence_C9A/step2/STRICT_COMPARE.md` |
+| — | `RadiiPolynomial.l1Weighted.exists_eval_eq_of_analyticAt` (Geometric/AnalyticExt.lean: local real scalar analyticity at `0` gives a positive radius and a coefficient sequence) (S06-18) | added | `p3/evidence_C9A/step2/STRICT_COMPARE.md` |
+| — | `RadiiPolynomial.Gelfand.continuous_of_continuous_apply` (CharacterTopology.lean; introduction rule of the local pointwise topology; no global instance) (S07-2-9) | added | `p3/evidence_C9A/step2/STRICT_COMPARE.md`; `p3/evidence_C9A/step1/item9_CharacterTopology.txt` |
+| `Analysis/SequenceSpace/Geometric/Evaluation.lean`: `import Mathlib.RingTheory.PowerSeries.Basic` | dropped (still in its closure through `Algebra/Convolution/CauchyProduct`) | import change | `p3/evidence_C9A/step3/C9A_vs_baseline.diff` |
+
+#### Detail (C9-A, fragment)
+
+- Consumers of the retired names before the unit (Lake / tests / ReferenceBook / paper): 0 each; the gitignored
+  Lake-root `tmp/` holds archived snapshots that mention `l1Weighted.toPowerSeries` and `coeff_mul_eq_cauchyProduct`.
+- Attribute delta of the nine modules (`step2/SIMP_INVENTORY_DIFF.txt`): `@[simp]` removed with the retired heads
+  `l1Weighted.coeff_toPowerSeries` and `l1Weighted.evalAlgHomQ_apply`; `@[simp]` added on
+  `l1Weighted.toSeq_radiusRestrict`. No instance or reducibility change.
+- `TaylorSpectrum.continuous_discCharacter` is now one term through `Gelfand.continuous_of_continuous_apply` (statement
+  unchanged); the LaurentSpectrum and Spectrum/Topology consumers are left to C10 phase C.
+  Resolved by cohorts B (round 2) and C (C10-B/C, S07-2-9): both consumers are one term through that lemma.
+- New faces answer ReferenceBook friction (optional adoption, not a campaign edit): `toSeq_radiusRestrict`
+  (Ch08/Sec5Taylor:126–137), `aeval_of_norm_le_comp_radiusRestrict` (Spine/A10_Geometry:320–326, complex square =
+  instance `B = ℂ`), `exists_eval_eq_of_analyticAt` (Ch08/Sec5Taylor:202).
+
+### C9-B — Taylor analysis, polynomial-bridge side (`Algebra/Polynomial/MvPolynomial/WeightedL1.lean`, `CompPoly/WeightedL1.lean`)
+
+Triage rows S06-7, S06-9, S06-10, S06-11, S06-15. Strict compare: exactly one changed row, the approved weakening
+`norm_fderiv_diff_evalInBanach_bilinear`. The `Array` grep gate is read as for C3-B (`CompPoly.toSeq_evalBanach`,
+`compPoly_Dφ_bridge` = live certificate path; coordinator ruling, ~13:45Z).
+
+#### Ledger (C9-B)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `MvPolyBridge.evalInBanach_C_fun` | `funext fun x => MvPolyBridge.evalInBanach_C r x` (its body) (S06-7) | retired (induction plumbing) | `p3/evidence_C9B/step3/probes/C9B_Controls.lean`; `p3/evidence_C9B/step4/CONSUMERS_post.txt` |
+| `MvPolyBridge.evalInBanach_add_fun` | `funext fun x => MvPolyBridge.evalInBanach_add p q x` (its body) (S06-7) | retired (induction plumbing) | idem |
+| `MvPolyBridge.evalInBanach_mul_X_fun` | `funext fun x => by simp [MvPolyBridge.evalInBanach]` (its body; pointwise `evalInBanach_mul` + `evalInBanach_X`) (S06-7) | retired (induction plumbing) | idem |
+| `MvPolyBridge.norm_fderiv_diff_system_of_const_second_pderiv` | `MvPolyBridge.norm_fderiv_diff_evalInBanach_of_const_second_pderiv (φ_spec l) c a h (D₂ l) (hD₂ l) (hC l)` (S06-11) | retired (per-component wrapper) | idem |
+| — | `MvPolyBridge.hasFDerivAt_evalInBanach (p : MvPolynomial (Fin L) ℚ) (a : Fin L → l1Weighted ν) : HasFDerivAt (fun x => evalInBanach p x) (MvPolynomial.polynomialDerivative (𝕜 := ℝ) p a) a` (`:= MvPolynomial.hasFDerivAt_aeval p a`) (S06-7) | added | `p3/evidence_C9B/step2/STRICT_COMPARE.md` |
+| `MvPolyBridge.norm_fderiv_diff_evalInBanach_bilinear` | unchanged FQN; hypothesis `hLip` global → pointwise at `(c, a)` (old and new types below); an old call `… p c a h hLip` becomes `… p c a h (hLip c a)` (S06-10) | statement changed (approved weakening) | `p3/evidence_C9B/step3/probes/C9B_Controls.lean`; `p3/evidence_C9B/step2/STRICT_COMPARE.md` |
+| `MvPolyBridge.differentiable_evalInBanach`, `MvPolyBridge.fderiv_evalInBanach` (S06-7); `MvPolyBridge.norm_fderiv_diff_evalInBanach_of_const_second_pderiv`, `MvPolyBridge.CompPoly.norm_fderiv_evalBanach_sub_le` (S06-10) | statements byte-identical; re-proved through `hasFDerivAt_evalInBanach` and the pointwise `_bilinear` | proof only | `p3/evidence_C9B/step2/STRICT_COMPARE.md` |
+| `Algebra/Polynomial/MvPolynomial/WeightedL1.lean` imports | `MvPolynomial.Calculus` instead of `MvPolynomial.Core` (closure 4025 → 4036; downstream closures unchanged) | import change | `p3/evidence_C9B/step2/closure_WL1_delta.txt` |
+
+#### Changed statement (C9-B, the one approved row)
+
+`MvPolyBridge.norm_fderiv_diff_evalInBanach_bilinear` (S06-10); conclusion, constant `C` and all other binders unchanged.
+
+- OLD: `∀ {L : ℕ} {ν : PosReal} (p : MvPolynomial (Fin L) ℚ) (c a h : Fin L → l1Weighted ν) {C : ℝ}, (∀ (x y : Fin L → l1Weighted ν), ∑ i, ‖evalInBanach (pderiv i p) x - evalInBanach (pderiv i p) y‖ ≤ C * ‖x - y‖) → ‖(fderiv ℝ (fun x => evalInBanach p x) c - fderiv ℝ (fun x => evalInBanach p x) a) h‖ ≤ C * ‖c - a‖ * ‖h‖`
+- NEW: `∀ {L : ℕ} {ν : PosReal} (p : MvPolynomial (Fin L) ℚ) (c a h : Fin L → l1Weighted ν) {C : ℝ}, ∑ i, ‖evalInBanach (pderiv i p) c - evalInBanach (pderiv i p) a‖ ≤ C * ‖c - a‖ → ‖(fderiv ℝ (fun x => evalInBanach p x) c - fderiv ℝ (fun x => evalInBanach p x) a) h‖ ≤ C * ‖c - a‖ * ‖h‖`
+- Pin: `C9BControls.old_norm_fderiv_diff_evalInBanach_bilinear` and an anonymous `example` at the OLD type, both closed by
+  the new lemma at `hLip c a` (`p3/evidence_C9B/step3/probes/C9B_Controls.lean`). Callers: before, in-file 1
+  (`_of_const_second_pderiv`), external 0; after, in-file 1 + CompPoly/WeightedL1 1
+  (`CompPoly.norm_fderiv_evalBanach_sub_le`); ReferenceBook 0.
+
+#### Detail (C9-B, fragment)
+
+- Generated: `MvPolyBridge.fderiv_evalInBanach._simp_1_2` (internal simp auxiliary of the old induction proof) is no
+  longer produced.
+- Consumers of the retired names (word-boundary; Lake incl. Examples/tests, ReferenceBook excl. ledger, companions,
+  paper v6.3): Lean code in-file only before, 0 after; ReferenceBook 0; paper 0; companions 4 each
+  (MvPolynomial/WeightedL1.tex + sidecar): P4 companion refresh.
+- C6 tail precondition: `MvPolynomial/WeightedL1.lean` no longer uses root `differentiable_pi_apply`; Lake-wide `.lean`
+  hits are its definition (`Analysis/Calculus/Pi.lean:20`) and a docstring mention (`Tactic/AutoPolyFDeriv.lean:22`);
+  ReferenceBook 0. Its retirement (S00-16) is not part of this cohort's rows.
+  Resolved by cohorts B (round 2) and C (C6 tail): `differentiable_pi_apply` is retired → Mathlib `differentiable_apply`.
+
+## API campaign 2026-10-12 — cohorts B (round 2) and C
+
+Clusters C4, C10-B/C (with the C10 addendum), C11, C12 (with the C3 addendum), C13, C14 and C14b, the C7 addendum
+and the C6 tail of the 2026-10-12 API campaign. Each cluster was accepted by its independent critic, with the critic's
+fixes applied, and stands pending the serialized round-2 library, test and ReferenceBook builds (`DECISIONS.md` of the
+campaign, entries ~19:20Z on 10-12 to ~09:00Z on 10-13). Coordinator rulings in `DECISIONS.md` override fragment text
+where they differ; the kinds follow the critics' REVIEWED TYPE CHANGES sections.
+
+Each cluster subsection opens with a ledger, one row per migration: old FQN | new FQN or replacement | kind |
+evidence. Kinds: `moved` (FQN unchanged, new module), `retired` (replacement named), `retired (private)`,
+`privatized`, `renamed (no alias)`, `binder drop`, `statement changed`, `generalization`, `weakening`,
+`migrated instance path`, `redefined` (body changed, type exact), `metadata`, `de-simp`, `added`, `added (private)`,
+`added, then removed`, `proof only`, `syntax only`, `hygiene`, `docstring`, `import change`. Regenerated auxiliaries
+(`_proof_*`, `.eq_1`, matchers, notation artifacts) are not public API; they are named only in one-sentence notes.
+
+Evidence paths starting with `p3/` are relative to `exterior/tmp/api_campaign_20261012/`; `DECISIONS.md` is that
+directory's decision log. Both lie in the outer repository, outside the Lake root.
+
+ReferenceBook consumers: no ReferenceBook source is edited. Every retired, privatized or binder-dropped name below has
+0 ReferenceBook uses (cluster critics).
+
+### C4 — WeightedL1 carrier split (`Analysis/SequenceSpace/WeightedL1/*`, NEW `WeightedL1/Carrier.lean`)
+
+Triage rows S02-1 … S02-15, S00-10 and the addenda S04-16, S07-1-2, S09-2-12, S08-1-5, S08-1-6. All FQNs are under
+`RadiiPolynomial.`; no FQN is renamed and no deprecated alias is needed.
+
+#### Ledger (C4)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| 130 constants of `WeightedL1/Algebra.lean` (the carrier half; list below) | unchanged FQNs; `WeightedL1/Algebra.lean` → `WeightedL1/Carrier.lean` (S02-1) | moved | `p3/evidence_C4/step1/S02_1_LINE_MAP.txt`; `p3/evidence_C4/step2/moved_rows_hygiene_check.txt` |
+| `lpOneAlg.norm_ofReal_one_pos` | unchanged FQN, type and levels; `WeightedL1/Columns.lean` → `WeightedL1/Carrier.lean`, the one public copy (S02-2) | moved | `p3/evidence_C4/step3/old_interface_pins.out` |
+| private `lpOneAlg.norm_mulOfReal_one_pos` (Algebra), private `lpOneAlg.norm_ofReal_one_pos` (Multilinear) | `lpOneAlg.norm_ofReal_one_pos` (S02-2) | retired (private) | `p3/evidence_C4/step2/RULES_C4.json` |
+| private `lpOneAlg.mulFiber_finite`, private `lpOneAlg.addFiber_finite` (Algebra) | Mathlib `DiscreteConvolution.mulFiber_finite` / `DiscreteConvolution.addFiber_finite` (S00-10) | retired (private) | `p3/evidence_C4/step1/envlean_S00_10.txt` |
+| `lpOneAlg.norm_eq_bilatFinSum` | unchanged FQN and statement (`Int.negSucc` hypotheses kept); `Chebyshev/Algebra.lean` → `WeightedL1/Carrier.lean`, re-proved through the sign split (S04-16) | moved | `p3/evidence_C4/step1/S04_16_deleted_hunk.txt`; `p3/evidence_C4/step3/old_interface_pins.out` |
+| — | `lpOneAlg.norm_eq_tsum_natCast_add_tsum_neg`, `lpOneAlg.norm_eq_tsum_natCast_of_neg` (Carrier; sign split over `ℤ`, any fibers) (S07-1-2) | added | `p3/evidence_C4/step2/rowdiff.txt` |
+| — | `lpOneAlg.norm_eq_natFinSum_of_finSupp` (Carrier; arbitrary fibers; replaces C13's `ChebyshevIVP.lpOneAlg.norm_eq_natFinSum_of_finSupp`) (S09-2-12) | added | `p3/evidence_C4/step3/fourier_rewire.out` |
+| — | `lpOneAlg.toRealSeqAddHom : lpOneAlg M E →+ (M → 𝕜)`, `lpOneAlg.toRealSeqAddHom_apply` (`@[simp]`), `lpOneAlg.toRealSeq_injective`, `lpOneAlg.toRealSeq_finset_sum` (Carrier) (S02-8) | added | `p3/evidence_C4/step2/INVENTORY_diff.txt` |
+| — | `lpOneAlg.toRealSeq_single_eq_piSingle` (Carrier) (S02-9) | added | `p3/evidence_C4/step2/rowdiff.txt` |
+| — | `WeightedScalar.normedSpaceCore` (WeightedL1/Scalar) (S02-3) | added | idem |
+| — | `lpOneAlg.norm_mulLeftCLM_le`, `lpOneAlg.norm_mulRightCLM_le` (UniversalProperty, section `MulCLMNorm`) (S08-1-5) | added | idem |
+| — | `lpOneAlg.diagCLM_comp_headProj` (Diagonal) (S08-1-6) | added | idem |
+| `lpOneAlg.colRatio_add_of_head_tail`, `lpOneAlg.colRatio_add_of_head_zero` | unchanged FQN; `[lpAlgSmulCompat 𝕜 I E] [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G]` dropped (S02-4) | binder drop | `p3/evidence_C4/probes/OldInterfacePins.lean`; `p3/evidence_C4/CRITIC_C4.md` |
+| `lpOneAlg.opNorm_add_eq_iSup`, `lpOneAlg.opNorm_add_eq_iSup_of_head_zero`, `lpOneAlg.opNorm_joint_eq_iSup` | unchanged FQN; `[lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G]` dropped (S02-4) | binder drop | idem |
+| `lpOneAlg.instMulConvCompatOfAntidiag`, `lpOneAlg.instConvCompatOfAntidiag` (paper-cited; priority 1100) | unchanged FQN; `[DecidableEq M]` dropped (S02-5, Codex Q7); 0 `@`-uses in Lake root, ReferenceBook and paper | binder drop | `p3/evidence_C4/step3/Q7_RECORD_S02_5.md`; `p3/evidence_C4/probes/OldInterfacePins.lean` |
+| `FiberTrivialization.equiv_symm_apply_equiv`, `FiberTrivialization.equiv_apply_equiv_symm` | unchanged; no longer `@[simp]` (Mathlib `LinearEquiv.symm_apply_apply` / `apply_symm_apply` are) (S02-7) | de-simp | `p3/evidence_C4/step1/S02_7_faces.out` |
+| `WeightedScalar.instNormedAddCommGroup`, `WeightedScalar.instNormedSpace` | same names and types; built from `normedSpaceCore` with an explicit `edist`; `with_reducible_and_instances rfl` against the verbatim old body, `toEDist` included (S02-3) | redefined | `p3/evidence_C4/step1/defeq_gate_S02_3_after.out`; `p3/evidence_C4/probes/DefeqGate_S02_3.lean` |
+| `lpOneAlg.single_mul_single` (paper-cited) | type Expr-equal; body through the two-atom rule `DiscreteConvolution.single_addRingConvolution_single` (S02-9) | proof only | `p3/evidence_C4/step3/old_interface_pins.out` |
+| `WeightedL1/Algebra.lean`, `WeightedL1/UniversalProperty.lean` | `open DiscreteConvolution`; the `DiscreteConvolution.` qualifications dropped (Algebra 77 → 0, UniversalProperty 6 → 0); signatures identical (S02-10) | proof only | `p3/evidence_C4/step2/S02_10_signature_identity.txt` |
+| `WeightedL1/{Carrier,Algebra,Columns,ScalarInstances}.lean` and the facade `WeightedL1.lean` | `Carrier` imports only `WeightedL1.FiberTrivialization`, `Mathlib.Analysis.Normed.Lp.lpSpace`, `Mathlib.Analysis.Normed.Module.TransferInstance`; `Algebra` imports `Carrier` and `Algebra.Convolution.Ring`; `Columns` and `ScalarInstances` import `Carrier`, not `Algebra`; the facade imports `Carrier` (S02-1) | import change | `p3/evidence_C4/step3/closure_measure.txt`; `p3/evidence_C4/step3/carrier_minus_lpSpace_closure.txt` |
+| Columns (9) and Diagonal (40) run-ledger tags; `evalCLM` fields; module docs | 49/49 tags stripped (S02-15); `evalCLM` value identical (S02-11); module docs (S02-12/-13/-14) | docstring | `p3/evidence_C4/step4/C4_vs_baseline.diff` |
+
+Moved public names (S02-1, S02-2, S04-16), extracted from the fragment `p3/evidence_C4/RENAMES_C4.md`; they are 132
+constants including structure auxiliaries (`rec`, `casesOn`, `mk`, …), or 93 source-level names:
+
+- `Chebyshev.Algebra` → `WeightedL1.Carrier` (1): `lpOneAlg.norm_eq_bilatFinSum`
+- `WeightedL1.Algebra` → `WeightedL1.Carrier` (130): `FiberTrivialization.ofLpAlgRingData`, `FiberTrivialization.ofLpAlgRingData_equiv_apply`, `FiberTrivialization.ofLpAlgRingData_equiv_symm_apply`, `FiberTrivialization.toLpAlgRingData`, `FiberTrivialization.toLpAlgRingData_ofReal`, `FiberTrivialization.toLpAlgRingData_toReal`, `FiberTrivialization.toLpAlgRingData_weight`, `FiberTrivialization.toLpAlgSmulCompat`, `lpAlgRingData`, `lpAlgRingData.casesOn`, `lpAlgRingData.ctorIdx`, `lpAlgRingData.mk`, `lpAlgRingData.mk.noConfusion`, `lpAlgRingData.noConfusion`, `lpAlgRingData.noConfusionType`, `lpAlgRingData.norm_ofReal_eq`, `lpAlgRingData.ofReal`, `lpAlgRingData.ofReal_add`, `lpAlgRingData.ofReal_toReal`, `lpAlgRingData.ofReal_zero`, `lpAlgRingData.rec`, `lpAlgRingData.recOn`, `lpAlgRingData.toReal`, `lpAlgRingData.toReal_add`, `lpAlgRingData.toReal_neg`, `lpAlgRingData.toReal_ofReal`, `lpAlgRingData.toReal_zero`, `lpAlgRingData.weight`, `lpAlgRingData.weight_def`, `lpAlgSmulCompat`, `lpAlgSmulCompat.casesOn`, `lpAlgSmulCompat.mk`, `lpAlgSmulCompat.rec`, `lpAlgSmulCompat.recOn`, `lpAlgSmulCompat.toReal_smul`, `lpOneAlg`, `lpOneAlg.abs_mulToRealSeq_le`, `lpOneAlg.abs_toRealSeq_le`, `lpOneAlg.casesOn`, `lpOneAlg.ctorIdx`, `lpOneAlg.equiv`, `lpOneAlg.evalCLM`, `lpOneAlg.evalCLM_apply`, `lpOneAlg.ext`, `lpOneAlg.ext_mulToRealSeq`, `lpOneAlg.ext_toRealSeq`, `lpOneAlg.finsum_norm_le_of_cols`, `lpOneAlg.hasSum_single`, `lpOneAlg.hasSum_single_mapCLM`, `lpOneAlg.instCoeFunForall`, `lpOneAlg.instCompleteSpace`, `lpOneAlg.instNormedAddCommGroup`, `lpOneAlg.instNormedSpaceBase`, `lpOneAlg.isometry_mk`, `lpOneAlg.mk`, `lpOneAlg.mk.inj`, `lpOneAlg.mk.injEq`, `lpOneAlg.mk.noConfusion`, `lpOneAlg.mk.sizeOf_spec`, `lpOneAlg.mkAddHom`, `lpOneAlg.mulToRealSeq`, `lpOneAlg.mulToRealSeq_add`, `lpOneAlg.mulToRealSeq_neg`, `lpOneAlg.mulToRealSeq_sub`, `lpOneAlg.mulToRealSeq_zero`, `lpOneAlg.noConfusion`, `lpOneAlg.noConfusionType`, `lpOneAlg.norm_apply_le_norm`, `lpOneAlg.norm_def`, `lpOneAlg.norm_eq_abs_mulToReal_mul_weight`, `lpOneAlg.norm_eq_abs_toReal_mul_weight`, `lpOneAlg.norm_eq_tsum`, `lpOneAlg.norm_le_of_cols`, `lpOneAlg.norm_single`, `lpOneAlg.rec`, `lpOneAlg.recOn`, `lpOneAlg.single`, `lpOneAlg.single_smul`, `lpOneAlg.summable_abs_mulToRealSeq`, `lpOneAlg.summable_abs_toRealSeq`, `lpOneAlg.summable_norm`, `lpOneAlg.summable_norm_prod`, `lpOneAlg.summable_norm_shift`, `lpOneAlg.toLp`, `lpOneAlg.toLp_add`, `lpOneAlg.toLp_neg`, `lpOneAlg.toLp_smul`, `lpOneAlg.toLp_sub`, `lpOneAlg.toLp_zero`, `lpOneAlg.toRealSeq`, `lpOneAlg.toRealSeq_add`, `lpOneAlg.toRealSeq_neg`, `lpOneAlg.toRealSeq_single`, `lpOneAlg.toRealSeq_smul`, `lpOneAlg.toRealSeq_sub`, `lpOneAlg.toRealSeq_zero`, `lpOneAlgWeightMul`, `lpOneAlgWeightMul.casesOn`, `lpOneAlgWeightMul.mk`, `lpOneAlgWeightMul.norm_ofReal_mul_le`, `lpOneAlgWeightMul.norm_ofReal_one_zero`, `lpOneAlgWeightMul.rec`, `lpOneAlgWeightMul.recOn`, `lpOneAlgWeightMul.weight_add_le`, `lpOneAlgWeightMul.weight_zero`, `lpOneAlgWeightSubMul`, `lpOneAlgWeightSubMul.casesOn`, `lpOneAlgWeightSubMul.mk`, `lpOneAlgWeightSubMul.norm_ofReal_one_ge`, `lpOneAlgWeightSubMul.one_le_weight`, `lpOneAlgWeightSubMul.rec`, `lpOneAlgWeightSubMul.recOn`, `lpOneAlgWeightSubMul.tolpOneAlgWeightMul`, `lpOneMulAlgWeightMul`, `lpOneMulAlgWeightMul.casesOn`, `lpOneMulAlgWeightMul.mk`, `lpOneMulAlgWeightMul.norm_ofReal_mul_le`, `lpOneMulAlgWeightMul.norm_ofReal_one_one`, `lpOneMulAlgWeightMul.rec`, `lpOneMulAlgWeightMul.recOn`, `lpOneMulAlgWeightMul.weight_mul_le`, `lpOneMulAlgWeightMul.weight_one`, `lpOneMulAlgWeightSubMul`, `lpOneMulAlgWeightSubMul.casesOn`, `lpOneMulAlgWeightSubMul.mk`, `lpOneMulAlgWeightSubMul.norm_ofReal_one_ge`, `lpOneMulAlgWeightSubMul.one_le_weight`, `lpOneMulAlgWeightSubMul.rec`, `lpOneMulAlgWeightSubMul.recOn`, `lpOneMulAlgWeightSubMul.tolpOneMulAlgWeightMul`
+- `WeightedL1.Columns` → `WeightedL1.Carrier` (1): `lpOneAlg.norm_ofReal_one_pos`
+
+- Regenerated auxiliaries (`WeightedScalar.instNormedAddCommGroup._proof_{1,2,3,5,6,7,8}`, `lpOneAlg.evalCLM._proof_{1,2}`,
+  `lpOneAlg.norm_eq_bilatFinSum._proof_1_1`) have exact parent types and are not public API.
+
+### C10-B/C — Chebyshev phases B and C, phase-A tail and the C10 addendum (`Analysis/SequenceSpace/Chebyshev/*`, NEW `Chebyshev/Symmetrize.lean`)
+
+Triage rows S07-1-1 … S07-1-11, S07-2-1/-2/-3/-5/-6/-7/-8/-9/-10/-11/-14, the phase-A tail S04-13/-17/-22 and the C10
+addendum S09-2-13/-19/-21, CONS-T E2, S07-2-15. S04-17 and S04-22 were already landed by C7-A (verified, no edit).
+
+#### Ledger (C10-B/C)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.summable_norm_natCast`, `RadiiPolynomial.norm_fiber_natCast` | unchanged FQN; `Chebyshev/UConversion.lean` → `Chebyshev/Algebra.lean`, after `l1Chebyshev.norm_fiber` (S07-1-1) | moved | `p3/evidence_C10BC/step2/compare.log` |
+| `RadiiPolynomial.l1Chebyshev.IsSymmetric`, `.symmetrize`, `.symmetrize_toSeq`, `.symmetrize_add`, `.symmetrize_smul`, `.symmetrize_norm_le`, `.symmetrize_CLM`, `.symmetrize_CLM_apply`, `.symmetrize_CLM_norm_le`, `.symmetrize_isSymmetric`, `.symmetrize_eq_self_of_isSymmetric`, `.symmetrize_single_negSucc`, `.mul_symmetrize_single_toSeq`, `.natEmbed`, `.natEmbed_toSeq`, `.natEmbed_toSeq_natCast`, `.natEmbed_toSeq_negSucc`, `.norm_natEmbed`, `.natEmbed_single` (19 public; private helpers move with them) | unchanged FQN; `Chebyshev/Bordered.lean` → `Chebyshev/Symmetrize.lean` (S07-1-3, variant B); `l1Chebyshev.nonnegRestrict_symmetrize` stays in Bordered | moved | `p3/evidence_C10BC/step2/compare.log`; `p3/evidence_C10BC/step3/IMPORT_LISTS_final.txt` |
+| `RadiiPolynomial.uIntegrate_toSeq` | private, same statement; public faces `uIntegrate_toSeq_zero` / `_negSucc` / `_succ` (S07-1-10) | privatized | `p3/evidence_C10BC/step1/S07_1_10_usage.txt` |
+| `RadiiPolynomial.chebyshevFromU_toSeq` | private, same statement; public faces `chebyshevFromU_toSeq_natCast` / `_negSucc` (S07-1-10) | privatized | idem |
+| private `MvPolyBridge.CompPoly.Chebyshev.physicalInput` (CompPoly/Chebyshev) | `RadiiPolynomial.l1Chebyshev.symmetricRetract ν` (definitionally equal) (S07-1-7) | retired (private) | `p3/evidence_C10BC/step2/compare.log` |
+| private `CrossGeometry.add_inv_le_of_inv_le_le` (Joukowski), private `PhysicalSpectrum.focal_le_of_annulus` (Ellipse; identical statement) | `RadiiPolynomial.CrossGeometry.add_inv_le_add_inv_of_inv_le_of_le` (same statement) (S07-2-5) | retired (private) | idem |
+| `RadiiPolynomial.borderedTU_equiv` | unchanged FQN; the unreferenced `[Fact (1 ≤ ν)]` dropped (`{ν} [Fact (1 < ν)]`); body built from `borderedToU_CLM`, `borderedFromU_CLM` (verbatim old body equal by `rfl`) (S07-1-5) | binder drop | `p3/evidence_C10BC/step3/old_interface_pins.out`; `p3/evidence_C10BC/CRITIC_C10BC.md` |
+| `RadiiPolynomial.borderedToU_CLM_norm_mul_borderedFromU_CLM_norm_le` | unchanged FQN; `{ν} [Fact (1 < ν)]`; the `borderedToU_CLM` instance argument is now the section-local private `fact_one_le_of_one_lt` (Prop, proof-irrelevant; semantically a binder drop, pin A1) | statement changed | idem |
+| private `MvPolyBridge.CompPoly.Chebyshev.coe_physical_eval` | `physicalInput (a i)` → `l1Chebyshev.symmetricRetract ν (a i)` in the statement (definitionally equal) | statement changed (private) | `p3/evidence_C10BC/CRITIC_C10BC.md` |
+| `RadiiPolynomial.Galerkin.wt` | `def … if k = 0 then 1 else 2ν^k` → `abbrev … := borderedWeight ν k`; type exact; reducibility default → reducible (S07-1-6) | metadata | `p3/evidence_C10BC/step3/old_interface_pins.out`; `p3/evidence_C10BC/step2/INVENTORY_diff.txt` |
+| `RadiiPolynomial.PhysicalSpectrum.retract` | body forwards to `l1Chebyshev.symmetricRetract ν`; type exact (S07-1-7) | redefined | `p3/evidence_C10BC/step3/old_interface_pins.out` |
+| — | `l1Chebyshev.nonnegRestrict_norm_le`, `l1Chebyshev.nonnegRestrict_chebyshevFromU` (Bordered) (S07-1-4) | added | `p3/evidence_C10BC/step2/INVENTORY_diff.txt` |
+| — | `borderedTU_equiv_apply` (`@[simp]`), `borderedTU_equiv_symm_apply` (`@[simp]`), `coe_borderedTU_equiv`, `coe_borderedTU_equiv_symm`, `norm_borderedTU_equiv_mul_norm_symm_le` (Bordered) (S07-1-5) | added | idem |
+| — | `l1Chebyshev.symmetricRetract : l1Chebyshev ν →L[ℝ] symmetricSubalgebra ν` (a continuous linear retraction, not an algebra hom), `coe_symmetricRetract` (`@[simp]`), `symmetricRetract_coe` (`@[simp]`), `norm_symmetricRetract_le` (SymmetricSubalgebra) (S07-1-7) | added | idem |
+| — | `l1Chebyshev.physicalBorderedEquiv : symmetricSubalgebra ν ≃ₗᵢ[ℝ] l1Bordered ν`, `physicalBorderedEquiv_apply` (`@[simp]`) (SymmetricSubalgebra) (S07-1-8) | added | idem |
+| — | `l1Chebyshev.evalAtCLM`, `evalAtCLM_apply` (`@[simp]`), `norm_evalAtCLM_le` (Evaluation) (S07-1-9) | added | idem |
+| — | `RadiiPolynomial.CrossGeometry.add_inv_le_add_inv_of_inv_le_of_le` (Joukowski) (S07-2-5) | added | idem |
+| — | `l1Chebyshev.finSum_le_norm` (the C13-retired `ChebyshevIVP.l1Chebyshev_finSum_le_norm` without its unused `[Fact (1 ≤ ν)]`), `l1Chebyshev.ext_natCast_negSucc` (Algebra) (C10 addendum S09-2-13/-19) | added | `p3/evidence_C10BC/CRITIC_C10BC.md` |
+| — | `l1Chebyshev.norm_toSeq_mul_le`, `l1Chebyshev.summable_toSeq_mul_of_abs_le_one` (Evaluation) (C10 addendum S09-2-21) | added | `p3/evidence_C10BC/step2/INVENTORY_diff.txt` |
+| — | `lpOneAlg.norm_single_geomFiberZ` (Chebyshev/Scalar; `UnitLift` rewired to it) (C10 addendum CONS-T E2) | added | `p3/evidence_C10BC/step3/CLOSURE_ChebyshevScalar_final.txt` |
+| — | `RadiiPolynomial.CrossGeometry.semiMajor_le_self` (Joukowski): added by C10-B/C, then REMOVED by the coordinator — no consumer after C13's inline fallback (S07-2-15 REJECTED) | added, then removed | `p3/evidence_C10BC/RENAMES_C10BC.md`; `DECISIONS.md` |
+| `l1Chebyshev.toSeq_finset_sum` (S04-13); `nonnegRestrict_norm_of_isSymmetric`, `symmetrize_norm_le`, `norm_symmetrize_eq`, `norm_le_norm_symmetrize_of_neg_eq_zero` (S07-1-2); `borderedFromU_norm_le`, `borderedToU_borderedFromU`, `nonnegRestrictCLM` bound (S07-1-4); `derivativeBound_ratCast`, `derivativeLipschitzBound_ratCast`, `derivativeBound_nonneg`, `derivativeLipschitzBound_nonneg`, `derivativeLipschitzBound_mono` (S07-2-1); `norm_derivative_apply_le`, `norm_derivative_sub_apply_le` (S07-2-2, through `CompPoly.norm_sum_pderiv_(sub_)mul_le`); `norm_derivative_sub_le_of_norm_sub` (S07-2-3); `LaurentSpectrum.continuous_annulusCharacter`, `PhysicalSpectrum.continuous_ellipseCharacter` (S07-2-9, through `Gelfand.continuous_of_continuous_apply`); `summable_eval` (addendum) | statements unchanged (short names as in the fragment); re-proved | proof only | `p3/evidence_C10BC/step2/compare.log` |
+| UConversion and Chebyshev module headers; S07-2-6/-7/-8/-14 interface docstrings | headers (a)–(d) rewritten (S07-1-11); UConversion header "sharp" → "(attainment is not proved)"; docstrings added | docstring | `p3/evidence_C10BC/step4/C10BC_vs_baseline.diff` |
+| `Chebyshev/{Symmetrize,Bordered,UnitLift,Evaluation,SymmetricSubalgebra}.lean`, `CompPoly/Chebyshev/Coefficients.lean`, facade `Chebyshev.lean` | variant-B graph: Symmetrize → Chebyshev.Algebra + Geometric.Basic; Bordered → UConversion + Symmetrize; UnitLift → WeightedL1.UniversalProperty + Symmetrize; Coefficients → CompPoly.Laurent + Symmetrize; SymmetricSubalgebra → Evaluation + Bordered; no Bordered → SymmetricSubalgebra edge; the facade gains `Symmetrize` | import change | `p3/evidence_C10BC/step3/IMPORT_LISTS_final.txt`; `p3/evidence_C10BC/step3/CLOSURE_GAIN.tsv` |
+
+- Nine regenerated or renumbered `_proof_` auxiliaries (parents `borderedTU_equiv`, `natEmbed`, `norm_symmetrize_eq`,
+  `symmetrize_CLM`, `nonnegRestrict_norm_of_isSymmetric`) and the no-longer-pregenerated `derivativeBound.eq_1`,
+  `derivativeLipschitzBound.eq_1`, `Galerkin.wt.eq_1`, `LinearMap.mkContinuous.congr_simp` are not public API.
+
+### C11 — Fourier / Rees (`Algebra/Rees/Laurent/{Euler,Gamma}.lean`, `Analysis/SequenceSpace/Fourier/*`, `Applications/Fourier/*`)
+
+Triage rows S08-1-1, -2, -4, -5, -6, -7, -8, -9, -10, -11. No FQN is renamed; no deprecated alias.
+
+#### Ledger (C11)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.Rees.Laurent.gammaW_inv_le` | unchanged FQN and type; `Fourier/GammaLeakage.lean` → `Rees/Laurent/Gamma.lean` (section `Gamma`, after `gammaW_pos`) (S08-1-4) | moved | `p3/evidence_C11/step2/compare_lib.log` |
+| `RadiiPolynomial.Rees.Laurent.deltaU_one`, `.deltaU_X_pow_smul_one`, `.X_pow_smul_one_ne_zero`, `.z_ne_zero`, `.PH_z` | unchanged FQN; the elaborated `0 : U R` is now the default `ZeroMemClass` zero (was the selected `instUZero`); binders, levels and axioms unchanged (S08-1-1) | statement changed | `p3/evidence_C11/step3/migrated_rows.out`; `p3/evidence_C11/probes/MigratedRows_S08_1_1.lean` |
+| `RadiiPolynomial.Rees.Laurent.specCoeff t f` | `fun k => (specU t f).coeff k`, by `coeff_specU` (S08-1-2) | retired | `p3/evidence_C11/probes/RetiredRawBlock_Replacements.lean`; `p3/evidence_C11/step3/retired_replacements.out` |
+| `RadiiPolynomial.Rees.Laurent.rawHead H a` | `Set.indicator (↑H : Set ℤ) a` (all `a : ℤ → R`) (S08-1-2) | retired | idem |
+| `RadiiPolynomial.Rees.Laurent.rawDiag lam a` | `lam * a` (pointwise, all `a : ℤ → R`) (S08-1-2) | retired | idem |
+| `RadiiPolynomial.Rees.Laurent.specCoeff_deltaU`, `.specCoeff_qDelta`, `.specCoeff_PH`, `.specCoeff_z` | `specU_deltaU`, `specU_qDelta`, `specU_PH`, `specU_z` (with `coeff_specU`, `coeff_deltaL` / `coeff_diagL`, `coeff_single_eq`); each old statement re-derived verbatim (S08-1-2) | retired | idem |
+| `RadiiPolynomial.Rees.Laurent.rawHead_rawDiag` | `Set.indicator ↑H (lam * a) = lam * Set.indicator ↑H a` (`funext` + Mathlib `Set.indicator_mul_right`; Codex Q1) (S08-1-2) | retired | idem |
+| `RadiiPolynomial.Rees.Laurent.rawHead_rawDiag_tail` | `Set.indicator ↑H (lam * (a - Set.indicator ↑H a)) = 0` (pointwise `indicator_of_mem` / `indicator_of_notMem`, `sub_self`; Codex Q1) (S08-1-2) | retired | idem |
+| `RadiiPolynomial.Rees.Laurent.rawDiag_eq_mul`, `.rawHead_eq_indicator` | definitional records of the two replacements above (S08-1-2) | retired | idem |
+| — | `RadiiPolynomial.Rees.Laurent.specU (t : R) : U R →+* R[T;T⁻¹]` (= `mapRingHom ℤ (evalRingHom t)` after `(U R).val`; noncomputable), `coeff_specU`, `specU_z`, `specU_deltaU`, `specU_qDelta`, `specU_PH` (Euler) (S08-1-2) | added | `p3/evidence_C11/step2/compare_lib.log` |
+| `RadiiPolynomial.Fourier.norm_mulLeftCLM_le` | type identical; body `lpOneAlg.norm_mulLeftCLM_le c` (S08-1-5) | proof only | idem |
+| `RadiiPolynomial.Fourier.Semilinear.diagCLM_comp_headProj_of_head_zero` | type identical; body `lpOneAlg.diagCLM_comp_headProj (winZ N) r C hr …` (S08-1-6) | proof only | idem |
+| `RadiiPolynomial.Fourier.Semilinear.toRealSeq_finset_sum` | type identical; body `lpOneAlg.toRealSeq_finset_sum s a k` (S08-1-7) | proof only | idem |
+| `RadiiPolynomial.Fourier.Semilinear.fderiv_sub_modelDeriv` | type identical; proof through `defect_eq` (Semilinear no longer realizes `Fourier.defect.eq_1`) (S08-1-9) | proof only | idem |
+| GammaLeakage sections HeadDiagonals/Tail/Leak; Semilinear §§3–9, 11–13; SemilinearFirstOrder §§2–3 | local notations `𝓔`, `𝓟[N]`, `𝓠[N]`, `𝓛[b]`; types and def bodies Expr-identical (S08-1-10, -11) | syntax only | `p3/evidence_C11/step1/cmp_S08_1_11_Semilinear.out`; `p3/evidence_C11/step1/cmp_S08_1_10_GammaLeakage_negctl.out` |
+| Support, TailWindow, GammaLeakage, Gamma, facade docs | run-ledger tags stripped, file pointers, facade blocks merged; the GammaLeakage/Semilinear "Promoted from … by unit L00x" paragraphs removed (Codex Q3/Q12) (S08-1-8) | docstring | `p3/evidence_C11/step4/C11_vs_baseline.diff` |
+
+- L003 supersession: the L003 contract accepted the five S08-1-1 statements with Euler's selected zero; at the C11
+  generation the `Selection` section holds only `instUAddCommGroup`, `instUZero`, `zero_selection_eq_existing` and the
+  four operator identities, and under default instances `1 - PH H` still fails to elaborate (the L003 evidence is not
+  rewritten).
+- The new default-zero statements are syntactically equal to default-instance consumer statements only when
+  `Rees.Laurent` is imported before `Applications.Fourier`; with the other order they stay instance-defeq and term, `rw`
+  and `simp` uses succeed (critic F4).
+
+### C12 — Taylor IVP, VectorField, Galerkin face, with the C3 addendum (`Applications/IVP/{VectorField,Taylor/*}`, `Algebra/Polynomial/CompPoly/{Derivative,WeightedL1}`, `Applications/Galerkin/Face.lean`)
+
+No public rename and no public retirement. The C8 row S05-20 (`composedApprox_toCLM_eq_lift`) now has its consumer:
+`IVP.ivp_Z₀_le` is rewired through it (S09-1-10/-11; Codex F2 pairing closed).
+
+#### Ledger (C12)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `MvPolyBridge.contDiff_evalBanach` (paper-cited), `MvPolyBridge.differentiable_evalBanach` | unchanged FQN, type, levels and axioms; `CompPoly/WeightedL1.lean` → `CompPoly/Derivative.lean` (C3 addendum) | moved | `p3/evidence_C12/step2/MOVED_AND_CITED_CHECK.txt` |
+| `IVP.differentiable_vectorField`, `IVP.differentiable_vectorField_pi`, `IVP.exists_lipschitz_vectorField_closedBall` | unchanged FQN and type; `Taylor/Trajectory.lean` → `VectorField.lean` (S09-1-1); `exists_lipschitz_vectorField_closedBall` is now proved with a syntactic constant, no compactness (S09-1-2) | moved | idem |
+| `IVP.lipschitzOnWith_vectorField_closedBall` | unchanged FQN; same move; binder macro-scope module name only (S09-1-1) | moved | idem |
+| `IVP.contDiff_vectorField`, `IVP.contDiff_vectorField_pi` | unchanged FQN; same move; in VectorField's import context `NormedSpace ℝ ℝ` elaborates through `NormedField.toNormedSpace` instead of the `InnerProductSpace`/`RCLike` path; equal to the old types by `with_reducible_and_instances rfl`; 0 consumers (S09-1-1; DECISIONS ~20:45Z ruling 1) | migrated instance path | `p3/evidence_C12/probes/MovedTypePins.lean`; `p3/evidence_C12/probes/MovedTypePins.out` |
+| private `IVP.Z₁_component_le` (Taylor/Operator) | `IVP.ivp_Z₁_le_exact`; `IVP.ivp_Z₁_le` is its recipe instance (`C = ν/(N+1)·K` via `shiftDivN_tailTsum_le_div`) (S09-1-5) | retired (private) | `p3/evidence_C12/step2/STRICT_COMPARE.md` |
+| private section `l1Weighted.norm_shiftDivN_CLM_le` (Taylor/Operator) | none (0 references) (S09-1-4) | retired (private) | idem |
+| `RadiiPolynomial.Galerkin.I`, `RadiiPolynomial.Galerkin.Pi'` | type exact; bodies `ContinuousLinearMap.piMap fun _ => ιN.toContinuousLinearMap` / `ContinuousLinearMap.piMap fun _ => πN` (S09-1-13) | redefined | `p3/evidence_C12/probes/FaceReduction.out`; `p3/evidence_C12/probes/RB_Ch02Sec4_FisherGate.out` |
+| `IVP.ivp_Z₁_le` (paper), `IVP.ivp_Y₀_le`, `IVP.StdIVPData.existsUnique_ivpCoeffs` (paper), `IVP.ivp_Z₀_le` (through `composedApprox_toCLM_eq_lift`), `IVP.analytic_solution_unique`, `IVP.StdIVPData.analytic_uniqueness_wrapper`, `IVP.StdIVPData.x_analytic_isAnalyticSolution` | types exact; re-proved (S09-1-5, S09-1-10/-11, S09-1-12, S09-2-23/-25/-26) | proof only | `p3/evidence_C12/step2/STRICT_COMPARE.md`; `p3/evidence_C12/probes/OldContextPins.out` |
+| Taylor Operator (29) and Jacobian (12) non-internal rows | NeZero hygiene: every hand-written declaration exact; the matchers `IVP.ivpCoeffs.match_1`, `IVP.ivp_DF_of_Dφ_nat.match_1`, `IVP.ivp_hDF_block.match_1_1` differ by macro scope only (S09-1-7/-8) | hygiene | idem |
+| `Applications/IVP/VectorField.lean`, `CompPoly/WeightedL1.lean`, `Taylor/Trajectory.lean`, `Taylor/ComplexTime.lean` imports | VectorField imports `CompPoly/{Core,Bounds,Derivative}` (closure +364 modules, still free of the ℓ¹ carriers); CompPoly/WeightedL1 imports `CompPoly/Derivative`; Trajectory drops `CompPoly.Bounds` and `Mathlib.Analysis.Calculus.ContDiff.RCLike`; ComplexTime drops its direct `Geometric.Analytic` | import change | `p3/evidence_C12/probes/CLOSURE_DELTAS.txt` |
+
+- Measured and rejected: `import Mathlib.Analysis.InnerProductSpace.Basic` in VectorField restores the old instance path
+  at +77 modules of closure (`p3/evidence_C12/probes/RemedyInnerProductImport.out`).
+
+### C13 — Chebyshev IVP (`Applications/IVP/Chebyshev/*`)
+
+Triage rows S09-2-2 … S09-2-21, S07-1-9 (boundary half), S09-3-1 … S09-3-7. The 13 public retirements match the
+replacement table; every retired name has 0 ReferenceBook uses.
+
+#### Ledger (C13)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `ChebyshevIVP.chebyshevShiftDiv_seq_zero` | `ChebyshevIVP.chebyshevShiftDiv_toSeq_zero` (S09-2-2) | retired | `p3/evidence_C13/step2/COMPARE_C13.md`; `p3/evidence_C13/probes/C13Pins.lean` |
+| `ChebyshevIVP.chebyshevShiftDiv_seq_neg` | `ChebyshevIVP.chebyshevShiftDiv_toSeq_negSucc` (S09-2-2) | retired | idem |
+| `ChebyshevIVP.chebyshevShiftDiv_seq_pos` | `ChebyshevIVP.chebyshevShiftDiv_toSeq_natCast` (S09-2-2) | retired | idem |
+| `ChebyshevIVP.chebyshevShiftDiv_toSeq` (was `@[simp]`; RHS private) | the three `chebyshevShiftDiv_toSeq_*` faces (not simp) (S09-2-2) | retired | idem |
+| `ChebyshevIVP.chebyshevIvpTail` | `StdChebIVPData.G_decomp` / `hasFDerivAt_G` / `fderiv_G` with `TCtail` (S09-2-3) | retired | idem |
+| `ChebyshevIVP.differentiable_chebyshevIvpTail` | `StdChebIVPData.differentiable_G` (S09-2-3) | retired | idem |
+| `ChebyshevIVP.fderiv_chebyshevIvpTail` | `StdChebIVPData.fderiv_G` (S09-2-3) | retired | idem |
+| `ChebyshevIVP.summable_abs_toSeq` | `RadiiPolynomial.lpOneAlg.summable_abs_toRealSeq` (S09-2-5) | retired | idem |
+| `ChebyshevIVP.summable_alternating_toSeq` | `l1Chebyshev.summable_eval (t := -1)` / `lpOneAlg.summable_abs_toRealSeq` (S09-2-5) | retired | idem |
+| `ChebyshevIVP.tsum_abs_shift_le_norm` | `l1Chebyshev.abs_eval_le_two_mul_norm` (row 0 = evaluation) (S09-2-16) | retired | idem |
+| `ChebyshevIVP.TCtailSeq` | `lpOneAlg.tailProj (Finset.Icc 0 N)` after `chebyshevShiftDiv` (= `TCtailElem`) (S09-2-17) | retired | idem |
+| `ChebyshevIVP.lpOneAlg.norm_eq_natFinSum_of_finSupp` (BlockDiagonal copy) | `RadiiPolynomial.lpOneAlg.norm_eq_natFinSum_of_finSupp` (Carrier, generic fibers; added by C4) (S09-2-12) | retired | idem |
+| `ChebyshevIVP.l1Chebyshev_finSum_le_norm` | `RadiiPolynomial.l1Chebyshev.finSum_le_norm` (added by C10-B/C) (S09-2-13) | retired | idem |
+| `ChebyshevIVP.TCtailElem_norm_le_tail` | unchanged FQN, type and binder order; `Certification/IVP/Chebyshev.lean` → `Applications/IVP/Chebyshev/Lambda.lean` (S09-2-18, S10-2-2/-3) | moved | `p3/evidence_C13/step2/CERT_L2_vs_C14repair.md` |
+| — | `ChebyshevIVP.chebyshevShiftDiv_toSeq_zero`, `…_toSeq_negSucc`, `…_toSeq_natCast` (S09-2-2) | added | `p3/evidence_C13/step2/COMPARE_C13.md` |
+| — | `ChebyshevIVP.semiMajor_div_le_div` (inline proof; no `CrossGeometry.semiMajor_le_self`, no Joukowski import) (S09-2-4) | added | idem |
+| — | `ChebyshevIVP.FAseq_zero_eq_eval` (no `Fact` binder), `ChebyshevIVP.chebyshevIvpCoeffs_zero_eq_eval` (S09-2-16) | added | idem |
+| — | `ChebyshevIVP.defectCheb_apply_toSeq_natCast` / `_negSucc`, `ChebyshevIVP.composedApproxCheb_toSeq_natCast` / `_negSucc` (S09-2-10) | added | idem |
+| — | `ChebyshevIVP.composedApproxCheb_eq_id_sub` (S09-2-11) | added | idem |
+| — | `ChebyshevIVP.compPolyDerivative_apply` (not simp) (S09-3-6) | added | idem |
+| — | `@[simp] ChebyshevIVP.liftDefect_eq_defectCheb_apply` (BlockDiagonal; the XCheb instance field is `defectCheb_apply`, so `simp` normalizes `composedApproxCheb D h` to `h - defectCheb_apply D h`) (critic F1, ruling 1a) | added | `p3/evidence_C13/CRITIC_C13.md`; `DECISIONS.md` |
+| `ChebyshevIVP.chebyshevShiftDiv` | type exact; body `-(uIntegrate (chebyshevToU c))`; `chebyshevShiftDiv_eq_neg_uIntegrate_chebyshevToU` is now `rfl` (S09-2-2) | redefined | `p3/evidence_C13/probes/C13Pins.lean` |
+| `ChebyshevIVP.chebyshevShiftDiv_CLM` | type exact; body `-(uIntegrate_CLM.comp chebyshevToU_CLM)` (S09-2-2) | redefined | idem |
+| `ChebyshevIVP.composedApproxCheb` | `def` → `abbrev … := BlockDiagLift.composedApproxCLM (X := XCheb ν L) D`; reducibility default → reducible (S09-2-9) | metadata | idem |
+| `ChebyshevIVP.defectCheb_apply`, `ChebyshevIVP.instBlockDiagLiftXCheb` | types exact; the XL1 lift (`ofCoeff ∘ actionFinite ∘ toCoeff`) of `OneSided.restr`, re-embedded by `natEmbed`; `defectCheb_apply` stays `NeZero`-free (S09-2-13; DECISIONS ~03:05Z ruling 2) | redefined | idem |
+| `ChebyshevIVP.TCtailElem`, `ChebyshevIVP.TCtail` | types exact; `tailProj (Icc 0 N) ∘ chebyshevShiftDiv`; `TCtail = pi (tailProj ∘L chebyshevShiftDiv_CLM ∘L proj)` (S09-2-17) | redefined | idem |
+| `IVP.chebyshevBoundary` | type exact; body `l1Chebyshev.evalAtCLM (-1) _`; `chebyshevBoundary_apply` still `rfl` (S07-1-9) | redefined | idem; `p3/evidence_C13/probes/RB_A6_copy_narrowImports.out` |
+| `ChebyshevIVP.defectChebCLM`, `ChebyshevIVP.embedNatToInt`, `ChebyshevIVP.embedWithPassThrough`, `IVP.chebyshevIntegrateCLM`, `IVP.chebyshevSplitBoundary`, `IVP.symmetricEndpointCharacter` | types exact; values changed with the bodies above, each pinned (`rfl` or ext against the verbatim old body) | redefined | `p3/evidence_C13/CRITIC_C13.md` |
+| private `chebyshevShiftDiv_seq`, `_fiber_le`, `_memℓp`, `_elem_le`; `l1Chebyshev_norm_eq_nat_tailTsum`; `summable_abs_shift`; `TCtailSeq_le`, `TCtail_memℓp`, `TCtailElem_add` / `_smul`, `TCtailFun_norm_le`; `defectCheb_seq`, `defectCheb_memℓp`; `composedApprox_lm`, `composedApprox_bound` (BlockDiagonal); Trajectory `norm_term_le`, `summable_of_bounded` | the faces above; the Carrier `ℤ`-split; `l1Chebyshev.norm_toSeq_mul_le` / `summable_toSeq_mul_of_abs_le_one` (S09-2-2/-4/-9/-13/-16/-17/-21) | retired (private) | `p3/evidence_C13/step2/COMPARE_C13.md` |
+| private `ChebyshevIVP.action_chebyshev_tail_eq` (Operator) | RHS now `toSeq (chebyshevShiftDiv (φ a l)) n` (was the private sequence) (S09-2-2) | statement changed (private) | `p3/evidence_C13/CRITIC_C13.md` |
+| — | private `toCoeff_restr` (BlockDiagonal) (S09-2-13) | added (private) | `p3/evidence_C13/step2/COMPARE_C13.md` |
+| `Applications/IVP/Chebyshev/{BlockDiagonal,Lambda}.lean` imports | BlockDiagonal → `Chebyshev/OneSided`; Lambda → `WeightedL1/Diagonal`; Operator has no Joukowski edge (closure 23 → 23) | import change | `p3/evidence_C13/step3/CLOSURE_before_after.tsv` |
+
+- `chebyshevShiftDiv_tailTsum_le_div` and `_le_half` keep their public faces with 0 consumers (DECISIONS ~03:05Z
+  ruling 4); the S07-1-7 Boundary half is held (KEEP; ruling 7).
+- Eighteen type-changed auxiliaries (`TCtail._proof_2`, `chebyshevShiftDiv.eq_1`, `defectCheb_apply._proof_1`,
+  `IVP.chebyshevBoundary._proof_1`, …; list in the critic) follow their parents and are not public API.
+
+### C14 — Certification and tactics (`Certification/*`, NEW `Certification/Rational/Matrix.lean`, `Tactic/*`)
+
+Triage rows S10-1-1/-2/-3/-5/-6/-9/-11/-12/-13/-14/-15/-17 and S10-2-1/-4/-8/-10/-11/-12/-13/-16/-17, with the two C13
+Certification repairs. Not executed: S10-1-4 (KEEP, Codex Q6), S10-1-8 and S10-2-18 (DEFER-USER).
+
+#### Ledger (C14)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.Z₂_blockNormQ` | `activeBlockNormQ L N blockCols ν tailBound (ν * 2) active` (S10-1-1) | retired | `p3/evidence_C14/probes/C14Pins.lean`; `p3/evidence_C14/step2/cmpA/STRICT_COMPARE.md` |
+| `RadiiPolynomial.Z₂_blockNorm_component_le` | `activeBlockNorm_component_le … (C_q := ν_q * 2)` (S10-1-1) | retired | idem |
+| `RadiiPolynomial.Z₂_blockNormQ_eq` | definitional (`ring`); re-derived in the pins (S10-1-1) | retired | idem |
+| `IVP.StdIVPDataQ.checksZ₂_iff_blockNormQ_gen` | none needed: `ChecksZ₂` is stated with `activeBlockNormQ` directly (S10-1-2) | retired | idem |
+| `RadiiPolynomial.Z₂_blockNormQ_gen` | `activeBlockNormQ … (ν * C_q) active` (S10-1-3) | retired | idem |
+| `RadiiPolynomial.Z₂_blockNormQ_gen_eq` | `ring` identity; re-derived in the pins (S10-1-3) | retired | idem |
+| `RadiiPolynomial.Z₂_blockNorm_component_le_gen` | `activeBlockNorm_component_le … (C_q := ν_q * C_q)` (S10-1-3) | retired | idem |
+| `RadiiPolynomial.Certification.Rational.foldlB_length` | `foldl_length (β := PM)` (S10-1-14) | retired | idem |
+| `RadiiPolynomial.Certification.Rational.foldl_length` | unchanged FQN; generic in `{β ι : Type*}` (was `List QF`); the old statement is the instance `@foldl_length QF` (pin `pin_foldl_length_old`) (S10-1-14) | generalization | `p3/evidence_C14/probes/C14Pins.lean`; `p3/evidence_C14/CRITIC_C14.md` |
+| `ChebyshevIVP.clm_apply_eq_sum` | unchanged FQN; any semiring, finite index, topological modules; `[Fact (1 ≤ ν)]` dropped; component form of Mathlib `ContinuousLinearMap.sum_comp_single` (pin `pin_clm_apply_eq_sum_old`) (S10-2-4) | weakening | `p3/evidence_C14/step2/cmpB/STRICT_COMPARE.md`; `p3/evidence_C14/probes/C14Pins.lean` |
+| `RadiiPolynomial.matOfCols`, `.defectMatQ`, `.defectMatQ_correct`, `.blockDefectMatQ`, `.blockDefectMatQ_correct`, `.defectCols`, `.colNormQ`, `.finWeightedMatrixNormQ`, `.FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le`, `.finiteBlockMatrixNormQ`, `.activeBlockNormQ`, `.activeBlockNorm_component_le`, `.finiteBlockMatrixNorm_le_of_Q_le`, `.finiteBlockMatrixNorm_defect_le_of_Q`, `.norm_toCLM_le_of_Q`, `.norm_toScalarCLM_le_of_Q`, `.scalarBlockDiagAction`, `.ScalarBlockDiagData.toScalarCLM_toSeq_eq_action` (18 exact-ℚ declarations) | unchanged FQN; `Certification/LeanCertAdapter.lean` → `Certification/Rational/Matrix.lean`; 28 move rows exact or hygiene (S10-1-13) | moved | `p3/evidence_C14/step2/cmpA/STRICT_COMPARE.md`; `p3/evidence_C14/step3/LEANCERT_ENV_final.tsv` |
+| `RadiiPolynomial.Certification.Rational.getD_ofFn_fin` | unchanged FQN; `Rational/Grid.lean` → `Rational/Matrix.lean` (S10-1-13) | moved | `p3/evidence_C14/step2/cmpA/STRICT_COMPARE.md` |
+| — | `RadiiPolynomial.blockActionQ` (shared Taylor/Chebyshev action) and `RadiiPolynomial.SystemBlockDiagData.action_eq_blockActionQ` (Rational/Matrix); both `action_eq_actionQ` are corollaries, statements exact (S10-1-9) | added | idem |
+| — | `RadiiPolynomial.l1Weighted.norm_eq_ratCast_sum_of_support` (Witness); `IVP.StdIVPData.norm_abar_eq`, `norm_evalBanach_abar_eq`, `PolyZeroData.norm_xbar` are corollaries (S10-1-11) | added | idem |
+| syntax node kinds `LeanCert.Tactic.finMatrixBound`, `LeanCert.Tactic.finMatrixDyadic` | `RadiiPolynomial.Tactic.finMatrixBound`, `RadiiPolynomial.Tactic.finMatrixDyadic`; tokens `finmatrix_bound` / `finmatrix_dyadic` unchanged; elaborators registered only at the new kinds (S10-2-17) | renamed (no alias) | `p3/evidence_C14/probes/C14Pins.lean` |
+| private `Example81.Cert.dataQ`, private `Example83.Cert.dataQ` | body `IVP.StdIVPDataQ.ofStd data`, equal to the old literal by `rfl`; Ex83 `dataQ` now noncomputable (section marker; `decide +kernel` re-checked) (S10-1-6) | redefined | `p3/evidence_C14/step2/INVENTORY_diff.txt` |
+| Taylor `radii_sound`, PolynomialZero `certified`, Chebyshev `certified_of_Y₀Z₀`; `IVP.StdIVPData.norm_abar_eq`, `norm_evalBanach_abar_eq`, `PolyZeroData.norm_xbar`; both `action_eq_actionQ`; `ChebyshevIVP.StdChebIVPData.composed_toSeq_nat` / `_neg` (C13 repair) | statements exact; re-proved (S10-1-9/-11/-12; C13 repair 2) | proof only | `p3/evidence_C14/step2/cmpA/STRICT_COMPARE.md`; `p3/evidence_C14/step2/cmpB/STRICT_COMPARE.md` |
+| `Certification/{Rational/Grid,LeanCertAdapter,IVP/Taylor,IVP/Chebyshev,PowerSeries/PolynomialZero}.lean`, facade `Certification.lean`; Ex83 Algebra | Grid, LeanCertAdapter, the three family faces and the facade import `Rational/Matrix`; `Certification/IVP/Chebyshev` imports `Applications.IVP.Chebyshev.Polynomial`, not the facade (closure 73 → 53) (S10-2-1); Ex83 drops its `PDerivSimp` import (S10-2-12) | import change | `p3/evidence_C14/step3/CLOSURE_final.tsv` |
+| `Certification.lean`, `Rational/Matrix`, `LeanCertAdapter`, `Tactic/{PDerivSimp,MakeCompPoly,AutoPolyFDeriv}` docs | facade doc names `Rational.Matrix` and says the family faces are not in the facade (S10-2-8); native prose reworded (Codex Q7); `PDerivSimp` gains a `tests` section and role/side-effect docs (S10-2-10/-11); MakeCompPoly prose (S10-2-13); AutoPolyFDeriv doc points to Mathlib `differentiable_apply` (S10-2-16); S10-1-5/-15/-17 docstrings | docstring | `p3/evidence_C14/step4/C14_vs_baseline.diff` |
+
+- `IVP.tail_shiftDivN_sum_le` (deprecated alias, `RENAMES.md`:676) is kept (S10-1-4, Codex Q6).
+- C14 renamed no native auxiliary axiom: `#print axioms` of every endpoint is byte-identical before and after
+  (`p3/evidence_C14/step2/endpoint_axioms_final.out`).
+- Tests `TY/AllGenerated` and `TC/FinMatrixBound` are handed to C15 (`p3/evidence_C14/TESTS_HANDOFF_C14.md`).
+
+### C14b — CONS-E extension of C14 (`Certification/IVP/{Taylor,Chebyshev}.lean`, Ex81/Ex83 Algebra and Certificate, Ex1421 Certificate)
+
+Triage rows CONS-E-1, -2, -3, -11, -12 (:257), -13, -14 (Codex Q1 ownership).
+
+#### Ledger (C14b)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| — | `ChebyshevIVP.StdChebIVPData.Z₁_le_semiMajor_of_Q` (Certification/IVP/Chebyshev, after `Z₁_le_of_Q`): total `ε + (ν_q⁻¹ + ν_q)/(2(N+1))·K ≤ Z₁` via `chebyshev_Z₁_le_semiMajor`; the relaxed sibling is kept (CONS-E-1) | added | `p3/evidence_C14b/step3/ctrl1421_semimajor.out`; `p3/evidence_C14b/CRITIC_C14b.md` |
+| — | `ChebyshevIVP.StdChebIVPData.Z₁_le_semiMajor_of_checksK` (after `Z₁_le_of_checksK`): the `R`/`K`/`ε` conjuncts of `ChecksK` and a separate semi-major total `hZ₁`; no `p = p_q` hypothesis (CONS-E-1) | added | idem |
+| — | `IVP.StdIVPData.ivpCoeffs_abar_eq_zero_of_compPoly` (Certification/IVP/Taylor, after `ivpCoeffsQ_support`): for any real `x₀`, `F(ā)_{l,n} = 0` when `supportM f_cpoly N < n` (CONS-E-2) | added | `p3/evidence_C14b/probes/CtrlTaylorSupport.lean`; `p3/evidence_C14b/step3/ctrl_taylor_support.out` |
+| — | `IVP.StdIVPData.ivpCoeffs_abar_mem_of_compPoly`: `l1Weighted.Mem ν (F(ā)_l)` for every real `x₀` (CONS-E-2) | added | idem |
+| `Example81.f_abar_support`, `Example81.F_abar_support`, `Example81.F_abar_mem`, `Example83.f_abar_support`, `Example83.F_abar_support`, `Example83.F_abar_mem` | statements, bounds and FQNs exact; one call of the Taylor faces each (CONS-E-2) | proof only | `p3/evidence_C14b/step4/C14b_vs_baseline.diff` |
+| private `Example81.abar_toSeq_zero`, private `Example83.abar_toSeq_zero` | through `abar_Q_getD_eq_zero` (CONS-E-2) | proof only | idem |
+| — | private `Example81.supportM_eq`, private `Example83.supportM_eq`: `IVP.supportM f_cpoly N = 2 * N + 1` by kernel `decide` (CONS-E-2) | added (private) | idem |
+| private `Example81.Cert.F_abar`, `.G_eq_toCLM_F_abar`, `.F_abar_toCoeff_support`; private `Example83.Cert.F_abar`, `.G_eq_toCLM_F_abar`, `.F_abar_toCoeff_support` | none (0 consumers); `Y₀_le` goes through `IVP.ivp_Y₀_le`; statements re-derived from the faces (CONS-E-3) | retired (private) | `p3/evidence_C14b/probes/CtrlTaylorSupport.lean` |
+| `Example81.Cert.Y₀_le`, `Example83.Cert.Y₀_le` (paper-cited) | statements exact; `finsum_bound` route kept; native auxiliary names shift (trust record below) (CONS-E-3) | proof only | `p3/evidence_C14b/step2/NATIVE_AXIOM_CORRESPONDENCE.md` |
+| `Example1421.Cert.Z₁_le_semiMajor` (paper-cited, main.tex:1439) | statement exact, axioms the standard three; one call of `Z₁_le_semiMajor_of_checksK` (CONS-E-1) | proof only | `p3/evidence_C14b/step3/ctrl1421_semimajor.out` |
+| Cert/IVP/Chebyshev and Ex81/Ex83/Ex1421 docs | "Audit cross-check (not consumed by the certificate)" (CONS-E-11); ":257 Additive" removed (CONS-E-12); `project_ivp_codomain_design` pointers removed (CONS-E-13); diary phrases removed (CONS-E-14) | docstring | `p3/evidence_C14b/step4/C14b_vs_baseline.diff` |
+
+- `Example81.F.eq_1` and `Example83.F.eq_1` are no longer pregenerated in the Algebra modules; they are realized on first
+  use with the baseline statement (`p3/evidence_C14b/probes/CtrlTaylorSupport.lean`).
+
+#### Trust record — native auxiliary renames (C14b; not public API, Codex)
+
+| old auxiliary | new auxiliary | kind | evidence |
+|---|---|---|---|
+| `Example81.Cert.Y₀_le._native.native_decide.ax_1_3` | `….ax_1_2` (identical proposition: `c = 0`, `R = 2*10+1`, `B = 3/1000000`) | native auxiliary rename | `p3/evidence_C14b/step2/NATIVE_AXIOM_CORRESPONDENCE.md` |
+| `Example83.Cert.Y₀_le._native.native_decide.ax_1_3`, `ax_1_4`, `ax_1_5` | `ax_1_2`, `ax_1_3`, `ax_1_4` (identical propositions: components 0, 1, 2; `R = 2*30+1`, `B = 11/25000`) | native auxiliary rename | idem |
+
+- Matching is by raw `Expr` (13 ↔ 13, nothing unmatched); endpoint native counts are unchanged (Ex81 1/1/1, Ex83 3/7/7,
+  Ex1421 0) and agree with paper main.tex:1268–1270.
+
+### C7 addendum (S10-2-14) — `Tactic/AutoPolyFDeriv.lean` → `Analysis/SequenceSpace/Geometric/Basic.lean`
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.l1Weighted.smul_proj_eq_leftMul_comp_proj` (`@[simp]`) | unchanged FQN and type; `Tactic/AutoPolyFDeriv.lean` → `Geometric/Basic.lean`, beside `smul_id_eq_leftMul` (section BanachAlgebra); `@[simp]` dropped; both tactic macros name it explicitly | moved; de-simp | `p3/evidence_C7addendum/REPORT_C7addendum.md`; `p3/evidence_C7addendum/Probe_simp.lean` |
+
+### C6 tail (S00-16) — `Analysis/Calculus/Pi.lean`
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `differentiable_pi_apply` (root) | Mathlib `@[fun_prop] differentiable_apply` (dependent Pi, strictly more general); 0 consumers in the Lake root and ReferenceBook | retired | `p3/evidence_C6/RENAMES_C6.md`; `DECISIONS.md` |
+
+### Supersessions of earlier rows (history kept)
+
+- C6 (cohort A): the bullet "`differentiable_pi_apply` is KEPT" is superseded by the C6 tail above.
+- C8 (cohort B): the S05-20 condition on C12 is met (C12 above); the row and the paragraph carry a pointer here.
+- C9-A, C9-B (cohort B): the forward pointers to C10 phase C and to the S00-16 retirement are resolved (C10-B/C,
+  C6 tail above).
+
+### C15 (tests; CONS-T T-2/T-3/T-4, S10-1-7, S10-2-19)
+
+| old | new | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial/Examples/tests/FiberTrivializationProbes.lean` (module `RadiiPolynomial.Examples.tests.FiberTrivializationProbes`, namespace `RadiiPolynomial.FiberTrivializationProbes`) | `RadiiPolynomial/Examples/tests/FT/FiberTrivializationProbes.lean` (module `….tests.FT.FiberTrivializationProbes`, namespace `RadiiPolynomial.Tests.FT`) | test path move + re-namespace (T-4); 0 consumers; the accepted adoption bytes (sha 8c125247…) are preserved at `exterior/tmp/api_campaign_20261012/p3/evidence_C15/T4_snapshot/` | `p3/evidence_C15/RENAMES_C15.md` |
+| — | `RadiiPolynomial/Examples/tests/TY/AllGenerated.lean`, `RadiiPolynomial/Examples/tests/TC/FinMatrixBound.lean` | new test modules (S10-1-7, S10-2-19) | `p3/evidence_C15/TESTS_REPORT_C15.md` |
+| `tests/CV/PowerSeriesBridge` §5 `#print axioms` records | the same records under `#guard_msgs` (T-3) | test strengthening | `p3/evidence_C15/TESTS_REPORT_C15.md` |
+

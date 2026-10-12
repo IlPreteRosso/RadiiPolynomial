@@ -29,18 +29,11 @@ open ChebyshevIVP
 
 variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 
-/-- Evaluation of the stored Chebyshev series at the left endpoint.  This is
-linear and unital on the storage carrier, but not multiplicative there. -/
+/-- Evaluation of the stored Chebyshev series at the left endpoint (the bundled evaluation
+functional `l1Chebyshev.evalAtCLM` at `t = -1`).  This is linear and unital on the storage
+carrier, but not multiplicative there. -/
 def chebyshevBoundary : l1Chebyshev ν →L[ℝ] ℝ :=
-  LinearMap.mkContinuous
-    { toFun := fun a => l1Chebyshev.eval a (-1)
-      map_add' := fun a b => by
-        simpa using l1Chebyshev.eval_add a b (t := (-1 : ℝ)) (by norm_num)
-      map_smul' := fun r a => by
-        simpa only [RingHom.id_apply, smul_eq_mul] using l1Chebyshev.eval_smul r a (-1) }
-    2 (fun a => by
-      change |l1Chebyshev.eval a (-1)| ≤ 2 * ‖a‖
-      exact l1Chebyshev.abs_eval_le_two_mul_norm a (by norm_num))
+  l1Chebyshev.evalAtCLM (-1) (by norm_num)
 
 @[simp]
 theorem chebyshevBoundary_apply (a : l1Chebyshev ν) :

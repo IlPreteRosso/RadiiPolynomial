@@ -179,7 +179,7 @@ theorem hAnorm_of_carrier (A : (Fin (N + 1) → ℝ) →L[ℝ] (Fin (N + 1) → 
 carrier norm is `|x₀| + 2 Σ_{k ≥ 1} |x_k|`. The weighted norm of Example 2.4.15 is this one. -/
 theorem norm_amb_symm_ν₁ (x : Fin (N + 1) → ℝ) :
     ‖(amb ν₁ N).symm x‖ = ∑ k : Fin (N + 1), (if (k : ℕ) = 0 then (1 : ℝ) else 2) * |x k| := by
-  simp [norm_amb_symm, wt, mul_comm]
+  simp [norm_amb_symm, wt, borderedWeight, mul_comm]
 
 end Fisher
 

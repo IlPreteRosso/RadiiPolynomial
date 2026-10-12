@@ -9,7 +9,8 @@ import Mathlib.Tactic.LinearCombination
 One cancellation length `eps k j = |k - j| + |j| - |k|` with `z (k - j) * z j = X ^ eps k j • z k`
 (`z_sub_mul_z`), its arithmetic on head × tail (`|k| ≤ N < |j|`) against the ONE annihilator exponent
 `aN` of `Family` (`aN_le_eps`, `eps_sub_aN`, attainment at `jstar N k = sgn' k * (N + 1)`), and the
-ONE gamma `gammaW ν N k = ν ^ (2|k|) / ν ^ (2(N + 1))` over real `ν`, with the carrier-free identities
+ONE gamma `gammaW ν N k = ν ^ (2|k|) / ν ^ (2(N + 1))` over real `ν` (with the inverse bound
+`gammaW_inv_le`: `γ_N(k)⁻¹ ≤ ν ^ (2(N + 1))` for real `ν ≥ 1`), with the carrier-free identities
 `gammaW_eq_eval_annihilator` (`Γ = eval_{1/ν} (X ^ aN N k)`), `weight_eq` / `weight_eq_rees` (the
 column-weight identity) and `eval_eps_div_eval_aN`; the Fourier unit
 `Analysis/SequenceSpace/Fourier/GammaLeakage.lean` consumes `gammaW_eq_eval_annihilator` and
@@ -17,9 +18,6 @@ column-weight identity) and `eval_eps_div_eval_aN`; the Fourier unit
 
 Nothing analytic lands here: no norm, no `ℓ¹` carrier, no `Fact`. Of the library modules, this
 module imports `Family` only.
-
-Promoted from the slice-23 `ReesBridge` and the S028a `ReesGamma` sources by unit L003-ReesLaurent
-(see `RENAMES.md`).
 -/
 
 noncomputable section
@@ -84,6 +82,12 @@ def gammaW (ν : ℝ) (N : ℕ) (k : ℤ) : ℝ := ν ^ (2 * k.natAbs) / ν ^ (2
 
 theorem gammaW_pos {ν : ℝ} (hν : 0 < ν) (N : ℕ) (k : ℤ) : 0 < gammaW ν N k :=
   div_pos (pow_pos hν _) (pow_pos hν _)
+
+/-- The inverse gamma is at most `ν ^ (2(N + 1))` for real `ν ≥ 1`. -/
+theorem gammaW_inv_le {ν : ℝ} (hν : 1 ≤ ν) (N : ℕ) (k : ℤ) :
+    (gammaW ν N k)⁻¹ ≤ ν ^ (2 * (N + 1)) := by
+  rw [gammaW, inv_div]
+  exact div_le_self (pow_nonneg (zero_le_one.trans hν) _) (one_le_pow₀ hν)
 
 /-- For a head index `|k| ≤ N` and `0 < ν`, `Γ_k` is the annihilator monomial of `z_k`
 evaluated at `h = 1/ν`. -/

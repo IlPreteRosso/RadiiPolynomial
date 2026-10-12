@@ -431,8 +431,10 @@ theorem existsUnique
 /-- Preferred existence/uniqueness theorem for standard IVP systems, stated at the
 source coefficient residual rather than only at the preconditioned map `G`.
 
-The finite `Z₀` certificate is used both for the canonical radii-polynomial bound and
-for the injectivity bridge `G = 0 ↔ ivpCoeffs = 0`. -/
+The finite `Z₀` certificate is used both for the canonical radii-polynomial bound (through
+`Z₀_le`) and for the injectivity bridge `G = 0 ↔ ivpCoeffs = 0`
+(`G_eq_zero_iff_ivpCoeffs_eq_zero`), which transports `existsUnique` along
+`existsUnique_congr`. -/
 theorem existsUnique_ivpCoeffs
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
@@ -447,16 +449,10 @@ theorem existsUnique_ivpCoeffs
         Z₂ r₀ * r₀)
     (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0) :
     ∃! xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀,
-      ∀ l n, ivpCoeffs φ x₀ xTilde l n = 0 := by
-  have hdefect := d.defect_finBlockNorm_lt_one_of_radii φ x₀
-    hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii
-  rcases d.existsUnique φ x₀ hφ_diff hr₀ hY₀ (d.Z₀_le hZ₀fin)
-      hZ₁ hZ₂ h_radii with ⟨xTilde, hxTilde, hunique⟩
-  refine ⟨xTilde, ⟨hxTilde.1,
-    (d.G_eq_zero_iff_ivpCoeffs_eq_zero φ x₀ hdefect).mp hxTilde.2⟩, ?_⟩
-  intro y hy
-  exact hunique y ⟨hy.1,
-    (d.G_eq_zero_iff_ivpCoeffs_eq_zero φ x₀ hdefect).mpr hy.2⟩
+      ∀ l n, ivpCoeffs φ x₀ xTilde l n = 0 :=
+  (existsUnique_congr fun _ => and_congr_right fun _ => d.G_eq_zero_iff_ivpCoeffs_eq_zero φ x₀
+    (d.defect_finBlockNorm_lt_one_of_radii φ x₀ hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)).mp
+    (d.existsUnique φ x₀ hφ_diff hr₀ hY₀ (d.Z₀_le hZ₀fin) hZ₁ hZ₂ h_radii)
 
 end StdIVPData
 

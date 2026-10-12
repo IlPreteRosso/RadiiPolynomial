@@ -272,17 +272,12 @@ private theorem borderedEvalCLM_nonnegRestrict
   rw [hs.tsum_eq_zero_add]
   have hzero : lpOneAlg.toRealSeq
       (l1Chebyshev.nonnegRestrictCLM ν (a : l1Chebyshev ν)) 0 •
-        (chebyshevStorageFactor 0 * (Chebyshev.T ℝ (0 : ℤ)).eval t) =
+        (chebyshevStorageFactor 0 * (Chebyshev.T ℝ ((0 : ℕ) : ℤ)).eval t) =
       l1Chebyshev.toSeq (a : l1Chebyshev ν) 0 := by
     rw [l1Chebyshev.nonnegRestrictCLM_apply, nonnegRestrict_toSeq]
     simp [chebyshevStorageFactor]
     rfl
-  have hzero' : lpOneAlg.toRealSeq
-      (l1Chebyshev.nonnegRestrictCLM ν (a : l1Chebyshev ν)) 0 •
-        (chebyshevStorageFactor 0 * (Chebyshev.T ℝ ((0 : ℕ) : ℤ)).eval t) =
-      l1Chebyshev.toSeq (a : l1Chebyshev ν) 0 := by
-    simpa using hzero
-  rw [hzero']
+  rw [hzero]
   congr 1
   rw [← tsum_mul_left]
   exact tsum_congr fun k => by

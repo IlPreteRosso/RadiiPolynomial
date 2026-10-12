@@ -1,5 +1,5 @@
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.Laurent
-import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered
+import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Symmetrize
 
 /-!
 # Computable coefficients and completed Chebyshev polynomial evaluation
@@ -29,7 +29,7 @@ theorem toSeq_evalBanach_laurent_of_coeffs (p : CompPoly L)
       change (r : ℝ) * lpOneAlg.toRealSeq (1 : l1Chebyshev ν) n = _
       rw [lpOneAlg.toRealSeq_one_fun]
       simp only [evalLaurentCoeffSeq]
-      split_ifs <;> simp_all [DiscreteConvolution.addDelta]
+      split_ifs <;> simp_all [RadiiPolynomial.DiscreteConvolution.addDelta]
   | X i => exact ha i n
   | add p q ihp ihq => simp [evalBanach, evalLaurentCoeffSeq, ihp, ihq]
   | sub p q ihp ihq => simp [evalBanach, evalLaurentCoeffSeq, ihp, ihq]

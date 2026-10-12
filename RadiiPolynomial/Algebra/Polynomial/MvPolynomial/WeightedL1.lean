@@ -1,7 +1,8 @@
 import Mathlib.Analysis.Calculus.MeanValue
 import RadiiPolynomial.Algebra.Convolution.CauchyProduct
+import RadiiPolynomial.Algebra.Convolution.CauchyProductReal
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
-import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Core
+import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Calculus
 import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Coefficients
 import RadiiPolynomial.Analysis.Calculus.Pi
 
@@ -18,25 +19,25 @@ For `native_decide`, the caller supplies computable ℚ data outside this file (
 the `Dφ_Q` table of `ivp_hDF_block_nat`, or `CompPoly.evalCoeff`); no computable mirror is
 declared here. The MvPolynomial bridge automates:
 
-1. **ℚ↔ℝ bridge**: `toSeq(aeval a p) n = (mvPolyCoeffQ p arrs n : ℝ)`
+1. **ℚ↔ℝ bridge**: `toSeq(aeval a p) n = (mvPolyCoeff p coeffs n : ℝ)`
    — reduces to `CauchyProduct.ratCast` + ring hom properties
 2. **Differentiability**: `aeval · p` is differentiable (polynomial on Banach algebra)
 3. **Fderiv via pderiv**: `fderiv(aeval · p)(a) = Σᵢ leftMul(aeval a (pderiv i p)) ∘ proj i`
-4. **DF verification**: Jacobian entries = `mvPolyCoeffQ(pderiv m (φ_spec j))`
+4. **DF verification**: Jacobian entries = coefficients of `pderiv m (φ_spec j)` evaluated at `a`
 5. **Z₂ bound**: when every `pderiv j (pderiv i p)` is a constant (hypothesis `hD₂`; true for
    degree ≤ 2) → bilinear bound
 
-The caller connects its computable ℚ data to `mvPolyCoeffQ` by an agreement hypothesis
+The caller connects its computable ℚ data to these coefficients by an agreement hypothesis
 (for example `hDφ_Q` of `ivp_hDF_block_nat`).
 
 ## Key Insight
 
 The value of MvPolynomial is NOT computation — it's PROOF automation.
 By stating φ as `MvPolynomial (Fin L) ℚ`, we get:
-- `differentiable_evalInBanach` (replaces ~60 lines of manual differentiability proofs)
-- `fderiv_evalInBanach` (replaces ~100 lines of fderiv computation)
-- `pderiv`-based DF verification (~200 lines collapsed into `ivp_hDF_block_nat`)
-- constant-second-pderiv Z₂ bound (replaces ~60 lines of bilinear bound proofs)
+- `differentiable_evalInBanach`, `fderiv_evalInBanach` (from the generic
+  `MvPolynomial.hasFDerivAt_aeval`);
+- `pderiv`-based DF verification (consumed by `ivp_hDF_block_nat`);
+- the constant-second-pderiv Z₂ bound.
 -/
 
 open MvPolynomial (C X aeval pderiv)
@@ -60,7 +61,7 @@ def evalInBanach (p : MvPolynomial (Fin L) ℚ)
     (a : Fin L → l1Weighted ν) : l1Weighted ν :=
   aeval a p
 
-/-! ## 2. Master Bridge: `toSeq_evalInBanach`
+/-! ## 2. Master Bridge: `toSeq_evalInBanach_of_coeffs`
 
 Connects evaluation in `l1Weighted ν` to rational sequence semantics:
 
@@ -68,7 +69,7 @@ Connects evaluation in `l1Weighted ν` to rational sequence semantics:
 toSeq(evalInBanach p a) n = (mvPolyCoeff p coeffs n : ℝ)
 ```
 
-The array theorem is a compatibility wrapper around this sequence-level statement. -/
+-/
 
 /-- `toSeq` of `algebraMap ℚ (l1Weighted ν) r` at mode n:
 mode 0 = (r : ℝ), mode n+1 = 0. -/
@@ -111,20 +112,10 @@ theorem toSeq_evalInBanach_of_coeffs (p : MvPolynomial (Fin L) ℚ)
       show l1Weighted.toSeq (a i) = fun k => (coeffs i k : ℝ) from funext (ha i)]
     rw [CauchyProduct.ratCast, mvPolyCoeff_mul, mvPolyCoeff_X_fun]
 
-/-- Array adapter for `toSeq_evalInBanach_of_coeffs`. -/
-theorem toSeq_evalInBanach (p : MvPolynomial (Fin L) ℚ)
-    (a : Fin L → l1Weighted ν) (arrs : Fin L → Array ℚ)
-    (ha : ∀ i n, l1Weighted.toSeq (a i) n = ((arrs i).getD n 0 : ℝ)) :
-    ∀ n, l1Weighted.toSeq (evalInBanach p a) n = (mvPolyCoeffQ p arrs n : ℝ) := by
-  simpa only [mvPolyCoeffQ] using
-    toSeq_evalInBanach_of_coeffs p a (fun i n => (arrs i).getD n 0) ha
-
 /-! ## 3. evalInBanach simp API
 
-Pointwise and function-level lemmas for `evalInBanach` on compound MvPolynomials.
-The pointwise `@[simp]` lemmas normalize `evalInBanach (C r) a`, `evalInBanach (p + q) a`, etc.
-The `_fun` lemmas rewrite the lambda `fun x => evalInBanach (·) x` to expose the
-algebraic structure, enabling `rw` with `fderiv_add`, `HasFDerivAt.mul`, etc. -/
+Pointwise lemmas for `evalInBanach` on compound MvPolynomials.
+The `@[simp]` lemmas normalize `evalInBanach (C r) a`, `evalInBanach (p + q) a`, etc. -/
 
 @[simp] lemma evalInBanach_C (r : ℚ) (a : Fin L → l1Weighted ν) :
     evalInBanach (MvPolynomial.C r) a = algebraMap ℚ (l1Weighted ν) r := by
@@ -164,24 +155,6 @@ algebraic structure, enabling `rw` with `fderiv_add`, `HasFDerivAt.mul`, etc. -/
   simp only [evalInBanach, MvPolynomial.pderiv_X, Pi.single_apply,
     apply_ite (aeval a), map_one, map_zero, eq_comm]
 
-/-- Function-level: `fun x => evalInBanach (C r) x` = constant. -/
-lemma evalInBanach_C_fun (r : ℚ) :
-    (fun x : Fin L → l1Weighted ν => evalInBanach (MvPolynomial.C r) x) =
-      fun _ => algebraMap ℚ (l1Weighted ν) r :=
-  funext fun x => evalInBanach_C r x
-
-/-- Function-level: `fun x => evalInBanach (p + q) x` = sum of evaluations. -/
-lemma evalInBanach_add_fun (p q : MvPolynomial (Fin L) ℚ) :
-    (fun x : Fin L → l1Weighted ν => evalInBanach (p + q) x) =
-      fun x => evalInBanach p x + evalInBanach q x :=
-  funext fun x => evalInBanach_add p q x
-
-/-- Function-level: `fun x => evalInBanach (p * X i) x` = product with coordinate. -/
-lemma evalInBanach_mul_X_fun (p : MvPolynomial (Fin L) ℚ) (i : Fin L) :
-    (fun x : Fin L → l1Weighted ν => evalInBanach (p * MvPolynomial.X i) x) =
-      fun x => evalInBanach p x * x i :=
-  funext fun x => by simp [evalInBanach]
-
 /-! ## 4. Differentiability and Fréchet Derivative via pderiv
 
 `evalInBanach p` is differentiable (polynomial on Banach algebra), and its Fréchet derivative
@@ -191,14 +164,18 @@ This formalizes the book's equation (8.27): `Dφ_j(a)b = Σ_{j'} D_{a_{j'}} φ_j
 
 open ContinuousLinearMap (proj)
 
-/-- `evalInBanach p` is differentiable at every point: by induction, constants, sums and
-products with a coordinate of differentiable functions are differentiable. -/
+/-- `evalInBanach p` has Fréchet derivative `MvPolynomial.polynomialDerivative p a` at `a`,
+the continuous linear map `h ↦ ∑ i, evalInBanach (pderiv i p) a * h i`. This is
+`MvPolynomial.hasFDerivAt_aeval` in the normed commutative algebra `l1Weighted ν`. -/
+theorem hasFDerivAt_evalInBanach (p : MvPolynomial (Fin L) ℚ) (a : Fin L → l1Weighted ν) :
+    HasFDerivAt (fun x => evalInBanach p x)
+      (MvPolynomial.polynomialDerivative (𝕜 := ℝ) p a) a :=
+  MvPolynomial.hasFDerivAt_aeval p a
+
+/-- `evalInBanach p` is differentiable at every point (from `hasFDerivAt_evalInBanach`). -/
 theorem differentiable_evalInBanach (p : MvPolynomial (Fin L) ℚ) :
-    Differentiable ℝ (fun x : Fin L → l1Weighted ν => evalInBanach p x) := by
-  induction p using MvPolynomial.induction_on with
-  | C r => rw [evalInBanach_C_fun]; exact differentiable_const _
-  | add p q ihp ihq => rw [evalInBanach_add_fun]; exact ihp.add ihq
-  | mul_X p i ih => rw [evalInBanach_mul_X_fun]; exact ih.mul (differentiable_pi_apply i)
+    Differentiable ℝ (fun x : Fin L → l1Weighted ν => evalInBanach p x) :=
+  fun a => (hasFDerivAt_evalInBanach p a).differentiableAt
 
 /-- Fréchet derivative of `evalInBanach p` at `a`: the pderiv sum formula.
 
@@ -208,63 +185,15 @@ fderiv ℝ (fun x => evalInBanach p x) a =
   Σᵢ (leftMul (evalInBanach (pderiv i p) a)).comp (proj i)
 ```
 
-Proof by `MvPolynomial.induction_on`:
-- `C r`: constant → fderiv = 0, all pderivs = 0
-- `p + q`: linearity of fderiv and pderiv
-- `p * X i`: product rule + IH + `pderiv_mul` + commutativity of `l1Weighted` -/
+The induction lives once, at the `MvPolynomial` layer (`MvPolynomial.hasFDerivAt_aeval`). -/
 theorem fderiv_evalInBanach (p : MvPolynomial (Fin L) ℚ)
     (a : Fin L → l1Weighted ν) :
     fderiv ℝ (fun x => evalInBanach p x) a =
       ∑ i : Fin L, (l1Weighted.leftMul (evalInBanach (MvPolynomial.pderiv i p) a)).comp
         (proj (R := ℝ) (φ := fun _ : Fin L => l1Weighted ν) i) := by
-  induction p using MvPolynomial.induction_on with
-  | C r =>
-    rw [evalInBanach_C_fun, (hasFDerivAt_const (algebraMap ℚ (l1Weighted ν) r) a).fderiv]
-    symm; apply Finset.sum_eq_zero; intro i _
-    simp only [MvPolynomial.pderiv_C, evalInBanach, map_zero]
-    ext h; simp
-  | add p q ihp ihq =>
-    have hfd : fderiv ℝ (fun x => evalInBanach p x + evalInBanach q x) a =
-        fderiv ℝ (fun x => evalInBanach p x) a +
-          fderiv ℝ (fun x => evalInBanach q x) a :=
-      ((differentiable_evalInBanach p a).hasFDerivAt.add
-        (differentiable_evalInBanach q a).hasFDerivAt).fderiv
-    rw [evalInBanach_add_fun, hfd, ihp, ihq, ← Finset.sum_add_distrib]
-    congr 1; funext i
-    simp only [← ContinuousLinearMap.add_comp]
-    congr 1; ext1 h; simp
-  | mul_X p i ih =>
-    rw [evalInBanach_mul_X_fun]
-    -- Product rule via HasFDerivAt
-    have hfi : HasFDerivAt (fun x : Fin L → l1Weighted ν => x i)
-        (proj (R := ℝ) (φ := fun _ : Fin L => l1Weighted ν) i) a :=
-      (proj (R := ℝ) (φ := fun _ : Fin L => l1Weighted ν) i).hasFDerivAt
-    have hfd : fderiv ℝ (fun x => evalInBanach p x * x i) a =
-        evalInBanach p a • (proj (R := ℝ) (φ := fun _ : Fin L => l1Weighted ν) i) +
-          (a i) • fderiv ℝ (fun x => evalInBanach p x) a :=
-      ((differentiable_evalInBanach p a).hasFDerivAt.mul hfi).fderiv
-    rw [hfd, ih]
-    -- Apply to h and work at l1Weighted level
-    ext1 h
-    simp only [add_apply, sum_apply,
-      ContinuousLinearMap.comp_apply, smul_apply,
-      ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply,
-      smul_eq_mul, Finset.smul_sum]
-    -- Expand pderiv on RHS using pderiv_mul + evalInBanach API
-    conv_rhs => arg 2; ext j; rw [MvPolynomial.pderiv_mul]
-    simp only [evalInBanach_add, evalInBanach_mul, evalInBanach_X, evalInBanach_pderiv_X]
-    -- Split RHS sum and collapse the Kronecker delta part
-    conv_rhs => arg 2; ext j; rw [add_mul]
-    rw [Finset.sum_add_distrib]
-    have hcollapse : ∑ j : Fin L,
-        (evalInBanach p a * if j = i then (1 : l1Weighted ν) else 0) * h j =
-        evalInBanach p a * h i := by
-      rw [show (∑ j : Fin L, (evalInBanach p a * if j = i then (1 : l1Weighted ν) else 0) * h j) =
-        ∑ j : Fin L, if j = i then evalInBanach p a * h i else 0 from
-        Finset.sum_congr rfl fun j _ => by split_ifs with hji <;> simp [hji]]
-      simp
-    rw [hcollapse, add_comm]
-    congr 1; apply Finset.sum_congr rfl; intro j _; ring
+  rw [(hasFDerivAt_evalInBanach p a).fderiv]
+  ext1 h
+  simp [evalInBanach]
 
 /-- Fréchet derivative difference of `evalInBanach p` at two points factors through
 pderiv evaluation differences:
@@ -322,16 +251,12 @@ For degree ≤ 2 polynomials, the fderiv difference is bilinear: each `pderiv i 
 is degree ≤ 1, so its evaluation is Lipschitz with computable constant.
 The chain: MVT → fderiv norm → pderiv norms → constant second pderivs. -/
 
-/-- ‖∑_i f_i * h_i‖ ≤ (∑_i ‖f_i‖) * ‖h‖ for pi-type h.
-Combines triangle inequality, submultiplicativity, and ‖h_i‖ ≤ ‖h‖. -/
+/-- ‖∑_i f_i * h_i‖ ≤ (∑_i ‖f_i‖) * ‖h‖ for pi-type h; the consumer-compatibility face of
+`RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le`. -/
 theorem norm_sum_mul_pi_le
     (f h : Fin L → l1Weighted ν) :
-    ‖∑ i : Fin L, f i * h i‖ ≤ (∑ i : Fin L, ‖f i‖) * ‖h‖ := by
-  refine ((norm_sum_le _ _).trans
-    (Finset.sum_le_sum fun i _ => norm_mul_le _ _)).trans ?_
-  rw [Finset.sum_mul]
-  exact Finset.sum_le_sum fun i _ =>
-    mul_le_mul_of_nonneg_left (norm_le_pi_norm h i) (norm_nonneg _)
+    ‖∑ i : Fin L, f i * h i‖ ≤ (∑ i : Fin L, ‖f i‖) * ‖h‖ :=
+  NormHelpers.norm_sum_mul_pi_le f h
 
 /-- MVT: ‖eval(q, c) - eval(q, a)‖ ≤ C * ‖c - a‖ when ‖fderiv(eval q)‖ ≤ C everywhere. -/
 theorem norm_evalInBanach_sub_le
@@ -358,20 +283,23 @@ theorem norm_fderiv_evalInBanach_le
     ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply]
   exact norm_sum_mul_pi_le _ _
 
-/-- Generic Z₂ bilinear bound for polynomial evaluation from total pderiv Lipschitz. -/
+/-- Generic Z₂ bilinear bound for polynomial evaluation: if the partial derivatives satisfy
+`∑ i, ‖evalInBanach (pderiv i p) c - evalInBanach (pderiv i p) a‖ ≤ C * ‖c - a‖` at the two
+points `c` and `a`, then `‖(Df(c) - Df(a)) h‖ ≤ C * ‖c - a‖ * ‖h‖`. The hypothesis is needed
+only at `(c, a)`; a global Lipschitz bound gives it as the instance `hLip c a`.
+The syntactic Taylor face `MvPolyBridge.CompPoly.norm_fderiv_evalBanach_sub_le` and the semantic
+face `norm_fderiv_diff_evalInBanach_of_const_second_pderiv` are its corollaries. -/
 theorem norm_fderiv_diff_evalInBanach_bilinear
     (p : MvPolynomial (Fin L) ℚ)
     (c a h : Fin L → l1Weighted ν)
     {C : ℝ}
-    (hLip : ∀ x y : Fin L → l1Weighted ν,
-      ∑ i : Fin L, ‖evalInBanach (MvPolynomial.pderiv i p) x -
-        evalInBanach (MvPolynomial.pderiv i p) y‖ ≤ C * ‖x - y‖) :
+    (hLip : ∑ i : Fin L, ‖evalInBanach (MvPolynomial.pderiv i p) c -
+        evalInBanach (MvPolynomial.pderiv i p) a‖ ≤ C * ‖c - a‖) :
     ‖(fderiv ℝ (fun x => evalInBanach p x) c -
       fderiv ℝ (fun x => evalInBanach p x) a) h‖ ≤
       C * ‖c - a‖ * ‖h‖ := by
   rw [fderiv_diff_evalInBanach]
-  exact (norm_sum_mul_pi_le _ _).trans
-    (mul_le_mul_of_nonneg_right (hLip c a) (norm_nonneg _))
+  exact (norm_sum_mul_pi_le _ _).trans (mul_le_mul_of_nonneg_right hLip (norm_nonneg _))
 
 /-- Combined Z₂ bilinear bound for polynomial evaluation with constant second pderivs.
 
@@ -396,45 +324,12 @@ theorem norm_fderiv_diff_evalInBanach_of_const_second_pderiv
     (hC_bound : (∑ i : Fin L, ∑ j : Fin L, |(D₂ i j : ℝ)|) ≤ C) :
     ‖(fderiv ℝ (fun x => evalInBanach p x) c -
       fderiv ℝ (fun x => evalInBanach p x) a) h‖ ≤ C * ‖c - a‖ * ‖h‖ := by
-  apply norm_fderiv_diff_evalInBanach_bilinear _ _ _ _ (fun x y => ?_)
-  calc ∑ i : Fin L, ‖evalInBanach (MvPolynomial.pderiv i p) x -
-          evalInBanach (MvPolynomial.pderiv i p) y‖
-      ≤ ∑ i : Fin L, (∑ j : Fin L, |(D₂ i j : ℝ)|) * ‖x - y‖ :=
-        Finset.sum_le_sum fun i _ => norm_evalInBanach_sub_le _ _ _
-          (fun z => (norm_fderiv_evalInBanach_le _ z).trans
-            (Finset.sum_le_sum fun j _ => by
-              rw [hD₂ i j, norm_evalInBanach_C, Real.norm_eq_abs]))
-    _ = (∑ i : Fin L, ∑ j : Fin L, |(D₂ i j : ℝ)|) * ‖x - y‖ := by
-        rw [← Finset.sum_mul]
-    _ ≤ C * ‖x - y‖ := mul_le_mul_of_nonneg_right hC_bound (norm_nonneg _)
-
-/-- System-level Z₂ bilinear bound for polynomial systems with constant second pderivs.
-
-Given `D₂ l i j = coeff of ∂ⱼ∂ᵢ(φ_spec l)` for the whole system, derives the
-per-component bilinear bound `‖(Df_l c - Df_l a) h‖ ≤ C * ‖c-a‖ * ‖h‖`. The vanishing of
-the difference on inactive components (all `D₂ l i j = 0`) is the separate
-`fderiv_diff_zero_of_D₂_zero`.
-
-The caller provides:
-- `D₂` and `hD₂` (verified by `pderiv_simp`)
-- `C` and `hC` (a bound on every component sum `∑ᵢ ∑ⱼ |D₂ l i j|`, e.g. their maximum,
-  verified by `norm_num`) -/
-theorem norm_fderiv_diff_system_of_const_second_pderiv
-    (φ_spec : Fin L → MvPolynomial (Fin L) ℚ)
-    (c a : Fin L → l1Weighted ν)
-    -- System-level second pderiv coefficient table
-    (D₂ : Fin L → Fin L → Fin L → ℚ)
-    (hD₂ : ∀ (l i j : Fin L),
-      MvPolynomial.pderiv j (MvPolynomial.pderiv i (φ_spec l)) = MvPolynomial.C (D₂ l i j))
-    -- Per-component bilinear bound
-    {C : ℝ}
-    (hC : ∀ l : Fin L, (∑ i : Fin L, ∑ j : Fin L, |(D₂ l i j : ℝ)|) ≤ C)
-    -- Per-component bound
-    (h : Fin L → l1Weighted ν) (l : Fin L) :
-    ‖(fderiv ℝ (fun x => evalInBanach (φ_spec l) x) c -
-      fderiv ℝ (fun x => evalInBanach (φ_spec l) x) a) h‖ ≤ C * ‖c - a‖ * ‖h‖ :=
-  norm_fderiv_diff_evalInBanach_of_const_second_pderiv _ _ _ _
-    (D₂ := D₂ l) (fun i j => hD₂ l i j) ((hC l).trans (le_refl _))
+  refine norm_fderiv_diff_evalInBanach_bilinear _ c a h ?_
+  refine (Finset.sum_le_sum fun i _ => norm_evalInBanach_sub_le _ c a (C := ∑ j, |(D₂ i j : ℝ)|)
+    fun z => (norm_fderiv_evalInBanach_le _ z).trans (Finset.sum_le_sum fun j _ => by
+      rw [hD₂ i j, norm_evalInBanach_C, Real.norm_eq_abs])).trans ?_
+  rw [← Finset.sum_mul]
+  exact mul_le_mul_of_nonneg_right hC_bound (norm_nonneg _)
 
 /-- For inactive components (all `D₂ l i j = 0`), the fderiv difference is zero. -/
 theorem fderiv_diff_zero_of_D₂_zero

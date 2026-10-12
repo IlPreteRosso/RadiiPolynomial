@@ -1,5 +1,5 @@
 import RadiiPolynomial.Applications.IVP.Taylor
-import RadiiPolynomial.Certification.LeanCertAdapter
+import RadiiPolynomial.Certification.Rational.Matrix
 import RadiiPolynomial.Certification.Rational.Grid
 import RadiiPolynomial.Certification.ColumnTailBound
 import RadiiPolynomial.Certification.Witness
@@ -18,9 +18,11 @@ below `Certification` imports it.
 1. `IVP.abarNormQ`, `IVP.seqNormQ`, `IVP.DfExactQ`, `IVP.DLipBoundQ`, `IVP.activeQ`,
    `IVP.evalArr`, `IVP.colSupQ`, `IVP.actionQ`, `IVP.supportM`, `IVP.Y₀Q`, `IVP.Z₁colQ` —
    the computable ℚ quantities read off the stored data and the syntax.
-2. Bound faces on a bundle `d : IVP.StdIVPData ν L N`: `d.Y₀_le_of_Q`, `d.Z₁_le_of_Q` (recipe
-   `Z₁`), `d.Z₁_le_col_of_Q` (exact column `Z₁`), `d.Z₂_le_of_Q` (`activeBlockNormQ` at the
-   computed scale `ν_q · DLipBoundQ`), with their helpers.
+2. Bound faces on a bundle `d : IVP.StdIVPData ν L N`: the support and membership of `F(ā)`
+   (`d.ivpCoeffs_abar_eq_zero_of_compPoly`, `d.ivpCoeffs_abar_mem_of_compPoly`, any real `x₀`),
+   `d.Y₀_le_of_Q`, `d.Z₁_le_of_Q` (recipe `Z₁`), `d.Z₁_le_col_of_Q` (exact column `Z₁`),
+   `d.Z₂_le_of_Q` (`activeBlockNormQ` at the computed scale `ν_q · DLipBoundQ`), with their
+   helpers.
 3. `IVP.StdIVPDataQ` — the ν-free rational record, its realization `toStdIVPData`, and the
    decidable clauses `ChecksDF`, `ChecksZ₀`, `ChecksZ₀By` (slot and grid denominator),
    `ChecksY₀`, `ChecksZ₁`, `ChecksZ₁col`, `ChecksZ₁By` (slot), `ChecksZ₂`, each with its
@@ -28,52 +30,10 @@ below `Certification` imports it.
 4. `IVP.TaylorCertQ` (the five certificate numbers), the override face
    `StdIVPDataQ.certified_of_bounds` and the all-generated face
    `StdIVPDataQ.certified_of_checksBy` (and their source-residual forms).
-5. `RadiiPolynomial.Z₂_blockNormQ` / `Z₂_blockNorm_component_le` — the quadratic special case
-   `C_q = ν · 2` of the active-block evaluator (transition; `Z₂_blockNormQ_eq`); placed first
-   in the file.
 -/
 
 open scoped BigOperators Topology
 open RadiiPolynomial MvPolyBridge RadiiPolynomial.Certification.Rational
-
-namespace RadiiPolynomial
-
-/-! ## The quadratic special case of the active-block evaluator (transition)
-Kept for certificates stated with the factor-`2` evaluator; `Z₂_blockNormQ_eq` identifies it with
-`activeBlockNormQ` at `C_q := ν · 2`. -/
-
-/-- Per-block Z₂ evaluator with hardcoded factor `2`.
-Special case of `Z₂_blockNormQ_gen`. -/
-def Z₂_blockNormQ (L N : ℕ) [NeZero L]
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν tailBound : ℚ)
-    (active : Finset (Fin L)) : ℚ :=
-  Z₂_blockNormQ_gen L N blockCols ν tailBound 2 active
-
-/-- Z₂ per-component bridge with factor `2`.
-Special case of `Z₂_blockNorm_component_le_gen`. -/
-lemma Z₂_blockNorm_component_le {L N : ℕ} [NeZero L] {ν : PosReal}
-    (A : SystemBlockDiagData L N)
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν_q tailBound_q : ℚ)
-    (active : Finset (Fin L)) {C : ℚ}
-    (hcols : ∀ l j : Fin L, ∀ k i : Fin (N + 1),
-      A.finBlock l j i k = ((blockCols l j k).getD (i : ℕ) 0 : ℝ))
-    (hν : (ν : ℝ) = (ν_q : ℝ))
-    (htail : A.tailBound = (tailBound_q : ℝ))
-    (hle : Z₂_blockNormQ L N blockCols ν_q tailBound_q active ≤ C) (l : Fin L) :
-    2 * (ν : ℝ) * ((∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
-      if l ∈ active then A.tailBound else 0) ≤ (C : ℝ) := by
-  exact_mod_cast Z₂_blockNorm_component_le_gen A blockCols ν_q tailBound_q 2
-    active hcols hν htail (by norm_num) hle l
-
-/-- The factor-`2` evaluator is `activeBlockNormQ` at `C_q := ν · 2`. -/
-theorem Z₂_blockNormQ_eq (L N : ℕ) [NeZero L]
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν tailBound : ℚ)
-    (active : Finset (Fin L)) :
-    Z₂_blockNormQ L N blockCols ν tailBound active =
-      activeBlockNormQ L N blockCols ν tailBound (ν * 2) active :=
-  Z₂_blockNormQ_gen_eq L N blockCols ν tailBound 2 active
-
-end RadiiPolynomial
 
 namespace IVP
 
@@ -199,12 +159,9 @@ theorem abarNormQ_nonneg (d : IVP.StdIVPData ν L N) (i : Fin L) :
 /-- The weighted ℓ¹ norm of the realized component `ā_i` equals the cast of its exact
 rational norm `abarNormQ`. -/
 theorem norm_abar_eq (d : IVP.StdIVPData ν L N) (i : Fin L) :
-    ‖d.abar i‖ = (abarNormQ N d.abar_Q d.ν_q i : ℝ) := by
-  rw [l1Weighted.norm_eq_Icc_sum_of_support _ N (fun n hn => by
-    rw [d.abar_toSeq_eq, abar_Q_getD_eq_zero d i n hn, Rat.cast_zero])]
-  unfold abarNormQ
-  push_cast
-  simp_rw [d.abar_toSeq_eq, d.hν]
+    ‖d.abar i‖ = (abarNormQ N d.abar_Q d.ν_q i : ℝ) :=
+  l1Weighted.norm_eq_ratCast_sum_of_support _ _ _ (d.abar_toSeq_eq i) d.hν N
+    (abar_Q_getD_eq_zero d i)
 
 /-- `Z₂` from one exact-ℚ check of `activeBlockNormQ` at the computed scale
 `C_q = ν_q · DLipBoundQ`: the derivative-Lipschitz constant of the polynomial field and its
@@ -270,16 +227,11 @@ diagonal tail `c n / n` above). -/
 theorem action_eq_actionQ (d : IVP.StdIVPData ν L N) (c : SystemCoeff L)
     (cq : Fin L → ℕ → ℚ) (hc : ∀ l n, c l n = (cq l n : ℝ)) (l : Fin L) (n : ℕ) :
     d.approxInverse.action c l n = (actionQ N d.A_col cq l n : ℝ) := by
-  unfold actionQ
-  by_cases hn : n ≤ N
-  · rw [SystemBlockDiagData.action_finite _ _ _ _ hn, ite_eq_left hn]
-    push_cast
-    simp only [hc]
-    rfl
-  · rw [SystemBlockDiagData.action_tail _ _ _ _ (by omega), ite_eq_right hn,
-      d.htail_diag_inv l n (by omega), hc]
-    push_cast
-    ring
+  rw [d.approxInverse.action_eq_blockActionQ (fun l j k => d.A_col l j (k : ℕ))
+    (fun _ n => 1 / (n : ℚ)) (fun l j k i => d.A_finBlock_eq l j i k)
+    (fun l n hn => by rw [d.htail_diag_inv l n hn]; push_cast; rfl) c cq hc l n]
+  unfold blockActionQ actionQ
+  split_ifs <;> first | rfl | (push_cast; ring)
 
 /-- The rational IVP coefficients at `ā` vanish past `supportM f_cpoly N`, the support index
 read off the syntax. -/
@@ -296,6 +248,29 @@ theorem ivpCoeffsQ_support (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → Comp
     CompPoly.evalCoeffSeq_eq_zero_of_support N (f_cpoly l) _
       (fun i k hk => abar_Q_getD_eq_zero d i k hk) m (by omega)]
   ring
+
+/-- The real IVP coefficients `F(ā)` of a `CompPoly` field vanish past `supportM f_cpoly N`, for
+every real initial value `x₀` (`x₀` enters `ivpCoeffs` only at `n = 0`, and `n > 0` here): the
+rational bridge at zero initial data and `ivpCoeffsQ_support`. -/
+theorem ivpCoeffs_abar_eq_zero_of_compPoly (d : IVP.StdIVPData ν L N)
+    (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) (l : Fin L) (n : ℕ)
+    (hn : supportM f_cpoly N < n) :
+    IVP.ivpCoeffs (fun a j => (f_cpoly j).evalBanach a) x₀ d.abar l n = 0 := by
+  obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by unfold supportM at hn; omega⟩
+  have h := d.ivpCoeffs_abar_eq_cast_of_compPoly f_cpoly 0 0 (fun _ => by simp) l (m + 1)
+  rw [ivpCoeffsQ_support d f_cpoly 0 l (m + 1) hn, Rat.cast_zero] at h
+  exact h
+
+/-- Each component of `F(ā)` lies in `ℓ¹_ν` (finite support `supportM f_cpoly N`), for every real
+initial value `x₀`. -/
+theorem ivpCoeffs_abar_mem_of_compPoly (d : IVP.StdIVPData ν L N)
+    (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) (l : Fin L) :
+    l1Weighted.Mem ν
+      (fun n => IVP.ivpCoeffs (fun a j => (f_cpoly j).evalBanach a) x₀ d.abar l n) := by
+  rw [l1Weighted.mem_iff]
+  exact summable_of_ne_finset_zero (s := Finset.Icc 0 (supportM f_cpoly N)) fun n hn => by
+    simp only [Finset.mem_Icc, not_and_or, not_le] at hn
+    simp [ivpCoeffs_abar_eq_zero_of_compPoly d f_cpoly x₀ l n (by omega)]
 
 /-- `Y₀` from one exact-ℚ check. -/
 theorem Y₀_le_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
@@ -342,16 +317,11 @@ theorem Y₀_le_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L
 /-- The weighted norm of a `CompPoly` evaluated at `ā` equals the cast of the exact
 rational sum `seqNormQ` over its syntactic support window. -/
 theorem norm_evalBanach_abar_eq (d : IVP.StdIVPData ν L N) (p : CompPoly L) :
-    ‖p.evalBanach d.abar‖ = (seqNormQ N d.abar_Q d.ν_q p : ℝ) := by
-  have hz := CompPoly.evalCoeffSeq_eq_zero_of_support N p _
-    (fun i k hk => abar_Q_getD_eq_zero d i k hk)
-  rw [l1Weighted.norm_eq_Icc_sum_of_support _ (CompPoly.supportBound N p) (fun n hn => by
-    rw [p.toSeq_evalBanach d.abar d.abar_Q d.abar_toSeq_eq n, CompPoly.evalCoeff, hz n hn,
-      Rat.cast_zero])]
-  unfold seqNormQ
-  push_cast
-  refine Finset.sum_congr rfl fun n _ => ?_
-  rw [p.toSeq_evalBanach d.abar d.abar_Q d.abar_toSeq_eq n, d.hν]
+    ‖p.evalBanach d.abar‖ = (seqNormQ N d.abar_Q d.ν_q p : ℝ) :=
+  l1Weighted.norm_eq_ratCast_sum_of_support _ _ _
+    (p.toSeq_evalBanach d.abar d.abar_Q d.abar_toSeq_eq) d.hν _ fun n hn => by
+      rw [CompPoly.evalCoeff, CompPoly.evalCoeffSeq_eq_zero_of_support N p _
+        (fun i k hk => abar_Q_getD_eq_zero d i k hk) n hn]
 
 /-- `Z₁` from the finite Jacobian check `hDF` and one ℚ inequality; the derivative
 constant is the exact evaluated one, computed from the bundle and the syntax. -/
@@ -520,17 +490,6 @@ abbrev ChecksZ₂ (q : StdIVPDataQ L N) (f_cpoly : Fin L → CompPoly L) (r₀ Z
     (q.ν_q * DLipBoundQ f_cpoly (fun i => abarNormQ N q.abar_Q q.ν_q i + r₀))
     (activeQ f_cpoly (fun i => abarNormQ N q.abar_Q q.ν_q i + r₀)) ≤ Z₂
 
-/-- The `Z₂` clause is the clause of the built-in-weight evaluator `Z₂_blockNormQ_gen` at the
-constant `DLipBoundQ`, rewritten. -/
-theorem checksZ₂_iff_blockNormQ_gen (q : StdIVPDataQ L N) (f_cpoly : Fin L → CompPoly L)
-    (r₀ Z₂ : ℚ) :
-    q.ChecksZ₂ f_cpoly r₀ Z₂ ↔
-      Z₂_blockNormQ_gen L N (fun l j k => q.A_col l j (k : ℕ)) q.ν_q
-        (IVP.StdIVPData.approxInverse_tailBound_q (N := N))
-        (DLipBoundQ f_cpoly (fun i => abarNormQ N q.abar_Q q.ν_q i + r₀))
-        (activeQ f_cpoly (fun i => abarNormQ N q.abar_Q q.ν_q i + r₀)) ≤ Z₂ := by
-  rw [Z₂_blockNormQ_gen_eq]
-
 /-- The weight read off a record with positive rational weight. -/
 def weight (q : StdIVPDataQ L N) (hpos : 0 < q.ν_q) : PosReal :=
   ⟨(q.ν_q : ℝ), by exact_mod_cast hpos⟩
@@ -539,7 +498,8 @@ def weight (q : StdIVPDataQ L N) (hpos : 0 < q.ν_q) : PosReal :=
 def toStd (q : StdIVPDataQ L N) (hpos : 0 < q.ν_q) : IVP.StdIVPData (q.weight hpos) L N :=
   q.toStdIVPData (q.weight hpos) rfl
 
-/-- Forgetful map from an existing bundle (replay of accepted certificates). -/
+/-- Forgetful map from an existing bundle: its ℚ fields and size invariant, forgetting `hν`
+(`toStdIVPData_ofStd` is the definitional round trip). -/
 def ofStd {ν : PosReal} (d : IVP.StdIVPData ν L N) : StdIVPDataQ L N :=
   ⟨d.A_col, d.DF_col, d.abar_Q, d.ν_q, d.habar_size⟩
 
@@ -702,9 +662,8 @@ theorem Z₁_sound {Z₁ : ℚ} (hDF : q.ChecksDF f_cpoly) (h : q.ChecksZ₁ f_c
 numbers `Y₀ Z₀ Z₁ Z₂ r₀`. -/
 theorem radii_sound (C : TaylorCertQ) (h : C.ChecksRadii) :
     generalRadiiPolynomial (C.Y₀ : ℝ) (C.Z₀ : ℝ) (C.Z₁ : ℝ) (fun _ => (C.Z₂ : ℝ)) (C.r₀ : ℝ)
-      < 0 := by
-  rw [generalRadiiPolynomial_ratCast]
-  exact Rat.cast_lt_zero.mpr h.2
+      < 0 :=
+  generalRadiiPolynomial_neg_of_Q_const _ _ _ _ _ h.2
 
 /-! #### The override face (the `_of_le` pattern, slot by slot) -/
 

@@ -1,4 +1,6 @@
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.Core
+import RadiiPolynomial.Algebra.Polynomial.CompPoly.Derivative
+import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Calculus
 import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.WeightedL1
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.Bounds
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Aeval
@@ -89,9 +91,8 @@ theorem norm_fderiv_evalBanach_sub_le {ν : PosReal} {L : ℕ} (p : CompPoly L)
     ‖(fderiv ℝ (fun x => p.evalBanach x) c - fderiv ℝ (fun x => p.evalBanach x) a) h‖ ≤
       p.derivativeLipschitzBound R * ‖c - a‖ * ‖h‖ := by
   rw [show (fun x : Fin L → l1Weighted ν => p.evalBanach x) =
-      fun x => evalInBanach p.toMvPoly x from funext (compPoly_evalBanach_eq_evalInBanach p),
-    fderiv_diff_evalInBanach]
-  refine (norm_sum_mul_pi_le _ _).trans (mul_le_mul_of_nonneg_right ?_ (norm_nonneg _))
+      fun x => evalInBanach p.toMvPoly x from funext (compPoly_evalBanach_eq_evalInBanach p)]
+  refine norm_fderiv_diff_evalInBanach_bilinear _ c a h ?_
   rw [derivativeLipschitzBound, Finset.sum_mul]
   refine Finset.sum_le_sum fun i _ => ?_
   rw [← pderiv_toMvPoly, ← compPoly_evalBanach_eq_evalInBanach,
@@ -110,21 +111,6 @@ theorem norm_fderiv_evalBanach_sub_le_max {ν : PosReal} {L : ℕ} (p : CompPoly
     (fun _ => le_max_right _ _) h
 
 end CompPoly
-
-/-- The pointwise interpretation of a `CompPoly` on `Fin L → ℝ` is `ContDiff ℝ ⊤`, i.e. of
-class `C^ω` (analytic), which in particular makes it smooth. -/
-theorem contDiff_evalBanach {L : ℕ} (p : CompPoly L) :
-    ContDiff ℝ ⊤ (fun x : Fin L → ℝ => p.evalBanach x) := by
-  have h : (fun x : Fin L → ℝ => p.evalBanach x) =
-           (fun x => MvPolynomial.aeval x p.toMvPoly) :=
-    funext fun x => (p.evalBanach_eq_evalAlg x).trans (p.evalAlg_eq_aeval x)
-  rw [h]
-  exact MvPolynomial.contDiff_aeval p.toMvPoly ⊤
-
-/-- Differentiability follows from smoothness. -/
-theorem differentiable_evalBanach {L : ℕ} (p : CompPoly L) :
-    Differentiable ℝ (fun x : Fin L → ℝ => p.evalBanach x) :=
-  (contDiff_evalBanach p).differentiable (by decide)
 
 /-- Banach-algebra interpretation of a computable polynomial is differentiable on
 `l1Weighted`. -/

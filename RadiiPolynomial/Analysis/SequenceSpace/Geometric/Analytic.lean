@@ -13,11 +13,9 @@ ball (`analyticOnNhd_eval`, from `hasFPowerSeriesOnBall_eval`), and the same
 coefficient estimate gives its complex counterpart `l1Weighted.complexEval` on the
 open complex disc together with a termwise derivative identity through `derivShift`.
 
-Before this module production carried only the power series centred at zero and a
-real derivative identity on `(-ν, ν)`. The coefficient carrier stays real: complex
-evaluation changes the target of the algebra homomorphism, not the coefficients or
-any certificate. The polynomial-substitution identity for `complexEval` lives with
-its consumer in `Applications/IVP/Taylor/ComplexTime.lean`.
+The coefficient carrier stays real: complex evaluation changes the target of the algebra
+homomorphism, not the coefficients or any certificate. The polynomial-substitution identity
+for `complexEval` lives with its consumer in `Applications/IVP/Taylor/ComplexTime.lean`.
 -/
 
 open scoped ENNReal NNReal Topology
@@ -75,20 +73,6 @@ theorem complexEval_eq_evalC (a : l1Weighted ν) (z : ℂ) (hz : ‖z‖ ≤ (ν
     complexEval a z = l1Weighted.evalC ν z hz a :=
   (l1Weighted.evalC_apply ν z hz a).symm
 
-private theorem summable_derivative_bound (a : l1Weighted ν) {r : ℝ}
-    (hr : 0 < r) (hrν : r < (ν : ℝ)) :
-    Summable (fun n : ℕ => |l1Weighted.toSeq a n| * (n : ℝ) * r ^ (n - 1)) := by
-  have hs := l1Omega.summable_abs_eval (derivShift a)
-    (show |r| < (ν : ℝ) by simpa only [abs_of_pos hr] using hrν)
-  have ht : Summable (fun n : ℕ =>
-      |l1Weighted.toSeq a (n + 1)| * ((n : ℝ) + 1) * r ^ n) := by
-    refine hs.congr fun n => ?_
-    rw [derivShift_apply, abs_mul, abs_of_pos (by positivity : 0 < (n : ℝ) + 1),
-      abs_of_pos hr]
-    ring
-  exact (summable_nat_add_iff 1).mp (by simpa only [Nat.cast_add, Nat.cast_one,
-    Nat.add_sub_cancel] using ht)
-
 /-- The complex derivative is synthesis of the same coefficient derivative shift. -/
 theorem hasDerivAt_complexEval (a : l1Weighted ν) {z : ℂ} (hz : ‖z‖ < (ν : ℝ)) :
     HasDerivAt (complexEval a) (complexOmegaEval (derivShift a) z) z := by
@@ -112,7 +96,7 @@ theorem hasDerivAt_complexEval (a : l1Weighted ν) {z : ℂ} (hz : ‖z‖ < (ν
     exact hasDerivAt_tsum_of_isPreconnected (𝕜 := ℂ)
       (g := fun n y => (l1Weighted.toSeq a n : ℂ) * y ^ n)
       (g' := fun n y => (l1Weighted.toSeq a n : ℂ) * (n : ℂ) * y ^ (n - 1))
-      (summable_derivative_bound a hr hrν)
+      (summable_abs_mul_pow_pred a hr.le hrν)
       Metric.isOpen_ball (convex_ball (0 : ℂ) r).isPreconnected
       (fun n y _ => by simpa only [mul_assoc] using
         (hasDerivAt_pow n y).const_mul (l1Weighted.toSeq a n : ℂ))
@@ -121,7 +105,7 @@ theorem hasDerivAt_complexEval (a : l1Weighted ν) {z : ℂ} (hz : ‖z‖ < (ν
         simpa only [Metric.mem_ball, dist_zero_right] using hzr)
   have hs : Summable (fun n : ℕ =>
       (l1Weighted.toSeq a n : ℂ) * (n : ℂ) * z ^ (n - 1)) :=
-    Summable.of_norm_bounded (summable_derivative_bound a hr hrν)
+    Summable.of_norm_bounded (summable_abs_mul_pow_pred a hr.le hrν)
       (fun n => hbound n z (by simpa only [Metric.mem_ball, dist_zero_right] using hzr))
   have heq : (∑' n : ℕ, (l1Weighted.toSeq a n : ℂ) * (n : ℂ) * z ^ (n - 1)) =
       complexOmegaEval (derivShift a) z := by

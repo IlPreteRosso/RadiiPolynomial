@@ -57,8 +57,7 @@ theorem norm_mul_geomSeries_sub_le (b e : A) {ε : ℝ} (he : ‖e‖ ≤ ε) (h
     rw [← (summable_geometric_of_norm_lt_one (he.trans_lt hε)).tsum_mul_left b,
       hs.tsum_eq_zero_add]
     simp
-  rw [ht]
-  rw [div_eq_mul_inv]
+  rw [ht, div_eq_mul_inv]
   refine tsum_of_norm_bounded
     ((hasSum_geometric_of_lt_one ((norm_nonneg _).trans he) hε).mul_left (ε * ‖b‖)) ?_
   intro n
@@ -156,22 +155,26 @@ theorem correction_identity (f b₀ : ι → A) (h : ‖residual f b₀‖ < 1) 
   convert mul_neg_geom_series (residual f b₀) h using 2
   simp [residual]
 
+/-- The corrected coefficient has norm at most `‖b₀ i‖ / (1 - ε)`. -/
 theorem norm_correction_le (f b₀ : ι → A) {ε : ℝ}
     (h : ‖residual f b₀‖ ≤ ε) (hε : ε < 1) (i : ι) :
     ‖correction f b₀ i‖ ≤ ‖b₀ i‖ / (1 - ε) :=
   norm_mul_geomSeries_le (b₀ i) (residual f b₀) h hε
 
+/-- Each corrected coefficient moves by at most `ε ‖b₀ i‖ / (1 - ε)`. -/
 theorem norm_correction_sub_le (f b₀ : ι → A) {ε : ℝ}
     (h : ‖residual f b₀‖ ≤ ε) (hε : ε < 1) (i : ι) :
     ‖correction f b₀ i - b₀ i‖ ≤ ε * ‖b₀ i‖ / (1 - ε) :=
   norm_mul_geomSeries_sub_le (b₀ i) (residual f b₀) h hε
 
+/-- Summed version of the coefficient bound `norm_correction_le`. -/
 theorem sum_norm_correction_le (f b₀ : ι → A) {ε : ℝ}
     (h : ‖residual f b₀‖ ≤ ε) (hε : ε < 1) :
     ∑ i, ‖correction f b₀ i‖ ≤ (∑ i, ‖b₀ i‖) / (1 - ε) := by
   rw [div_eq_mul_inv, Finset.sum_mul]
   exact Finset.sum_le_sum (fun i _ => norm_correction_le f b₀ h hε i)
 
+/-- Summed version of the coefficient bound `norm_correction_sub_le`. -/
 theorem sum_norm_correction_sub_le (f b₀ : ι → A) {ε : ℝ}
     (h : ‖residual f b₀‖ ≤ ε) (hε : ε < 1) :
     ∑ i, ‖correction f b₀ i - b₀ i‖ ≤ ε * (∑ i, ‖b₀ i‖) / (1 - ε) := by
@@ -188,6 +191,7 @@ theorem exists_bezout_of_residual_le (f b₀ : ι → A) {ε : ℝ}
     sum_norm_correction_le f b₀ h hε, sum_norm_correction_sub_le f b₀ h hε⟩
 
 omit [HasSummableGeomSeries A] in
+/-- The residual of a perturbed family loses the perturbation's contribution. -/
 theorem residual_add (f Δf b₀ : ι → A) :
     residual (f + Δf) b₀ = residual f b₀ - ∑ i, Δf i * b₀ i := by
   simp only [residual, Pi.add_apply, add_mul, Finset.sum_add_distrib]
@@ -212,7 +216,6 @@ theorem exists_bezout_of_perturbation (f Δf b₀ : ι → A) {ε : ℝ}
         (ε + ∑ i, ‖Δf i‖ * ‖b₀ i‖) * (∑ i, ‖b₀ i‖) /
           (1 - (ε + ∑ i, ‖Δf i‖ * ‖b₀ i‖))) :=
   exists_bezout_of_residual_le (f + Δf) b₀ (norm_residual_add_le f Δf b₀ h) hε
-
 
 omit [HasSummableGeomSeries A] in
 /-- The residual varies continuously with a finite candidate family. -/
@@ -241,6 +244,5 @@ theorem exists_bezout_iff_dense_certificate {D : Set A} (hD : Dense D) (f : ι �
     exact exists_dense_candidate_of_bezout hD f b hb zero_lt_one
   · rintro ⟨b₀, _, hr⟩
     exact ⟨correction f b₀, correction_identity f b₀ hr⟩
-
 
 end RadiiPolynomial.Residual

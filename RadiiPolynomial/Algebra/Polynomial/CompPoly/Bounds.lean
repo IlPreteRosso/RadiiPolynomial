@@ -1,4 +1,5 @@
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.Core
+import RadiiPolynomial.Analysis.Norm.FiniteSum
 
 /-!
 # Norm and Lipschitz bounds computed from polynomial syntax
@@ -229,15 +230,11 @@ section SumMul
 
 variable {A ι : Type*} [NonUnitalSeminormedRing A] [Fintype ι]
 
-/-- `‖∑ᵢ fᵢ * hᵢ‖ ≤ (∑ᵢ ‖fᵢ‖) * ‖h‖` for a sup-normed direction `h : ι → A`: triangle
-inequality, submultiplicativity, and `‖hᵢ‖ ≤ ‖h‖`. -/
+/-- `‖∑ᵢ fᵢ * hᵢ‖ ≤ (∑ᵢ ‖fᵢ‖) * ‖h‖` for a sup-normed direction `h : ι → A`; the
+consumer-compatibility face of `RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le`. -/
 theorem norm_sum_mul_pi_le (f h : ι → A) :
-    ‖∑ i, f i * h i‖ ≤ (∑ i, ‖f i‖) * ‖h‖ := by
-  refine ((norm_sum_le _ _).trans
-    (Finset.sum_le_sum fun i _ => norm_mul_le _ _)).trans ?_
-  rw [Finset.sum_mul]
-  exact Finset.sum_le_sum fun i _ =>
-    mul_le_mul_of_nonneg_left (norm_le_pi_norm h i) (norm_nonneg _)
+    ‖∑ i, f i * h i‖ ≤ (∑ i, ‖f i‖) * ‖h‖ :=
+  RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le f h
 
 end SumMul
 
@@ -325,6 +322,32 @@ theorem norm_evalBanach_sub_le_max (p : CompPoly L) (a b : Fin L → A) :
     ‖p.evalBanach a - p.evalBanach b‖ ≤
       p.lipschitzBound (fun i => max ‖a i‖ ‖b i‖) * ‖a - b‖ :=
   norm_evalBanach_sub_le p a b _ (fun _ => le_max_left _ _) (fun _ => le_max_right _ _)
+
+/-- Derivative-direction bound in sum form: for inputs in the ball `‖x i‖ ≤ R i` and a
+sup-normed direction `h`, `‖∑ i, (∂ᵢp)(x) * h i‖ ≤ derivativeBound p R * ‖h‖`.
+Geometry-free: the Chebyshev face `CompPoly.Chebyshev.norm_derivative_apply_le` follows
+from it at the symmetrized inputs. -/
+theorem norm_sum_pderiv_mul_le (p : CompPoly L) (x : Fin L → A) (R : Fin L → ℝ)
+    (hx : ∀ i, ‖x i‖ ≤ R i) (h : Fin L → A) :
+    ‖∑ i, (p.pderiv i).evalBanach x * h i‖ ≤ p.derivativeBound R * ‖h‖ :=
+  (RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le _ h).trans (mul_le_mul_of_nonneg_right
+    (Finset.sum_le_sum fun _ _ => norm_evalBanach_le _ x R hx) (norm_nonneg _))
+
+/-- Derivative-difference bound in sum form: for inputs `x`, `y` in the ball `‖· i‖ ≤ R i`
+that differ by at most `d` in every coordinate, and a sup-normed direction `h`,
+`‖∑ i, ((∂ᵢp)(x) - (∂ᵢp)(y)) * h i‖ ≤ derivativeLipschitzBound p R * d * ‖h‖`.
+Geometry-free: the Chebyshev face `CompPoly.Chebyshev.norm_derivative_sub_apply_le` follows
+from it at the symmetrized inputs. -/
+theorem norm_sum_pderiv_sub_mul_le (p : CompPoly L) (x y : Fin L → A) (R : Fin L → ℝ) (d : ℝ)
+    (hx : ∀ i, ‖x i‖ ≤ R i) (hy : ∀ i, ‖y i‖ ≤ R i) (hd : ∀ i, ‖x i - y i‖ ≤ d) (hd0 : 0 ≤ d)
+    (h : Fin L → A) :
+    ‖∑ i, ((p.pderiv i).evalBanach x - (p.pderiv i).evalBanach y) * h i‖ ≤
+      p.derivativeLipschitzBound R * d * ‖h‖ := by
+  refine (RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le _ h).trans
+    (mul_le_mul_of_nonneg_right ?_ (norm_nonneg _))
+  rw [derivativeLipschitzBound, Finset.sum_mul]
+  exact Finset.sum_le_sum fun i _ =>
+    norm_evalBanach_sub_le_of_forall_le _ x y R d hx hy hd hd0
 
 end Normed
 

@@ -19,9 +19,10 @@ Unified tactic for computing derivatives of polynomial expressions. Handles:
    (handles both `DifferentiableAt` and `ContDiffAt` side conditions).
    Includes Banach algebra bridge (`smul_id_eq_leftMul`, `leftMul_nsmul`) — type-safe,
    only fires on `l1Weighted`.
-   Includes Pi projection bridge (`fderiv_pi_apply` + `differentiable_pi_apply`) —
-   handles `fderiv ℝ (· i)` and compound expressions like `fun a => a 0 - a 1`
-   for system-level derivatives on `Fin L → l1Weighted ν`.
+   Includes the Pi projection bridge `fderiv_pi_apply` — handles `fderiv ℝ (· i)` and compound
+   expressions like `fun a => a 0 - a 1` for system-level derivatives on `Fin L → l1Weighted ν`;
+   differentiability side goals of projections close by Mathlib's `@[fun_prop]`
+   `differentiable_apply`.
 2. **Cleanup** (via `first`): the base form tries `ring_nf` (fderiv scalar), then
    `descFactorial` reduction (iteratedDeriv); the form with extra lemmas tries them in the
    reverse order. `first` backtracks on failure, so the two strategies don't interfere.
@@ -36,18 +37,11 @@ auto_poly_fderiv [extra₁, ...]     -- with additional simp lemmas
 
 /-! ## Pi-level Banach algebra bridge
 
-When `auto_poly_fderiv` differentiates `fun a => a i * a j` on a Pi type `ι → l1Weighted ν`,
-the product rule yields `a j • proj i + a i • proj j` (Mathlib canonical form).
-The existing `smul_id_eq_leftMul` only fires for `a • id`. This bridge converts
-`a • proj i → (leftMul a).comp (proj i)` so that the result uses `leftMul` uniformly. -/
-
-@[simp]
-lemma RadiiPolynomial.l1Weighted.smul_proj_eq_leftMul_comp_proj
-    {ν : PosReal} {ι : Type*} [Fintype ι] (a : RadiiPolynomial.l1Weighted ν) (i : ι) :
-    a • (ContinuousLinearMap.proj (R := ℝ) i :
-      (ι → RadiiPolynomial.l1Weighted ν) →L[ℝ] RadiiPolynomial.l1Weighted ν) =
-    (RadiiPolynomial.l1Weighted.leftMul a).comp (ContinuousLinearMap.proj i) := by
-  ext h; simp
+When `auto_poly_fderiv` differentiates `fun a => a i * a j` on `ι → l1Weighted ν`, the product
+rule yields `a j • proj i + a i • proj j` (Mathlib's canonical form). The bridge
+`RadiiPolynomial.l1Weighted.smul_proj_eq_leftMul_comp_proj` (declared beside
+`smul_id_eq_leftMul` in `Analysis/SequenceSpace/Geometric/Basic.lean`, not a simp lemma)
+converts `a • proj i` to `(leftMul a).comp (proj i)`; the macros below name it explicitly. -/
 
 -- Combined fderiv + iteratedDeriv lemma set with Banach algebra bridge.
 -- Unmatched lemmas are harmless (simp skips them).

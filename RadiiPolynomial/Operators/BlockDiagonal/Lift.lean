@@ -3,27 +3,28 @@ import RadiiPolynomial.Operators.BlockDiagonal.Basic
 /-!
 # Block-Diagonal Lift Typeclass
 
-Abstracts the bridge between a concrete system space `X` (a real normed space; no
-completeness is assumed) and the ℕ-indexed coefficient space `SystemCoeff L`, enabling
-generic construction of the composed approximate derivative CLM and Z₀ bound.
+Abstract interface for the composed approximate derivative `id - defect` on a real normed
+space `X` (no completeness is assumed): `X` carries, for every `D : SystemBlockDiagData L N`,
+a linear defect action `liftDefect D : X → X` bounded by `finiteBlockMatrixNorm ν D.finBlock`.
+From these data alone one gets the CLM `composedApproxCLM D` and its Z₀ bound.
 
-Both Taylor (`XL1 = Fin L → l1Weighted ν`) and Chebyshev (`XCheb = Fin L → l1Chebyshev ν`)
-share the same `SystemBlockDiagData` structure operating on `SystemCoeff L`. They differ only
-in how coefficients are extracted from `X` and how finite-rank results are embedded back.
+The class does not enforce a coefficient representation: nothing ties `liftDefect D` to
+`D.actionFinite`, and the zero lift (`liftDefect D x = 0`) satisfies every field. The
+coefficient meaning lives in the instances: Taylor (`XL1 = Fin L → l1Weighted ν`,
+`instBlockDiagLiftXL1`) applies `D.actionFinite` to `toCoeff x` and re-embeds the result;
+Chebyshev (`XCheb = Fin L → l1Chebyshev ν`, `instBlockDiagLiftXCheb`) does the same on the
+ℕ-coefficients of a ℤ-indexed sequence. On `XL1` the equality bridge
+`SystemBlockDiagData.composedApprox_toCLM_eq_lift` identifies the generic construction with the
+concrete `composedApprox`.
 
 ## Main definitions
 
-- `BlockDiagLift`: typeclass providing `extractCoeff` and `liftDefect`
+- `BlockDiagLift`: typeclass providing `liftDefect` with linearity and the norm bound
 - `BlockDiagLift.composedApproxCLM`: generic composed approximate derivative (id - defect)
 - `BlockDiagLift.composedApprox_Z₀`: generic Z₀ bound
 
-## Architecture
-
-The typeclass does NOT require a ring/algebra structure on `X`. It only needs:
-1. Coefficient extraction: `X → SystemCoeff L`
-2. Finite block defect lift: `SystemBlockDiagData L N → X → X` (linear, norm-bounded)
-
-The `N` parameter is NOT part of the typeclass — the same space supports any truncation level.
+The typeclass does not require a ring/algebra structure on `X`, and the truncation level `N`
+is not a class parameter: the same space supports every truncation level.
 -/
 
 open scoped Topology
@@ -35,26 +36,20 @@ namespace RadiiPolynomial
 
 variable {ν : PosReal} {L : ℕ}
 
-/-- Typeclass for real normed spaces (no completeness is assumed) that support lifting
-`SystemBlockDiagData` finite block actions via coefficient extraction and re-embedding.
+/-- A norm-bounded linear defect action of `SystemBlockDiagData L N` on a real normed space
+`X` (no completeness is assumed), for every truncation level `N`.
 
-An instance provides:
-- `extractCoeff`: project elements of `X` to ℕ-indexed `SystemCoeff L`
-- `liftDefect`: intended as `actionFinite` applied to extracted coefficients and embedded back
-  into `X`
-- Linearity and norm bound for `liftDefect`
-
-The fields impose only the linearity and the norm bound; no field relates `liftDefect` to
-`extractCoeff` or to `actionFinite`.
+The fields are the action `liftDefect`, its additivity and homogeneity, and the bound
+`‖liftDefect D x‖ ≤ finiteBlockMatrixNorm ν D.finBlock * ‖x‖`. They do not relate
+`liftDefect D` to `D.actionFinite` or to any coefficient map, and the zero action satisfies them;
+the coefficient meaning is supplied by each instance (see the module docstring).
 
 From these, generic `composedApproxCLM` and `composedApprox_Z₀` are derived. -/
 class BlockDiagLift (X : Type*) [NormedAddCommGroup X] [NormedSpace ℝ X]
     (L : ℕ) [NeZero L] (ν : PosReal) where
-  /-- Extract ℕ-indexed coefficient representation from system space element. -/
-  extractCoeff : X → SystemCoeff L
-  /-- Lift finite block action to X. Intended meaning (not imposed by the class): apply
-  `D.actionFinite` to extracted coefficients, re-embed result into X, zero on tail modes
-  (n > N). -/
+  /-- The defect action of `D` on `X`. In the Taylor and Chebyshev instances: `D.actionFinite`
+  applied to the coefficients of the argument and re-embedded into `X` (zero on tail modes
+  `n > N`); the class itself imposes only linearity and the norm bound. -/
   liftDefect : {N : ℕ} → SystemBlockDiagData L N → X → X
   /-- Additivity of lifted defect. -/
   liftDefect_add : ∀ {N : ℕ} (D : SystemBlockDiagData L N) (x y : X),
@@ -112,6 +107,15 @@ lemma composedApprox_Z₀ (D : SystemBlockDiagData L N)
     (mul_le_mul_of_nonneg_right hZ₀ (norm_nonneg x))
 
 end BlockDiagLift
+
+/-- The zero action satisfies the `BlockDiagLift` axioms: the class imposes no coefficient law. -/
+example (X : Type*) [NormedAddCommGroup X] [NormedSpace ℝ X] [NeZero L] :
+    BlockDiagLift X L ν where
+  liftDefect _ _ := 0
+  liftDefect_add _ _ _ := (add_zero 0).symm
+  liftDefect_smul _ r _ := (smul_zero r).symm
+  liftDefect_norm_le _ x := by
+    rw [norm_zero]; exact mul_nonneg (finiteBlockMatrixNorm_nonneg _) (norm_nonneg x)
 
 end RadiiPolynomial
 

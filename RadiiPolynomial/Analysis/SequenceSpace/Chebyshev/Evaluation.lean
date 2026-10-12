@@ -78,7 +78,7 @@ theorem IsSymmetric.smul (r : ℝ) {f : l1Chebyshev ν} (hf : f.IsSymmetric) :
 lemma toSeq_one (k : ℤ) : toSeq (1 : l1Chebyshev ν) k = if k = 0 then 1 else 0 := by
   show lpOneAlg.toRealSeq 1 k = _
   rw [lpOneAlg.toRealSeq_one_fun]
-  simp [DiscreteConvolution.addDelta, Pi.single_apply]
+  simp [RadiiPolynomial.DiscreteConvolution.addDelta, Pi.single_apply]
 
 theorem isSymmetric_one : (1 : l1Chebyshev ν).IsSymmetric := fun k => by
   show toSeq 1 (-k) = toSeq 1 k
@@ -140,16 +140,29 @@ section Analytic
 
 variable [Fact (1 ≤ (ν : ℝ))]
 
-private lemma norm_term_le (a : l1Chebyshev ν) {t : ℝ} (ht : |t| ≤ 1) (k : ℕ) :
-    ‖toSeq a ((k + 1 : ℕ) : ℤ) * (T ℝ ((k + 1 : ℕ) : ℤ)).eval t‖ ≤ ‖a ((k + 1 : ℕ) : ℤ)‖ := by
+/-- A nonnegative mode against a factor `|g| ≤ 1`: `‖a_m g‖ ≤ ‖a_m‖` (from `1 ≤ ν^m`). -/
+theorem norm_toSeq_mul_le (c : l1Chebyshev ν) {g : ℝ} (hg : |g| ≤ 1) (m : ℕ) :
+    ‖toSeq c (m : ℤ) * g‖ ≤ ‖c (m : ℤ)‖ := by
   rw [norm_fiber_natCast, Real.norm_eq_abs, abs_mul]
-  exact mul_le_mul le_rfl ((abs_eval_T_real_le_one _ ht).trans (one_le_pow₀ Fact.out))
-    (abs_nonneg _) (abs_nonneg _)
+  exact mul_le_mul le_rfl (hg.trans (one_le_pow₀ Fact.out)) (abs_nonneg _) (abs_nonneg _)
+
+/-- Any series `∑ₖ a_{k+s} gₖ` with `|gₖ| ≤ 1` converges absolutely. -/
+theorem summable_toSeq_mul_of_abs_le_one (c : l1Chebyshev ν) (g : ℕ → ℝ)
+    (hg : ∀ k, |g k| ≤ 1) (s : ℕ) :
+    Summable (fun k : ℕ => toSeq c ((k + s : ℕ) : ℤ) * g k) :=
+  Summable.of_norm_bounded
+    ((summable_norm_natCast c).comp_injective (add_left_injective s))
+    (fun k => norm_toSeq_mul_le c (hg k) (k + s))
+
+private lemma norm_term_le (a : l1Chebyshev ν) {t : ℝ} (ht : |t| ≤ 1) (k : ℕ) :
+    ‖toSeq a ((k + 1 : ℕ) : ℤ) * (T ℝ ((k + 1 : ℕ) : ℤ)).eval t‖ ≤ ‖a ((k + 1 : ℕ) : ℤ)‖ :=
+  norm_toSeq_mul_le a (abs_eval_T_real_le_one _ ht) (k + 1)
 
 /-- The T-series converges absolutely on `|t| ≤ 1`: `|T_k(t)| ≤ 1 ≤ ν^k`. -/
 theorem summable_eval (a : l1Chebyshev ν) {t : ℝ} (ht : |t| ≤ 1) :
     Summable (fun k : ℕ => toSeq a ((k + 1 : ℕ) : ℤ) * (T ℝ ((k + 1 : ℕ) : ℤ)).eval t) :=
-  Summable.of_norm_bounded (summable_norm_succ a) (norm_term_le a ht)
+  summable_toSeq_mul_of_abs_le_one a (fun k => (T ℝ ((k + 1 : ℕ) : ℤ)).eval t)
+    (fun _ => abs_eval_T_real_le_one _ ht) 1
 
 lemma eval_add (a b : l1Chebyshev ν) {t : ℝ} (ht : |t| ≤ 1) :
     eval (a + b) t = eval a t + eval b t := by
@@ -169,8 +182,6 @@ theorem continuousOn_eval (a : l1Chebyshev ν) :
   exact continuousOn_tsum (fun k => continuousOn_const.mul (Polynomial.continuousOn _))
     (summable_norm_succ a) (fun k t ht => norm_term_le a (abs_le.mpr ht) k)
 
-/-! ### The evaluation bound (the Chebyshev Prop. 8.1.3 the book does not state) -/
-
 end Analytic
 
 /-- `‖symmetrize a‖ = |a₀| + 2 ∑_{k ≥ 1} |a_k| ν^k`: the bilateral norm of the
@@ -180,13 +191,8 @@ theorem norm_symmetrize_eq (a : l1Chebyshev ν) :
       + 2 * ∑' k : ℕ, |toSeq a ((k + 1 : ℕ) : ℤ)| * (ν : ℝ) ^ (k + 1) := by
   have hfib : ∀ k : ℤ, ‖(symmetrize a) k‖ = |toSeq a (k.natAbs : ℤ)| * (ν : ℝ) ^ k.natAbs :=
     fun k => by rw [norm_fiber, symmetrize_toSeq]
-  have hs1 : Summable (fun n : ℕ => ‖(symmetrize a) (n : ℤ)‖) :=
-    summable_norm_natCast (symmetrize a)
-  have hs2 : Summable (fun n : ℕ => ‖(symmetrize a) (-((n : ℤ) + 1))‖) :=
-    (lpOneAlg.summable_norm (symmetrize a)).comp_injective (fun n m h => by omega)
-  rw [lpOneAlg.norm_eq_tsum,
-    tsum_of_nat_of_neg_add_one (f := fun k : ℤ => ‖(symmetrize a) k‖) hs1 hs2,
-    hs1.tsum_eq_zero_add]
+  rw [lpOneAlg.norm_eq_tsum_natCast_add_tsum_neg,
+    (summable_norm_natCast (symmetrize a)).tsum_eq_zero_add]
   have h0 : ‖(symmetrize a) ((0 : ℕ) : ℤ)‖ = |toSeq a 0| := by rw [hfib]; simp
   have hp : ∀ n : ℕ, ‖(symmetrize a) ((n + 1 : ℕ) : ℤ)‖
       = |toSeq a ((n + 1 : ℕ) : ℤ)| * (ν : ℝ) ^ (n + 1) :=
@@ -200,19 +206,16 @@ section Analytic
 
 variable [Fact (1 ≤ (ν : ℝ))]
 
+/-! ### The evaluation bound (the Chebyshev Prop. 8.1.3 the book does not state) -/
+
 /-- For an element stored on the modes `k ≥ 0` only, `‖a‖ ≤ ‖symmetrize a‖`: the
 `|k|`-fold doubles every positive mode and drops nothing. (Certificates store their
 candidates this way, so their symmetrized norm bounds also bound the stored norm.) -/
 theorem norm_le_norm_symmetrize_of_neg_eq_zero (a : l1Chebyshev ν)
     (h : ∀ n : ℕ, toSeq a (-((n : ℤ) + 1)) = 0) : ‖a‖ ≤ ‖symmetrize a‖ := by
-  have hs1 : Summable (fun n : ℕ => ‖a (n : ℤ)‖) := summable_norm_natCast a
-  have hs2 : Summable (fun n : ℕ => ‖a (-((n : ℤ) + 1))‖) :=
-    (lpOneAlg.summable_norm a).comp_injective (fun n m h => by omega)
-  have hneg : ∀ n : ℕ, ‖a (-((n : ℤ) + 1))‖ = 0 := fun n => by
-    rw [norm_fiber, h n, abs_zero, zero_mul]
-  rw [norm_symmetrize_eq, lpOneAlg.norm_eq_tsum,
-    tsum_of_nat_of_neg_add_one (f := fun k : ℤ => ‖a k‖) hs1 hs2,
-    tsum_congr hneg, tsum_zero, add_zero, hs1.tsum_eq_zero_add]
+  rw [norm_symmetrize_eq, lpOneAlg.norm_eq_tsum_natCast_of_neg a fun n => by
+      rw [← norm_eq_zero, norm_fiber, h n, abs_zero, zero_mul],
+    (summable_norm_natCast a).tsum_eq_zero_add]
   have h0 : ‖a ((0 : ℕ) : ℤ)‖ = |toSeq a 0| := by rw [norm_fiber_natCast]; simp
   have hp : ∀ n : ℕ, ‖a ((n + 1 : ℕ) : ℤ)‖
       = |toSeq a ((n + 1 : ℕ) : ℤ)| * (ν : ℝ) ^ (n + 1) :=
@@ -245,6 +248,29 @@ theorem abs_eval_le_norm_symmetrize (a : l1Chebyshev ν) {t : ℝ} (ht : |t| ≤
 theorem abs_eval_le_two_mul_norm (a : l1Chebyshev ν) {t : ℝ} (ht : |t| ≤ 1) :
     |eval a t| ≤ 2 * ‖a‖ :=
   (abs_eval_le_norm_symmetrize a ht).trans (symmetrize_norm_le a)
+
+/-- **Evaluation at `t ∈ [-1, 1]` as a continuous linear functional** on the storage carrier,
+`a ↦ u_a(t)`, with `‖evalAtCLM t ht‖ ≤ 2` (`norm_evalAtCLM_le`). Linear and unital, not
+multiplicative on bilateral storage; `symmetricEvalCharacter` is the multiplicative face on the
+physical algebra. (Not `evalCLM`, which would shadow the coordinate functional
+`lpOneAlg.evalCLM`.) -/
+def evalAtCLM (t : ℝ) (ht : |t| ≤ 1) : l1Chebyshev ν →L[ℝ] ℝ :=
+  LinearMap.mkContinuous
+    { toFun := fun a => eval a t
+      map_add' := fun a b => eval_add a b ht
+      map_smul' := fun r a => by
+        simpa only [RingHom.id_apply, smul_eq_mul] using eval_smul r a t }
+    2 (fun a => by
+      change |eval a t| ≤ 2 * ‖a‖
+      exact abs_eval_le_two_mul_norm a ht)
+
+@[simp] theorem evalAtCLM_apply (t : ℝ) (ht : |t| ≤ 1) (a : l1Chebyshev ν) :
+    evalAtCLM t ht a = eval a t :=
+  rfl
+
+theorem norm_evalAtCLM_le (t : ℝ) (ht : |t| ≤ 1) :
+    ‖(evalAtCLM t ht : l1Chebyshev ν →L[ℝ] ℝ)‖ ≤ 2 :=
+  LinearMap.mkContinuous_norm_le _ zero_le_two _
 
 /-- On symmetric elements the bound is contractive: `|u_a(t)| ≤ ‖a‖`. -/
 theorem abs_eval_le_norm_of_isSymmetric (a : l1Chebyshev ν) (ha : a.IsSymmetric) {t : ℝ}

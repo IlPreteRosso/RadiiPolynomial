@@ -29,8 +29,6 @@ is the Laurent variable; `U R` is the Rees algebra `∑ₙ Xⁿ Fₙ` of the inc
 
 Generic Laurent lemmas: `coeff_single_eq` (any semiring) and `dvd_coeff_mul` (divisibility
 propagation through the Laurent product, any commutative semiring and any `x`).
-
-Promoted from the S028a/slice-20 sources by unit L003-ReesLaurent (see `RENAMES.md`).
 -/
 
 noncomputable section

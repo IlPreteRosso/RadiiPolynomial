@@ -1,47 +1,43 @@
-import Mathlib.Topology.Algebra.InfiniteSum.Basic
-import Mathlib.Algebra.Module.LinearMap.Basic
-import Mathlib.Algebra.Algebra.Bilinear
-import Mathlib.Algebra.Order.Antidiag.Prod
-import Mathlib.Data.Set.MulAntidiagonal
+import Mathlib.Topology.Algebra.InfiniteSum.DiscreteConvolution
 
 /-!
-# Minimal Discrete Convolution API
+# Discrete convolution over monoids
 
-This file keeps discrete-convolution pieces currently used by
-`source.lpSpace.CauchyProduct`:
+The discrete convolution of functions on a monoid `M` is provided by Mathlib's
+`Mathlib.Topology.Algebra.InfiniteSum.DiscreteConvolution`. The value of `f ⋆[L] g` at `x` is
+the unconditional sum of `L (f a) (g b)` over the multiplication fiber
+`DiscreteConvolution.mulFiber x = {(a, b) | a * b = x}`, and the ring convolution `f ⋆ᵣ g`
+combines the values by multiplication. The additive-index versions `addFiber`, `⋆₊[L]` and `⋆ᵣ₊`
+sum over the fibers of addition. This file imports that module and adds one construction that
+needs inverses in the index.
 
-- `convolution` / `addConvolution`
-- `ringConvolution` / `addRingConvolution`
-- `convolution_eq_sum_finset_mulAntidiagonal` / `addConvolution_eq_sum_finset_antidiagonal`
+## Main definitions
 
-The multiplicative versions are primary; additive versions are generated via `@[to_additive]`.
+* `RadiiPolynomial.DiscreteConvolution.mulFiberEquiv x`: for a group `M`, the fiber
+  `mulFiber x` is parametrized by its second coordinate, `i ↦ (x / i, i)`.
+* `RadiiPolynomial.DiscreteConvolution.addFiberEquiv x`: for an additive group, the fiber
+  `addFiber x` is parametrized by `i ↦ (x - i, i)`.
+
+## Implementation notes
+
+The library's extensions of the convolution API live in the namespace
+`RadiiPolynomial.DiscreteConvolution`, apart from Mathlib's namespace `DiscreteConvolution`.
+The few Mathlib names used below are opened by name, outside any namespace; they resolve to the
+Mathlib constants because no declaration under `RadiiPolynomial` carries these short names.
 -/
 
-open scoped BigOperators
+open DiscreteConvolution (mulFiber mem_mulFiber)
 
-noncomputable section
+namespace RadiiPolynomial.DiscreteConvolution
 
-namespace DiscreteConvolution
+variable {M : Type*}
 
-variable {M S E E' F R : Type*}
+/-! ### Fibers over a group index -/
 
-/-- The fiber of multiplication at `x`: all pairs `(a, b)` with `a * b = x`.
-This is `Set.mulAntidiagonal Set.univ Set.univ x`. -/
-@[to_additive /-- The fiber of addition at `x`: all pairs `(a, b)` with `a + b = x`.
-This is `Set.addAntidiagonal Set.univ Set.univ x`. -/]
-def mulFiber [Monoid M] (x : M) : Set (M × M) :=
-  Set.mulAntidiagonal Set.univ Set.univ x
-
-/-- Membership characterization for `mulFiber`. -/
-@[to_additive (attr := simp) /-- Membership characterization for `addFiber`. -/]
-lemma mem_mulFiber [Monoid M] {x : M} {ab : M × M} :
-    ab ∈ mulFiber x ↔ ab.1 * ab.2 = x := by
-  unfold mulFiber; simp only [Set.mem_mulAntidiagonal, Set.mem_univ, true_and]
-
-/-- For a group index, the fiber of multiplication at `x` is parameterized by its
-second coordinate: `i ↦ (x / i, i)`. -/
-@[to_additive /-- For an additive group index, the fiber of addition at `x` is
-parameterized by its second coordinate: `i ↦ (x - i, i)`. -/]
+/-- For a group index, the fiber of multiplication at `x` is parametrized by its second
+coordinate: `i ↦ (x / i, i)`. -/
+@[to_additive /-- For an additive group index, the fiber of addition at `x` is parametrized by
+its second coordinate: `i ↦ (x - i, i)`. -/]
 def mulFiberEquiv [Group M] (x : M) : M ≃ mulFiber x where
   toFun i := ⟨(x / i, i), mem_mulFiber.mpr (div_mul_cancel x i)⟩
   invFun p := p.1.2
@@ -50,64 +46,4 @@ def mulFiberEquiv [Group M] (x : M) : M ≃ mulFiber x where
     Subtype.ext (show (x / b, b) = (a, b) by
       rw [div_eq_iff_eq_mul.mpr (mem_mulFiber.mp hab).symm])
 
-/-- The discrete convolution of `f` and `g` using bilinear map `L`:
-`(f ⋆[L] g) x = ∑' (a, b) : mulFiber x, L (f a) (g b)`. -/
-@[to_additive (dont_translate := S E E' F) addConvolution
-  /-- Additive convolution: `(f ⋆₊[L] g) x = ∑' ab : addFiber x, L (f ab.1) (g ab.2)`. -/]
-def convolution [Monoid M] [CommSemiring S]
-    [AddCommMonoid E] [AddCommMonoid E'] [AddCommMonoid F]
-    [Module S E] [Module S E'] [Module S F] [TopologicalSpace F]
-    (L : E →ₗ[S] E' →ₗ[S] F) (f : M → E) (g : M → E') : M → F :=
-  fun x => ∑' ab : mulFiber x, L (f ab.1.1) (g ab.1.2)
-
-/-- Notation for discrete convolution with explicit bilinear map. -/
-scoped notation:67 f:68 " ⋆[" L "] " g:67 => convolution L f g
-
-/-- Notation for additive convolution. -/
-scoped notation:67 f:68 " ⋆₊[" L "] " g:67 => addConvolution L f g
-
-/-- Convolution using ring multiplication. This is `convolution (LinearMap.mul ℕ R)`. -/
-@[to_additive (dont_translate := R) addRingConvolution
-  /-- Additive convolution using ring multiplication. -/]
-def ringConvolution [Monoid M] [Semiring R] [TopologicalSpace R]
-    (f g : M → R) : M → R := convolution (LinearMap.mul ℕ R) f g
-
-/-- Notation for ring multiplication convolution. -/
-scoped notation:67 f:68 " ⋆ᵣ " g:67 => ringConvolution f g
-
-/-- Notation for additive ring convolution. -/
-scoped notation:67 f:68 " ⋆ᵣ₊ " g:67 => addRingConvolution f g
-
-section AntidiagonalBridge
-
-variable [Monoid M] [Finset.HasMulAntidiagonal M]
-variable [CommSemiring S] [AddCommMonoid E] [Module S E]
-
-/-- For types with `HasMulAntidiagonal`, the multiplicative fiber equals the mulAntidiagonal. -/
-@[to_additive
-  /-- For types with `HasAntidiagonal`, the additive fiber equals the antidiagonal. -/]
-private lemma mulFiber_eq_finset_mulAntidiagonal (x : M) :
-    mulFiber x = ↑(Finset.mulAntidiagonal x) := by
-  ext ⟨a, b⟩
-  simp only [Finset.mem_coe, Finset.mem_mulAntidiagonal, mem_mulFiber]
-
-variable [AddCommMonoid E'] [Module S E'] [AddCommMonoid F] [Module S F]
-variable [TopologicalSpace F]
-
-/-- For `HasMulAntidiagonal` types, convolution equals a finite sum over the mulAntidiagonal. -/
-@[to_additive (dont_translate := S) addConvolution_eq_sum_finset_antidiagonal
-  /-- For `HasAntidiagonal` types, additive convolution equals a finite sum
-  over the antidiagonal. -/]
-lemma convolution_eq_sum_finset_mulAntidiagonal
-    (L : E →ₗ[S] E' →ₗ[S] F) (f : M → E) (g : M → E') (x : M) :
-    (f ⋆[L] g) x = ∑ ab ∈ Finset.mulAntidiagonal x, L (f ab.1) (g ab.2) := by
-  simp only [convolution]
-  rw [← (Finset.mulAntidiagonal x).tsum_subtype fun ab => L (f ab.1) (g ab.2)]
-  exact (Set.equivOfEq (mulFiber_eq_finset_mulAntidiagonal x)).tsum_eq
-    (fun ab => (L (f ab.1.1)) (g ab.1.2))
-
-end AntidiagonalBridge
-
-end DiscreteConvolution
-
-end
+end RadiiPolynomial.DiscreteConvolution

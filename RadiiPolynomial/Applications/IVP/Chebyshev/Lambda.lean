@@ -1,4 +1,5 @@
 import RadiiPolynomial.Applications.IVP.Chebyshev.Standard
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Diagonal
 
 /-!
 # Λ-decomposition of the composed Chebyshev IVP map
@@ -14,8 +15,10 @@ import RadiiPolynomial.Applications.IVP.Chebyshev.Standard
   on modes `> N`.
 
 `TA` and `TC` are CLMs (`constG p` is a constant vector). Crude norm constants
-suffice for differentiability; `TCtail` is built with the constant `ν/2 + 1/(2ν)`
-from `chebyshevShiftDiv_norm_le'`.
+suffice for differentiability of `TA` and `TCblock`. `TCtail` is the composite of bundled
+maps, the tail projection `lpOneAlg.tailProj` after `chebyshevShiftDiv_CLM`; its
+componentwise bounds are `TCtailElem_norm_le` (`ν/2 + 1/(2ν)`, from
+`chebyshevShiftDiv_norm_le'`) and the sharp `TCtailElem_norm_le_tail` (`ν/(N+1)`).
 
 The equation-generic rows (`FAseq`, `FCseq`, `constFseq`) and the tail
 operator `TCtail` live at the `ChebyshevIVP` level; everything that needs the
@@ -23,8 +26,8 @@ numerical data lives in the `StdChebIVPData` namespace, parameterized by
 `d : StdChebIVPData ν L N`.
 
 Outputs: `StdChebIVPData.hasFDerivAt_G`, `StdChebIVPData.differentiable_G`,
-`StdChebIVPData.fderiv_G` (+ the pointwise `toSeq` bridges used by Z₁/Z₂
-obligations at the example level).
+`StdChebIVPData.fderiv_G` (+ the pointwise `toSeq` bridges used by the Z₁/Z₂ faces of
+Certification/IVP/Chebyshev.lean).
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -46,6 +49,14 @@ def FAseq (v : l1Chebyshev ν) : ℕ → ℝ
   | 0 => -(l1Chebyshev.toSeq v 0) -
       2 * ∑' n : ℕ, (-1 : ℝ) ^ (n + 1) * l1Chebyshev.toSeq v (↑(n + 1) : ℤ)
   | (k + 1) => 2 * ((k : ℝ) + 1) * l1Chebyshev.toSeq v (↑(k + 1) : ℤ)
+
+omit [Fact (1 ≤ (ν : ℝ))] in
+/-- Row 0 of the linear-in-`a` rows is minus the endpoint evaluation `u_v(-1)` (book (14.2)). -/
+theorem FAseq_zero_eq_eval (v : l1Chebyshev ν) : FAseq v 0 = -l1Chebyshev.eval v (-1) := by
+  rw [l1Chebyshev.eval_at_neg_one]
+  simp only [FAseq]
+  rw [tsum_congr fun k => mul_comm _ _]
+  ring
 
 /-- The linear-in-`c` rows of F: row 0 is zero, row k+1 is `c_{k+2} − c_k`. -/
 def FCseq (c : l1Chebyshev ν) : ℕ → ℝ
@@ -76,15 +87,8 @@ lemma FAseq_add (v w : l1Chebyshev ν) (n : ℕ) :
     FAseq (v + w) n = FAseq v n + FAseq w n := by
   cases n with
   | zero =>
-    have hv := summable_alternating_toSeq v
-    have hw := summable_alternating_toSeq w
-    simp only [FAseq, l1Chebyshev.toSeq_add]
-    rw [show ∑' n : ℕ, (-1 : ℝ) ^ (n + 1) *
-          (l1Chebyshev.toSeq v (↑(n + 1) : ℤ) + l1Chebyshev.toSeq w (↑(n + 1) : ℤ))
-        = ∑' n : ℕ, ((-1 : ℝ) ^ (n + 1) * l1Chebyshev.toSeq v (↑(n + 1) : ℤ)
-          + (-1 : ℝ) ^ (n + 1) * l1Chebyshev.toSeq w (↑(n + 1) : ℤ)) from
-      tsum_congr fun n => by ring]
-    rw [hv.tsum_add hw]
+    rw [FAseq_zero_eq_eval, FAseq_zero_eq_eval, FAseq_zero_eq_eval,
+      l1Chebyshev.eval_add v w (by norm_num)]
     ring
   | succ k =>
     simp only [FAseq, l1Chebyshev.toSeq_add]
@@ -93,13 +97,7 @@ lemma FAseq_add (v w : l1Chebyshev ν) (n : ℕ) :
 lemma FAseq_smul (r : ℝ) (v : l1Chebyshev ν) (n : ℕ) :
     FAseq (r • v) n = r * FAseq v n := by
   cases n with
-  | zero =>
-    simp only [FAseq, l1Chebyshev.toSeq_smul]
-    rw [show ∑' n : ℕ, (-1 : ℝ) ^ (n + 1) * (r * l1Chebyshev.toSeq v (↑(n + 1) : ℤ))
-        = ∑' n : ℕ, r * ((-1 : ℝ) ^ (n + 1) * l1Chebyshev.toSeq v (↑(n + 1) : ℤ)) from
-      tsum_congr fun n => by ring]
-    rw [tsum_mul_left]
-    ring
+  | zero => rw [FAseq_zero_eq_eval, FAseq_zero_eq_eval, l1Chebyshev.eval_smul]; ring
   | succ k =>
     simp only [FAseq, l1Chebyshev.toSeq_smul]
     ring
@@ -127,58 +125,15 @@ lemma abs_toSeq_le_norm (v : l1Chebyshev ν) (k : ℤ) :
   rw [l1Chebyshev.norm_fiber]
   exact le_mul_of_one_le_right (abs_nonneg _) (one_le_pow_nu _)
 
-private lemma summable_abs_shift (v : l1Chebyshev ν) :
-    Summable (fun n : ℕ => |l1Chebyshev.toSeq v (↑(n + 1) : ℤ)|) := by
-  have h1 : Summable (fun n : ℕ => ‖v ((↑(n + 1) : ℤ))‖) :=
-    (lpOneAlg.summable_norm v).comp_injective fun n m h => by simpa using h
-  refine Summable.of_nonneg_of_le (fun _ => abs_nonneg _) (fun n => ?_) h1
-  rw [l1Chebyshev.norm_fiber]
-  exact le_mul_of_one_le_right (abs_nonneg _) (one_le_pow_nu _)
-
-lemma tsum_abs_shift_le_norm (v : l1Chebyshev ν) :
-    ∑' n : ℕ, |l1Chebyshev.toSeq v (↑(n + 1) : ℤ)| ≤ ‖v‖ := by
-  have h1 : Summable (fun n : ℕ => ‖v ((↑(n + 1) : ℤ))‖) :=
-    (lpOneAlg.summable_norm v).comp_injective fun n m h => by simpa using h
-  have hsummand : ∀ n : ℕ, |l1Chebyshev.toSeq v (↑(n + 1) : ℤ)| ≤ ‖v ((↑(n + 1) : ℤ))‖ := by
-    intro n
-    rw [l1Chebyshev.norm_fiber]
-    exact le_mul_of_one_le_right (abs_nonneg _) (one_le_pow_nu _)
-  refine (Summable.tsum_le_tsum hsummand (summable_abs_shift v) h1).trans ?_
-  rw [lpOneAlg.norm_eq_tsum]
-  exact tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm v)
-    (fun _ => norm_nonneg _) fun n m h => by simpa using h
-
 lemma FAseq_abs_le (v : l1Chebyshev ν) (k : ℕ) (hk : k ≤ N) :
     |FAseq v k| ≤ (2 * (N : ℝ) + 3) * ‖v‖ := by
   have hnn : (0 : ℝ) ≤ ‖v‖ := norm_nonneg v
   have hNn : (0 : ℝ) ≤ (N : ℝ) := Nat.cast_nonneg N
   cases k with
   | zero =>
-    have h0 : |l1Chebyshev.toSeq v 0| ≤ ‖v‖ := abs_toSeq_le_norm v 0
-    have habs : Summable (fun n : ℕ =>
-        ‖(-1 : ℝ) ^ (n + 1) * l1Chebyshev.toSeq v (↑(n + 1) : ℤ)‖) := by
-      refine (summable_abs_shift v).congr fun n => ?_
-      simp [Real.norm_eq_abs]
-    have htsum : |∑' n : ℕ, (-1 : ℝ) ^ (n + 1) * l1Chebyshev.toSeq v (↑(n + 1) : ℤ)|
-        ≤ ‖v‖ := by
-      refine le_trans ?_ (tsum_abs_shift_le_norm v)
-      rw [show ∑' n : ℕ, |l1Chebyshev.toSeq v (↑(n + 1) : ℤ)|
-          = ∑' n : ℕ, ‖(-1 : ℝ) ^ (n + 1) * l1Chebyshev.toSeq v (↑(n + 1) : ℤ)‖ from
-        tsum_congr fun n => by simp [Real.norm_eq_abs]]
-      exact norm_tsum_le_tsum_norm habs
-    have hval : FAseq v 0 = -(l1Chebyshev.toSeq v 0) -
-        2 * ∑' n : ℕ, (-1 : ℝ) ^ (n + 1) * l1Chebyshev.toSeq v (↑(n + 1) : ℤ) := rfl
-    rw [hval]
-    set T := ∑' n : ℕ, (-1 : ℝ) ^ (n + 1) * l1Chebyshev.toSeq v (↑(n + 1) : ℤ)
-    have htri : |(-(l1Chebyshev.toSeq v 0)) - 2 * T|
-        ≤ |l1Chebyshev.toSeq v 0| + 2 * |T| := by
-      have h := abs_add_le (-(l1Chebyshev.toSeq v 0)) (-(2 * T))
-      rw [abs_neg, abs_neg, abs_mul] at h
-      have h2 : |(2 : ℝ)| = 2 := by norm_num
-      rw [h2] at h
-      rw [sub_eq_add_neg]
-      exact h
-    nlinarith [h0, htsum, htri, abs_nonneg T]
+    rw [FAseq_zero_eq_eval, abs_neg]
+    refine (l1Chebyshev.abs_eval_le_two_mul_norm v (by norm_num)).trans ?_
+    nlinarith
   | succ m =>
     have hval : FAseq v (m + 1)
         = 2 * ((m : ℝ) + 1) * l1Chebyshev.toSeq v (↑(m + 1) : ℤ) := rfl
@@ -214,139 +169,86 @@ end Rows
 /-! ## TCtail — the Chebyshev integration tail
 
 Needs only `(ν, N)`, not the numerical data bundle: on tail modes `> N` the
-preconditioned `c`-part is exactly the `chebyshevShiftDiv` fiber. The cutoff
-`N` is an explicit argument (it is not determined by the types). -/
+preconditioned `c`-part is exactly the `chebyshevShiftDiv` fiber. Componentwise it is
+the tail projection `lpOneAlg.tailProj (Icc 0 N)` (which kills the modes `0..N`) after
+`chebyshevShiftDiv`. The cutoff `N` is an explicit argument (it is not determined by the
+types). -/
 
 section TCtail
 
 variable {ν : PosReal} {L : ℕ} (N : ℕ) [Fact (1 ≤ (ν : ℝ))]
 
-/-- Raw ℤ-sequence of `TCtail`: the `chebyshevShiftDiv` fibers on modes `> N`,
-zero elsewhere. -/
-def TCtailSeq (v : l1Chebyshev ν) : ∀ k : ℤ, ScaledRealZ ν k :=
-  fun k => match k with
-  | (n : ℕ) => if N < n then chebyshevShiftDiv v (↑n : ℤ) else 0
-  | (Int.negSucc _) => 0
-
-private lemma TCtailSeq_le (v : l1Chebyshev ν) (k : ℤ) :
-    ‖TCtailSeq N v k‖ ≤ ‖chebyshevShiftDiv v k‖ := by
-  cases k with
-  | ofNat n =>
-    show ‖if N < n then chebyshevShiftDiv v (↑n : ℤ) else 0‖ ≤ _
-    split
-    · exact le_refl _
-    · rw [norm_zero]; exact norm_nonneg _
-  | negSucc m =>
-    show ‖(0 : ScaledRealZ ν _)‖ ≤ _
-    rw [norm_zero]; exact norm_nonneg _
-
-private lemma TCtail_memℓp (v : l1Chebyshev ν) : Memℓp (TCtailSeq N v) 1 := by
-  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
-  simp only [ENNReal.toReal_one, Real.rpow_one]
-  exact Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (TCtailSeq_le N v)
-    (lpOneAlg.summable_norm (chebyshevShiftDiv v))
-
-/-- One component of the tail operator. -/
+/-- One component of the tail operator: the `chebyshevShiftDiv` fibers on modes `> N`, zero
+elsewhere (the tail projection after `chebyshevShiftDiv`, which already vanishes on the modes
+`≤ 0`). -/
 def TCtailElem (v : l1Chebyshev ν) : l1Chebyshev ν :=
-  ⟨⟨TCtailSeq N v, TCtail_memℓp N v⟩⟩
+  lpOneAlg.tailProj (𝕜 := ℝ) (Finset.Icc 0 (N : ℤ)) (chebyshevShiftDiv v)
 
 lemma TCtailElem_toSeq_nat (v : l1Chebyshev ν) (n : ℕ) :
     l1Chebyshev.toSeq (TCtailElem N v) (↑n : ℤ)
       = if N < n then l1Chebyshev.toSeq (chebyshevShiftDiv v) (↑n : ℤ) else 0 := by
-  show lpAlgRingData.toReal (↑n : ℤ) (TCtailSeq N v (↑n : ℤ)) = _
-  show lpAlgRingData.toReal (↑n : ℤ)
-    (if N < n then chebyshevShiftDiv v (↑n : ℤ) else 0) = _
-  split
-  · rfl
-  · exact lpAlgRingData.toReal_zero _
+  show lpOneAlg.toRealSeq (TCtailElem N v) (↑n : ℤ) = _
+  rw [TCtailElem, lpOneAlg.toRealSeq_tailProj]
+  by_cases h : N < n
+  · rw [ite_eq_right (by simp only [Finset.mem_Icc]; omega), ite_eq_left h]; rfl
+  · rw [ite_eq_left (by simp only [Finset.mem_Icc]; omega), ite_eq_right h]
 
 lemma TCtailElem_toSeq_neg (v : l1Chebyshev ν) (m : ℕ) :
     l1Chebyshev.toSeq (TCtailElem N v) (Int.negSucc m) = 0 := by
-  show lpAlgRingData.toReal _ (TCtailSeq N v (Int.negSucc m)) = _
-  exact lpAlgRingData.toReal_zero _
+  show lpOneAlg.toRealSeq (TCtailElem N v) (Int.negSucc m) = 0
+  rw [TCtailElem, lpOneAlg.toRealSeq_tailProj, ite_eq_right (by simp only [Finset.mem_Icc]; omega)]
+  exact chebyshevShiftDiv_toSeq_negSucc v m
 
-/-- Norm bound `(ν/2 + 1/(2ν)) ‖v‖` for the tail component, from
-`chebyshevShiftDiv_norm_le'`. -/
+/-- Norm bound `(ν/2 + 1/(2ν)) ‖v‖` for the tail component: the tail projection is a
+contraction, then `chebyshevShiftDiv_norm_le'`. -/
 lemma TCtailElem_norm_le (v : l1Chebyshev ν) :
-    ‖TCtailElem N v‖ ≤ ((ν : ℝ) / 2 + 1 / (2 * (ν : ℝ))) * ‖v‖ := by
-  refine le_trans ?_ (chebyshevShiftDiv_norm_le' v)
-  rw [lpOneAlg.norm_eq_tsum, lpOneAlg.norm_eq_tsum]
-  exact Summable.tsum_le_tsum (TCtailSeq_le N v)
-    (lpOneAlg.summable_norm (TCtailElem N v))
-    (lpOneAlg.summable_norm (chebyshevShiftDiv v))
+    ‖TCtailElem N v‖ ≤ ((ν : ℝ) / 2 + 1 / (2 * (ν : ℝ))) * ‖v‖ :=
+  (lpOneAlg.norm_tailProj_apply_le (𝕜 := ℝ) _ _).trans (chebyshevShiftDiv_norm_le' v)
 
-private lemma TCtailElem_add (v w : l1Chebyshev ν) :
-    TCtailElem N (v + w) = TCtailElem N v + TCtailElem N w := by
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  rw [show lpOneAlg.toRealSeq (TCtailElem N v + TCtailElem N w) k
-      = lpOneAlg.toRealSeq (TCtailElem N v) k + lpOneAlg.toRealSeq (TCtailElem N w) k from
-    congr_fun (lpOneAlg.toRealSeq_add _ _) k]
-  cases k with
-  | ofNat n =>
-    show l1Chebyshev.toSeq (TCtailElem N (v + w)) (↑n : ℤ)
-      = l1Chebyshev.toSeq (TCtailElem N v) (↑n : ℤ)
-        + l1Chebyshev.toSeq (TCtailElem N w) (↑n : ℤ)
-    rw [TCtailElem_toSeq_nat, TCtailElem_toSeq_nat, TCtailElem_toSeq_nat,
-      chebyshevShiftDiv_add]
-    split
-    · exact l1Chebyshev.toSeq_add _ _ _
-    · ring
-  | negSucc m =>
-    show l1Chebyshev.toSeq (TCtailElem N (v + w)) (Int.negSucc m)
-      = l1Chebyshev.toSeq (TCtailElem N v) (Int.negSucc m)
-        + l1Chebyshev.toSeq (TCtailElem N w) (Int.negSucc m)
-    rw [TCtailElem_toSeq_neg, TCtailElem_toSeq_neg, TCtailElem_toSeq_neg]
-    ring
+end TCtail
 
-private lemma TCtailElem_smul (r : ℝ) (v : l1Chebyshev ν) :
-    TCtailElem N (r • v) = r • TCtailElem N v := by
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  rw [show lpOneAlg.toRealSeq (r • TCtailElem N v) k
-      = r * lpOneAlg.toRealSeq (TCtailElem N v) k from
-    congr_fun (lpOneAlg.toRealSeq_smul r _) k]
-  cases k with
-  | ofNat n =>
-    show l1Chebyshev.toSeq (TCtailElem N (r • v)) (↑n : ℤ)
-      = r * l1Chebyshev.toSeq (TCtailElem N v) (↑n : ℤ)
-    rw [TCtailElem_toSeq_nat, TCtailElem_toSeq_nat, chebyshevShiftDiv_smul]
-    split
-    · exact l1Chebyshev.toSeq_smul r (chebyshevShiftDiv v) _
-    · ring
-  | negSucc m =>
-    show l1Chebyshev.toSeq (TCtailElem N (r • v)) (Int.negSucc m)
-      = r * l1Chebyshev.toSeq (TCtailElem N v) (Int.negSucc m)
-    rw [TCtailElem_toSeq_neg, TCtailElem_toSeq_neg]
-    ring
+section TCtailSharp
+
+variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
+
+/-- The tail part of `TC` has norm at most `ν / (N + 1)` times the norm of its input: the
+sharp sibling of `TCtailElem_norm_le`. `TCtailElem N v` vanishes on the modes `≤ N` and is
+`chebyshevShiftDiv v` beyond, so `chebyshev_Z₁_component_le` applies. -/
+theorem TCtailElem_norm_le_tail (N : ℕ) (v : l1Chebyshev ν) :
+    ‖TCtailElem N v‖ ≤ (ν : ℝ) / ((N : ℝ) + 1) * ‖v‖ := by
+  refine chebyshev_Z₁_component_le _ v N (fun k hk => ?_) (fun m hm => ?_)
+  · rw [← lpAlgRingData.ofReal_toReal k ((TCtailElem N v) k)]
+    change lpAlgRingData.ofReal k (l1Chebyshev.toSeq (TCtailElem N v) k) = 0
+    cases k with
+    | ofNat n =>
+      simp only [Int.ofNat_eq_natCast] at hk ⊢
+      rw [TCtailElem_toSeq_nat, ite_eq_right (by omega), lpAlgRingData.ofReal_zero]
+    | negSucc m => rw [TCtailElem_toSeq_neg, lpAlgRingData.ofReal_zero]
+  · rw [← lpAlgRingData.ofReal_toReal (m : ℤ) ((TCtailElem N v) m),
+      ← lpAlgRingData.ofReal_toReal (m : ℤ) ((chebyshevShiftDiv v) m)]
+    change lpAlgRingData.ofReal _ (l1Chebyshev.toSeq (TCtailElem N v) m) =
+      lpAlgRingData.ofReal _ (l1Chebyshev.toSeq (chebyshevShiftDiv v) m)
+    rw [TCtailElem_toSeq_nat, ite_eq_left hm]
+
+end TCtailSharp
+
+section TCtailCLM
+
+variable {ν : PosReal} {L : ℕ} (N : ℕ) [Fact (1 ≤ (ν : ℝ))]
 
 /-- The tail operator, componentwise. -/
 def TCtailFun (c : XCheb ν L) : XCheb ν L := fun l => TCtailElem N (c l)
 
-private lemma TCtailFun_norm_le (c : XCheb ν L) :
-    ‖TCtailFun N c‖ ≤ ((ν : ℝ) / 2 + 1 / (2 * (ν : ℝ))) * ‖c‖ := by
-  have hν0 : (0 : ℝ) < (ν : ℝ) := ν.2
-  have hpos : (0 : ℝ) ≤ (ν : ℝ) / 2 + 1 / (2 * (ν : ℝ)) :=
-    add_nonneg (div_nonneg ν.2.le (by norm_num))
-      (div_nonneg (by norm_num) (by nlinarith))
-  refine (pi_norm_le_iff_of_nonneg (mul_nonneg hpos (norm_nonneg c))).mpr fun l => ?_
-  exact (TCtailElem_norm_le N (c l)).trans
-    (mul_le_mul_of_nonneg_left (norm_le_pi_norm c l) hpos)
-
-/-- The Chebyshev integration tail of TC as a CLM (norm constant `ν/2 + 1/(2ν)`). -/
+/-- The Chebyshev integration tail of TC as a CLM: componentwise, the tail projection
+`lpOneAlg.tailProj (Icc 0 N)` after `chebyshevShiftDiv_CLM`. -/
 def TCtail : XCheb ν L →L[ℝ] XCheb ν L :=
-  LinearMap.mkContinuous
-    { toFun := TCtailFun N
-      map_add' := fun a b => funext fun l => TCtailElem_add N (a l) (b l)
-      map_smul' := fun r c => funext fun l => TCtailElem_smul N r (c l) }
-    ((ν : ℝ) / 2 + 1 / (2 * (ν : ℝ)))
-    fun c => by
-      show ‖TCtailFun N c‖ ≤ _
-      exact TCtailFun_norm_le N c
+  ContinuousLinearMap.pi fun l =>
+    (lpOneAlg.tailProj (𝕜 := ℝ) (Finset.Icc 0 (N : ℤ)) ∘L chebyshevShiftDiv_CLM) ∘L
+      ContinuousLinearMap.proj l
 
 @[simp] lemma TCtail_apply (c : XCheb ν L) : TCtail N c = TCtailFun N c := rfl
 
-end TCtail
+end TCtailCLM
 
 /-! ## Data-dependent operators -/
 
@@ -506,55 +408,30 @@ lemma TAfun_toSeq_neg (a : XCheb ν L) (l : Fin L) (m : ℕ) :
       = l1Chebyshev.toSeq (a l) (Int.negSucc m) := rfl
 
 private lemma TAfun_add (a b : XCheb ν L) :
-    d.TAfun (a + b) = d.TAfun a + d.TAfun b := by
-  funext l
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  show lpOneAlg.toRealSeq (d.TAfun (a + b) l) k
-    = lpOneAlg.toRealSeq (d.TAfun a l + d.TAfun b l) k
-  rw [show lpOneAlg.toRealSeq (d.TAfun a l + d.TAfun b l) k
-      = lpOneAlg.toRealSeq (d.TAfun a l) k + lpOneAlg.toRealSeq (d.TAfun b l) k from
-    congr_fun (lpOneAlg.toRealSeq_add _ _) k]
-  cases k with
-  | ofNat n =>
-    show l1Chebyshev.toSeq (d.TAfun (a + b) l) (↑n : ℤ)
-      = l1Chebyshev.toSeq (d.TAfun a l) (↑n : ℤ)
-        + l1Chebyshev.toSeq (d.TAfun b l) (↑n : ℤ)
-    rw [d.TAfun_toSeq_nat, d.TAfun_toSeq_nat, d.TAfun_toSeq_nat]
-    rw [show (fun j => FAseq ((a + b) j)) = fun j n => FAseq (a j) n + FAseq (b j) n from
-      funext fun j => funext fun n => FAseq_add (a j) (b j) n]
-    exact congr_fun (congr_fun (SystemBlockDiagData.action_add d.approxInverse
-      (fun j => FAseq (a j)) (fun j => FAseq (b j))) l) n
-  | negSucc m =>
-    show l1Chebyshev.toSeq (d.TAfun (a + b) l) (Int.negSucc m)
-      = l1Chebyshev.toSeq (d.TAfun a l) (Int.negSucc m)
-        + l1Chebyshev.toSeq (d.TAfun b l) (Int.negSucc m)
-    rw [d.TAfun_toSeq_neg, d.TAfun_toSeq_neg, d.TAfun_toSeq_neg]
-    exact l1Chebyshev.toSeq_add (a l) (b l) (Int.negSucc m)
+    d.TAfun (a + b) = d.TAfun a + d.TAfun b :=
+  funext fun l => l1Chebyshev.ext_natCast_negSucc
+    (fun n => by
+      rw [Pi.add_apply, l1Chebyshev.toSeq_add, d.TAfun_toSeq_nat, d.TAfun_toSeq_nat,
+        d.TAfun_toSeq_nat, show (fun j => FAseq ((a + b) j)) = fun j n => FAseq (a j) n +
+          FAseq (b j) n from funext fun j => funext fun n => FAseq_add (a j) (b j) n]
+      exact congr_fun (congr_fun (SystemBlockDiagData.action_add d.approxInverse
+        (fun j => FAseq (a j)) (fun j => FAseq (b j))) l) n)
+    (fun m => by
+      rw [Pi.add_apply, l1Chebyshev.toSeq_add, d.TAfun_toSeq_neg, d.TAfun_toSeq_neg,
+        d.TAfun_toSeq_neg, Pi.add_apply, l1Chebyshev.toSeq_add])
 
 private lemma TAfun_smul (r : ℝ) (a : XCheb ν L) :
-    d.TAfun (r • a) = r • d.TAfun a := by
-  funext l
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  show lpOneAlg.toRealSeq (d.TAfun (r • a) l) k = lpOneAlg.toRealSeq (r • d.TAfun a l) k
-  rw [show lpOneAlg.toRealSeq (r • d.TAfun a l) k
-      = r * lpOneAlg.toRealSeq (d.TAfun a l) k from
-    congr_fun (lpOneAlg.toRealSeq_smul r _) k]
-  cases k with
-  | ofNat n =>
-    show l1Chebyshev.toSeq (d.TAfun (r • a) l) (↑n : ℤ)
-      = r * l1Chebyshev.toSeq (d.TAfun a l) (↑n : ℤ)
-    rw [d.TAfun_toSeq_nat, d.TAfun_toSeq_nat]
-    rw [show (fun j => FAseq ((r • a) j)) = fun j n => r * FAseq (a j) n from
-      funext fun j => funext fun n => FAseq_smul r (a j) n]
-    exact congr_fun (congr_fun (SystemBlockDiagData.action_smul d.approxInverse r
-      (fun j => FAseq (a j))) l) n
-  | negSucc m =>
-    show l1Chebyshev.toSeq (d.TAfun (r • a) l) (Int.negSucc m)
-      = r * l1Chebyshev.toSeq (d.TAfun a l) (Int.negSucc m)
-    rw [d.TAfun_toSeq_neg, d.TAfun_toSeq_neg]
-    exact l1Chebyshev.toSeq_smul r (a l) (Int.negSucc m)
+    d.TAfun (r • a) = r • d.TAfun a :=
+  funext fun l => l1Chebyshev.ext_natCast_negSucc
+    (fun n => by
+      rw [Pi.smul_apply, l1Chebyshev.toSeq_smul, d.TAfun_toSeq_nat, d.TAfun_toSeq_nat,
+        show (fun j => FAseq ((r • a) j)) = fun j n => r * FAseq (a j) n from
+          funext fun j => funext fun n => FAseq_smul r (a j) n]
+      exact congr_fun (congr_fun (SystemBlockDiagData.action_smul d.approxInverse r
+        (fun j => FAseq (a j))) l) n)
+    (fun m => by
+      rw [Pi.smul_apply, l1Chebyshev.toSeq_smul, d.TAfun_toSeq_neg, d.TAfun_toSeq_neg,
+        Pi.smul_apply, l1Chebyshev.toSeq_smul])
 
 private lemma TAfun_norm_le (a : XCheb ν L) :
     ‖d.TAfun a‖ ≤ (d.MA * (2 * (N : ℝ) + 3) + 2) * ‖a‖ := by
@@ -621,59 +498,34 @@ lemma TCblockFun_toSeq_neg (c : XCheb ν L) (l : Fin L) (m : ℕ) :
   exact lpAlgRingData.toReal_zero _
 
 private lemma TCblockFun_add (a b : XCheb ν L) :
-    d.TCblockFun (a + b) = d.TCblockFun a + d.TCblockFun b := by
-  funext l
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  show lpOneAlg.toRealSeq (d.TCblockFun (a + b) l) k
-    = lpOneAlg.toRealSeq (d.TCblockFun a l + d.TCblockFun b l) k
-  rw [show lpOneAlg.toRealSeq (d.TCblockFun a l + d.TCblockFun b l) k
-      = lpOneAlg.toRealSeq (d.TCblockFun a l) k
-        + lpOneAlg.toRealSeq (d.TCblockFun b l) k from
-    congr_fun (lpOneAlg.toRealSeq_add _ _) k]
-  cases k with
-  | ofNat n =>
-    show l1Chebyshev.toSeq (d.TCblockFun (a + b) l) (↑n : ℤ)
-      = l1Chebyshev.toSeq (d.TCblockFun a l) (↑n : ℤ)
-        + l1Chebyshev.toSeq (d.TCblockFun b l) (↑n : ℤ)
-    rw [d.TCblockFun_toSeq_nat, d.TCblockFun_toSeq_nat, d.TCblockFun_toSeq_nat]
-    show d.approxInverse.actionFinite (fun j => FCseq ((a + b) j)) l n = _
-    rw [show (fun j => FCseq ((a + b) j)) = fun j n => FCseq (a j) n + FCseq (b j) n from
-      funext fun j => funext fun n => FCseq_add (a j) (b j) n]
-    exact congr_fun (congr_fun (SystemBlockDiagData.actionFinite_add d.approxInverse
-      (fun j => FCseq (a j)) (fun j => FCseq (b j))) l) n
-  | negSucc m =>
-    show l1Chebyshev.toSeq (d.TCblockFun (a + b) l) (Int.negSucc m)
-      = l1Chebyshev.toSeq (d.TCblockFun a l) (Int.negSucc m)
-        + l1Chebyshev.toSeq (d.TCblockFun b l) (Int.negSucc m)
-    rw [d.TCblockFun_toSeq_neg, d.TCblockFun_toSeq_neg, d.TCblockFun_toSeq_neg]
-    ring
+    d.TCblockFun (a + b) = d.TCblockFun a + d.TCblockFun b :=
+  funext fun l => l1Chebyshev.ext_natCast_negSucc
+    (fun n => by
+      rw [Pi.add_apply, l1Chebyshev.toSeq_add, d.TCblockFun_toSeq_nat, d.TCblockFun_toSeq_nat,
+        d.TCblockFun_toSeq_nat]
+      show d.approxInverse.actionFinite (fun j => FCseq ((a + b) j)) l n = _
+      rw [show (fun j => FCseq ((a + b) j)) = fun j n => FCseq (a j) n + FCseq (b j) n from
+        funext fun j => funext fun n => FCseq_add (a j) (b j) n]
+      exact congr_fun (congr_fun (SystemBlockDiagData.actionFinite_add d.approxInverse
+        (fun j => FCseq (a j)) (fun j => FCseq (b j))) l) n)
+    (fun m => by
+      rw [Pi.add_apply, l1Chebyshev.toSeq_add, d.TCblockFun_toSeq_neg, d.TCblockFun_toSeq_neg,
+        d.TCblockFun_toSeq_neg, add_zero])
 
 private lemma TCblockFun_smul (r : ℝ) (c : XCheb ν L) :
-    d.TCblockFun (r • c) = r • d.TCblockFun c := by
-  funext l
-  apply lpOneAlg.ext_toRealSeq
-  funext k
-  show lpOneAlg.toRealSeq (d.TCblockFun (r • c) l) k
-    = lpOneAlg.toRealSeq (r • d.TCblockFun c l) k
-  rw [show lpOneAlg.toRealSeq (r • d.TCblockFun c l) k
-      = r * lpOneAlg.toRealSeq (d.TCblockFun c l) k from
-    congr_fun (lpOneAlg.toRealSeq_smul r _) k]
-  cases k with
-  | ofNat n =>
-    show l1Chebyshev.toSeq (d.TCblockFun (r • c) l) (↑n : ℤ)
-      = r * l1Chebyshev.toSeq (d.TCblockFun c l) (↑n : ℤ)
-    rw [d.TCblockFun_toSeq_nat, d.TCblockFun_toSeq_nat]
-    show d.approxInverse.actionFinite (fun j => FCseq ((r • c) j)) l n = _
-    rw [show (fun j => FCseq ((r • c) j)) = fun j n => r * FCseq (c j) n from
-      funext fun j => funext fun n => FCseq_smul r (c j) n]
-    exact congr_fun (congr_fun (SystemBlockDiagData.actionFinite_smul d.approxInverse r
-      (fun j => FCseq (c j))) l) n
-  | negSucc m =>
-    show l1Chebyshev.toSeq (d.TCblockFun (r • c) l) (Int.negSucc m)
-      = r * l1Chebyshev.toSeq (d.TCblockFun c l) (Int.negSucc m)
-    rw [d.TCblockFun_toSeq_neg, d.TCblockFun_toSeq_neg]
-    ring
+    d.TCblockFun (r • c) = r • d.TCblockFun c :=
+  funext fun l => l1Chebyshev.ext_natCast_negSucc
+    (fun n => by
+      rw [Pi.smul_apply, l1Chebyshev.toSeq_smul, d.TCblockFun_toSeq_nat, d.TCblockFun_toSeq_nat]
+      show d.approxInverse.actionFinite (fun j => FCseq ((r • c) j)) l n =
+        r * d.approxInverse.actionFinite (fun j => FCseq (c j)) l n
+      rw [show (fun j => FCseq ((r • c) j)) = fun j n => r * FCseq (c j) n from
+        funext fun j => funext fun n => FCseq_smul r (c j) n]
+      exact congr_fun (congr_fun (SystemBlockDiagData.actionFinite_smul d.approxInverse r
+        (fun j => FCseq (c j))) l) n)
+    (fun m => by
+      rw [Pi.smul_apply, l1Chebyshev.toSeq_smul, d.TCblockFun_toSeq_neg,
+        d.TCblockFun_toSeq_neg, mul_zero])
 
 private lemma TCblockFun_norm_le (c : XCheb ν L) :
     ‖d.TCblockFun c‖ ≤ (d.MA * 2) * ‖c‖ := by
@@ -766,12 +618,7 @@ lemma G_decomp (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ
       rw [SystemBlockDiagData.action_tail _ _ _ _ hn, d.htail_diag_inv l n hn,
         d.constGseq_tail p l n hn, d.TA_action_tail_eq a l n hn,
         d.TCblockSeq_tail _ l n hn]
-      have hshift : l1Chebyshev.toSeq (chebyshevShiftDiv (φ a l)) (↑n : ℤ)
-          = (l1Chebyshev.toSeq (φ a l) ((↑n : ℤ) + 1)
-            - l1Chebyshev.toSeq (φ a l) ((↑n : ℤ) - 1)) / (2 * (n : ℝ)) := by
-        show lpOneAlg.toRealSeq (chebyshevShiftDiv (φ a l)) (↑n : ℤ) = _
-        rw [chebyshevShiftDiv_toSeq, chebyshevShiftDiv_seq_pos _ n (by omega)]
-      rw [hshift]
+      rw [chebyshevShiftDiv_toSeq_natCast _ n (by omega)]
       obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
       show 1 / (2 * ((↑(m + 1) : ℕ) : ℝ))
           * (2 * ((m : ℝ) + 1) * l1Chebyshev.toSeq (a l) (↑(m + 1) : ℤ)

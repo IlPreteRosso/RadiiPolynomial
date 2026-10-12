@@ -14,26 +14,16 @@ open Metric Set Filter ContinuousLinearMap
 /-!
 # General Radii Polynomial Theorem
 
-This file generalizes the radii polynomial approach to maps between potentially different
-Banach spaces (E, F). This corresponds to Theorem 7.6.2 in the informal proof.
+This file generalizes the radii polynomial approach to maps `f : E → F` between possibly
+different spaces: a real Banach space `E` and a real normed space `F`. This corresponds to
+Theorem 7.6.2 in the informal proof.
 
-## Banach Space Setup
+## Spaces
 
-We work with two Banach spaces E and F over ℝ:
-
-For each space X ∈ {E, F}:
-1. `NormedAddCommGroup X`: X has a norm satisfying definiteness, symmetry, triangle inequality
-2. `NormedSpace ℝ X`: The norm is compatible with scalar multiplication
-3. `CompleteSpace X`: Every Cauchy sequence converges (crucial for fixed point theorems)
-
-This framework supports:
-- Fréchet derivatives (via the norm structure)
-- Fixed point theorems (via completeness)
-- Mean Value Theorem (via the metric structure)
-- Linear operator theory (via the vector space structure)
-
-The radii polynomial theorems below drop completeness of F (`omit [CompleteSpace F]`): only
-the domain E carries the fixed-point argument, and F need only be a real normed space.
+The domain `E` is a real Banach space (`NormedAddCommGroup`, `NormedSpace ℝ`, `CompleteSpace`);
+completeness is used only by the fixed-point argument (Neumann series, contraction mapping) and
+is declared section-locally where it is used. The codomain `F` is a real normed space
+(`NormedAddCommGroup`, `NormedSpace ℝ`); no statement of this file assumes completeness of `F`.
 
 ## Local layers and faces (namespace `RadiiPolynomial`)
 
@@ -46,10 +36,8 @@ convexity of the radii polynomial with a polynomial `Z₂` (sections
 face with its output record `Enclosure` (section `FiniteDimensionalFace`).
 -/
 
--- Two Banach spaces: domain E and codomain F
-variable {E F : Type*}
-  [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
-  [NormedAddCommGroup F] [NormedSpace ℝ F] [CompleteSpace F]
+-- Domain E (complete where a section needs the fixed-point argument) and codomain F (normed only)
+variable {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
 
 -- Identity operators on each space
 abbrev I_E := ContinuousLinearMap.id ℝ E
@@ -68,6 +56,8 @@ which must be close to the identity I_E for the method to work.
 Key insight: If ‖I - B‖ < 1 for an operator B : E →L[ℝ] E, then B is invertible.
 This is the Neumann series theorem, already available in Mathlib.
 -/
+
+variable [CompleteSpace E]
 
 /-- If an operator is close to identity, it is a unit (invertible in the multiplicative sense).
     This is a direct application of Mathlib's `isUnit_one_sub_of_norm_lt_one`. -/
@@ -90,12 +80,8 @@ theorem invertible_of_norm_sub_id_lt_one {B : E →L[ℝ] E}
 /-- Composition form: useful for working with .comp notation -/
 lemma invertible_comp_form {B : E →L[ℝ] E}
   (h : ‖I_E - B‖ < 1) :
-  ∃ (B_inv : E →L[ℝ] E), B.comp B_inv = I_E ∧ B_inv.comp B = I_E := by
-  obtain ⟨B_inv, h_left, h_right⟩ := invertible_of_norm_sub_id_lt_one h
-  use B_inv
-  constructor
-  · ext x; exact congrFun (congrArg DFunLike.coe h_left) x
-  · ext x; exact congrFun (congrArg DFunLike.coe h_right) x
+  ∃ (B_inv : E →L[ℝ] E), B.comp B_inv = I_E ∧ B_inv.comp B = I_E :=
+  invertible_of_norm_sub_id_lt_one h
 
 namespace RadiiPolynomial
 
@@ -108,7 +94,7 @@ private theorem isDedekindFiniteMonoid_clm {E : Type*} [NormedAddCommGroup E]
 /-- Finite-dimensional Neumann rung: `‖I - A B‖ < 1` makes `A` injective (`A B` is a unit, so
 `A` is a unit by Dedekind-finiteness). -/
 theorem injective_left_of_norm_id_sub_comp_lt_one {E : Type*} [NormedAddCommGroup E]
-    [NormedSpace ℝ E] [CompleteSpace E] [FiniteDimensional ℝ E] {A B : E →L[ℝ] E}
+    [NormedSpace ℝ E] [FiniteDimensional ℝ E] {A B : E →L[ℝ] E}
     (h : ‖I_E - A.comp B‖ < 1) : Function.Injective A := by
   have := isDedekindFiniteMonoid_clm (E := E)
   obtain ⟨u, rfl⟩ := isUnit_of_mul_isUnit_left (isUnit_of_norm_sub_id_lt_one h)
@@ -117,7 +103,7 @@ theorem injective_left_of_norm_id_sub_comp_lt_one {E : Type*} [NormedAddCommGrou
 /-- Finite-dimensional Neumann rung: `‖I - A B‖ < 1` makes `B` a unit (`A B` is a unit and
 `E →L[ℝ] E` is Dedekind-finite). -/
 theorem isUnit_right_of_norm_id_sub_comp_lt_one {E : Type*} [NormedAddCommGroup E]
-    [NormedSpace ℝ E] [CompleteSpace E] [FiniteDimensional ℝ E] {A B : E →L[ℝ] E}
+    [NormedSpace ℝ E] [FiniteDimensional ℝ E] {A B : E →L[ℝ] E}
     (h : ‖I_E - A.comp B‖ < 1) : IsUnit B := by
   have := isDedekindFiniteMonoid_clm (E := E)
   exact isUnit_of_mul_isUnit_right (isUnit_of_norm_sub_id_lt_one h)
@@ -125,7 +111,7 @@ theorem isUnit_right_of_norm_id_sub_comp_lt_one {E : Type*} [NormedAddCommGroup 
 /-- Finite-dimensional Neumann rung: `‖I - A B‖ < 1` makes `A` a unit (the left twin of
 `isUnit_right_of_norm_id_sub_comp_lt_one`). -/
 theorem isUnit_left_of_norm_id_sub_comp_lt_one {E : Type*} [NormedAddCommGroup E]
-    [NormedSpace ℝ E] [CompleteSpace E] [FiniteDimensional ℝ E] {A B : E →L[ℝ] E}
+    [NormedSpace ℝ E] [FiniteDimensional ℝ E] {A B : E →L[ℝ] E}
     (h : ‖I_E - A.comp B‖ < 1) : IsUnit A := by
   have := isDedekindFiniteMonoid_clm (E := E)
   exact isUnit_of_mul_isUnit_left (isUnit_of_norm_sub_id_lt_one h)
@@ -152,10 +138,11 @@ Key differences from E to E case:
 - T : E → E (the Newton operator still maps E to itself)
 -/
 
+variable [NormedAddCommGroup F] [NormedSpace ℝ F]
+
 /-- The Newton-like operator T(x) = x - Af(x) for maps from E to F -/
 def NewtonLikeMap (A : F →L[ℝ] E) (f : E → F) (x : E) : E := x - A (f x)
 
-omit [CompleteSpace E] [CompleteSpace F] in
 /-- Newton-like map is differentiable when f is. -/
 lemma NewtonLikeMap.differentiable {A : F →L[ℝ] E} {f : E → F}
     (hf : Differentiable ℝ f) : Differentiable ℝ (NewtonLikeMap A f) :=
@@ -178,7 +165,8 @@ The proof is **identical** to the E to E case - injectivity of A is the key requ
 not invertibility.
 -/
 
-omit [CompleteSpace E] [CompleteSpace F] in
+variable [NormedAddCommGroup F] [NormedSpace ℝ F]
+
 /-- **Proposition 2.3.1**: Fixed points of Newton operator ⟺ Zeros of f
 
     Let T(x) = x - Af(x) be the Newton-like operator where:
@@ -214,7 +202,7 @@ For the general E to F case (Theorem 7.6.2), we have an additional parameter Z�
 Where:
 - Y₀: bound on ‖A(f(x̄))‖ (initial defect)
 - Z₀: bound on ‖I_E - AA†‖ (how close AA† is to identity)
-- Z₁: bound on ‖A[Df(x̄) - A†]‖ (how well A† approximates Df(x̄))
+- Z₁: bound on ‖A[A† - Df(x̄)]‖ (how well A† approximates Df(x̄))
 - Z₂(r): Z₂(r)·r bounds ‖A[Df(c) - Df(x̄)]‖ for c ∈ B̄ᵣ(x̄) (Lipschitz-type bound)
 
 The simpler case (when E = F and A† = Df(x̄)) has Z₁ = 0.
@@ -405,7 +393,25 @@ These lemmas establish the key bounds needed to apply the contraction mapping th
 In the general E to F setting, the derivative is DT(x) = I_E - A ∘ Df(x).
 -/
 
-omit [CompleteSpace E] [CompleteSpace F] in
+variable [NormedAddCommGroup F] [NormedSpace ℝ F]
+
+namespace RadiiPolynomial
+
+/-- Derivative-free three-term split:
+`I - A Q = (I - A A†) + A (A† - P) - A (Q - P)`, whence `‖I - A Q‖ ≤ Z₀ + Z₁ + W`. -/
+theorem norm_id_sub_comp_le_Z_bound
+    {A : F →L[ℝ] E} {A_dagger P Q : E →L[ℝ] F} {Z₀ Z₁ W : ℝ}
+    (h_Z₀ : ‖ContinuousLinearMap.id ℝ E - A.comp A_dagger‖ ≤ Z₀)
+    (h_Z₁ : ‖A.comp (A_dagger - P)‖ ≤ Z₁) (h_W : ‖A.comp (Q - P)‖ ≤ W) :
+    ‖ContinuousLinearMap.id ℝ E - A.comp Q‖ ≤ Z₀ + Z₁ + W := by
+  have hsplit : ContinuousLinearMap.id ℝ E - A.comp Q =
+      (ContinuousLinearMap.id ℝ E - A.comp A_dagger) + A.comp (A_dagger - P) - A.comp (Q - P) := by
+    simp only [ContinuousLinearMap.comp_sub]; abel
+  rw [hsplit]
+  exact (norm_sub_le _ _).trans (add_le_add ((norm_add_le _ _).trans (add_le_add h_Z₀ h_Z₁)) h_W)
+
+end RadiiPolynomial
+
 /-- Y₀ bound for Newton operator: ‖T(x̄) - x̄‖ ≤ Y₀
 
     This reformulates equation (7.30) for the Newton-like operator.
@@ -420,7 +426,6 @@ lemma newton_operator_Y_bound
   simp only [sub_sub_cancel_left, norm_neg]
   exact h_bound
 
-omit [CompleteSpace E] [CompleteSpace F] in
 /-- Derivative of the Newton-like operator in the E to F setting
 
     For T(x) = x - A(f(x)) where f : E → F and A : F →L[ℝ] E:
@@ -458,7 +463,6 @@ lemma newton_operator_fderiv
 
   rw [h_sub, h1, h2]
 
-omit [CompleteSpace E] [CompleteSpace F] in
 /-- General derivative bound for Newton operator on closed ball
 
     ‖DT(c)‖ ≤ Z₀ + Z₁ + Z₂(r)·r  for all c ∈ B̄ᵣ(x̄)
@@ -481,35 +485,9 @@ lemma newton_operator_derivative_bound_general
     ‖A.comp (fderiv ℝ f c - fderiv ℝ f xBar)‖ ≤ Z₂ r * r)
   (c : E) (hc : c ∈ Metric.closedBall xBar r) :
   ‖fderiv ℝ (NewtonLikeMap A f) c‖ ≤ Z_bound_general Z₀ Z₁ Z₂ r := by
-  unfold Z_bound_general
-
   rw [newton_operator_fderiv hf_diff]
+  exact RadiiPolynomial.norm_id_sub_comp_le_Z_bound h_Z₀ h_Z₁ (h_Z₂ c hc)
 
-  -- Key decomposition using A†:
-  -- I_E - A∘Df(c) = [I_E - A∘A†] + A∘[A† - Df(x̄)] + A∘[Df(x̄) - Df(c)]
-  --               = [I_E - A∘A†] + A∘[A† - Df(x̄)] + A∘[Df(x̄) - Df(c)]
-
-  -- Decompose: I_E - A∘Df(c) = [I_E - A∘A†] + A∘[A† - Df(x̄)] + A∘[Df(x̄) - Df(c)]
-  have h_decomp : I_E - A.comp (fderiv ℝ f c) =
-      (I_E - A.comp A_dagger) +
-      A.comp (A_dagger - fderiv ℝ f xBar) +
-      A.comp (fderiv ℝ f xBar - fderiv ℝ f c) := by
-    simp only [comp_sub, sub_add_sub_cancel]
-
-  -- For the third term, flip the order using norm_neg
-  have h_flip : fderiv ℝ f xBar - fderiv ℝ f c = -(fderiv ℝ f c - fderiv ℝ f xBar) := by abel
-  have h_third : ‖A.comp (fderiv ℝ f xBar - fderiv ℝ f c)‖ ≤ Z₂ r * r := by
-    rw [h_flip, ContinuousLinearMap.comp_neg, norm_neg]
-    exact h_Z₂ c hc
-
-  -- Apply triangle inequality twice and combine bounds
-  rw [h_decomp]
-  have h1 := norm_add_le (I_E - A.comp A_dagger + A.comp (A_dagger - fderiv ℝ f xBar))
-                         (A.comp (fderiv ℝ f xBar - fderiv ℝ f c))
-  have h2 := norm_add_le (I_E - A.comp A_dagger) (A.comp (A_dagger - fderiv ℝ f xBar))
-  linarith [h1, h2, h_Z₀, h_Z₁, h_third]
-
-omit [CompleteSpace E] [CompleteSpace F] in
 /-- Simple derivative bound (when A† = Df(x̄), so Z₁ = 0)
 
     This is used in Theorem 2.4.2 when E = F or when we can set A† = Df(x̄).
@@ -524,13 +502,9 @@ lemma newton_operator_derivative_bound_simple
     ‖A.comp (fderiv ℝ f c - fderiv ℝ f xBar)‖ ≤ Z₂ r * r)
   (c : E) (hc : c ∈ Metric.closedBall xBar r) :
   ‖fderiv ℝ (NewtonLikeMap A f) c‖ ≤ Z_bound Z₀ Z₂ r := by
-  unfold Z_bound
-  rw [newton_operator_fderiv hf_diff,
-    show I_E - A.comp (fderiv ℝ f c) = (I_E - A.comp (fderiv ℝ f xBar)) +
-      A.comp (fderiv ℝ f xBar - fderiv ℝ f c) from by simp only [comp_sub, sub_add_sub_cancel]]
-  have : ‖A.comp (fderiv ℝ f xBar - fderiv ℝ f c)‖ ≤ Z₂ r * r := by
-    rw [← neg_sub, comp_neg, norm_neg]; exact h_Z₂ c hc
-  linarith [norm_add_le (I_E - A.comp (fderiv ℝ f xBar)) (A.comp (fderiv ℝ f xBar - fderiv ℝ f c))]
+  rw [newton_operator_fderiv hf_diff]
+  simpa [Z_bound] using RadiiPolynomial.norm_id_sub_comp_le_Z_bound (P := fderiv ℝ f xBar)
+    (Z₁ := 0) h_Z₀ (by simp) (h_Z₂ c hc)
 
 end OperatorBounds
 
@@ -541,45 +515,6 @@ section HelperLemmas
 ## Helper Lemmas for Fixed Point Theorems
 -/
 
--- omit [CompleteSpace F] in
--- /-- Construct inverse of Df(x̃) from invertibility of A∘Df(x̃)
-
---     Key insight: If A : F →L[ℝ] E is injective and A∘B : E →L[ℝ] E is invertible,
---     then B : E →L[ℝ] F is invertible with inverse B⁻¹ = (A∘B)⁻¹ ∘ A.
-
---     This is used to show Df(x̃) is invertible without requiring A to be invertible. -/
--- lemma construct_derivative_inverse
---   {A : F →L[ℝ] E} {B : E →L[ℝ] F}
---   (hA_inj : Function.Injective A)
---   (h_norm : ‖I_E - A.comp B‖ < 1) :
---   B.IsInvertible := by
---   -- By Neumann series, A∘B is invertible
---   obtain ⟨inv_AB, h_left, h_right⟩ := invertible_comp_form h_norm
-
---   -- Construct B⁻¹ = inv_AB ∘ A
---   let B_inv := inv_AB.comp A
-
---   -- Left inverse: B(B⁻¹(x)) = x
---   have h_inv_left : ∀ x, B (B_inv x) = x := by
---     intro x
---     have h1 : A (B (inv_AB (A x))) = A x := by
---       have := congrFun (congrArg DFunLike.coe h_left) (A x)
---       simp at this
---       exact this
---     exact hA_inj h1
-
---   -- Right inverse: B⁻¹(B(x)) = x
---   have h_inv_right : ∀ x, B_inv (B x) = x := by
---     intro x
---     have := congrFun (congrArg DFunLike.coe h_right) x
---     simp at this
---     exact this
-
---   -- Package as ContinuousLinearEquiv
---   use ContinuousLinearEquiv.equivOfInverse B B_inv h_inv_right h_inv_left
---   rfl
-
-omit [CompleteSpace E] in
 /-- T maps the closed ball into itself when the radii polynomial is negative
 
     This is a key step in applying the Banach fixed point theorem.
@@ -640,9 +575,10 @@ and each global theorem is one application of its local form. The local forms
 return the invertibility of `Df x̃`.
 -/
 
+variable [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
+
 namespace RadiiPolynomial
 
-omit [CompleteSpace F] in
 /-- Invertibility of `D : E →L[ℝ] F` from an injective `A : F →L[ℝ] E` with `‖I - A D‖ < 1`:
 `A D` is invertible (Neumann series), so `(A D)⁻¹ A` is a two-sided inverse of `D`. -/
 theorem isInvertible_of_injective_of_norm_id_sub_comp_lt_one
@@ -685,11 +621,8 @@ theorem general_fixed_point_theorem_local
     have h1 := hlip x hx xBar hxBar
     rw [dist_eq_norm, dist_eq_norm] at h1
     have h2 : ‖x - xBar‖ ≤ r₀ := by rw [← dist_eq_norm]; exact hx
-    calc ‖T x - xBar‖ = ‖(T x - T xBar) + (T xBar - xBar)‖ := by rw [sub_add_sub_cancel]
-      _ ≤ ‖T x - T xBar‖ + ‖T xBar - xBar‖ := norm_add_le _ _
-      _ ≤ Z r₀ * r₀ + Y₀ :=
-        add_le_add (h1.trans (mul_le_mul_of_nonneg_left h2 hZ0)) h_bound_Y
-      _ < r₀ := hlt
+    exact ((norm_sub_le_norm_sub_add_norm_sub _ (T xBar) _).trans
+      (add_le_add (h1.trans (mul_le_mul_of_nonneg_left h2 hZ0)) h_bound_Y)).trans_lt hlt
   have h_maps : Set.MapsTo T (closedBall xBar r₀) (closedBall xBar r₀) := fun x hx =>
     ball_subset_closedBall (hball x hx)
   have h_contr : ContractingWith (Real.toNNReal (Z r₀)) (h_maps.restrict T _ _) :=
@@ -702,21 +635,6 @@ theorem general_fixed_point_theorem_local
   have hx' : Function.IsFixedPt (h_maps.restrict T _ _) ⟨x, hx⟩ := Subtype.ext hfix.eq
   exact congrArg Subtype.val (h_contr.fixedPoint_unique' hz' hx')
 
-omit [CompleteSpace E] [CompleteSpace F] in
-/-- Derivative-free three-term split:
-`I - A Q = (I - A A†) + A (A† - P) - A (Q - P)`, whence `‖I - A Q‖ ≤ Z₀ + Z₁ + W`. -/
-theorem norm_id_sub_comp_le_Z_bound
-    {A : F →L[ℝ] E} {A_dagger P Q : E →L[ℝ] F} {Z₀ Z₁ W : ℝ}
-    (h_Z₀ : ‖ContinuousLinearMap.id ℝ E - A.comp A_dagger‖ ≤ Z₀)
-    (h_Z₁ : ‖A.comp (A_dagger - P)‖ ≤ Z₁) (h_W : ‖A.comp (Q - P)‖ ≤ W) :
-    ‖ContinuousLinearMap.id ℝ E - A.comp Q‖ ≤ Z₀ + Z₁ + W := by
-  have hsplit : ContinuousLinearMap.id ℝ E - A.comp Q =
-      (ContinuousLinearMap.id ℝ E - A.comp A_dagger) + A.comp (A_dagger - P) - A.comp (Q - P) := by
-    simp only [ContinuousLinearMap.comp_sub]; abel
-  rw [hsplit]
-  exact (norm_sub_le _ _).trans (add_le_add ((norm_add_le _ _).trans (add_le_add h_Z₀ h_Z₁)) h_W)
-
-omit [CompleteSpace F] in
 /-- **Local radii polynomial theorem, single-`Z` form.** With derivative data `Df` of
 `f : E → F` within the closed ball `B̄_{r₀}(x̄)`, an injective `A : F →L[ℝ] E`,
 `‖A f(x̄)‖ ≤ Y₀`, `‖I - A Df(c)‖ ≤ Z(r₀)` on the ball and `(Z(r₀) - 1) r₀ + Y₀ < 0`, the map `f`
@@ -745,7 +663,6 @@ theorem radii_polynomial_theorem_of_norm_id_sub_le_local
   intro z hz hz0
   exact hu z hz ((fixedPoint_injective_iff_zero hA_inj z).mpr hz0)
 
-omit [CompleteSpace F] in
 /-- **Local general radii polynomial theorem with nondegeneracy** (local form of Theorem 7.6.2):
 the bounds `Y₀, Z₀, Z₁, Z₂` of `general_radii_polynomial_theorem` with derivative data `Df` on the
 closed ball only. The zero `x̃` lies in the open ball and `Df x̃` is invertible. -/
@@ -764,10 +681,9 @@ theorem general_radii_polynomial_theorem_nondegenerate_local
       ∀ z ∈ closedBall xBar r₀, f z = 0 → z = xTilde :=
   radii_polynomial_theorem_of_norm_id_sub_le_local (Z := Z_bound_general Z₀ Z₁ Z₂) hr₀ h_Y₀
     (fun c hc => norm_id_sub_comp_le_Z_bound h_Z₀ h_Z₁ (h_Z₂ c hc)) hf
-    (by unfold simpleRadiiPolynomial; rw [← generalRadiiPolynomial_alt_form]; exact h_radii)
+    ((generalRadiiPolynomial_alt_form ..).symm.trans_lt h_radii)
     hA_inj
 
-omit [CompleteSpace F] in
 /-- **Local general radii polynomial theorem** (local form of Theorem 7.6.2): the conclusion of
 `general_radii_polynomial_theorem` from derivative data `Df` on the closed ball only. -/
 theorem general_radii_polynomial_theorem_local
@@ -786,7 +702,6 @@ theorem general_radii_polynomial_theorem_local
     general_radii_polynomial_theorem_nondegenerate_local hr₀ h_Y₀ h_Z₀ h_Z₁ h_Z₂ hf h_radii hA_inj
   exact ⟨x, ⟨ball_subset_closedBall hx, hfx⟩, fun z ⟨hz, hz0⟩ => hu z hz hz0⟩
 
-omit [CompleteSpace F] in
 /-- **Local simple radii polynomial theorem**: the conclusion of
 `simple_radii_polynomial_theorem_EtoF` from derivative data `Df` on the closed ball only
 (`A† = Df x̄`, so `Z₁ = 0`). -/
@@ -801,15 +716,12 @@ theorem radii_polynomial_theorem_EtoF_local
     (h_radii : radiiPolynomial Y₀ Z₀ Z₂ r₀ < 0)
     (hA_inj : Function.Injective A) :
     ∃! xTilde ∈ closedBall xBar r₀, f xTilde = 0 := by
-  have hpoly : simpleRadiiPolynomial Y₀ (fun r => Z₀ + Z₂ r * r) r₀ =
-      radiiPolynomial Y₀ Z₀ Z₂ r₀ := by
-    unfold simpleRadiiPolynomial radiiPolynomial; ring
   obtain ⟨x, hx, hfx, -, hu⟩ := radii_polynomial_theorem_of_norm_id_sub_le_local
-    (Z := fun r => Z₀ + Z₂ r * r) hr₀ h_Y₀
+    (Z := Z_bound Z₀ Z₂) hr₀ h_Y₀
     (fun c hc => by
-      simpa using norm_id_sub_comp_le_Z_bound (A_dagger := Df xBar) (P := Df xBar) (Z₁ := 0)
-        h_Z₀ (by simp) (h_Z₂ c hc))
-    hf (hpoly ▸ h_radii) hA_inj
+      simpa [Z_bound] using norm_id_sub_comp_le_Z_bound (A_dagger := Df xBar) (P := Df xBar)
+        (Z₁ := 0) h_Z₀ (by simp) (h_Z₂ c hc))
+    hf ((radiiPolynomial_alt_form ..).symm.trans_lt h_radii) hA_inj
   exact ⟨x, ⟨ball_subset_closedBall hx, hfx⟩, fun z ⟨hz, hz0⟩ => hu z hz hz0⟩
 
 end RadiiPolynomial
@@ -832,6 +744,8 @@ Given:
 
 If p(r₀) < 0, then there exists a unique fixed point x̃ ∈ B̄ᵣ₀(x̄).
 -/
+
+variable [CompleteSpace E]
 
 /-- **Theorem 7.6.1**: General Fixed Point Theorem for Banach Spaces
 
@@ -889,7 +803,8 @@ hypotheses it holds: the local form
 Df(x̃) : E →L[ℝ] F is invertible (a continuous linear equivalence E ≃ F).
 -/
 
-omit [CompleteSpace F] in
+variable [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
+
 /-- **Theorem 7.6.2**: General Radii Polynomial Theorem for E to F maps
 
     Given a differentiable f : E → F with E a Banach space and F a real normed space
@@ -898,15 +813,14 @@ omit [CompleteSpace F] in
 
     - ‖A(f(x̄))‖ ≤ Y₀                               (eq. 7.30: initial defect)
     - ‖I_E - A∘A†‖ ≤ Z₀                            (eq. 7.31: AA† close to identity)
-    - ‖A∘[Df(x̄) - A†]‖ ≤ Z₁                        (eq. 7.32: A† approximates Df(x̄))
+    - ‖A∘[A† - Df(x̄)]‖ ≤ Z₁                        (eq. 7.32: A† approximates Df(x̄))
     - ‖A∘[Df(c) - Df(x̄)]‖ ≤ Z₂(r₀)·r₀ for c ∈ B̄ᵣ₀(x̄) (eq. 7.33: Lipschitz bound, at r₀)
 
     If p(r₀) < 0 where p(r) = Z₂(r)r² - (1-Z₀-Z₁)r + Y₀ (eq. 7.34),
     then there exists a unique x̃ ∈ B̄ᵣ₀(x̄) with f(x̃) = 0.
 
-    RM: It turns out we only need need there exists some r₀ > 0 such that p(r₀) < 0,
-    not that p(r) < 0 for all r ∈ (0, r₀]. This is a slight generalization over the
-    original statement.
+    Only one radius r₀ > 0 with p(r₀) < 0 is required, not p(r) < 0 for all r ∈ (0, r₀];
+    this is slightly more general than the book's statement.
 
     Proof: one application of the local form
     `RadiiPolynomial.general_radii_polynomial_theorem_local` (derivative data `fderiv ℝ f`
@@ -939,7 +853,7 @@ section SimpleRadiiPolynomialTheorem
 ## Simplified Radii Polynomial Theorem
 
 This is the simpler version when we don't need an explicit A†, or when we can effectively
-set A† = Df(x̄). This corresponds to Theorem 2.4.2 in the original formalization.
+set A† = Df(x̄). This generalizes Theorem 2.4.2 of the reference book (stated there on ℝⁿ).
 
 The key simplification: Z₁ = 0, so the polynomial becomes:
   p(r) = Z₂(r)r² - (1 - Z₀)r + Y₀
@@ -947,7 +861,8 @@ The key simplification: Z₁ = 0, so the polynomial becomes:
 This still works for f : E → F with different spaces, but requires tighter bounds.
 -/
 
-omit [CompleteSpace F] in
+variable [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
+
 /-- **Theorem 2.4.2 (Generalized)**: Simple Radii Polynomial Theorem for E to F
 
     Given a differentiable f : E → F and approximate inverse A : F →L[ℝ] E satisfying:
@@ -1003,6 +918,8 @@ a rule about acceptance. The two directions that do hold:
 Together these give "the dyadic check suffices" without the false converse.
 -/
 
+variable [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
+
 /-- Acceptance under tightening: componentwise smaller bound values preserve
     negativity of the general radii polynomial at a fixed radius. -/
 lemma generalRadiiPolynomial_anti_bounds
@@ -1016,7 +933,6 @@ lemma generalRadiiPolynomial_anti_bounds
     mul_le_mul_of_nonneg_right hZ₀ hr.le,
     mul_le_mul_of_nonneg_right hZ₁ hr.le]
 
-omit [CompleteSpace F] in
 /-- Sound-bound weakening composed with the abstract theorem: certify through
     any componentwise larger bound values at which the polynomial inequality
     is checked. -/
@@ -1065,14 +981,14 @@ namespace RadiiPolynomial
 
 section Adapters
 
-omit [CompleteSpace E] [CompleteSpace F] in
+variable [NormedAddCommGroup F] [NormedSpace ℝ F]
+
 /-- Derivative-data adapter, global form: `Differentiable ℝ f` gives `fderiv` derivative data
 within any set. -/
 theorem hasFDerivWithinAt_fderiv_of_differentiable {f : E → F} (hf : Differentiable ℝ f)
     (s : Set E) : ∀ x ∈ s, HasFDerivWithinAt f (fderiv ℝ f x) s x :=
   fun x _ => (hf x).hasFDerivAt.hasFDerivWithinAt
 
-omit [CompleteSpace E] [CompleteSpace F] in
 /-- Derivative-data adapter, open-set form: differentiability on an open `U ⊇ s` gives `fderiv`
 derivative data within `s`. -/
 theorem hasFDerivWithinAt_fderiv_of_differentiableOn {f : E → F} {U s : Set E} (hU : IsOpen U)
@@ -1082,7 +998,6 @@ theorem hasFDerivWithinAt_fderiv_of_differentiableOn {f : E → F} {U s : Set E}
 
 end Adapters
 
-omit [CompleteSpace E] in
 /-- The output of the finite-dimensional face: `A` is invertible, `Df` is invertible on the whole
 closed ball, and `f` has exactly one zero in `B̄_{r₀}(x̄)`, which lies in the open ball. -/
 structure Enclosure (f : E → E) (Df : E → E →L[ℝ] E) (A : E →L[ℝ] E) (xBar : E) (r₀ : ℝ) :
@@ -1092,7 +1007,6 @@ structure Enclosure (f : E → E) (Df : E → E →L[ℝ] E) (A : E →L[ℝ] E)
   exists_zero : ∃ xTilde ∈ ball xBar r₀, f xTilde = 0 ∧
     ∀ z ∈ closedBall xBar r₀, f z = 0 → z = xTilde
 
-omit [CompleteSpace E] in
 /-- Existence and uniqueness of the zero in the closed ball, from an `Enclosure`. -/
 theorem Enclosure.existsUnique {f : E → E} {Df : E → E →L[ℝ] E} {A : E →L[ℝ] E} {xBar : E}
     {r₀ : ℝ} (h : Enclosure f Df A xBar r₀) : ∃! xTilde ∈ closedBall xBar r₀, f xTilde = 0 := by
@@ -1102,7 +1016,6 @@ theorem Enclosure.existsUnique {f : E → E} {Df : E → E →L[ℝ] E} {A : E �
 -- `CompleteSpace E` is inferred from `FiniteDimensional ℝ E` (no completeness binder on the faces).
 variable [FiniteDimensional ℝ E]
 
-omit [CompleteSpace E] in
 /-- **Single-`Z` face** (local; derivative data on the closed ball only).
 `p(r₀) = (Z - 1) r₀ + Y₀ < 0` with `‖I - A Df(c)‖ ≤ Z` on `B̄_{r₀}(x̄)`. No hypothesis on `A`. -/
 theorem enclosure_of_Z {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : E →L[ℝ] E}
@@ -1120,7 +1033,6 @@ theorem enclosure_of_Z {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : 
   exact ⟨isUnit_left_of_norm_id_sub_comp_lt_one (hres xBar hc),
     fun c hc => isUnit_right_of_norm_id_sub_comp_lt_one (hres c hc), x, hx, hfx, hu⟩
 
-omit [CompleteSpace E] in
 /-- Derived face: four bounds `Y₀, Z₀, Z₁, Z₂` with an approximate derivative `A†`
 (`generalRadiiPolynomial`). -/
 theorem enclosure_of_general {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A A_dagger : E →L[ℝ] E}
@@ -1135,7 +1047,6 @@ theorem enclosure_of_general {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E}
     (fun c hc => norm_id_sub_comp_le_Z_bound h_Z₀ h_Z₁ (h_Z₂ c hc)) hf
     (by rw [← generalRadiiPolynomial_alt_form]; exact h_radii)
 
-omit [CompleteSpace E] in
 /-- Derived face: the three bounds `Y₀, Z₀, Z₂` (`A† = Df x̄`, `Z₁ = 0`). -/
 theorem enclosure_of_radii {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : E →L[ℝ] E}
     {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ} (hr₀ : 0 < r₀)
@@ -1147,7 +1058,6 @@ theorem enclosure_of_radii {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {
   enclosure_of_general (A_dagger := Df xBar) (Z₁ := 0) hr₀ h_Y₀ h_Z₀ (by simp) h_Z₂ hf
     (by rw [← radiiPolynomial_is_special_case]; exact h_radii)
 
-omit [CompleteSpace E] in
 /-- Global-derivative face: `Differentiable ℝ f` and `Df = fderiv ℝ f`. -/
 theorem enclosure_of_differentiable {f : E → E} {xBar : E} {A : E →L[ℝ] E}
     {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ} (hr₀ : 0 < r₀)
@@ -1160,7 +1070,6 @@ theorem enclosure_of_differentiable {f : E → E} {xBar : E} {A : E →L[ℝ] E}
   enclosure_of_radii hr₀ h_Y₀ h_Z₀ h_Z₂ (hasFDerivWithinAt_fderiv_of_differentiable hf_diff _)
     h_radii
 
-omit [CompleteSpace E] in
 /-- **Open-set face.** The derivative data come from `DifferentiableOn ℝ f U` on an open `U`
 containing the closed ball of the single radius `r₀`; the `Z₂` bound is demanded at `r₀` only and
 the sign condition is `radiiPolynomial` at `r₀`. Exactly `enclosure_of_radii` with the
@@ -1175,7 +1084,6 @@ theorem enclosure_of_differentiableOn {U : Set E} (hU : IsOpen U) {f : E → E} 
   enclosure_of_radii hr₀ h_Y₀ h_Z₀ h_Z₂
     (hasFDerivWithinAt_fderiv_of_differentiableOn hU hballU hf) h_radii
 
-omit [CompleteSpace E] in
 /-- Output of the two-radius face: `p < 0` on `[rlo, rhi]` and an `Enclosure` at both radii. -/
 structure PairEnclosure (f : E → E) (Df : E → E →L[ℝ] E) (A : E →L[ℝ] E) (xBar : E)
     (p : ℝ → ℝ) (rlo rhi : ℝ) : Prop where
@@ -1183,7 +1091,7 @@ structure PairEnclosure (f : E → E) (Df : E → E →L[ℝ] E) (A : E →L[ℝ
   lower : Enclosure f Df A xBar rlo
   upper : Enclosure f Df A xBar rhi
 
-omit [CompleteSpace E] [FiniteDimensional ℝ E] in
+omit [FiniteDimensional ℝ E] in
 /-- The radii of a `PairEnclosure` form an interval inside one order-connected component of the
 negative set of `p`. -/
 theorem PairEnclosure.Icc_subset_component {f : E → E} {Df : E → E →L[ℝ] E} {A : E →L[ℝ] E}
@@ -1191,7 +1099,6 @@ theorem PairEnclosure.Icc_subset_component {f : E → E} {Df : E → E →L[ℝ]
     (hr₀ : r₀ ∈ Set.Icc rlo rhi) : Set.Icc rlo rhi ⊆ Set.ordConnectedComponent {r | p r < 0} r₀ :=
   Icc_subset_ordConnectedComponent_of_neg hr₀ h.neg
 
-omit [CompleteSpace E] in
 /-- **Two-radius face** with convexity of the radii polynomial as a hypothesis. -/
 theorem enclosure_pair {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : E →L[ℝ] E}
     {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {rlo rhi : ℝ} (hrlo : 0 < rlo) (hle : rlo ≤ rhi)
@@ -1208,7 +1115,6 @@ theorem enclosure_pair {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : 
     enclosure_of_radii hrlo h_Y₀ h_Z₀ h_Z₂lo (fun x hx => (hf x (hs hx)).mono hs) hpm,
     enclosure_of_radii (hrlo.trans_le hle) h_Y₀ h_Z₀ h_Z₂hi hf hpp⟩
 
-omit [CompleteSpace E] in
 /-- **Two-radius face, polynomial `Z₂` of any degree**, local derivative data, convexity
 discharged by `convexOn_radiiPolynomial_of_poly`. A constant or affine `Z₂` is the one- or
 two-element list `[c₀]`, `[c₀, c₁]`; global derivative data enter through
@@ -1227,7 +1133,6 @@ theorem enclosure_pair_poly {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} 
   enclosure_pair hrlo hle h_Y₀ h_Z₀ h_Z₂lo h_Z₂hi hf
     (convexOn_radiiPolynomial_of_poly hcs hZ₂ hrlo.le) hpm hpp
 
-omit [CompleteSpace E] in
 /-- **Per-radius face** with convexity of the radii polynomial as a hypothesis: every radius of
 `[rlo, rhi]` carries an `Enclosure`. -/
 theorem enclosure_Icc {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : E →L[ℝ] E}
@@ -1243,7 +1148,6 @@ theorem enclosure_Icc {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : E
   exact enclosure_of_radii (hrlo.trans_le hr.1) h_Y₀ h_Z₀ (h_Z₂ r hr)
     (fun x hx => (hf x (hs hx)).mono hs) (radiiPoly_neg_on_Icc_of_convexOn hconv hpm hpp r hr)
 
-omit [CompleteSpace E] in
 /-- **Per-radius face, polynomial `Z₂` of any degree**, local derivative data, convexity
 discharged: every radius of `[rlo, rhi]` carries both `p(r) < 0` and an `Enclosure`. -/
 theorem enclosure_Icc_poly {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : E →L[ℝ] E}
@@ -1260,7 +1164,6 @@ theorem enclosure_Icc_poly {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {
   fun r hr => ⟨radiiPoly_neg_on_Icc_of_convexOn hconv hpm hpp r hr,
     enclosure_Icc hrlo h_Y₀ h_Z₀ h_Z₂ hf hconv hpm hpp r hr⟩
 
-omit [CompleteSpace E] in
 /-- **Finite-dimensional local radii polynomial theorem, general form**: general `A†` (`Z₁`
 slot), `Z₂ : ℝ → ℝ`, derivative data on the closed ball only. Injectivity of `A` is not a
 hypothesis: `p(r₀) < 0` forces `‖I − A Df(x̄)‖ < 1`, so `A` is onto, hence injective in finite
@@ -1275,14 +1178,10 @@ theorem general_rp_findim_local {f : E → E} {Df : E → E →L[ℝ] E} {xBar :
     (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0) :
     ∃ xTilde ∈ ball xBar r₀, f xTilde = 0 ∧ (Df xTilde).IsInvertible ∧
       ∀ z ∈ closedBall xBar r₀, f z = 0 → z = xTilde := by
-  have : CompleteSpace E := FiniteDimensional.complete ℝ E
   have hZ : ∀ c ∈ closedBall xBar r₀,
       ‖ContinuousLinearMap.id ℝ E - A.comp (Df c)‖ ≤ Z_bound_general Z₀ Z₁ Z₂ r₀ :=
     fun c hc => norm_id_sub_comp_le_Z_bound h_Z₀ h_Z₁ (h_Z₂ c hc)
-  have hp : simpleRadiiPolynomial Y₀ (Z_bound_general Z₀ Z₁ Z₂) r₀ < 0 := by
-    unfold simpleRadiiPolynomial
-    rw [← generalRadiiPolynomial_alt_form]
-    exact h_radii
+  have hp := (generalRadiiPolynomial_alt_form ..).symm.trans_lt h_radii
   have hZ1 := simple_radii_poly_neg_implies_Z_lt_one ((norm_nonneg _).trans h_Y₀) hr₀ hp
   exact radii_polynomial_theorem_of_norm_id_sub_le_local (Z := Z_bound_general Z₀ Z₁ Z₂) hr₀
     h_Y₀ hZ hf hp

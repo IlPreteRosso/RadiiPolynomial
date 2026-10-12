@@ -95,8 +95,10 @@ end
 section
 variable {ν : PosReal}
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ ℂ ν)
+
 /-- The first-order tail column in closed form, for every coefficient `c`. -/
-theorem tailCol_tailInv_ikSymbol_coeff (N m : ℕ) (c : lpOneAlg ℤ (geomFiberZ ℂ ν)) (j : ℤ) :
+theorem tailCol_tailInv_ikSymbol_coeff (N m : ℕ) (c : 𝓔) (j : ℤ) :
     tailCol m (tailInv N ikSymbol) c j =
       (∑ i ∈ winZ m, (if N < (j + i).natAbs then ((j + i).natAbs : ℝ)⁻¹ else 0) *
         ‖lpOneAlg.toRealSeq c i‖ * (ν : ℝ) ^ (j + i).natAbs) / (ν : ℝ) ^ j.natAbs := by
@@ -112,12 +114,15 @@ end
 section
 variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
+local notation "𝓔" => lpOneAlg ℤ (geomFiberZ ℂ ν)
+local notation "𝓟[" N "]" => (lpOneAlg.headProj (𝕜 := ℂ) (G := geomFiberZ ℂ ν) (winZ N) : 𝓔 →L[ℂ] 𝓔)
+
 /-- The exact window `N + m + 1` of the first-order family (`K₀ = 1`), explicit form, under `P M = M`
 and the band `m` of `β`. -/
-theorem norm_fderiv_sub_modelDeriv_eq_sup'_first (N m : ℕ) (M : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν)) (τ : ℂ)
-    (Φ : MvPolynomial (Fin 1) ℂ) (abar : lpOneAlg ℤ (geomFiberZ ℂ ν)) (hPM : (lpOneAlg.headProj (𝕜 := ℂ) (G := geomFiberZ ℂ ν) (winZ N) : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν)) ∘L M = M)
+theorem norm_fderiv_sub_modelDeriv_eq_sup'_first (N m : ℕ) (M : 𝓔 →L[ℂ] 𝓔) (τ : ℂ)
+    (Φ : MvPolynomial (Fin 1) ℂ) (abar : 𝓔) (hPM : 𝓟[N] ∘L M = M)
     (hβ : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq (beta τ Φ abar) i = 0) :
-    ‖(fderiv ℂ (precondMap N M ikSymbol (tailInv N ikSymbol) (1 / ((N : ℝ) + 1)) (norm_tailInv_ikSymbol_le N) τ Φ : lpOneAlg ℤ (geomFiberZ ℂ ν) → lpOneAlg ℤ (geomFiberZ ℂ ν)) abar : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν)) - (modelDeriv N M ikSymbol τ Φ abar : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν))‖ =
+    ‖(fderiv ℂ (precondMap N M ikSymbol (tailInv N ikSymbol) (1 / ((N : ℝ) + 1)) (norm_tailInv_ikSymbol_le N) τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[ℂ] 𝓔) - (modelDeriv N M ikSymbol τ Φ abar : 𝓔 →L[ℂ] 𝓔)‖ =
       (winZ (N + m + 1)).sup' (winZ_nonempty _)
         (fun j => headCol N M (beta τ Φ abar) j + tailCol m (tailInv N ikSymbol) (beta τ Φ abar) j) := by
   rw [norm_fderiv_sub_modelDeriv_eq_sup'_explicit N m 1 M ikSymbol (tailInv N ikSymbol)
@@ -126,10 +131,10 @@ theorem norm_fderiv_sub_modelDeriv_eq_sup'_first (N m : ℕ) (M : lpOneAlg ℤ (
 
 /-- The Γ majorant of the first-order family, with the first-tail bound `C = 1/(N + 1)`. Not the exact
 window norm. -/
-theorem norm_fderiv_sub_modelDeriv_le_gamma_first (N : ℕ) (M : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν)) (τ : ℂ)
-    (Φ : MvPolynomial (Fin 1) ℂ) (abar : lpOneAlg ℤ (geomFiberZ ℂ ν)) :
-    ‖(fderiv ℂ (precondMap N M ikSymbol (tailInv N ikSymbol) (1 / ((N : ℝ) + 1)) (norm_tailInv_ikSymbol_le N) τ Φ : lpOneAlg ℤ (geomFiberZ ℂ ν) → lpOneAlg ℤ (geomFiberZ ℂ ν)) abar : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν)) - (modelDeriv N M ikSymbol τ Φ abar : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν))‖ ≤
-      (‖M ∘L (lpOneAlg.headProj (𝕜 := ℂ) (G := geomFiberZ ℂ ν) (winZ N) : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν)) ∘L (gammaDiag N : lpOneAlg ℤ (geomFiberZ ℂ ν) →L[ℂ] lpOneAlg ℤ (geomFiberZ ℂ ν))‖ + 1 / ((N : ℝ) + 1)) * ‖(beta τ Φ abar : lpOneAlg ℤ (geomFiberZ ℂ ν))‖ :=
+theorem norm_fderiv_sub_modelDeriv_le_gamma_first (N : ℕ) (M : 𝓔 →L[ℂ] 𝓔) (τ : ℂ)
+    (Φ : MvPolynomial (Fin 1) ℂ) (abar : 𝓔) :
+    ‖(fderiv ℂ (precondMap N M ikSymbol (tailInv N ikSymbol) (1 / ((N : ℝ) + 1)) (norm_tailInv_ikSymbol_le N) τ Φ : 𝓔 → 𝓔) abar : 𝓔 →L[ℂ] 𝓔) - (modelDeriv N M ikSymbol τ Φ abar : 𝓔 →L[ℂ] 𝓔)‖ ≤
+      (‖M ∘L 𝓟[N] ∘L (gammaDiag N : 𝓔 →L[ℂ] 𝓔)‖ + 1 / ((N : ℝ) + 1)) * ‖(beta τ Φ abar : 𝓔)‖ :=
   norm_fderiv_sub_modelDeriv_le_gamma N M ikSymbol (tailInv N ikSymbol) (1 / ((N : ℝ) + 1))
     (norm_tailInv_ikSymbol_le N) τ Φ abar
 

@@ -12,6 +12,9 @@ positive weight function. This provides a single parameterized fiber type that u
 ## Main definitions
 
 - `WeightedScalar 𝕜 w m`: 𝕜 with weighted norm
+- `WeightedScalar.equiv`: the standard frame `θ_m : 𝕜 ≃ₗ[𝕜] WeightedScalar 𝕜 w m` (the identity
+  of `𝕜`), with its additive view `WeightedScalar.ofReal` and the inverse map
+  `WeightedScalar.toReal`
 - `PosWeight w`: weight with positive values (→ NormedAddCommGroup)
 - `SuperUnitWeight w`: weight ≥ 1 (→ ℓ¹_w ↪ ℓ¹, uniform convergence)
 - `SubMulWeightBase w`: submultiplicative weight with `w 0 = 1` (→ ring and normed-ring
@@ -109,26 +112,8 @@ lemma equiv_toAddEquiv : (equiv : 𝕜 ≃ₗ[𝕜] WeightedScalar 𝕜 w m).toA
 @[simp] lemma equiv_symm_apply (x : WeightedScalar 𝕜 w m) :
     (equiv : 𝕜 ≃ₗ[𝕜] WeightedScalar 𝕜 w m).symm x = toReal x := rfl
 
--- omit [NormedField 𝕜] in
--- @[simp] lemma toReal_apply (x : WeightedScalar 𝕜 w m) : toReal x = x := rfl
--- @[simp] lemma ofReal_apply (x : 𝕜) : (ofReal x : WeightedScalar 𝕜 w m) = x := rfl
-
--- @[simp] lemma coe_zero : ((0 : WeightedScalar 𝕜 w m) : 𝕜) = 0 := rfl
--- @[simp] lemma coe_one : ((1 : WeightedScalar 𝕜 w m) : 𝕜) = 1 := rfl
--- @[simp] lemma coe_add (x y : WeightedScalar 𝕜 w m) :
---     ((x + y : WeightedScalar 𝕜 w m) : 𝕜) = x + y := rfl
--- @[simp] lemma coe_sub (x y : WeightedScalar 𝕜 w m) :
---     ((x - y : WeightedScalar 𝕜 w m) : 𝕜) = x - y := rfl
--- @[simp] lemma coe_neg (x : WeightedScalar 𝕜 w m) :
---     ((-x : WeightedScalar 𝕜 w m) : 𝕜) = -x := rfl
--- @[simp] lemma coe_mul (x y : WeightedScalar 𝕜 w m) :
---     ((x * y : WeightedScalar 𝕜 w m) : 𝕜) = x * y := rfl
--- @[simp] lemma coe_smul (r : 𝕜) (x : WeightedScalar 𝕜 w m) :
---     ((r • x : WeightedScalar 𝕜 w m) : 𝕜) = r • ↑x := rfl
--- @[simp] lemma coe_pow (x : WeightedScalar 𝕜 w m) (k : ℕ) :
---     ((x ^ k : WeightedScalar 𝕜 w m) : 𝕜) = (↑x) ^ k := rfl
--- @[simp] lemma coe_natCast (k : ℕ) : ((k : WeightedScalar 𝕜 w m) : 𝕜) = k := rfl
--- @[simp] lemma coe_intCast (k : ℤ) : ((k : WeightedScalar 𝕜 w m) : 𝕜) = k := rfl
+-- No coe_*/toReal_apply simp lemmas (retired at 35f292a);
+-- use equiv_apply, equiv_symm_apply, norm_def.
 
 /-! ### Weighted Norm -/
 
@@ -139,14 +124,15 @@ lemma norm_def (x : WeightedScalar 𝕜 w m) : ‖x‖ = ‖toReal x‖ * w m :=
 
 @[simp] lemma norm_ofReal (r : 𝕜) : ‖(ofReal r : WeightedScalar 𝕜 w m)‖ = ‖r‖ * w m := rfl
 
-/-- Standard-model form of the scaling identity `‖ofReal r‖ = ‖r‖ * ‖ofReal 1‖`;
-retained for consumers. -/
+/-- Standard-model form of the scaling identity `‖ofReal r‖ = ‖r‖ * ‖ofReal 1‖`: the
+`WeightedScalar.ofReal` spelling of the generic face `lpAlgRingData.norm_ofReal_eq`. -/
 lemma norm_ofReal_eq_mul_norm_one (r : 𝕜) :
     ‖(ofReal r : WeightedScalar 𝕜 w m)‖ = ‖r‖ * ‖(ofReal 1 : WeightedScalar 𝕜 w m)‖ := by
   show ‖r‖ * w m = ‖r‖ * (‖(1 : 𝕜)‖ * w m); rw [norm_one, one_mul]
 
 /-- Standard-model form of the (derived) two-scalar Beurling inequality
-`‖a*b‖ * w(j+l) ≤ (‖a‖*w j) * (‖b‖*w l)`; retained for consumers. -/
+`‖a*b‖ * w(j+l) ≤ (‖a‖*w j) * (‖b‖*w l)`: the `WeightedScalar.ofReal` spelling of the generic
+face `lpOneAlgWeightMul.norm_ofReal_mul_le`. -/
 lemma norm_ofReal_mul_le [AddCommMonoid M] [SubMulWeightBase w] (j l : M) (a b : 𝕜) :
     ‖(ofReal (a * b) : WeightedScalar 𝕜 w (j + l))‖ ≤
     ‖(ofReal a : WeightedScalar 𝕜 w j)‖ * ‖(ofReal b : WeightedScalar 𝕜 w l)‖ := by
@@ -154,8 +140,8 @@ lemma norm_ofReal_mul_le [AddCommMonoid M] [SubMulWeightBase w] (j l : M) (a b :
   exact (mul_le_mul_of_nonneg_left (SubMulWeightBase.submul j l)
     (mul_nonneg (norm_nonneg _) (norm_nonneg _))).trans_eq (by ring)
 
-/-- Standard-model form of the (derived) bound `1 ≤ ‖ofReal 1‖`, i.e. `1 ≤ w m`;
-retained for consumers. -/
+/-- Standard-model form of the (derived) bound `1 ≤ ‖ofReal 1‖`, i.e. `1 ≤ w m`: the
+`WeightedScalar.ofReal` spelling of the generic face `lpOneAlgWeightSubMul.norm_ofReal_one_ge`. -/
 lemma norm_ofReal_one_ge [AddCommMonoid M] [SubMulWeight w] (m : M) :
     1 ≤ ‖(ofReal 1 : WeightedScalar 𝕜 w m)‖ := by
   simp only [norm_ofReal, norm_one, one_mul]; exact SuperUnitWeight.one_le m
@@ -189,40 +175,21 @@ lemma norm_eq_zero' (x : WeightedScalar 𝕜 w m) : ‖x‖ = 0 ↔ x = 0 := by
     | inr h => exact absurd h (PosWeight.weight_ne_zero m)
   · intro h; left; rw [h]; exact norm_zero
 
-instance instNormedAddCommGroup : NormedAddCommGroup (WeightedScalar 𝕜 w m) where
-  dist x y := ‖-x + y‖
-  dist_self x := by
-    show ‖toReal (-x + x)‖ * w m = 0
-    rw [show toReal (-x + x) = (0 : 𝕜) from neg_add_cancel x, norm_zero, zero_mul]
-  dist_comm x y := by
-    simp only [norm_def]; congr 1
-    show ‖(-toReal x + toReal y : 𝕜)‖ = ‖(-toReal y + toReal x : 𝕜)‖
-    rw [show -toReal x + toReal y = toReal y - toReal x from by ring,
-        show -toReal y + toReal x = toReal x - toReal y from by ring, norm_sub_rev]
-  dist_triangle x y z := by
-    rw [show -x + z = (-x + y) + (-y + z) from by abel_nf]
-    show ‖toReal ((-x + y) + (-y + z))‖ * w m ≤
-      ‖toReal (-x + y)‖ * w m + ‖toReal (-y + z)‖ * w m
-    rw [← add_mul]; exact mul_le_mul_of_nonneg_right (norm_add_le _ _)
-      (le_of_lt (PosWeight.weight_pos m))
-  edist_dist x y := rfl
-  eq_of_dist_eq_zero {a b} h := by
-    have : ‖toReal (-a + b)‖ * w m = 0 := h
-    have h1 : ‖toReal (-a + b)‖ = 0 := by
-      rcases mul_eq_zero.mp this with h | h
-      · exact h
-      · exact absurd h (ne_of_gt (PosWeight.weight_pos m))
-    have h2 : -a + b = (0 : WeightedScalar 𝕜 w m) := norm_eq_zero.mp h1
-    have h3 : a + (-a + b) = a + 0 := congr_arg (a + ·) h2
-    rwa [add_neg_cancel_left, add_zero, eq_comm] at h3
-  norm := (‖·‖)
-  dist_eq _ _ := rfl
+/-- The weighted-norm laws `norm_nonneg'`, `norm_smul'`, `norm_add_le'`, `norm_eq_zero'` as a
+`NormedSpace.Core`: the source of the normed-group and normed-space instances below. -/
+theorem normedSpaceCore : NormedSpace.Core 𝕜 (WeightedScalar 𝕜 w m) :=
+  ⟨⟨norm_nonneg', norm_smul', norm_add_le'⟩, norm_eq_zero'⟩
 
-instance instNormedSpace : NormedSpace 𝕜 (WeightedScalar 𝕜 w m) where
-  toModule := inferInstance
-  norm_smul_le c x := by
-    show ‖c * toReal x‖ * w m ≤ ‖c‖ * (‖toReal x‖ * w m)
-    rw [norm_mul, mul_assoc]
+/-- The normed group of the weighted norm, built from `normedSpaceCore`. The explicit `edist`
+field is the default `ENNReal.ofReal ∘ dist`; `NormedAddCommGroup.ofCore` alone constructs the
+extended distance through a different term. -/
+instance instNormedAddCommGroup : NormedAddCommGroup (WeightedScalar 𝕜 w m) :=
+  { NormedAddCommGroup.ofCore normedSpaceCore with
+    edist := fun x y => ENNReal.ofReal ‖-x + y‖
+    edist_dist := fun _ _ => rfl }
+
+instance instNormedSpace : NormedSpace 𝕜 (WeightedScalar 𝕜 w m) :=
+  NormedSpace.ofCore normedSpaceCore
 
 instance instFiniteDimensional : FiniteDimensional 𝕜 (WeightedScalar 𝕜 w m) :=
   inferInstanceAs (FiniteDimensional 𝕜 𝕜)

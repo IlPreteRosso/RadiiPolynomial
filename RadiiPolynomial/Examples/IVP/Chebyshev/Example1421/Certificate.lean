@@ -13,8 +13,9 @@ obligation is an exact-ℚ conjunct of `ChebCertQ.ChecksK`, closed by its own
 certificate uses no compiled-code evaluation. The four bounds:
 
 - `Y₀_le` — ‖G(ā)‖ ≤ 10⁻²¹ from the exact ℚ value of the residual after the stored
-  preconditioner (`Y₀_le_of_Q`); the ℚ mirror `FQ` of F(ā) below agrees with the
-  adapter's residual coefficients (`computed_residual_eq`);
+  preconditioner (`Y₀_le_of_Q`); the ℚ mirror `FQ` of F(ā) below is an audit cross-check, not
+  consumed by the certificate: it agrees with the adapter's residual coefficients
+  (`computed_residual_eq`);
 - `Z₀_finBlockNorm_le` — the 41×41 block defect ‖I − A·DF‖ ≤ 10⁻¹⁶ from the grid clause
   of `DefectBy` at denominator `10 ^ 60` (`StdChebIVPData.Z₀_sound`); `main_theorem`
   consumes the same kernel lemma through the family face, and the operator form `Z₀_le` is
@@ -25,8 +26,8 @@ certificate uses no compiled-code evaluation. The four bounds:
   Jacobian, the leaked Dφ couplings N < m ≤ 2N+2 peak at ≈ 0.0034, and beyond 2N+2 only
   row 0's alternating functional survives; K = 5.12 is the syntactic derivative constant
   at the certified radius `‖S(ā)‖ ≤ 39/50` (the kernel checks `k_R`, `k_K`; the same radius
-  is the public `Sabar_norm_le`); `Z₁_le_semiMajor` feeds the same four obligations to
-  `chebyshev_Z₁_le_semiMajor`;
+  is the public `Sabar_norm_le`); `Z₁_le_semiMajor` feeds the same obligations to
+  `chebyshev_Z₁_le_semiMajor` through the family face `Z₁_le_semiMajor_of_checksK`;
 - `Z₂_le` — 14·r₀ through `Z₂_le_of_Q`: the derivative's Lipschitz constant
   `8 = 2·derivativeLipschitzBound (X² − X)` read off the syntax, and the sharp full-column
   bound ‖TC‖ ≤ 7/4 (closed-form `TC` rows, tail ν/(N+1) = 2/41);
@@ -44,11 +45,12 @@ noncomputable section
 
 namespace Example1421.Cert
 
-/-! ## ℚ mirror of F(ā)
+/-! ## Audit cross-check (not consumed by the certificate): ℚ mirror of F(ā)
 
 The folded convolution of the stored dyadic coefficients, run in exact ℚ.
 `FQ` mirrors `chebyshevIvpCoeffs (banachField f_cpoly) p₀ ā` row by row (bridge:
-`computed_residual_eq`). -/
+`computed_residual_eq`). `main_theorem` does not use this section: its `Y₀` goes through the
+adapter's `Y₀Q` (`k_Y₀`). -/
 
 /-- Stored coefficient, zero-extended beyond the array. -/
 def qbar (k : ℕ) : ℚ := abar_0.getD k 0
@@ -253,19 +255,13 @@ lemma Z₁_le :
   data.Z₁_le_of_checksK f_cpoly p₀ p_q cert E .grid (10 ^ 60) checksK_data
 
 /-- **Semi-major Z₁ bound**: `‖composedApprox − DG(ā)‖ ≤ ε + (ν⁻¹+ν)/(2(N+1))·K ≤ 0.16`,
-via `chebyshev_Z₁_le_semiMajor` with the same four obligations as `Z₁_le`
-(0.0035 + (1.25/41)·5.12 = 0.1596…). Additive: `Z₁_le` and `Z₁_bound` are unchanged. -/
+via `chebyshev_Z₁_le_semiMajor` (family face `Z₁_le_semiMajor_of_checksK`) with the same kernel
+checks as `Z₁_le` (0.0035 + (1.25/41)·5.12 = 0.1596…). -/
 theorem Z₁_le_semiMajor :
     ‖data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar‖
-      ≤ ((Z₁_semiMajor_bound : ℚ) : ℝ) := by
-  obtain ⟨-, -, hR, hK, hε, -⟩ :=
-    checks_of_checksK cert E data.ν_q_pos .grid (10 ^ 60) checksK_data
-  refine chebyshev_Z₁_le_semiMajor N data.composedApproxCLM (data.G (banachField f_cpoly) p₀) ābar
-    (fun h l => compPolyDerivative f_cpoly data.abar h l) (data.Z₁_hneg f_cpoly p₀)
-    (by norm_num [cert, eps_bound]) (data.Z₁_hfin f_cpoly p₀ hε) (data.Z₁_htail f_cpoly p₀)
-    (by norm_num [cert, K_bound]) (data.Z₁_hDφ f_cpoly hR hK) ?_
-  rw [show ((ν_val : ℝ)) = 2 from rfl]
-  norm_num [cert, eps_bound, K_bound, Z₁_semiMajor_bound, N]
+      ≤ ((Z₁_semiMajor_bound : ℚ) : ℝ) :=
+  data.Z₁_le_semiMajor_of_checksK f_cpoly p₀ p_q cert E .grid (10 ^ 60) checksK_data
+    (by norm_num [cert, eps_bound, K_bound, Z₁_semiMajor_bound, data, ν_q, N])
 
 /-- **Z₂ obligation**: the Lipschitz bound on DG over the certificate ball, from
 `Z₂_le_of_Q`: `‖TC‖ ≤ 7/4` (closed-form rows, `TCnormF_eq`) times the syntactic derivative

@@ -1,6 +1,5 @@
 import Mathlib.Algebra.BigOperators.NatAntidiagonal
 import Mathlib.RingTheory.PowerSeries.Basic
-import Mathlib.Basic.Real.Basic
 import RadiiPolynomial.Algebra.Convolution.Finite
 
 /-!
@@ -11,9 +10,12 @@ It is the finite-fiber convolution `finiteAddConvolution` on the additive index 
 (`CauchyProduct_eq_finiteAddConvolution`). That general operation owns the algebraic laws:
 associativity, distributivity, the zero laws, commutativity, the scalar laws and the two-atom
 rule are specializations of its laws. The coefficient map to formal power series identifies
-this product with power-series multiplication and supplies the unit laws. Atom, support and
-finite Toeplitz formulas provide the concrete coefficient API. Raw sequence multiplication
-remains pointwise; the bridge records compatibility with the separately named Cauchy product.
+this product with power-series multiplication and supplies the unit laws. Its bundled view
+`toPowerSeriesLinearEquiv` is an `S`-linear equivalence for every semiring `S` acting on the
+coefficients, so additivity and scalar compatibility of the map are `map_add`, `map_zero` and
+`map_smul`. Atom, support and finite Toeplitz formulas provide the concrete coefficient API.
+Raw sequence multiplication remains pointwise; the bridge records compatibility with the
+separately named Cauchy product.
 -/
 
 open scoped BigOperators
@@ -43,10 +45,12 @@ section Semiring
 
 variable [Semiring R]
 
-lemma apply (a b : ℕ → R) (n : ℕ) :
+/-- Application of the Cauchy product: the antidiagonal sum. -/
+theorem apply (a b : ℕ → R) (n : ℕ) :
     CauchyProduct a b n = ∑ kl ∈ Finset.antidiagonal n, a kl.1 * b kl.2 := rfl
 
-lemma apply_range (a b : ℕ → R) (n : ℕ) :
+/-- The Cauchy product as a sum over `range (n + 1)`, `∑ j, a (n - j) * b j`. -/
+theorem apply_range (a b : ℕ → R) (n : ℕ) :
     CauchyProduct a b n = ∑ j ∈ Finset.range (n + 1), a (n - j) * b j := by
   rw [apply, ← Finset.Nat.sum_antidiagonal_swap (f := fun p => a p.1 * b p.2)]
   exact Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun i j => a j * b i) n
@@ -54,8 +58,11 @@ lemma apply_range (a b : ℕ → R) (n : ℕ) :
 /-- Multiplicative identity sequence (`1,0,0,...`). -/
 def one : ℕ → R := fun n => if n = 0 then 1 else 0
 
-@[simp] lemma one_zero : (one : ℕ → R) 0 = 1 := rfl
-@[simp] lemma one_succ (n : ℕ) : (one : ℕ → R) (n + 1) = 0 := rfl
+/-- The unit sequence at `0`. -/
+@[simp] theorem one_zero : (one : ℕ → R) 0 = 1 := rfl
+
+/-- The unit sequence at `n + 1`. -/
+@[simp] theorem one_succ (n : ℕ) : (one : ℕ → R) (n + 1) = 0 := rfl
 
 end Semiring
 
@@ -72,25 +79,56 @@ theorem toPowerSeries_injective : Function.Injective (toPowerSeries (R := R)) :=
     simpa only [toPowerSeries, PowerSeries.mk, Finsupp.single_eq_same] using
       congrFun h (Finsupp.single () n)
 
+section LinearEquiv
+
+variable (S : Type*) [Semiring S] [AddCommMonoid R] [Module S R]
+
+/-- The coefficient map `toPowerSeries` as an `S`-linear equivalence, for any semiring `S` acting
+on the coefficients: the forward map is `toPowerSeries` (`toPowerSeriesLinearEquiv_apply`) and
+the inverse reads off coefficients (`toPowerSeriesLinearEquiv_symm_apply`).
+
+It is the reindexing of coordinates along `(Unit →₀ ℕ) ≃ ℕ`; no multiplication on `R` is
+involved. Both the forward map and the inverse compute by `rfl`. -/
+noncomputable def toPowerSeriesLinearEquiv : (ℕ → R) ≃ₗ[S] PowerSeries R :=
+  LinearEquiv.funCongrLeft S R (Finsupp.uniqueEquiv (M := ℕ) ())
+
+variable {S}
+
+/-- The forward map of `toPowerSeriesLinearEquiv` is the raw coefficient map `toPowerSeries`. -/
+theorem toPowerSeriesLinearEquiv_apply (a : ℕ → R) :
+    toPowerSeriesLinearEquiv S a = toPowerSeries a :=
+  rfl
+
+/-- The inverse of `toPowerSeriesLinearEquiv` evaluates a power series at the exponent
+`Finsupp.single () n`; over a semiring this is `PowerSeries.coeff n`
+(`toPowerSeriesLinearEquiv_symm_apply_coeff`). -/
+theorem toPowerSeriesLinearEquiv_symm_apply (φ : PowerSeries R) (n : ℕ) :
+    (toPowerSeriesLinearEquiv S).symm φ n = φ (Finsupp.single () n) :=
+  rfl
+
+end LinearEquiv
+
 variable [Semiring R]
 
-@[simp] lemma coeff_toPowerSeries (a : ℕ → R) (n : ℕ) :
+/-- The coefficients of `toPowerSeries a` are the entries of `a`. -/
+@[simp] theorem coeff_toPowerSeries (a : ℕ → R) (n : ℕ) :
     PowerSeries.coeff n (toPowerSeries a) = a n := PowerSeries.coeff_mk n a
 
-theorem toPowerSeries_add (a b : ℕ → R) :
-    toPowerSeries (a + b) = toPowerSeries a + toPowerSeries b := by
-  ext n
-  simp only [coeff_toPowerSeries, Pi.add_apply, map_add]
+/-- Over a semiring `R`, the inverse of `toPowerSeriesLinearEquiv` is coefficient extraction,
+for any scalar semiring `S` acting on `R`. -/
+@[simp] theorem toPowerSeriesLinearEquiv_symm_apply_coeff {S : Type*} [Semiring S] [Module S R]
+    (φ : PowerSeries R) (n : ℕ) :
+    (toPowerSeriesLinearEquiv S).symm φ n = PowerSeries.coeff n φ :=
+  toPowerSeriesLinearEquiv_symm_apply φ n
 
-theorem toPowerSeries_zero : toPowerSeries (0 : ℕ → R) = 0 := by
-  ext n
-  simp only [coeff_toPowerSeries, Pi.zero_apply, map_zero]
+/-- Over a semiring `R`, the coefficients of the bundled view are the entries of the sequence,
+for any scalar semiring `S` acting on `R`. -/
+@[simp] theorem coeff_toPowerSeriesLinearEquiv {S : Type*} [Semiring S] [Module S R]
+    (a : ℕ → R) (n : ℕ) :
+    PowerSeries.coeff n (toPowerSeriesLinearEquiv S a) = a n :=
+  coeff_toPowerSeries a n
 
-theorem toPowerSeries_smul (c : R) (a : ℕ → R) :
-    toPowerSeries (c • a) = c • toPowerSeries a := by
-  ext n
-  simp only [coeff_toPowerSeries, Pi.smul_apply, PowerSeries.coeff_smul]
-
+/-- The unit sequence maps to the power series `1`. -/
 theorem toPowerSeries_one : toPowerSeries (one : ℕ → R) = 1 := by
   ext n
   rw [coeff_toPowerSeries, PowerSeries.coeff_one]
@@ -146,10 +184,12 @@ theorem right_distrib (a b c : ℕ → R) :
     CauchyProduct (a + b) c = CauchyProduct a c + CauchyProduct b c := by
   simpa only [CauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.add_left a b c
 
+/-- The zero sequence is a left zero of the Cauchy product. -/
 theorem zero_mul (a : ℕ → R) : CauchyProduct 0 a = 0 := by
   simpa only [CauchyProduct_eq_finiteAddConvolution] using
     finiteAddConvolution.zero_left MulZeroClass.zero_mul a
 
+/-- The zero sequence is a right zero of the Cauchy product. -/
 theorem mul_zero (a : ℕ → R) : CauchyProduct a 0 = 0 := by
   simpa only [CauchyProduct_eq_finiteAddConvolution] using
     finiteAddConvolution.zero_right MulZeroClass.mul_zero a
@@ -211,7 +251,8 @@ theorem single_mul_single (i j : ℕ) (a b : R) :
   simpa only [CauchyProduct_eq_finiteAddConvolution] using
     finiteAddConvolution.single_single MulZeroClass.zero_mul MulZeroClass.mul_zero i j a b
 
-lemma zero_of_support {a b : ℕ → R} {M : ℕ}
+/-- If `a` and `b` vanish above `M`, their Cauchy product vanishes above `2 * M`. -/
+theorem zero_of_support {a b : ℕ → R} {M : ℕ}
     (ha : ∀ n, M < n → a n = 0) (hb : ∀ n, M < n → b n = 0)
     (n : ℕ) (hn : 2 * M < n) :
     CauchyProduct a b n = 0 := by
@@ -221,7 +262,9 @@ lemma zero_of_support {a b : ℕ → R} {M : ℕ}
   · simp [ha k hk]
   · simp [hb l (by omega)]
 
-lemma apply_of_support_le_split {a h : ℕ → R} {N n : ℕ}
+/-- If `a` vanishes above `N < n`, the `n`-th coefficient of `a ⋆ h` splits into the `k = 0`
+term and a sum over `Icc 1 N`. -/
+theorem apply_of_support_le_split {a h : ℕ → R} {N n : ℕ}
     (ha : ∀ k, N < k → a k = 0) (hn : N < n) :
     CauchyProduct a h n = a 0 * h n + ∑ k ∈ Finset.Icc 1 N, a k * h (n - k) := by
   rw [apply, Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun k l => a k * h l)]
@@ -277,11 +320,5 @@ lemma map_CauchyProduct {S : Type*} [Semiring R] [Semiring S] (f : R →+* S)
 end CauchyProduct
 
 end Generic
-
-/-- Cauchy product with `ℚ → ℝ` cast. -/
-theorem CauchyProduct.ratCast (a b : ℕ → ℚ) (n : ℕ) :
-    CauchyProduct (fun k => (a k : ℝ)) (fun k => (b k : ℝ)) n =
-      ↑(CauchyProduct a b n) :=
-  CauchyProduct.map_CauchyProduct (Rat.castHom ℝ) a b n
 
 end RadiiPolynomial

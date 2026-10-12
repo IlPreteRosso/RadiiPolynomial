@@ -176,7 +176,7 @@ private lemma hc (n : ℕ) : l1Weighted.toSeq c n = ((kdata.cq n : ℚ) : ℝ) :
 threshold (κ−1)/κ = 62.5%, so the certificate transports: a unique zero of the
 conjugated map `F'` in the bordered Chebyshev ball of radius 1/16 around the
 transported candidate — proved without re-running any bound on the C side. The B-side
-bounds come from the polynomial-zero family face, the margin from the root `gateQ_sound`. -/
+bounds come from the polynomial-zero family face, the margin from Core's `gateQ_sound`. -/
 theorem transported_existsUnique :
     ∃! bTilde ∈ Metric.closedBall (u xBar) (1/16 : ℝ), F' bTilde = 0 := by
   obtain ⟨-, hY, hZ0, hZ1, hZ2, hd, -, hi⟩ := kdata.certified hν hx hc kdata_checks
@@ -185,7 +185,7 @@ theorem transported_existsUnique :
     u u hsquare hα hβ (by norm_num)
     (by norm_num) (by show ((1/16 : ℚ) : ℝ) = 1 * (1/16); norm_num)
     hY hZ0 hZ1 hZ2 hd (by
-      have := _root_.gateQ_sound (α := 8/3) (β := 1) (Y₀ := kdata.Y₀) (Z₀ := kdata.Z₀)
+      have := gateQ_sound (α := 8/3) (β := 1) (Y₀ := kdata.Y₀) (Z₀ := kdata.Z₀)
         (Z₁ := kdata.Z₁) (Z₂ := kdata.Z₂) (r₀ := kdata.r₀) (by decide +kernel)
       push_cast at this ⊢; exact this) hi
 
@@ -204,28 +204,7 @@ theorem gate_rejects_half :
 
 end
 
-/-! ## §6 The ℚ gate: the reuse-or-reprove decision procedure
-
-`gateQ` is the entire decision procedure: given the B-side certificate numbers
-and the transport price κ = αβ, one rational-arithmetic check decides whether
-the transported certificate closes. `gateQ_sound` connects a `true` verdict to
-the hypothesis of `transport_radii_polynomial_of_margin`. -/
-
-def gateQ (Y₀ Z₀ Z₁ Z₂ r₀ κ : ℚ) : Bool :=
-  decide (κ * (Z₂ * r₀^2 - (1 - Z₀ - Z₁) * r₀ + Y₀) + (κ - 1) * r₀ < 0)
-
-theorem gateQ_sound {Y₀ Z₀ Z₁ Z₂ r₀ α β : ℚ}
-    (h : gateQ Y₀ Z₀ Z₁ Z₂ r₀ (α * β) = true) :
-    (α : ℝ) * (β : ℝ) *
-        generalRadiiPolynomial (Y₀ : ℝ) (Z₀ : ℝ) (Z₁ : ℝ) (fun _ => (Z₂ : ℝ)) (r₀ : ℝ)
-      + ((α : ℝ) * (β : ℝ) - 1) * (r₀ : ℝ) < 0 := by
-  have hq : ((α * β) * (Z₂ * r₀^2 - (1 - Z₀ - Z₁) * r₀ + Y₀) + ((α * β) - 1) * r₀ : ℚ) < 0 :=
-    of_decide_eq_true h
-  have hR : (((α * β) * (Z₂ * r₀^2 - (1 - Z₀ - Z₁) * r₀ + Y₀) + ((α * β) - 1) * r₀ : ℚ) : ℝ)
-      < 0 := by exact_mod_cast hq
-  push_cast at hR
-  simp only [generalRadiiPolynomial]
-  linarith [hR]
+/-! ## §6 The ℚ gate runs (Core's `gateQ`) -/
 
 -- Toy at r = 1/16 (margin ≈ 84% > 62.5%): the gate ACCEPTS.
 example : gateQ (1/216) 0 0 (4/3) (1/16) (8/3) = true := by native_decide

@@ -34,7 +34,6 @@ the Newton-like map for the radii polynomial theorem.
 ## What Stays Equation-Specific
 
 - `f` definition (the polynomial vector field, e.g. `f` in `Example83.Algebra`)
-- `differentiable_f_component` (typically `fun_prop`)
 - Fderiv structure of `f` (via `auto_poly_fderiv`)
 - ℚ mirrors and bridges
 -/
@@ -46,7 +45,7 @@ noncomputable section
 
 namespace IVP
 
-variable {ν : PosReal} {L N : ℕ} [NeZero L]
+variable {ν : PosReal} {L N : ℕ}
 
 /-! ## 1. IVP Coefficient Formula -/
 
@@ -80,7 +79,6 @@ def ivpMap (A : SystemBlockDiagData L N) (φ : XL1 ν L → Fin L → l1Weighted
     (a : XL1 ν L) : XL1 ν L := fun l =>
   l1Weighted.mk (A.action (ivpCoeffs φ x₀ a) l) (hmem a l)
 
-omit [NeZero L] in
 /-- G at the coefficient level. -/
 lemma ivpMap_coeff (A : SystemBlockDiagData L N) (φ : XL1 ν L → Fin L → l1Weighted ν)
     (x₀ : Fin L → ℝ)
@@ -100,7 +98,6 @@ def ivpTail (φ : XL1 ν L → Fin L → l1Weighted ν)
     (a : XL1 ν L) : XL1 ν L := fun l =>
   a l - shiftDivN_CLM (φ a l)
 
-omit [NeZero L] in
 lemma differentiable_ivpTail (φ : XL1 ν L → Fin L → l1Weighted ν)
     (hφ : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l)) :
     Differentiable ℝ (ivpTail φ) := by
@@ -112,7 +109,6 @@ lemma differentiable_ivpTail (φ : XL1 ν L → Fin L → l1Weighted ν)
 
 /-! ## 4. Fderiv on Tail Modes -/
 
-omit [NeZero L] in
 /-- Extract component `l` from `fderiv ℝ F a h` when `F : XL1 → XL1`.
 Built on Mathlib's `fderiv_apply`. -/
 private lemma fderiv_apply_component {F : XL1 ν L → XL1 ν L} {a : XL1 ν L}
@@ -120,7 +116,6 @@ private lemma fderiv_apply_component {F : XL1 ν L → XL1 ν L} {a : XL1 ν L}
     (fderiv ℝ F a h) l = (fderiv ℝ (fun x => F x l) a) h := by
   rw [fderiv_apply hF l]; rfl
 
-omit [NeZero L] in
 /-- Fderiv of ivpTail at `ā` applied to `h`:
 `(fderiv(ivpTail)(ā)(h)) l = h l - shiftDivN_CLM((fderiv(φ·l)(ā))(h))`.
 Used for Z₁ bound (tail difference = shiftDivN of Dφ). -/
@@ -147,72 +142,12 @@ This section provides the generic Z₁ bounds (recipe and exact-column), paramet
 - `htail`: tail difference = shiftDivN(Dφ) (from `fderiv_ivpTail` when the composedApprox
   tail is the identity; that fact is not a separate parameter) -/
 
-/-- Generic Z₁ per-component bound.
-Given that finite modes cancel and the tail difference is `shiftDivN(Dφ(h) l)`,
-the component norm is bounded by `ν/(N+1) * ‖Dφ(h) l‖`. -/
-private lemma Z₁_component_le
-    (composedApprox : SystemBlockDiagData L N)
-    (G : XL1 ν L → XL1 ν L) (ā : XL1 ν L)
-    (Dφ : XL1 ν L → Fin L → l1Weighted ν)
-    -- Finite modes: composedApprox = fderiv G on n ≤ N
-    (hfin : ∀ h : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, n ≤ N →
-      l1Weighted.toSeq (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) n = 0)
-    -- Tail: difference = shiftDivN(Dφ)
-    (htail : ∀ h : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, N < n →
-      l1Weighted.toSeq (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) n =
-        l1Weighted.toSeq (shiftDivN_CLM (Dφ h l)) n)
-    (h : XL1 ν L) (l : Fin L) :
-    ‖((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l‖ ≤
-      (ν : ℝ) / ((N : ℝ) + 1) * ‖Dφ h l‖ := by
-  -- Step 1: finite part = 0 → norm = tail tsum starting at N+1
-  rw [l1Weighted.norm_eq_tailTsum_of_fin_zero _ (N + 1)
-    (fun n hn => hfin h l n (by omega))]
-  -- Step 2: rewrite tail terms using htail
-  have htail' : ∀ n, |l1Weighted.toSeq
-      (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) (n + (N + 1))| =
-      |l1Weighted.toSeq (shiftDivN_CLM (Dφ h l)) (n + (N + 1))| :=
-    fun n => congrArg (|·|) (htail h l (n + (N + 1)) (by omega))
-  simp_rw [htail', shiftDivN_CLM_apply]
-  -- Step 3: apply shiftDivN_tailTsum_le_div
-  exact shiftDivN_tailTsum_le_div (Dφ h l) N
-
-/-- **Generic Z₁ bound**: `‖composedApprox.toCLM - fderiv G ā‖ ≤ Z₁`.
-Chains `Z₁_component_le` with per-component Dφ norm bound.
-
-The caller provides:
-- `hfin`: finite modes agree (from composedApprox = fderiv G on n ≤ N)
-- `htail`: tail difference = shiftDivN(Dφ)
-- `hDφ`: per-component `‖Dφ(h) l‖ ≤ K * ‖h‖`
-- `hZ₁`: `ν/(N+1) * K ≤ Z₁` -/
-lemma ivp_Z₁_le
-    (composedApprox : SystemBlockDiagData L N)
-    (G : XL1 ν L → XL1 ν L) (ā : XL1 ν L)
-    (Dφ : XL1 ν L → Fin L → l1Weighted ν)
-    (hfin : ∀ h : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, n ≤ N →
-      l1Weighted.toSeq (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) n = 0)
-    (htail : ∀ h : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, N < n →
-      l1Weighted.toSeq (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) n =
-        l1Weighted.toSeq (shiftDivN_CLM (Dφ h l)) n)
-    {K : ℝ} (hK : 0 ≤ K)
-    (hDφ : ∀ h : XL1 ν L, ∀ l : Fin L, ‖Dφ h l‖ ≤ K * ‖h‖)
-    {Z₁ : ℝ} (hZ₁ : (ν : ℝ) / ((N : ℝ) + 1) * K ≤ Z₁) :
-    ‖composedApprox.toCLM (ν := ν) - fderiv ℝ G ā‖ ≤ Z₁ := by
-  have hν : (0 : ℝ) ≤ (ν : ℝ) / ((N : ℝ) + 1) := div_nonneg ν.coe_nonneg (by positivity)
-  apply ContinuousLinearMap.opNorm_le_bound _ (le_trans (mul_nonneg hν hK) hZ₁)
-  intro h
-  refine (pi_norm_le_iff_of_nonneg (mul_nonneg (le_trans (mul_nonneg hν hK) hZ₁)
-    (norm_nonneg _))).mpr fun l => ?_
-  calc ‖((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l‖
-      ≤ (ν : ℝ) / ((N : ℝ) + 1) * ‖Dφ h l‖ := Z₁_component_le composedApprox G ā Dφ hfin htail h l
-    _ ≤ (ν : ℝ) / ((N : ℝ) + 1) * (K * ‖h‖) := mul_le_mul_of_nonneg_left (hDφ h l) hν
-    _ ≤ Z₁ * ‖h‖ := by nlinarith [norm_nonneg h]
-
 /-- Generic Z₁ per-component bound, exact-column variant (tightening B).
-Same finite/tail decomposition as `Z₁_component_le`, but the tail is bounded by
+Finite modes cancel and the tail difference is `shiftDivN(Dφ(h) l)`; the tail is bounded by
 a caller-supplied per-component tail-tsum estimate `hDtail` — e.g. the exact
 weighted column-sup certified through `shiftDivN_leftMul_tail_le_of_cols` —
 in place of the `shiftDivN_tailTsum_le_div` recipe `ν/(N+1) · ‖Dφ h l‖`. -/
-private lemma Z₁_component_le_exact
+private lemma Z₁_component_le_exact [NeZero L]
     (composedApprox : SystemBlockDiagData L N)
     (G : XL1 ν L → XL1 ν L) (ā : XL1 ν L)
     (Dφ : XL1 ν L → Fin L → l1Weighted ν)
@@ -247,7 +182,7 @@ are replaced by:
   structural rewrite of `Dφ` as a left multiplication);
 - `hZ₁`: `C ≤ Z₁`.
 `hfin`/`htail` are exactly as in `ivp_Z₁_le`. -/
-lemma ivp_Z₁_le_exact
+lemma ivp_Z₁_le_exact [NeZero L]
     (composedApprox : SystemBlockDiagData L N)
     (G : XL1 ν L → XL1 ν L) (ā : XL1 ν L)
     (Dφ : XL1 ν L → Fin L → l1Weighted ν)
@@ -269,6 +204,33 @@ lemma ivp_Z₁_le_exact
   refine (Z₁_component_le_exact composedApprox G ā Dφ hfin htail hDtail h l).trans ?_
   exact mul_le_mul_of_nonneg_right hZ₁ (norm_nonneg h)
 
+/-- **Generic Z₁ bound**: `‖composedApprox.toCLM - fderiv G ā‖ ≤ Z₁`.
+The recipe instance of `ivp_Z₁_le_exact`: `C = ν/(N+1) · K`, the tail sum bounded by
+`shiftDivN_tailTsum_le_div`.
+
+The caller provides:
+- `hfin`: finite modes agree (from composedApprox = fderiv G on n ≤ N)
+- `htail`: tail difference = shiftDivN(Dφ)
+- `hDφ`: per-component `‖Dφ(h) l‖ ≤ K * ‖h‖`
+- `hZ₁`: `ν/(N+1) * K ≤ Z₁` -/
+lemma ivp_Z₁_le [NeZero L]
+    (composedApprox : SystemBlockDiagData L N)
+    (G : XL1 ν L → XL1 ν L) (ā : XL1 ν L)
+    (Dφ : XL1 ν L → Fin L → l1Weighted ν)
+    (hfin : ∀ h : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, n ≤ N →
+      l1Weighted.toSeq (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) n = 0)
+    (htail : ∀ h : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, N < n →
+      l1Weighted.toSeq (((composedApprox.toCLM (ν := ν) - fderiv ℝ G ā) h) l) n =
+        l1Weighted.toSeq (shiftDivN_CLM (Dφ h l)) n)
+    {K : ℝ} (hK : 0 ≤ K)
+    (hDφ : ∀ h : XL1 ν L, ∀ l : Fin L, ‖Dφ h l‖ ≤ K * ‖h‖)
+    {Z₁ : ℝ} (hZ₁ : (ν : ℝ) / ((N : ℝ) + 1) * K ≤ Z₁) :
+    ‖composedApprox.toCLM (ν := ν) - fderiv ℝ G ā‖ ≤ Z₁ :=
+  have hν : (0 : ℝ) ≤ (ν : ℝ) / ((N : ℝ) + 1) := div_nonneg ν.coe_nonneg (by positivity)
+  ivp_Z₁_le_exact composedApprox G ā Dφ hfin htail (mul_nonneg hν hK)
+    (fun h l => (shiftDivN_tailTsum_le_div (Dφ h l) N).trans <|
+      (mul_le_mul_of_nonneg_left (hDφ h l) hν).trans_eq (mul_assoc _ _ _).symm) hZ₁
+
 /-! ## 6. Generic Y₀ Bound
 
 The Y₀ bound `‖G(ā)‖ ≤ C` reduces to:
@@ -280,7 +242,6 @@ The Y₀ bound `‖G(ā)‖ ≤ C` reduces to:
 The caller provides: the support bound `S` with its vanishing proof and the
 per-component finite-sum bounds. -/
 
-omit [NeZero L] in
 /-- **Generic Y₀ bound**: `‖ivpMap A φ x₀ hmem ā‖ ≤ C`.
 
 Reduces to per-component finite sums of `|A.action(ivpCoeffs ā) l n| * ν^n`,
@@ -311,12 +272,9 @@ lemma ivp_Y₀_le
   -- Step 2: ‖G(ā) l‖ = finite sum (support bound from A.toCLM_support)
   rw [l1Weighted.norm_eq_Icc_sum_of_support (ivpMap A φ x₀ hmem ā l) S
     (fun n hn => by
-      simp only [ivpMap, l1Weighted.mk_apply]
-      rw [SystemBlockDiagData.action_tail _ _ _ _ (by omega : N < n)]
-      rw [hsupport l n hn, mul_zero])]
-  -- Step 3: rewrite toSeq to A.action
-  simp_rw [show ∀ n, l1Weighted.toSeq (ivpMap A φ x₀ hmem ā l) n =
-    A.action (ivpCoeffs φ x₀ ā) l n from fun n => by simp [ivpMap, l1Weighted.mk]; rfl]
+      rw [ivpMap_coeff, SystemBlockDiagData.action_tail _ _ _ _ (by omega : N < n),
+        hsupport l n hn, mul_zero])]
+  simp_rw [ivpMap_coeff]
   exact hcomp l
 
 /-! ## 7. Differentiability of IVP Coefficients
@@ -326,7 +284,6 @@ points yields the shifted Dφ difference pattern:
 - k = 0: difference = 0 (affine in a, constant fderiv)
 - k = n + 1: difference = −(Dφ_diff l h)_n -/
 
-omit [NeZero L] in
 /-- `ivpCoeffs φ x₀ · j k` is differentiable for all k. -/
 lemma differentiable_ivpCoeffs (φ : XL1 ν L → Fin L → l1Weighted ν)
     (x₀ : Fin L → ℝ)
@@ -344,7 +301,6 @@ lemma differentiable_ivpCoeffs (φ : XL1 ν L → Fin L → l1Weighted ν)
         ((ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin L => l1Weighted ν) j).differentiable))).sub
       ((l1Weighted.toSeq_CLM n).differentiable.comp (hφ j))
 
-omit [NeZero L] in
 /-- The derivative of the initial-condition row selects the zeroth coefficient. -/
 lemma fderiv_ivpCoeffs_zero_apply (φ : XL1 ν L → Fin L → l1Weighted ν)
     (x₀ : Fin L → ℝ) (a h : XL1 ν L) (j : Fin L) :
@@ -360,7 +316,6 @@ lemma fderiv_ivpCoeffs_zero_apply (φ : XL1 ν L → Fin L → l1Weighted ν)
     ContinuousLinearMap.proj_apply]
   rfl
 
-omit [NeZero L] in
 /-- The derivative of a positive IVP row is its diagonal linear term minus `Dφ`. -/
 lemma fderiv_ivpCoeffs_succ_apply (φ : XL1 ν L → Fin L → l1Weighted ν)
     (x₀ : Fin L → ℝ)
@@ -385,7 +340,6 @@ lemma fderiv_ivpCoeffs_succ_apply (φ : XL1 ν L → Fin L → l1Weighted ν)
   rw [hfd.fderiv]
   rfl
 
-omit [NeZero L] in
 /-- Fderiv difference of `ivpCoeffs` at two points: only the φ-fderiv difference survives.
 The linear part `(k+1) * toSeq(a j)(k+1)` has constant fderiv (cancels in difference). -/
 private lemma fderiv_ivpCoeffs_diff (φ : XL1 ν L → Fin L → l1Weighted ν)
@@ -408,7 +362,6 @@ private lemma fderiv_ivpCoeffs_diff (φ : XL1 ν L → Fin L → l1Weighted ν)
       fderiv_ivpCoeffs_succ_apply φ x₀ ā h j n (hφ j ā)]
     simp only [sub_apply, l1Weighted.sub_toSeq]; ring
 
-omit [NeZero L] in
 /-- Chain rule: `toSeq(fderiv(ivpMap A φ x₀) a h l) n = fderiv(a ↦ A.action(F a) l n) a h`.
 Used for Z₁ finite-mode cancellation and Z₂ factorization. -/
 lemma fderiv_ivpMap_coeff_at
@@ -438,7 +391,7 @@ The Z₂ bound `‖fderiv(ivpMap) c - fderiv(ivpMap) ā‖ ≤ Z₂ * r` for c �
 4. **Block norm bound**: `‖A.toCLM(w) l‖ ≤ restricted_norm(l) * ‖w‖`
 5. **Evaluation** (caller): `C·ν·restricted_norm(l) ≤ Z₂_val` via `native_decide` -/
 
-lemma ivp_Z₂_le
+lemma ivp_Z₂_le [NeZero L]
     (A : SystemBlockDiagData L N)
     (φ : XL1 ν L → Fin L → l1Weighted ν)
     (x₀ : Fin L → ℝ)
@@ -546,7 +499,6 @@ where:
 This gives generic differentiability of `ivpMap` and its derivative on tail modes
 (`fderiv_ivpMap_tail`). -/
 
-omit [NeZero L] in
 /-- ℓ¹ membership for `ivpMap` when `A.tailDiag = 1/n` on tail modes.
 The tail term `(1/n)((n)·a_n - φ_{n-1}) = a_n - φ_{n-1}/n` is bounded by
 `|a_n| + |φ_{n-1}|`, hence ℓ¹-summable. -/
@@ -567,7 +519,6 @@ lemma ivpMap_mem_of_tailDiag_inv
       (by nlinarith [abs_nonneg (l1Weighted.toSeq (φ a l) m),
         Nat.cast_nonneg (α := ℝ) m])
 
-omit [NeZero L] in
 /-- On tail modes (n > N), `ivpMap` agrees with `ivpTail` when `A.tailDiag = 1/n`. -/
 private lemma ivpMap_tail_eq_ivpTail
     (A : SystemBlockDiagData L N)
@@ -591,7 +542,6 @@ private def ivpCorrectionSeq
     (a : XL1 ν L) (l : Fin L) (n : ℕ) : ℝ :=
   A.action (ivpCoeffs φ x₀ a) l n - l1Weighted.toSeq (ivpTail φ a l) n
 
-omit [NeZero L] in
 private lemma ivpCorrectionSeq_zero_tail
     (A : SystemBlockDiagData L N)
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
@@ -612,7 +562,6 @@ def ivpFinCorrection
       simp only [Finset.mem_Icc, not_and_or, not_le] at hn
       simp [ivpCorrectionSeq_zero_tail A φ x₀ htail a l n (by omega)])
 
-omit [NeZero L] in
 /-- `ivpMap = ivpTail + ivpFinCorrection`. -/
 lemma ivpMap_eq_tail_plus_correction
     (A : SystemBlockDiagData L N)
@@ -628,7 +577,6 @@ lemma ivpMap_eq_tail_plus_correction
     ivpTail, l1Weighted.sub_toSeq, shiftDivN_CLM_apply]
   show A.action (ivpCoeffs φ x₀ a) l n = _; ring
 
-omit [NeZero L] in
 /-- Each coefficient of the finite correction is differentiable in `a`. -/
 private lemma differentiable_ivpCorrectionSeq_fin
     (A : SystemBlockDiagData L N)
@@ -644,7 +592,6 @@ private lemma differentiable_ivpCorrectionSeq_fin
       ((l1Weighted.toSeq_CLM (ν := ν) ↑k).differentiableAt.comp a
         (shiftDivN_CLM.differentiableAt.comp a (hφ l a))))
 
-omit [NeZero L] in
 /-- The finite correction is differentiable. -/
 lemma differentiable_ivpFinCorrection
     (A : SystemBlockDiagData L N)
@@ -658,7 +605,6 @@ lemma differentiable_ivpFinCorrection
     (fun a n hn => ivpCorrectionSeq_zero_tail A φ x₀ htail a l n hn)
     _ (fun k => differentiable_ivpCorrectionSeq_fin A φ x₀ hφ l k) a
 
-omit [NeZero L] in
 /-- The IVP composed map is differentiable (decomposition: `ivpTail + ivpFinCorrection`). -/
 lemma differentiable_ivpMap
     (A : SystemBlockDiagData L N)
@@ -674,7 +620,6 @@ lemma differentiable_ivpMap
   rw [hdecomp]
   exact (differentiable_ivpTail φ hφ).add (differentiable_ivpFinCorrection A φ x₀ htail hφ)
 
-omit [NeZero L] in
 /-- Fderiv of `ivpFinCorrection` vanishes on tail modes (n > N). -/
 lemma fderiv_ivpFinCorrection_zero_tail
     (A : SystemBlockDiagData L N)
@@ -689,7 +634,6 @@ lemma fderiv_ivpFinCorrection_zero_tail
     (fun a m hm => ivpCorrectionSeq_zero_tail A φ x₀ htail a l m hm)
     _ (fun k => differentiable_ivpCorrectionSeq_fin A φ x₀ hφ l k) ā h n hn
 
-omit [NeZero L] in
 /-- Fderiv of `ivpMap` on tail modes equals fderiv of `ivpTail`.
 Used for Z₁: the tail difference reduces to `shiftDivN(Dφ)`. -/
 lemma fderiv_ivpMap_tail
@@ -713,19 +657,3 @@ lemma fderiv_ivpMap_tail
     fderiv_ivpFinCorrection_zero_tail A φ x₀ htail hφ ā h l n hn, add_zero]
 
 end IVP
-
-/-! ## CLM Operator Norm Bound for shiftDivN
-
-Stated here, as a private lemma, rather than in `Analysis/SequenceSpace/Geometric/Omega.lean`
-because the `Norm` instance for `ContinuousLinearMap` requires the operator-norm imports
-available in this file. -/
-
-namespace l1Weighted
-
-variable {ν : PosReal}
-
-/-- Operator norm bound: `‖S_{/n}‖ ≤ ν` (shift-divide by n). -/
-private lemma norm_shiftDivN_CLM_le : ‖shiftDivN_CLM (ν := ν)‖ ≤ (ν : ℝ) :=
-  LinearMap.mkContinuous_norm_le _ (le_of_lt ν.prop) _
-
-end l1Weighted

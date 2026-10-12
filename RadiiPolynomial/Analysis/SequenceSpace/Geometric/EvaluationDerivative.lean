@@ -7,7 +7,8 @@ import Mathlib.Analysis.Calculus.Deriv.Pow
 # Term-by-Term Differentiation of Weighted Sequence Evaluation
 
 Differentiates `l1Weighted.eval` strictly inside its disk of convergence. This analytic
-layer is separate from the continuous algebra-hom evaluation API in `lpSpace.Eval`.
+layer is separate from the continuous algebra-hom evaluation API (`evalContinuousAlgHom`,
+`Geometric/Evaluation.lean`).
 -/
 
 open scoped BigOperators NNReal ENNReal Topology
@@ -31,24 +32,6 @@ lemma hasDerivAt_eval_single (n : ℕ) (x : ℝ) (t : ℝ) :
   rw [h_eq]
   have h := (hasDerivAt_pow n t).const_mul x
   simpa [mul_comm, mul_left_comm, mul_assoc] using h
-
-private theorem summable_diff_bound (a : l1Weighted ν) {ν' : ℝ}
-    (hν' : ν' < (ν : ℝ)) (hν'_pos : 0 < ν') :
-    Summable fun n : ℕ => |seq a n| * (n : ℝ) * ν' ^ (n - 1) := by
-  have hν'_abs : |ν'| < (ν : ℝ) := by rwa [abs_of_pos hν'_pos]
-  have h_shifted : Summable fun m : ℕ => |seq a (m + 1)| * ((m : ℝ) + 1) * ν' ^ m := by
-    refine (l1Omega.summable_abs_eval (derivShift a) hν'_abs).congr fun m => ?_
-    rw [show |ν'|^m = ν'^m from by rw [abs_of_pos hν'_pos]]
-    rw [derivShift_apply, abs_mul, abs_of_pos (by positivity : (0:ℝ) < (m : ℝ) + 1)]
-    ring
-  rw [show (fun n : ℕ => |seq a n| * (n : ℝ) * ν' ^ (n - 1)) =
-      (fun n : ℕ => match n with
-        | 0 => 0
-        | m + 1 => |seq a (m + 1)| * ((m : ℝ) + 1) * ν' ^ m) from by
-    ext n; cases n with
-    | zero => simp
-    | succ m => simp only [Nat.succ_sub_one, Nat.cast_succ]]
-  exact (summable_nat_add_iff (k := 1)).mp (by simpa using h_shifted)
 
 /-- Term-by-term differentiation of `eval` strictly inside the disk of convergence. -/
 theorem hasDerivAt_eval (a : l1Weighted ν) {t : ℝ} (ht : |t| < ν) :
@@ -77,14 +60,14 @@ theorem hasDerivAt_eval (a : l1Weighted ν) {t : ℝ} (ht : |t| < ν) :
     have : n ≠ 0 := fun h => hn (by simp [h])
     simp [zero_pow this]
   have h_main := hasDerivAt_tsum_of_isPreconnected
-    (summable_diff_bound a hν'_lt_ν hν'_pos)
+    (l1Weighted.summable_abs_mul_pow_pred a hν'_pos.le hν'_lt_ν)
     isOpen_Ioo (convex_Ioo _ _).isPreconnected
     (fun n y _ => h_g_hasDeriv n y)
     h_g_bound h_zero_mem h_g_summable_zero h_t_mem
   have h_summable : Summable fun n : ℕ => seq a n * (n : ℝ) * t^(n - 1) := by
     refine Summable.of_norm_bounded
       (g := fun n => |seq a n| * (n : ℝ) * ν'^(n - 1))
-      (summable_diff_bound a hν'_lt_ν hν'_pos)
+      (l1Weighted.summable_abs_mul_pow_pred a hν'_pos.le hν'_lt_ν)
       (fun n => h_g_bound n t h_t_mem)
   have h_deriv_eq :
       (∑' n, seq a n * (n : ℝ) * t^(n - 1)) =

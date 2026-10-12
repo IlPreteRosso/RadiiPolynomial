@@ -1,5 +1,6 @@
 import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Certification.LeanCertAdapter
+import RadiiPolynomial.Certification.IVP.Taylor
 import RadiiPolynomial.Tactic.AutoPolyFDeriv
 import RadiiPolynomial.Tactic.MakeCompPoly
 import RadiiPolynomial.Algebra.Polynomial
@@ -104,7 +105,6 @@ lemma Df_eq_fderiv (h : XL1 ν_val L) (l : Fin L) :
   rw [show (2 : ℕ) • (data.abar 0 * h 0) = data.abar 0 * h 0 + data.abar 0 * h 0
     from two_nsmul _]
 
-
 /-! ## 5. DF Correctness (Jacobian matches numerical data) -/
 
 private lemma hDF_nat :
@@ -136,8 +136,7 @@ def F_Q (n : ℕ) : ℚ :=
 via the IVP Taylor recurrence `IVP.ivpCoeffs`:
   `F(a)_l(0) = a_l(0) − x₀(l)`,
   `F(a)_l(n+1) = (n+1)·a_l(n+1) − f(a)_l(n)`.
-Codomain is the raw coefficient sequence `SystemCoeff L = Fin L → ℕ → ℝ`
-(see `project_ivp_codomain_design`). -/
+Codomain is the raw coefficient sequence `SystemCoeff L = Fin L → ℕ → ℝ`. -/
 def F (a : XL1 ν_val L) : SystemCoeff L :=
   fun l n => IVP.ivpCoeffs f x₀ a l n
 
@@ -156,40 +155,26 @@ lemma F_bridge (l : Fin L) (n : ℕ) :
 
 private lemma abar_toSeq_zero (k : ℕ) (hk : N < k) :
     l1Weighted.toSeq (data.abar 0) k = 0 := by
-  rw [data.abar_toSeq_eq]; show ((abar_0.getD k 0 : ℚ) : ℝ) = 0
-  have hsz : abar_0.size = N + 1 := by decide
-  have : ¬(k < abar_0.size) := by omega
-  simp [Array.getD, this]
+  rw [data.abar_toSeq_eq, data.abar_Q_getD_eq_zero 0 k hk, Rat.cast_zero]
+
+/-- The support index of `F(ā)` read off the syntax: `supportM f_cpoly N = 2N + 1`. -/
+private lemma supportM_eq : IVP.supportM f_cpoly N = 2 * N + 1 := by decide
 
 lemma f_abar_support (n : ℕ) (hn : 2 * N < n) :
     l1Weighted.toSeq (f data.abar 0) n = 0 := by
-  have ha : ∀ k, N < k → l1Weighted.toSeq (data.abar 0) k = 0 :=
-    fun k hk => abar_toSeq_zero k hk
-  have h00 : l1Weighted.toSeq (data.abar 0 * data.abar 0) n = 0 := by
-    rw [l1Weighted.toSeq_mul]; exact CauchyProduct.zero_of_support ha ha n hn
-  show l1Weighted.toSeq (data.abar 0 * data.abar 0) n - l1Weighted.toSeq (data.abar 0) n = 0
-  rw [h00, ha n (by omega)]; ring
+  have h := data.ivpCoeffs_abar_eq_zero_of_compPoly f_cpoly x₀ 0 (n + 1)
+    (by rw [supportM_eq]; omega)
+  change ((n : ℝ) + 1) * l1Weighted.toSeq (data.abar 0) (n + 1) -
+    l1Weighted.toSeq (f data.abar 0) n = 0 at h
+  rwa [abar_toSeq_zero (n + 1) (by omega), mul_zero, zero_sub, neg_eq_zero] at h
 
 lemma F_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
-    IVP.ivpCoeffs f x₀ data.abar l n = 0 := by
-  fin_cases l
-  cases n with
-  | zero => omega
-  | succ m =>
-    show ((m : ℝ) + 1) * l1Weighted.toSeq (data.abar 0) (m + 1) -
-      l1Weighted.toSeq (f data.abar 0) m = 0
-    have ha : l1Weighted.toSeq (data.abar 0) (m + 1) = 0 :=
-      abar_toSeq_zero (m + 1) (by omega)
-    have hphi : l1Weighted.toSeq (f data.abar 0) m = 0 :=
-      f_abar_support m (by omega)
-    rw [ha, hphi]; ring
+    IVP.ivpCoeffs f x₀ data.abar l n = 0 :=
+  data.ivpCoeffs_abar_eq_zero_of_compPoly f_cpoly x₀ l n (supportM_eq ▸ hn)
 
 lemma F_abar_mem (l : Fin L) :
-    l1Weighted.Mem ν_val (F data.abar l) := by
-  rw [l1Weighted.mem_iff]
-  exact summable_of_ne_finset_zero (s := Finset.Icc 0 (2 * N + 1)) fun n hn => by
-    simp only [Finset.mem_Icc, not_and_or, not_le] at hn
-    simp [F, F_abar_support l n (by omega)]
+    l1Weighted.Mem ν_val (F data.abar l) :=
+  data.ivpCoeffs_abar_mem_of_compPoly f_cpoly x₀ l
 
 /-! ## 7. Norm bounds for ā components -/
 

@@ -1,8 +1,9 @@
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Algebra.BigOperators.NatAntidiagonal
 import Mathlib.Data.Fintype.BigOperators
 import Mathlib.Basic.Real.Basic
+import Mathlib.Analysis.Normed.Ring.Basic
+import Mathlib.Analysis.Normed.Group.Constructions
 
 /-!
 # Finite Norm Inequality Helpers
@@ -11,8 +12,6 @@ Reusable finite-sum inequalities used across norm proofs.
 -/
 
 open scoped BigOperators
-
-noncomputable section
 
 namespace RadiiPolynomial.NormHelpers
 
@@ -58,5 +57,21 @@ lemma sum4_swap_pairs
   simpa [e, assoc, Equiv.prodAssoc, Equiv.prodComm] using
     (Equiv.sum_comp e (fun t : (((α × β) × α) × β) =>
       f t.1.1.1 t.1.1.2 t.1.2 t.2)).symm
+
+section SumMul
+
+variable {A ι : Type*} [NonUnitalSeminormedRing A] [Fintype ι]
+
+/-- For a direction `h : ι → A` with the sup norm, `‖∑ i, f i * h i‖ ≤ (∑ i, ‖f i‖) * ‖h‖`:
+the triangle inequality, submultiplicativity of the norm, and `‖h i‖ ≤ ‖h‖`. -/
+theorem norm_sum_mul_pi_le (f h : ι → A) :
+    ‖∑ i, f i * h i‖ ≤ (∑ i, ‖f i‖) * ‖h‖ := by
+  refine ((norm_sum_le _ _).trans
+    (Finset.sum_le_sum fun i _ => norm_mul_le _ _)).trans ?_
+  rw [Finset.sum_mul]
+  exact Finset.sum_le_sum fun i _ =>
+    mul_le_mul_of_nonneg_left (norm_le_pi_norm h i) (norm_nonneg _)
+
+end SumMul
 
 end RadiiPolynomial.NormHelpers

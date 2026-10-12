@@ -1,12 +1,13 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.UniversalProperty
-import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered
+import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Symmetrize
 import Mathlib.Analysis.Complex.Trigonometric
 
 /-!
 # The bilateral weighted algebra is free on a weight-dominated unit
 
 `lpOneAlg ℤ (geomFiberZ 𝕜 ν)` — the bilateral geometric carrier over any normed
-field `𝕜`, whose `𝕜 = ℝ` instance is `l1Chebyshev ν` — receives exactly one
+field `𝕜` (fiber `geomFiberZ` and its weight face `geomFiberZ_weight` in
+`Chebyshev/Scalar.lean`), whose `𝕜 = ℝ` instance is `l1Chebyshev ν` — receives exactly one
 continuous algebra homomorphism into a Banach algebra `B` for every unit
 `u : Bˣ` whose integer powers are dominated by the weight, `‖uᵏ‖ ≤ C ν^|k|`.
 The three faces of this universal property, with the doctrine erased at proof
@@ -49,8 +50,6 @@ plus the places where it is used mathematically — the unit circle lies in the
 annulus `[ν⁻¹, ν]` (`evalLaurentC_circle`), and `conj_evalLaurentC_of_isSymmetric`
 uses it to place `z⁻¹` in the annulus. The domination lemmas
 `unit_zpow_le_weight` / `norm_unit_zpow_le` carry no `Fact`.
-
-The exists-unique forms of these statements live in `tmp/ground_floor` (frozen).
 -/
 
 open scoped BigOperators
@@ -58,23 +57,6 @@ open scoped BigOperators
 noncomputable section
 
 namespace RadiiPolynomial
-
-/-! ### The bilateral geometric fiber over any normed field -/
-
-/-- The bilateral geometric fiber over a normed field `𝕜`: `𝕜` with norm
-`‖x‖ ν^|k|` at mode `k : ℤ`. Its real instance is `ScaledRealZ ν`
-(definitionally), so `l1Chebyshev ν = lpOneAlg ℤ (geomFiberZ ℝ ν)`. -/
-abbrev geomFiberZ (𝕜 : Type*) [NormedField 𝕜] (ν : PosReal) :=
-  WeightedScalar 𝕜 (fun k : ℤ => (ν : ℝ) ^ k.natAbs)
-
-example (ν : PosReal) : ScaledRealZ ν = geomFiberZ ℝ ν := rfl
-
-/-- The fiber weight of `geomFiberZ 𝕜 ν` at `k` is `ν^|k|`. -/
-theorem geomFiberZ_weight {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal) (k : ℤ) :
-    ‖lpAlgRingData.ofReal (E := geomFiberZ 𝕜 ν) k (1 : 𝕜)‖ = (ν : ℝ) ^ k.natAbs := by
-  rw [show lpAlgRingData.ofReal (E := geomFiberZ 𝕜 ν) k (1 : 𝕜)
-      = WeightedScalar.ofReal 1 from rfl, WeightedScalar.norm_ofReal,
-    norm_one, one_mul]
 
 namespace lpOneAlg
 
@@ -148,7 +130,7 @@ theorem geomUnitLift_toContinuousLinearMap :
   liftAlgHom_single _ _ _ _ _ k
 
 /-- The generator `e₁` goes to `u`. -/
-@[simp] theorem geomUnitLift_gen : geomUnitLift (𝕜 := 𝕜) ν u C hu (single 1 1) = (u : B) := by
+theorem geomUnitLift_gen : geomUnitLift (𝕜 := 𝕜) ν u C hu (single 1 1) = (u : B) := by
   rw [geomUnitLift_single, zpow_one]
 
 /-- The co-generator `e₋₁` goes to `u⁻¹`. -/
@@ -230,7 +212,7 @@ theorem norm_genUnit_zpow_le (φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →A[𝕜] 
       ≤ ‖φ.toContinuousLinearMap‖ * (ν : ℝ) ^ k.natAbs := by
   rw [← continuousAlgHom_single_zpow]
   have h := φ.toContinuousLinearMap.le_opNorm (single k 1)
-  rwa [norm_single, norm_one, one_mul, geomFiberZ_weight] at h
+  rwa [norm_single_geomFiberZ, norm_one, one_mul] at h
 
 variable [CompleteSpace B]
 
@@ -339,7 +321,7 @@ theorem evalLaurent_apply (a : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
   rw [evalLaurent, geomUnitLift_single, Units.val_zpow_eq_zpow_val, Units.val_mk0]
 
 /-- The generator `e₁` evaluates to `z`. -/
-@[simp] theorem evalLaurent_gen : evalLaurent ν z hz (single 1 1) = z := by
+theorem evalLaurent_gen : evalLaurent ν z hz (single 1 1) = z := by
   rw [evalLaurent_single, zpow_one]
 
 /-- Contractivity of the Laurent evaluation on the annulus: `‖∑ₖ aₖ zᵏ‖ ≤ ‖a‖`. -/
@@ -441,7 +423,7 @@ theorem evalLaurentC_apply (a : l1Chebyshev ν) :
     evalLaurentC ν z hz (single k 1) = z ^ k := by
   rw [evalLaurentC, lpOneAlg.geomUnitLift_single, Units.val_zpow_eq_zpow_val, Units.val_mk0]
 
-@[simp] theorem evalLaurentC_gen : evalLaurentC ν z hz (single 1 1) = z := by
+theorem evalLaurentC_gen : evalLaurentC ν z hz (single 1 1) = z := by
   rw [evalLaurentC_single, zpow_one]
 
 /-- Contractivity: `‖∑ₖ aₖ zᵏ‖ ≤ ‖a‖` on the annulus. -/

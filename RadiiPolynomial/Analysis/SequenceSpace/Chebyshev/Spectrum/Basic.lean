@@ -13,9 +13,6 @@ supplies the symmetric Laurent modes `eₙ + e₋ₙ`, and `retract` exposes the
 symmetrization with its symmetric codomain. The two extensionality theorems —
 `linear_ext` (modes determine continuous linear maps) and `character_ext` (the
 Joukowski generator determines a character) — are what the classification rests on.
-
-Closes the first layer of the "spectrum as a space" gap: production bundles no
-character object for the Chebyshev geometry at all.
 -/
 
 noncomputable section
@@ -26,9 +23,13 @@ open lpOneAlg CrossGeometry
 
 variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 
+/-- The physical Chebyshev algebra: the production flip-fixed subalgebra
+`l1Chebyshev.symmetricSubalgebra ν`. -/
 abbrev Physical := l1Chebyshev.symmetricSubalgebra ν
+/-- Continuous complex characters of the physical algebra. -/
 abbrev Character := Physical ν →A[ℝ] ℂ
 
+/-- The Laurent character at an annulus point `z`, restricted to the physical algebra. -/
 def restriction (z : ℂ) (hz : (ν : ℝ)⁻¹ ≤ ‖z‖ ∧ ‖z‖ ≤ (ν : ℝ)) : Character ν :=
   (l1Chebyshev.evalLaurentC ν z hz).comp (l1Chebyshev.symmetricSubalgebra ν).valA
 
@@ -104,11 +105,10 @@ theorem norm_mode_le (n : ℕ) : ‖mode ν n‖ ≤ 2 * (ν : ℝ) ^ n := by
   rw [l1Chebyshev.norm_single, l1Chebyshev.norm_single]
   simp [Int.natAbs_natCast, Int.natAbs_neg, two_mul]
 
-/-- Existing symmetrization, with its physical codomain exposed. -/
+/-- Existing symmetrization, with its physical codomain exposed: the forwarding name of
+`l1Chebyshev.symmetricRetract`. -/
 def retract : l1Chebyshev ν →L[ℝ] Physical ν :=
-  (l1Chebyshev.symmetrize_CLM (ν := ν)).codRestrict
-    (l1Chebyshev.symmetricSubalgebra ν).toSubmodule
-    fun a => l1Chebyshev.symmetrize_isSymmetric a
+  l1Chebyshev.symmetricRetract ν
 
 @[simp] theorem retract_coe (a : l1Chebyshev ν) :
     (retract ν a : l1Chebyshev ν) = l1Chebyshev.symmetrize a := rfl

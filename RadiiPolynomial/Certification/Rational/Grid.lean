@@ -1,16 +1,17 @@
 import Mathlib.Tactic.TypeStar
 import Mathlib.Data.Nat.Notation
-import RadiiPolynomial.Certification.LeanCertAdapter
+import Mathlib.Data.List.GetD
+import RadiiPolynomial.Certification.Rational.Matrix
 import RadiiPolynomial.Certification.Rational.Frac
 
 /-!
 # Rational grid helpers
 
 Small facts about the `Array` encodings of rational certificate data (columns, coefficient
-lists) that exact-arithmetic certificates read back into `Fin`-indexed matrices, and the
-kernel-facing checkers of the defect block norm `‖I − A B‖` on stored columns.
+lists) that exact-arithmetic certificates read back into `Fin`-indexed matrices
+(`getD_ofFn_fin` is in `Rational/Matrix`), and the kernel-facing checkers of the defect block
+norm `‖I − A B‖` on stored columns.
 
-- `getD_ofFn_fin`: `getD` of `Array.ofFn` at a `Fin` index
 - `defectColF` / `roundCols`: exact gcd-free defect columns (`QF`), rounded upward onto the
   grid `1/S` (`abs_defectCols_le_roundCols`)
 - `defectColB` / `blockBoundB`: grid accumulators on `1/S` in `Nat` arithmetic, with the
@@ -20,11 +21,6 @@ kernel-facing checkers of the defect block norm `‖I − A B‖` on stored colu
 -/
 
 namespace RadiiPolynomial.Certification.Rational
-
-/-- `getD` of `Array.ofFn` at a `Fin` index. General in `α`, `n`, `f`, `d`. -/
-theorem getD_ofFn_fin {α : Type*} {n : ℕ} (f : Fin n → α) (i : Fin n) (d : α) :
-    (Array.ofFn f).getD (i : ℕ) d = f i := by
-  simp [Array.getD, Array.size_ofFn, i.isLt, Array.getElem_ofFn]
 
 /-! ## Exact gcd-free defect columns, rounded onto the grid `1/S` -/
 
@@ -112,9 +108,11 @@ theorem colWalk_getD (Acol : ℕ → Array ℚ) : ∀ (n k : ℕ) (bs : List ℚ
     · rw [Rat.num_eq_zero.mp hb]; ring
     · rw [axpy_getD _ _ _ _ h, toList_getD]; ring
 
-theorem foldl_length {ι : Type*} (f : List QF → ι → List QF)
+/-- A left fold whose step preserves the accumulator's length preserves it. Used by both the
+exact (`List QF`) and the grid (`List PM`) column accumulators. -/
+theorem foldl_length {β ι : Type*} (f : List β → ι → List β)
     (hlen : ∀ acc m, (f acc m).length = acc.length) :
-    ∀ (ms : List ι) (acc : List QF), (ms.foldl f acc).length = acc.length
+    ∀ (ms : List ι) (acc : List β), (ms.foldl f acc).length = acc.length
   | [], _ => rfl
   | m :: ms, acc => by rw [List.foldl_cons, foldl_length f hlen ms, hlen]
 
@@ -504,12 +502,6 @@ theorem colWalkB_spec (S : ℕ) (Acol : ℕ → Array ℚ) :
     push_cast
     linarith
 
-theorem foldlB_length {ι : Type*} (f : List PM → ι → List PM)
-    (hlen : ∀ acc m, (f acc m).length = acc.length) :
-    ∀ (ms : List ι) (acc : List PM), (ms.foldl f acc).length = acc.length
-  | [], _ => rfl
-  | m :: ms, acc => by rw [List.foldl_cons, foldlB_length f hlen ms, hlen]
-
 theorem foldlB_spec {ι : Type*} (S : ℕ) (f : List PM → ι → List PM) (g : ι → ℕ → ℚ) (n0 : ℚ)
     (hlen : ∀ acc m, (f acc m).length = acc.length)
     (hf : ∀ acc m i (x K : ℚ), i < acc.length → |x * S - (acc.getD i PM.zero).val| ≤ K →
@@ -541,7 +533,7 @@ theorem initColB_spec (S N : ℕ) (δ : Bool) (c i : ℕ) (hi : i < N + 1) :
 
 theorem defectColB_length {L : ℕ} (S : ℕ) (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ) (N : ℕ)
     (l j : Fin L) (c : ℕ) : (defectColB S A_col DF_col N l j c).length = N + 1 := by
-  rw [defectColB, foldlB_length _ (fun acc m => colWalkB_length _ _ _ _ _ acc), initColB_length]
+  rw [defectColB, foldl_length _ (fun acc m => colWalkB_length _ _ _ _ _ acc), initColB_length]
 
 /-- The grid column tracks the exact defect entry within `L(N+1)` grid units. -/
 theorem defectColB_spec {L : ℕ} (S : ℕ) (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ) (N : ℕ)

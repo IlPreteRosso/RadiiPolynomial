@@ -4,16 +4,15 @@ import RadiiPolynomial.Applications.IVP.Taylor.Analyticity
 /-!
 # Example 8.3 — actual analyticity of the certified canonical solution
 
-Additive strengthening of `Analytic.lean`: the canonical Lorenz solution
-`Example83.Cert.x_analytic` is not merely a power series centred at zero, it is
-`AnalyticOnNhd ℝ` on the whole interval `(-ν, ν)`, and that analyticity is
-attached to the existing existence/uniqueness statement.
+`lorenz_analyticOnNhd`: the canonical Lorenz solution `Example83.Cert.x_analytic` of
+`Analytic.lean` is not merely a power series centred at zero, it is `AnalyticOnNhd ℝ`
+on the whole interval `(-ν, ν)`; `lorenz_analytic_existsUnique` attaches that
+analyticity to the existence/uniqueness statement of `Analytic.lean`, whose competitor
+class is `IVP.IsAnalyticSolution`.
 
-Mirrors `Example81/Analyticity.lean`; both are one-line consumers of the generic
-`IVP.analyticOnNhd_x_analytic`. The complex-time statements stay in
-`Example83/ComplexTime.lean`. The certificate, the competitor class
-`IVP.IsAnalyticSolution`, and the public surface of `Analytic.lean` are
-untouched; the axiom set of these theorems is exactly that of
+As in `Example81/Analyticity.lean`, the analyticity theorem is a one-line consumer of
+the generic `IVP.analyticOnNhd_x_analytic`. The complex-time statements are in
+`Example83/ComplexTime.lean`. The axiom set of these theorems is exactly that of
 `Example83.Cert.main_theorem`.
 -/
 
@@ -25,7 +24,7 @@ namespace Example83.Cert
 
 open Example83
 
-/-- The Lorenz certificate now has an actual analytic canonical solution. -/
+/-- The canonical solution of the Lorenz certificate is real analytic on `(-ν, ν)`. -/
 theorem lorenz_analyticOnNhd :
     AnalyticOnNhd ℝ Example83.Cert.x_analytic
       (Set.Ioo (-(Example83.ν_val : ℝ)) Example83.ν_val) :=

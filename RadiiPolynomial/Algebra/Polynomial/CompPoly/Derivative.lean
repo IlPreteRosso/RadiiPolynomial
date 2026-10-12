@@ -23,6 +23,9 @@ the library's `MvPolynomial` calculus (`MvPolynomial.hasFDerivAt_aeval`, `MvPoly
 - `hasFDerivAt_system`: `D(P(·))(x) = jacCLM P x`
 - `gradCLM_eq_mul_comp_proj`: at `L = 1`, the gradient row is multiplication by `p′(x)` after
   the coordinate projection
+- `MvPolyBridge.contDiff_evalBanach`, `MvPolyBridge.differentiable_evalBanach`: on `ℝ^L` itself
+  the evaluation `x ↦ p.evalBanach x` is `C^ω` (through `MvPolynomial.contDiff_aeval`), hence
+  differentiable; the real vector field `IVP.vectorField` inherits both
 -/
 
 open scoped BigOperators
@@ -84,7 +87,7 @@ theorem hasFDerivAt_system {n : ℕ} (P : Fin n → CompPoly n) (x : Fin n → R
 /-- At `L = 1` the gradient row is left multiplication by the evaluated formal derivative
 `p′(x) = (pderiv 0 p)(x)` after the coordinate projection. Composing with `y ↦ fun _ => y` gives
 the derivative of `y ↦ p.evalBanach (fun _ => y)` on `R` itself as `ContinuousLinearMap.mul`
-(a consequence not stated in this file). -/
+(`CompPoly.hasFDerivAt_evalBanach_one`, `CompPoly/Univariate`). -/
 theorem gradCLM_eq_mul_comp_proj (p : CompPoly 1) (x : Fin 1 → R) :
     gradCLM p x = (ContinuousLinearMap.mul ℝ R ((p.pderiv 0).evalBanach x)).comp
       (ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin 1 => R) 0) := by
@@ -95,3 +98,25 @@ theorem gradCLM_eq_mul_comp_proj (p : CompPoly 1) (x : Fin 1 → R) :
 end PolyDeriv
 
 end MvPolyBridge.CompPoly
+
+/-! ## Smoothness of the real evaluation -/
+
+namespace MvPolyBridge
+
+/-- The pointwise interpretation of a `CompPoly` on `Fin L → ℝ` is `ContDiff ℝ ⊤`, i.e. of
+class `C^ω` (analytic), which in particular makes it smooth. -/
+theorem contDiff_evalBanach {L : ℕ} (p : CompPoly L) :
+    ContDiff ℝ ⊤ (fun x : Fin L → ℝ => p.evalBanach x) := by
+  have h : (fun x : Fin L → ℝ => p.evalBanach x) =
+           (fun x => MvPolynomial.aeval x p.toMvPoly) :=
+    funext fun x => (p.evalBanach_eq_evalAlg x).trans (p.evalAlg_eq_aeval x)
+  rw [h]
+  exact MvPolynomial.contDiff_aeval p.toMvPoly ⊤
+
+/-- The pointwise interpretation of a `CompPoly` on `Fin L → ℝ` is differentiable (from
+`contDiff_evalBanach`). -/
+theorem differentiable_evalBanach {L : ℕ} (p : CompPoly L) :
+    Differentiable ℝ (fun x : Fin L → ℝ => p.evalBanach x) :=
+  (contDiff_evalBanach p).differentiable (by decide)
+
+end MvPolyBridge

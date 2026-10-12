@@ -121,34 +121,19 @@ def chebyshevIntegrate (c : l1Chebyshev ν) : l1Chebyshev ν := -chebyshevShiftD
 
 @[simp] lemma chebyshevIntegrate_toSeq_zero (c : l1Chebyshev ν) :
     l1Chebyshev.toSeq (chebyshevIntegrate c) 0 = 0 := by
-  rw [chebyshevIntegrate, l1Chebyshev.toSeq_neg]
-  show -(lpOneAlg.toRealSeq (chebyshevShiftDiv c) 0) = 0
-  rw [chebyshevShiftDiv_toSeq, chebyshevShiftDiv_seq_zero, neg_zero]
+  rw [chebyshevIntegrate, l1Chebyshev.toSeq_neg, chebyshevShiftDiv_toSeq_zero, neg_zero]
 
 lemma chebyshevIntegrate_toSeq_succ (c : l1Chebyshev ν) (k : ℕ) :
     l1Chebyshev.toSeq (chebyshevIntegrate c) ((k + 1 : ℕ) : ℤ)
       = (l1Chebyshev.toSeq c (k : ℤ) - l1Chebyshev.toSeq c ((k + 2 : ℕ) : ℤ))
           / (2 * ((k + 1 : ℕ) : ℝ)) := by
-  rw [chebyshevIntegrate, l1Chebyshev.toSeq_neg]
-  show -(lpOneAlg.toRealSeq (chebyshevShiftDiv c) _) = _
-  rw [chebyshevShiftDiv_toSeq, chebyshevShiftDiv_seq_pos c (k + 1) k.succ_ne_zero,
+  rw [chebyshevIntegrate, l1Chebyshev.toSeq_neg,
+    chebyshevShiftDiv_toSeq_natCast c (k + 1) k.succ_ne_zero,
     show ((k + 1 : ℕ) : ℤ) + 1 = ((k + 2 : ℕ) : ℤ) by push_cast; ring,
     show ((k + 1 : ℕ) : ℤ) - 1 = (k : ℤ) by push_cast; ring]
   ring
 
 /-! ### Termwise integration of the T-series -/
-
-private lemma norm_term_le (c : l1Chebyshev ν) {g : ℝ} (hg : |g| ≤ 1) (m : ℕ) :
-    ‖l1Chebyshev.toSeq c (m : ℤ) * g‖ ≤ ‖c (m : ℤ)‖ := by
-  rw [norm_fiber_natCast, Real.norm_eq_abs, abs_mul]
-  exact mul_le_mul le_rfl (hg.trans (one_le_pow₀ Fact.out)) (abs_nonneg _) (abs_nonneg _)
-
-/-- Any series `∑ c_{k+s} g_k` with `|g_k| ≤ 1` converges absolutely. -/
-private lemma summable_of_bounded (c : l1Chebyshev ν) (g : ℕ → ℝ) (hg : ∀ k, |g k| ≤ 1)
-    (s : ℕ) : Summable (fun k : ℕ => l1Chebyshev.toSeq c ((k + s : ℕ) : ℤ) * g k) :=
-  Summable.of_norm_bounded
-    ((summable_norm_natCast c).comp_injective (add_left_injective s))
-    (fun k => norm_term_le c (hg k) (k + s))
 
 /-- The antiderivative series regrouped:
 `∑ c_{k+1} A_k(u) = ∑_m (∫c)_{m+1} T_{m+1}(u) - c₀ u / 2`, i.e. `(u_{∫c}(u) - c₀ u) / 2`. -/
@@ -158,18 +143,22 @@ private lemma tsum_chebAntideriv (c : l1Chebyshev ν) {u : ℝ} (hu : |u| ≤ 1)
           * (T ℝ ((m + 1 : ℕ) : ℤ)).eval u - l1Chebyshev.toSeq c 0 * u / 2 := by
   have hS1 : Summable (fun k : ℕ => l1Chebyshev.toSeq c ((k + 1 : ℕ) : ℤ)
       * ((T ℝ ((k + 2 : ℕ) : ℤ)).eval u / (2 * ((k + 2 : ℕ) : ℝ)))) :=
-    summable_of_bounded c _ (fun k => (abs_T_div_two_mul_le hu _ _).trans (by norm_num)) 1
+    l1Chebyshev.summable_toSeq_mul_of_abs_le_one c _
+      (fun k => (abs_T_div_two_mul_le hu _ _).trans (by norm_num)) 1
   have hS2 : Summable (fun k : ℕ => l1Chebyshev.toSeq c ((k + 1 : ℕ) : ℤ)
       * ((T ℝ (k : ℤ)).eval u / (2 * (k : ℝ)))) :=
-    summable_of_bounded c _ (fun k => (abs_T_div_two_mul_le hu _ _).trans (by norm_num)) 1
+    l1Chebyshev.summable_toSeq_mul_of_abs_le_one c _
+      (fun k => (abs_T_div_two_mul_le hu _ _).trans (by norm_num)) 1
   have hS3 : Summable (fun m : ℕ => l1Chebyshev.toSeq c (m : ℤ)
       * ((T ℝ ((m + 1 : ℕ) : ℤ)).eval u / (2 * ((m + 1 : ℕ) : ℝ)))) :=
-    (summable_of_bounded c (fun m => (T ℝ ((m + 1 : ℕ) : ℤ)).eval u / (2 * ((m + 1 : ℕ) : ℝ)))
+    (l1Chebyshev.summable_toSeq_mul_of_abs_le_one c
+      (fun m => (T ℝ ((m + 1 : ℕ) : ℤ)).eval u / (2 * ((m + 1 : ℕ) : ℝ)))
       (fun k => (abs_T_div_two_mul_le hu _ _).trans (by norm_num)) 0).congr
       (fun m => by rw [Nat.add_zero])
   have hS4 : Summable (fun m : ℕ => l1Chebyshev.toSeq c ((m + 2 : ℕ) : ℤ)
       * ((T ℝ ((m + 1 : ℕ) : ℤ)).eval u / (2 * ((m + 1 : ℕ) : ℝ)))) :=
-    summable_of_bounded c _ (fun k => (abs_T_div_two_mul_le hu _ _).trans (by norm_num)) 2
+    l1Chebyshev.summable_toSeq_mul_of_abs_le_one c _
+      (fun k => (abs_T_div_two_mul_le hu _ _).trans (by norm_num)) 2
   have e1 : ∀ k : ℕ, l1Chebyshev.toSeq c ((k + 1 : ℕ) : ℤ) * chebAntideriv k u
       = l1Chebyshev.toSeq c ((k + 1 : ℕ) : ℤ)
           * ((T ℝ ((k + 2 : ℕ) : ℤ)).eval u / (2 * ((k + 2 : ℕ) : ℝ)))
@@ -214,7 +203,7 @@ theorem integral_eval (c : l1Chebyshev ν) {t : ℝ} (ht : t ∈ Icc (-1 : ℝ) 
   have hbound : ∀ k : ℕ, ∀ s ∈ Icc (-1 : ℝ) 1,
       ‖l1Chebyshev.toSeq c ((k + 1 : ℕ) : ℤ) * (T ℝ ((k + 1 : ℕ) : ℤ)).eval s‖
         ≤ ‖c ((k + 1 : ℕ) : ℤ)‖ :=
-    fun k s hs => norm_term_le c (abs_eval_T_real_le_one _ (abs_le.mpr hs)) (k + 1)
+    fun k s hs => l1Chebyshev.norm_toSeq_mul_le c (abs_eval_T_real_le_one _ (abs_le.mpr hs)) (k + 1)
   -- (a) the interchange
   have hsum : HasSum
       (fun k : ℕ => ∫ s in (-1 : ℝ)..t,
@@ -257,7 +246,7 @@ theorem integral_eval (c : l1Chebyshev ν) {t : ℝ} (ht : t ∈ Icc (-1 : ℝ) 
     rw [intervalIntegral.integral_const_mul, integral_T_succ, mul_sub]
   have hA : ∀ u : ℝ, |u| ≤ 1 →
       Summable (fun k : ℕ => l1Chebyshev.toSeq c ((k + 1 : ℕ) : ℤ) * chebAntideriv k u) :=
-    fun u hu => summable_of_bounded c _ (abs_chebAntideriv_le hu) 1
+    fun u hu => l1Chebyshev.summable_toSeq_mul_of_abs_le_one c _ (abs_chebAntideriv_le hu) 1
   -- (d) regroup
   rw [h1, tsum_congr h2, (hA t (abs_le.mpr ht)).tsum_sub (hA (-1) (by norm_num)),
     tsum_chebAntideriv c (abs_le.mpr ht), tsum_chebAntideriv c (by norm_num)]
@@ -284,6 +273,14 @@ lemma eval_eq_of_toSeq_succ_eq {a b : l1Chebyshev ν}
 
 variable (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ) (a : XCheb ν L)
 
+/-- Row 0 of `F` is the endpoint evaluation (book (14.2)): `F(a)_{l,0} = p_l - u_{a_l}(-1)`. -/
+lemma chebyshevIvpCoeffs_zero_eq_eval (l : Fin L) :
+    chebyshevIvpCoeffs φ p a l 0 = p l - l1Chebyshev.eval (a l) (-1) := by
+  rw [l1Chebyshev.eval_at_neg_one]
+  simp only [chebyshevIvpCoeffs]
+  rw [tsum_congr fun k => mul_comm _ _]
+  ring
+
 /-- Rows `k ≥ 1` of `F(a) = 0`: `a` agrees with `∫φ(a)` on the positive modes. -/
 lemma toSeq_succ_eq_integrate_of_F_zero (hF : ∀ l k, chebyshevIvpCoeffs φ p a l k = 0)
     (l : Fin L) (k : ℕ) :
@@ -299,11 +296,7 @@ lemma toSeq_succ_eq_integrate_of_F_zero (hF : ∀ l k, chebyshevIvpCoeffs φ p a
 /-- Row 0 of `F(a) = 0` is the initial condition `u_{a_l}(-1) = p_l` (book (14.12)). -/
 lemma eval_neg_one_of_F_zero (hF : ∀ l k, chebyshevIvpCoeffs φ p a l k = 0) (l : Fin L) :
     l1Chebyshev.eval (a l) (-1) = p l := by
-  have h := hF l 0
-  simp only [chebyshevIvpCoeffs] at h
-  rw [l1Chebyshev.eval_at_neg_one,
-    tsum_congr (fun k => mul_comm (l1Chebyshev.toSeq (a l) ((k + 1 : ℕ) : ℤ)) ((-1 : ℝ) ^ (k + 1)))]
-  linarith
+  linarith [hF l 0, chebyshevIvpCoeffs_zero_eq_eval φ p a l]
 
 /-- **The integral equation** (book (14.8)): `F(a) = 0 ⟹ u_{a_l}(t) = p_l + ∫_{-1}^t u_{φ(a)_l}`
 on `[-1, 1]`. -/

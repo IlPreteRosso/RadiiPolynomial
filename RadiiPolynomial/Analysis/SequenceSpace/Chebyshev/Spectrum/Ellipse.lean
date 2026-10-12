@@ -12,8 +12,7 @@ of exactly one continuous complex character (`existsUnique_character`,
 `exists_character_iff`), which packages the classification into the set-level
 bijection `characterEquivEllipse : Character ν ≃ Ellipse ν`.
 
-Closes the "no packaged ellipse classification" half of the spectrum gap; the
-topological upgrade is in `Spectrum/Topology.lean`.
+The topological upgrade is in `Spectrum/Topology.lean`.
 -/
 
 noncomputable section
@@ -83,20 +82,6 @@ private theorem annulus_of_focal_le {t : ℝ} (ht : 0 < t) {ν : ℝ} (hν : 1 �
     have h3 : 0 < t - ν⁻¹ := by linarith
     nlinarith
 
-private theorem focal_le_of_annulus {t ν : ℝ} (ht : 0 < t) (hν0 : 0 < ν)
-    (h1 : ν⁻¹ ≤ t) (h2 : t ≤ ν) : t + t⁻¹ ≤ ν + ν⁻¹ := by
-  have hkey : 0 ≤ (ν - t) * (t * ν - 1) := by
-    have h3 : (1 : ℝ) ≤ t * ν := by
-      have h4 := mul_le_mul_of_nonneg_right h1 hν0.le
-      rwa [inv_mul_cancel₀ (ne_of_gt hν0)] at h4
-    exact mul_nonneg (by linarith) (by linarith)
-  have hexpand : (ν + ν⁻¹) - (t + t⁻¹) = (ν - t) * (t * ν - 1) / (t * ν) := by
-    field_simp
-    ring
-  have hnn : 0 ≤ (ν - t) * (t * ν - 1) / (t * ν) :=
-    div_nonneg hkey (mul_pos ht hν0).le
-  linarith [hexpand ▸ hnn]
-
 variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 
 omit [Fact (1 ≤ (ν : ℝ))] in
@@ -105,7 +90,7 @@ theorem joukowski_mem_ellipse {z : ℂ}
     ‖joukowski z - 1‖ + ‖joukowski z + 1‖ ≤ (ν : ℝ) + (ν : ℝ)⁻¹ := by
   have hz0 := lpOneAlg.ne_zero_of_annulus ν hz
   rw [focal_sum_eq hz0]
-  exact focal_le_of_annulus (norm_pos_iff.mpr hz0) ν.coe_pos hz.1 hz.2
+  exact add_inv_le_add_inv_of_inv_le_of_le (norm_pos_iff.mpr hz0) ν.coe_pos hz.1 hz.2
 
 theorem exists_annular_preimage (w : Ellipse ν) :
     ∃ (z : ℂ) (_hz : (ν : ℝ)⁻¹ ≤ ‖z‖ ∧ ‖z‖ ≤ (ν : ℝ)), joukowski z = w.val := by

@@ -18,17 +18,16 @@ the tail-offset index `n = k + M − N` instead, so the ℚ mirror has the same
 index set as the analytic tsum and the cast bridge is termwise).
 
 This file provides:
-* `colTailTermQ`, `colTailQ` — the computable ℚ mirrors (native_decide-friendly:
-  `Finset.range` folds, no `Finset.Icc` on ℤ), and `colTailQ_nonneg`;
+* `colTailTermQ`, `colTailQ` — the computable ℚ mirrors (`Finset.range` folds, no
+  `Finset.Icc` on ℤ), and `colTailQ_nonneg`;
 * `shiftDivN_single_tailTsum_eq_colTailQ` — the exact tsum-to-ℚ-sum bridge;
 * `shiftDivN_leftMul_tail_cols_le_of_Q` — the certificate-facing reduction:
-  a decidable check over the finite range `M ≤ N` (one `native_decide` in the
-  certificate) plus `shiftDivN_leftMul_tail_col_antitone` above `N` discharge
-  the `∀ M` column hypothesis.
-
-These are weighted harmonic sums, not matrix entries, so this is new
-`finmatrix_bound`-style work; the cast/bridge scaffolding (`hcols`-style ℚ
-arrays, `hν` weight cast) mirrors `Certification/LeanCertAdapter.lean`.
+  a decidable ℚ check over the finite range `M ≤ N` plus
+  `shiftDivN_leftMul_tail_col_antitone` above `N` discharge the `∀ M` column
+  hypothesis. In the Taylor family the bound `C` is `IVP.colSupQ`, the maximum
+  over `M ≤ N` of `κ_{N,M} / ν_q ^ M`, so the finite-range check holds by
+  construction; what `StdIVPDataQ.ChecksZ₁col` decides (`decide +kernel`) is
+  that the sum of these maxima over the partial derivatives is at most `Z₁`.
 -/
 
 open scoped BigOperators
@@ -103,7 +102,7 @@ theorem shiftDivN_single_tailTsum_eq_colTailQ (b : l1Weighted ν) (bQ : Array �
 
 /-- **Certificate-facing reduction** of the `∀ M` column hypothesis of
 `shiftDivN_leftMul_tail_le_of_cols`: the finite range `M ≤ N` is checked by
-exact ℚ computation (`hle`, decidable — one `native_decide` in a certificate),
+exact ℚ computation (`hle`, decidable),
 and columns above `N` are covered by `shiftDivN_leftMul_tail_col_antitone`. -/
 theorem shiftDivN_leftMul_tail_cols_le_of_Q (b : l1Weighted ν) (bQ : Array ℚ)
     (ν_q : ℚ) (d N : ℕ) {C : ℚ}

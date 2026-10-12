@@ -78,9 +78,11 @@ variable {ν : PosReal} {L N : ℕ} [NeZero L] (d : StdIVPData ν L N)
 
 /-! ## Lower-level wrapper (takes the `IsAnalyticSolution` fields separately) -/
 
-/-- Pinning at the field-level. Takes the `IsAnalyticSolution` data
-unpackaged; used by the predicate-based theorems below and reusable for
-callers that don't want to wrap into the structure. -/
+/-- Pinning at the field level: a solution `g` with the three `IsAnalyticSolution` fields given
+separately agrees with `x_analytic xTilde` on `(-ν, ν)`. The bridge `h_phi_eq` forces
+`φ = banachField φ_cpoly`, so the coefficient zero of `G` is a zero of the `banachField`
+residual and `analytic_solution_unique` applies with `R = ‖d.abar‖ + r₀`. Used by the
+predicate-based theorems below. -/
 theorem analytic_uniqueness_wrapper
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (φ_cpoly : Fin L → CompPoly L)
@@ -97,39 +99,17 @@ theorem analytic_uniqueness_wrapper
     (hg_solves : ∀ t ∈ Set.Ioo (-(ν : ℝ)) ν,
       HasDerivAt g (vectorField φ_cpoly (g t)) t) :
     Set.EqOn g (IVP.x_analytic xTilde) (Set.Ioo (-(ν : ℝ)) ν) := by
-  -- F-zero bridge in `φ` form, then convert to banachField form via h_phi_eq.
-  have hF_phi : ∀ l n, ivpCoeffs φ x₀ xTilde l n = 0 :=
-    d.ivpCoeffs_zero_of_G_zero φ x₀ h_defect_lt_one hG
-  have hF : ∀ l n, ivpCoeffs (banachField φ_cpoly) x₀ xTilde l n = 0 := fun l n => by
-    have h_alg := hF_phi l n
-    unfold ivpCoeffs at h_alg ⊢
-    cases n with
-    | zero => exact h_alg
-    | succ k =>
-      have h_phi_k : l1Weighted.toSeq (banachField φ_cpoly xTilde l) k =
-                     l1Weighted.toSeq (φ xTilde l) k := by rw [h_phi_eq]
-      linarith
-  have hxTilde_norm_le : ‖xTilde‖ ≤ ‖(d.abar : XL1 ν L)‖ + r₀ := by
-    have h_dist : dist xTilde d.abar ≤ r₀ := hxTilde_ball
-    rw [dist_eq_norm] at h_dist
-    have h_tri : ‖xTilde‖ ≤ ‖(d.abar : XL1 ν L)‖ + ‖xTilde - d.abar‖ := by
-      have heq : (d.abar : XL1 ν L) + (xTilde - d.abar) = xTilde := by abel
-      conv_lhs => rw [← heq]
-      exact norm_add_le _ _
-    linarith
-  have hf_in_R : ∀ t ∈ Set.Ioo (-(ν : ℝ)) ν,
-      (fun l => l1Weighted.eval (xTilde l) t) ∈
-        Metric.closedBall (0 : Fin L → ℝ) (‖(d.abar : XL1 ν L)‖ + r₀) := fun t ht => by
-    have h_abs : |t| ≤ (ν : ℝ) := by rw [abs_le]; exact ⟨ht.1.le, ht.2.le⟩
-    exact Metric.closedBall_subset_closedBall hxTilde_norm_le
-      (IVP.eval_traj_in_closedBall xTilde h_abs)
-  exact analytic_solution_unique φ_cpoly x₀ xTilde hF hf_in_R
+  obtain rfl : banachField φ_cpoly = φ := funext fun a => funext (h_phi_eq a)
+  exact analytic_solution_unique φ_cpoly x₀ xTilde
+    (d.ivpCoeffs_zero_of_G_zero _ x₀ h_defect_lt_one hG)
+    (fun t ht => closedBall_subset_closedBall (norm_le_of_mem_closedBall hxTilde_ball)
+      (IVP.eval_traj_in_closedBall xTilde (abs_le.mpr ⟨ht.1.le, ht.2.le⟩)))
     g hg_in_R hg_init hg_solves
 
 /-! ## Predicate-based theorems -/
 
-/-- **Existence**: `x_analytic xTilde` is an analytic solution of the IVP on
-`(-ν, ν)` with trajectory bound `R = ‖d.abar‖ + r₀`. -/
+/-- **Existence**: `x_analytic xTilde` satisfies `IsAnalyticSolution` on `(-ν, ν)` with
+trajectory bound `R = ‖d.abar‖ + r₀` (the ball bound is `norm_le_of_mem_closedBall`). -/
 theorem x_analytic_isAnalyticSolution
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (φ_cpoly : Fin L → CompPoly L)
@@ -140,43 +120,17 @@ theorem x_analytic_isAnalyticSolution
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G φ x₀ xTilde = 0) :
     IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
-      (‖(d.abar : XL1 ν L)‖ + r₀) (IVP.x_analytic xTilde) where
-  init := by
-    funext l
-    show l1Weighted.eval (xTilde l) 0 = x₀ l
-    rw [l1Weighted.eval_at_zero]
-    have hF : ∀ l n, ivpCoeffs φ x₀ xTilde l n = 0 :=
-      d.ivpCoeffs_zero_of_G_zero φ x₀ h_defect_lt_one hG
+      (‖(d.abar : XL1 ν L)‖ + r₀) (IVP.x_analytic xTilde) := by
+  obtain rfl : banachField φ_cpoly = φ := funext fun a => funext (h_phi_eq a)
+  have hF := d.ivpCoeffs_zero_of_G_zero _ x₀ h_defect_lt_one hG
+  refine ⟨funext fun l => ?_, fun t ht => ?_, fun t ht => ?_⟩
+  · show l1Weighted.eval (xTilde l) 0 = x₀ l
     have h0 := hF l 0
     unfold ivpCoeffs at h0
-    linarith
-  in_R := by
-    intro t ht
-    have h_abs : |t| ≤ (ν : ℝ) := by rw [abs_le]; exact ⟨ht.1.le, ht.2.le⟩
-    have hxTilde_norm_le : ‖xTilde‖ ≤ ‖(d.abar : XL1 ν L)‖ + r₀ := by
-      have h_dist : dist xTilde d.abar ≤ r₀ := hxTilde_ball
-      rw [dist_eq_norm] at h_dist
-      have h_tri : ‖xTilde‖ ≤ ‖(d.abar : XL1 ν L)‖ + ‖xTilde - d.abar‖ := by
-        have heq : (d.abar : XL1 ν L) + (xTilde - d.abar) = xTilde := by abel
-        conv_lhs => rw [← heq]
-        exact norm_add_le _ _
-      linarith
-    exact Metric.closedBall_subset_closedBall hxTilde_norm_le
-      (IVP.eval_traj_in_closedBall xTilde h_abs)
-  solves := by
-    intro t ht
-    have h_abs : |t| < (ν : ℝ) := abs_lt.mpr ht
-    have hF : ∀ l n, ivpCoeffs (banachField φ_cpoly) x₀ xTilde l n = 0 := fun l n => by
-      have h_alg := d.ivpCoeffs_zero_of_G_zero φ x₀ h_defect_lt_one hG l n
-      unfold ivpCoeffs at h_alg ⊢
-      cases n with
-      | zero => exact h_alg
-      | succ k =>
-        have h_phi_k : l1Weighted.toSeq (banachField φ_cpoly xTilde l) k =
-                       l1Weighted.toSeq (φ xTilde l) k := by rw [h_phi_eq]
-        linarith
-    have ⟨h_per_comp, _⟩ := IVP.solves_ODE_of_F_zero φ_cpoly x₀ xTilde hF h_abs
-    exact hasDerivAt_pi.mpr h_per_comp
+    rw [l1Weighted.eval_at_zero]; linarith
+  · exact closedBall_subset_closedBall (norm_le_of_mem_closedBall hxTilde_ball)
+      (IVP.eval_traj_in_closedBall xTilde (abs_le.mpr ⟨ht.1.le, ht.2.le⟩))
+  · exact hasDerivAt_pi.mpr (IVP.solves_ODE_of_F_zero φ_cpoly x₀ xTilde hF (abs_lt.mpr ht)).1
 
 /-- **Pinning**: any analytic solution agrees with `x_analytic xTilde` on
 `(-ν, ν)`. -/

@@ -41,8 +41,9 @@ The tactic:
 -/
 
 open Lean Meta Elab Tactic Term
+open LeanCert.Tactic
 
-namespace LeanCert.Tactic
+namespace RadiiPolynomial.Tactic
 
 /-- Prove a matrix norm bound by applying a bridge lemma and closing
     the ℚ certificate check with `native_decide` (the default route of
@@ -130,4 +131,4 @@ elab_rules : tactic
               (RadiiPolynomial.colNormTermEval _ $nuQ _)
               (fun k _ _ => RadiiPolynomial.colNormTermEval_correct _ $nuQ _ k _))))
 
-end LeanCert.Tactic
+end RadiiPolynomial.Tactic

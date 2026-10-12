@@ -13,8 +13,7 @@ abstracted over a sequence-space family `Seq : PosReal → Type*`.
 Canonical norm quantities (`Y₀_norm`, `Z₀_norm`, `Z₁_norm`, `Z₂_norm`) are
 defined over general real normed spaces (`E F : Type*` with `NormedAddCommGroup` and
 `NormedSpace ℝ`; no completeness is assumed),
-so both `l1Weighted ν` (scalar) and `XL1 ν L` (system) can use them without
-type bridging or `(Seq := Seq)` annotations.
+so both `l1Weighted ν` (scalar) and `XL1 ν L` (system) can use them directly.
 
 Certificates call `general_radii_polynomial_theorem` directly with these
 canonical norm definitions.
@@ -26,11 +25,6 @@ open Metric Set Filter ContinuousLinearMap
 noncomputable section
 
 namespace RadiiPolynomial
-
-variable {Seq : PosReal → Type*}
-variable [∀ ν, NormedAddCommGroup (Seq ν)]
-variable [∀ ν, NormedSpace ℝ (Seq ν)]
-variable [∀ ν, CompleteSpace (Seq ν)]
 
 /-- Domain space `X = (Seq ν)^L` for an `L`-component system.
 Ref: §8.2, p.195. -/

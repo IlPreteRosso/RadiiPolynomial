@@ -5,6 +5,12 @@ import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Scalar
 
 `ScaledRealZ ν k` is `WeightedScalar (fun k : ℤ => ν^|k|) k` — bilateral Chebyshev fiber.
 All instances (NormedAddCommGroup, NormedSpace, etc.) flow from `WeightedScalar`.
+
+This file owns the bilateral weight `k ↦ ν^|k|` and its instances, so it also holds the
+weight-level faces: the fiber over any normed field `geomFiberZ 𝕜 ν` (with
+`ScaledRealZ ν = geomFiberZ ℝ ν` definitionally) and its fiber weight `geomFiberZ_weight`,
+used by the Fourier carrier `lpOneAlg ℤ (geomFiberZ 𝕜 ν)`, and the real fiber-norm bridge
+`ScaledRealZ.norm_lpAlgRingData_ofReal`, twin of `ScaledReal.norm_lpAlgRingData_ofReal`.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -46,16 +52,36 @@ instance ScaledRealZ.instSubMulWeight (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] :
     have hν : (1 : ℝ) ≤ (ν : ℝ) := Fact.out
     exact ((one_pow k.natAbs).symm.le).trans (pow_le_pow_left₀ zero_le_one hν k.natAbs)
 
-/-! ### Compatibility aliases -/
+/-! ### The bilateral geometric fiber over any normed field -/
 
-namespace ScaledRealZ
+/-- The bilateral geometric fiber over a normed field `𝕜`: `𝕜` with norm
+`‖x‖ ν^|k|` at mode `k : ℤ`. Its real instance is `ScaledRealZ ν`
+(definitionally), so `l1Chebyshev ν = lpOneAlg ℤ (geomFiberZ ℝ ν)`. -/
+abbrev geomFiberZ (𝕜 : Type*) [NormedField 𝕜] (ν : PosReal) :=
+  WeightedScalar 𝕜 (fun k : ℤ => (ν : ℝ) ^ k.natAbs)
 
-variable {ν : PosReal} {k : ℤ}
+example (ν : PosReal) : ScaledRealZ ν = geomFiberZ ℝ ν := rfl
 
-/-- Identity map to `ℝ`. Alias for `WeightedScalar.toReal`. -/
-abbrev toReal (x : ScaledRealZ ν k) : ℝ := WeightedScalar.toReal x
+/-- The fiber weight of `geomFiberZ 𝕜 ν` at `k` is `ν^|k|`. -/
+theorem geomFiberZ_weight {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal) (k : ℤ) :
+    ‖lpAlgRingData.ofReal (E := geomFiberZ 𝕜 ν) k (1 : 𝕜)‖ = (ν : ℝ) ^ k.natAbs := by
+  rw [show lpAlgRingData.ofReal (E := geomFiberZ 𝕜 ν) k (1 : 𝕜)
+      = WeightedScalar.ofReal 1 from rfl, WeightedScalar.norm_ofReal,
+    norm_one, one_mul]
 
-end ScaledRealZ
+/-- The norm of an atom of the bilateral geometric carrier: `‖single j x‖ = ‖x‖ ν^|j|`. -/
+theorem lpOneAlg.norm_single_geomFiberZ {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal) (j : ℤ)
+    (x : 𝕜) :
+    ‖(lpOneAlg.single (E := geomFiberZ 𝕜 ν) j x : lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖
+      = ‖x‖ * (ν : ℝ) ^ j.natAbs := by
+  rw [lpOneAlg.norm_single, geomFiberZ_weight]
+
+/-! ### Fiber-norm bridge -/
+
+/-- The fiber norm of `lpAlgRingData.ofReal k r` for `ScaledRealZ` equals `|r| * ν^|k|`. -/
+@[simp] theorem ScaledRealZ.norm_lpAlgRingData_ofReal (ν : PosReal) (k : ℤ) (r : ℝ) :
+    ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) k r‖ = |r| * (ν : ℝ) ^ k.natAbs :=
+  WeightedScalar.norm_ofReal r
 
 end RadiiPolynomial
 

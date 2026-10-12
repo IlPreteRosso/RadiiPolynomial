@@ -1,6 +1,7 @@
 import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Coefficients
+import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Core
 import Mathlib.Algebra.MvPolynomial.PDeriv
-import Mathlib.Analysis.Calculus.ContDiff.Operations
+import Mathlib.Analysis.Normed.Module.Basic
 
 /-!
 # Computable Polynomial AST
@@ -29,48 +30,6 @@ def Df_Q (j m) k := ((f_cpoly j).pderiv m).evalCoeff arrs k     -- computable Ja
 
 open scoped BigOperators
 open RadiiPolynomial MvPolyBridge
-
-/-! ### Mathlib-ready: smoothness of multivariate polynomials
-
-The single-variable analogue `Polynomial.contDiff_aeval` is in
-`Mathlib/Analysis/Calculus/ContDiff/Polynomial.lean`. The lemma below extends it to
-multivariate polynomials and is suitable for upstreaming. The proof inducts via
-`MvPolynomial.induction_on` (3 cases: `C`, `add`, `mul_X`); each case dispatches to
-the corresponding `ContDiff` closure lemma. -/
-
-namespace MvPolynomial
-
-@[simp] theorem C_natCast_eq {σ R : Type*} [CommSemiring R] (n : ℕ) :
-    MvPolynomial.C (n : R) = (n : MvPolynomial σ R) :=
-  map_natCast MvPolynomial.C n
-
-@[simp] theorem C_ofNat_eq {σ R : Type*} [CommSemiring R] (n : ℕ) [n.AtLeastTwo] :
-    MvPolynomial.C (OfNat.ofNat n : R) = (OfNat.ofNat n : MvPolynomial σ R) :=
-  map_ofNat MvPolynomial.C n
-
-@[simp] theorem C_intCast_eq {σ R : Type*} [CommRing R] (z : ℤ) :
-    MvPolynomial.C (z : R) = (z : MvPolynomial σ R) :=
-  map_intCast MvPolynomial.C z
-
-/-- Multivariate polynomials, viewed as functions on `σ → 𝕜`, are `C^n` for any `n`.
-Multivariate analogue of `Polynomial.contDiff_aeval`. -/
-lemma contDiff_aeval {σ R 𝕜 : Type*} [Fintype σ] [CommSemiring R]
-    [NontriviallyNormedField 𝕜] [Algebra R 𝕜]
-    (p : MvPolynomial σ R) (n : WithTop ℕ∞) :
-    ContDiff 𝕜 n (fun x : σ → 𝕜 => aeval x p) := by
-  induction p using MvPolynomial.induction_on with
-  | C r =>
-      simp only [aeval_C]
-      exact contDiff_const
-  | add p q ihp ihq =>
-      simp only [map_add]
-      exact ihp.add ihq
-  | mul_X p i ih =>
-      simp only [map_mul, aeval_X]
-      exact ih.mul
-        ((ContinuousLinearMap.proj (R := 𝕜) (φ := fun _ : σ => 𝕜) i).contDiff)
-
-end MvPolynomial
 
 namespace MvPolyBridge
 
@@ -174,11 +133,6 @@ theorem evalCoeffSeq_eq_mvPolyCoeff (p : CompPoly L) (seqs : Fin L → ℕ → �
   | smul r p ih =>
       simp only [evalCoeffSeq, toMvPoly, mvPolyCoeff_C_mul]
       rw [ih]
-
-theorem evalCoeff_eq_mvPolyCoeffQ (p : CompPoly L) (arrs : Fin L → Array ℚ) (n : ℕ) :
-    p.evalCoeff arrs n = mvPolyCoeffQ p.toMvPoly arrs n := by
-  simpa only [evalCoeff, mvPolyCoeffQ] using
-    p.evalCoeffSeq_eq_mvPolyCoeff (fun i k => (arrs i).getD k 0) n
 
 theorem pderiv_toMvPoly (m : Fin L) (p : CompPoly L) :
     (p.pderiv m).toMvPoly = MvPolynomial.pderiv m p.toMvPoly := by
@@ -329,14 +283,7 @@ variable {R B : Type*} [CommRing R] [Algebra ℝ R]
 /-- Polynomial interpretation commutes with a real algebra homomorphism. -/
 theorem map_evalBanach (f : R →ₐ[ℝ] B) (p : CompPoly L) (a : Fin L → R) :
     f (p.evalBanach a) = p.evalBanach (fun i => f (a i)) := by
-  let : Algebra ℚ R := ((algebraMap ℝ R).comp (algebraMap ℚ ℝ)).toAlgebra
-  let : IsScalarTower ℚ ℝ R := IsScalarTower.of_algebraMap_eq' rfl
-  let : Algebra ℚ B := ((algebraMap ℝ B).comp (algebraMap ℚ ℝ)).toAlgebra
-  let : IsScalarTower ℚ ℝ B := IsScalarTower.of_algebraMap_eq' rfl
-  rw [p.evalBanach_eq_evalAlg, p.evalAlg_eq_aeval]
-  change (f.restrictScalars ℚ) (MvPolynomial.aeval a p.toMvPoly) = _
-  rw [MvPolynomial.comp_aeval_apply, p.evalBanach_eq_evalAlg, p.evalAlg_eq_aeval]
-  rfl
+  rw [p.evalBanach_eq_aeval_map, p.evalBanach_eq_aeval_map, MvPolynomial.comp_aeval_apply]
 
 end AlgebraHom
 

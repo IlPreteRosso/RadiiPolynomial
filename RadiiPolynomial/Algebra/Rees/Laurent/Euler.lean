@@ -14,6 +14,9 @@ multipliers `diagU lam` form an algebra map `diagAlgHom`; the polynomial symbols
 `PH H`, and `PH H ∘ₗ qDelta sym ∘ₗ (1 - PH H) = 0`. The tail-inverse criterion
 `qDelta_bijOn_tail_iff` says `qDelta sym` is bijective on the coordinate tail iff its tail
 eigenvalues are units; `deltaU_bijOn_tail` is the case `sym = X` over a `ℚ`-algebra.
+The specialization `specU t : U R →+* R[T;T⁻¹]` evaluates every coefficient at `t`; it carries
+`deltaU`, `qDelta sym` and `PH H` to `deltaL` and the multipliers `diagL`
+(`specU_deltaU`, `specU_qDelta`, `specU_PH`).
 Boundaries (under `[Nontrivial R]`): `X_pow_smul_one_ne_zero`, `X_pow_smul_one_not_mem_tailMod`,
 `deltaU_not_injOn_JN`, `no_inv_X_pow`, `z_ne_zero`.
 
@@ -37,8 +40,6 @@ the selection with
 `attribute [local instance] RadiiPolynomial.Rees.Laurent.instUAddCommGroup RadiiPolynomial.Rees.Laurent.instUZero`).
 Consumers that keep the default instances use the applied corollaries `PH_apply_sub_PH_apply`,
 `PH_sub_apply` and `PH_qDelta_tail_apply`, stated after the section under default instances.
-
-Promoted from the S028a `ReesEuler` freeze by unit L003-ReesLaurent (see `RENAMES.md`).
 -/
 
 noncomputable section
@@ -111,18 +112,9 @@ theorem coeff_deltaL {S : Type*} [CommRing S] (f : S[T;T⁻¹]) (j : ℤ) :
 
 end Generic
 
-section Selection
+section Core
 
 variable {R : Type*} [CommRing R]
-
-/-- Select the inherited group directly, without changing its operations. -/
-local instance instUAddCommGroup : AddCommGroup (U R) := (U R).toRing.toAddCommGroup
-
-/-- Select the zero of the inherited additive group in both assembly environments. -/
-local instance instUZero : Zero (U R) := (instUAddCommGroup (R := R)).toZero
-
-theorem zero_selection_eq_existing :
-    (0 : U R) = @Zero.zero (U R) ((instUAddCommGroup (R := R)).toZero) := rfl
 
 theorem deltaL_mem_U {f : (R[X])[T;T⁻¹]} (hf : f ∈ U R) : deltaL R[X] f ∈ U R := by
   apply (mem_U_iff _).mpr
@@ -277,16 +269,6 @@ theorem PH_comp_PH (H : Finset ℤ) : (PH (R := R) H : U R →ₗ[R[X]] U R) ∘
   simp only [LinearMap.comp_apply, coeff_PH]
   split_ifs <;> rfl
 
-theorem PH_comp_one_sub (H : Finset ℤ) :
-    (PH (R := R) H : U R →ₗ[R[X]] U R) ∘ₗ ((1 : U R →ₗ[R[X]] U R) - PH (R := R) H : U R →ₗ[R[X]] U R) = 0 := by
-  rw [LinearMap.comp_sub, show (1 : U R →ₗ[R[X]] U R) = LinearMap.id from rfl,
-    LinearMap.comp_id, PH_comp_PH, sub_self]
-
-theorem one_sub_comp_PH (H : Finset ℤ) :
-    ((1 : U R →ₗ[R[X]] U R) - (PH (R := R) H : U R →ₗ[R[X]] U R) : U R →ₗ[R[X]] U R) ∘ₗ PH (R := R) H = 0 := by
-  rw [LinearMap.sub_comp, show (1 : U R →ₗ[R[X]] U R) = LinearMap.id from rfl,
-    LinearMap.id_comp, PH_comp_PH, sub_self]
-
 theorem deltaU_eq_diagU : (deltaU R).toLinearMap = diagU (fun k => (k : R[X])) := by
   apply LinearMap.ext
   intro f
@@ -377,80 +359,61 @@ theorem PH_comm_qDelta (H : Finset ℤ) (sym : Polynomial R) :
   rw [qDelta_eq_diagU]
   exact PH_comm_diagU H _
 
-theorem PH_qDelta_tail (H : Finset ℤ) (sym : Polynomial R) :
-    PH (R := R) H ∘ₗ qDelta sym ∘ₗ ((1 : U R →ₗ[R[X]] U R) - PH (R := R) H : U R →ₗ[R[X]] U R) = 0 := by
-  rw [← LinearMap.comp_assoc, PH_comm_qDelta, LinearMap.comp_assoc, PH_comp_one_sub, LinearMap.comp_zero]
+/-- Specialization of the Rees parameter at `t`: the ambient coefficient evaluation
+`mapRingHom (evalRingHom t)` of `R[X][T;T⁻¹]`, restricted to `U R`. It is a ring hom into
+`R[T;T⁻¹]`; no fiber isomorphism is claimed: at `t = 0` it kills every `z j` with `j ≠ 0`, although
+`z 1 ∉ X • U R` for nontrivial `R`. -/
+def specU (t : R) : U R →+* R[T;T⁻¹] :=
+  (AddMonoidAlgebra.mapRingHom ℤ (Polynomial.evalRingHom t)).comp (U R).val
 
-theorem PH_add_qDelta_tail (H : Finset ℤ) (sym : Polynomial R)
-    (L : Module.End R[X] (U R)) :
-    PH (R := R) H ∘ₗ (qDelta sym + L) ∘ₗ ((1 : U R →ₗ[R[X]] U R) - PH (R := R) H : U R →ₗ[R[X]] U R) =
-      PH (R := R) H ∘ₗ L ∘ₗ ((1 : U R →ₗ[R[X]] U R) - PH (R := R) H : U R →ₗ[R[X]] U R) := by
-  apply LinearMap.ext
-  intro f
-  simp only [LinearMap.comp_apply, LinearMap.add_apply, map_add]
-  have hz := DFunLike.congr_fun (PH_qDelta_tail H sym) f
-  simp only [LinearMap.comp_apply, LinearMap.zero_apply] at hz
-  rw [hz, zero_add]
+/-- The coefficients of `specU t f` are the coefficients of `f` evaluated at `t`. -/
+theorem coeff_specU (t : R) (f : U R) (k : ℤ) :
+    (specU t f).coeff k = ((f : (R[X])[T;T⁻¹]).coeff k).eval t :=
+  AddMonoidAlgebra.coeff_mapRingHom _ _ _
 
-/-- Raw specialization of the coordinates at `t`. -/
-def specCoeff (t : R) (f : U R) : ℤ → R :=
-  fun k => ((f : (R[X])[T;T⁻¹]).coeff k).eval t
-
-/-- Raw head projection of a coefficient sequence. -/
-def rawHead (H : Finset ℤ) (a : ℤ → R) : ℤ → R := fun k => if k ∈ H then a k else 0
-
-/-- Raw diagonal multiplier of a coefficient sequence. -/
-def rawDiag (lam : ℤ → R) (a : ℤ → R) : ℤ → R := fun k => lam k * a k
-
-theorem specCoeff_deltaU (t : R) (f : U R) :
-    specCoeff t (deltaU R f) = rawDiag (fun k => (k : R)) (specCoeff t f) := by
-  funext k
-  simp only [specCoeff, rawDiag, coeff_deltaU, Polynomial.eval_mul,
-    ← Polynomial.C_eq_intCast, Polynomial.eval_C]
-
-theorem specCoeff_qDelta (t : R) (sym : Polynomial R) (f : U R) :
-    specCoeff t (qDelta sym f) = rawDiag (fun k => sym.eval (k : R)) (specCoeff t f) := by
-  funext k
-  simp only [specCoeff, rawDiag, qDelta_eq_diagU, coeff_diagU,
-    Polynomial.eval_mul, Polynomial.eval_C]
-
-theorem specCoeff_PH (t : R) (H : Finset ℤ) (f : U R) :
-    specCoeff t (PH (R := R) H f) = rawHead H (specCoeff t f) := by
-  funext k
-  simp only [specCoeff, rawHead, coeff_PH]
-  split_ifs <;> simp only [Polynomial.eval_zero]
-
-theorem specCoeff_z (t : R) (j k : ℤ) :
-    specCoeff t (z j : U R) k = if k = j then t ^ j.natAbs else 0 := by
-  simp only [specCoeff, coe_z_apply]
-  split_ifs <;> simp only [Polynomial.eval_pow, Polynomial.eval_X, Polynomial.eval_zero]
-
-theorem rawHead_rawDiag (H : Finset ℤ) (lam : ℤ → R) (a : ℤ → R) :
-    rawHead H (rawDiag lam a) = rawDiag lam (rawHead H a) := by
-  funext k
-  simp only [rawHead, rawDiag]
-  split_ifs <;> simp only [mul_zero]
-
-theorem rawHead_rawDiag_tail (H : Finset ℤ) (lam : ℤ → R) (a : ℤ → R) :
-    rawHead H (rawDiag lam (a - rawHead H a)) = 0 := by
-  funext k
-  simp only [rawHead, rawDiag, Pi.sub_apply, Pi.zero_apply]
-  split_ifs <;> simp only [sub_self, mul_zero]
-
-/-- `rawDiag` is the pointwise product. -/
-theorem rawDiag_eq_mul (lam a : ℤ → R) : rawDiag lam a = lam * a := rfl
-
-/-- `rawHead` is the indicator of the head set. -/
-theorem rawHead_eq_indicator (H : Finset ℤ) (a : ℤ → R) :
-    rawHead H a = Set.indicator (↑H : Set ℤ) a := by
-  funext k
-  rw [Set.indicator_apply]
-  unfold rawHead
+theorem specU_z (t : R) (j : ℤ) :
+    specU t (z j : U R) = AddMonoidAlgebra.single j (t ^ j.natAbs) := by
+  apply AddMonoidAlgebra.ext
+  apply Finsupp.ext
+  intro k
+  change (specU t (z j : U R)).coeff k = (AddMonoidAlgebra.single j (t ^ j.natAbs)).coeff k
+  rw [coeff_specU, coe_z_apply, coeff_single_eq]
   split_ifs with h1 h2 h2
-  · rfl
-  · exact absurd (Finset.mem_coe.mpr h1) h2
-  · exact absurd (Finset.mem_coe.mp h2) h1
-  · rfl
+  · rw [Polynomial.eval_pow, Polynomial.eval_X]
+  · exact absurd h1.symm h2
+  · exact absurd h2.symm h1
+  · exact Polynomial.eval_zero
+
+/-- Specialization intertwines the Euler derivations of `U R` and `R[T;T⁻¹]`. -/
+theorem specU_deltaU (t : R) (f : U R) : specU t (deltaU R f) = deltaL R (specU t f) := by
+  apply AddMonoidAlgebra.ext
+  apply Finsupp.ext
+  intro k
+  change (specU t (deltaU R f)).coeff k = (deltaL R (specU t f)).coeff k
+  rw [coeff_specU, coeff_deltaU, coeff_deltaL, coeff_specU, Polynomial.eval_mul,
+    Polynomial.eval_intCast]
+
+/-- Specialization carries the polynomial symbol `qDelta sym` to the multiplier `k ↦ sym (k)`. -/
+theorem specU_qDelta (t : R) (sym : Polynomial R) (f : U R) :
+    specU t (qDelta sym f) = diagL (fun k => sym.eval (k : R)) (specU t f) := by
+  apply AddMonoidAlgebra.ext
+  apply Finsupp.ext
+  intro k
+  change (specU t (qDelta sym f)).coeff k = (diagL _ (specU t f)).coeff k
+  rw [coeff_specU, qDelta_eq_diagU, coeff_diagU, coeff_diagL, coeff_specU, Polynomial.eval_mul,
+    Polynomial.eval_C]
+
+/-- Specialization carries the head projection `PH H` to the indicator multiplier of `H`. -/
+theorem specU_PH (t : R) (H : Finset ℤ) (f : U R) :
+    specU t (PH (R := R) H f) = diagL (fun k => if k ∈ H then 1 else 0) (specU t f) := by
+  apply AddMonoidAlgebra.ext
+  apply Finsupp.ext
+  intro k
+  change (specU t (PH (R := R) H f)).coeff k = (diagL _ (specU t f)).coeff k
+  rw [coeff_specU, coeff_PH, coeff_diagL, coeff_specU]
+  split_ifs
+  · rw [one_mul]
+  · rw [Polynomial.eval_zero, zero_mul]
 
 theorem deltaU_X_pow_smul_one (N : ℕ) :
     deltaU R ((X : R[X]) ^ (2 * N + 2) • (1 : U R)) = 0 := by
@@ -600,6 +563,46 @@ theorem z_ne_zero [Nontrivial R] (j : ℤ) : (z j : U R) ≠ 0 := by
   simp only [coe_z_apply, ite_true, Subalgebra.coe_zero,
     AddMonoidAlgebra.coeff_zero, Finsupp.zero_apply] at hc
   exact (Polynomial.monic_X_pow _).ne_zero hc
+
+end Core
+
+section Selection
+
+variable {R : Type*} [CommRing R]
+
+/-- Select the inherited group directly, without changing its operations. -/
+local instance instUAddCommGroup : AddCommGroup (U R) := (U R).toRing.toAddCommGroup
+
+/-- Select the zero of the inherited additive group in both assembly environments. -/
+local instance instUZero : Zero (U R) := (instUAddCommGroup (R := R)).toZero
+
+theorem zero_selection_eq_existing :
+    (0 : U R) = @Zero.zero (U R) ((instUAddCommGroup (R := R)).toZero) := rfl
+
+theorem PH_comp_one_sub (H : Finset ℤ) :
+    (PH (R := R) H : U R →ₗ[R[X]] U R) ∘ₗ ((1 : U R →ₗ[R[X]] U R) - PH (R := R) H : U R →ₗ[R[X]] U R) = 0 := by
+  rw [LinearMap.comp_sub, show (1 : U R →ₗ[R[X]] U R) = LinearMap.id from rfl,
+    LinearMap.comp_id, PH_comp_PH, sub_self]
+
+theorem one_sub_comp_PH (H : Finset ℤ) :
+    ((1 : U R →ₗ[R[X]] U R) - (PH (R := R) H : U R →ₗ[R[X]] U R) : U R →ₗ[R[X]] U R) ∘ₗ PH (R := R) H = 0 := by
+  rw [LinearMap.sub_comp, show (1 : U R →ₗ[R[X]] U R) = LinearMap.id from rfl,
+    LinearMap.id_comp, PH_comp_PH, sub_self]
+
+theorem PH_qDelta_tail (H : Finset ℤ) (sym : Polynomial R) :
+    PH (R := R) H ∘ₗ qDelta sym ∘ₗ ((1 : U R →ₗ[R[X]] U R) - PH (R := R) H : U R →ₗ[R[X]] U R) = 0 := by
+  rw [← LinearMap.comp_assoc, PH_comm_qDelta, LinearMap.comp_assoc, PH_comp_one_sub, LinearMap.comp_zero]
+
+theorem PH_add_qDelta_tail (H : Finset ℤ) (sym : Polynomial R)
+    (L : Module.End R[X] (U R)) :
+    PH (R := R) H ∘ₗ (qDelta sym + L) ∘ₗ ((1 : U R →ₗ[R[X]] U R) - PH (R := R) H : U R →ₗ[R[X]] U R) =
+      PH (R := R) H ∘ₗ L ∘ₗ ((1 : U R →ₗ[R[X]] U R) - PH (R := R) H : U R →ₗ[R[X]] U R) := by
+  apply LinearMap.ext
+  intro f
+  simp only [LinearMap.comp_apply, LinearMap.add_apply, map_add]
+  have hz := DFunLike.congr_fun (PH_qDelta_tail H sym) f
+  simp only [LinearMap.comp_apply, LinearMap.zero_apply] at hz
+  rw [hz, zero_add]
 
 end Selection
 

@@ -8,8 +8,6 @@ import Mathlib.Data.Int.Interval
 `PH_z_mul_z_head`: for any finite head `H` containing `k`, the head projection of the product
 `z (k - j) * z j` is `X ^ eps k j • z k`. This is the one Γ-layer lemma that needs both the cutoff
 API `PH` of `Euler` and the cancellation length `eps` of `Gamma`.
-
-Promoted from the S028a `ReesGamma` freeze by unit L003-ReesLaurent (see `RENAMES.md`).
 -/
 
 noncomputable section

@@ -1,5 +1,5 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Scalar
-import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Algebra
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Carrier
 
 /-!
 # Glue: WeightedScalar as a lpOneAlg Fiber
@@ -8,7 +8,7 @@ Registers the standard frame of `WeightedScalar 𝕜 w` as a `FiberTrivializatio
 legacy `lpAlgRingData` / `lpAlgSmulCompat` instances are derived) and the Beurling-weight classes
 `lpOneAlgWeightMul`, `lpOneAlgWeightSubMul`.
 
-Separating these instances from `WeightedScalar.lean` keeps `WeightedScalar` as a
+Separating these instances from `WeightedL1/Scalar.lean` keeps `WeightedScalar` as a
 self-contained weighted-scalar module, independent of `lpOneAlg`. Files that build
 `lpOneAlg M (WeightedScalar 𝕜 w)` should import this file.
 -/

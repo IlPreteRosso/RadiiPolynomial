@@ -1,7 +1,6 @@
 import RadiiPolynomial.Algebra.Convolution.CauchyProduct
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
 import Mathlib.Analysis.Normed.Ring.InfiniteSum
-import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Real
 import Mathlib.Topology.Algebra.Algebra
 
@@ -12,8 +11,6 @@ Bridges the coefficient space ℓ¹_ν to analytic functions via power series ev
 
 ## Main Results
 
-* `l1Weighted.toPowerSeries`: the coefficientwise map ℓ¹_ν → ℝ⟦X⟧ (its injectivity is not
-  stated here)
 * `l1Weighted.eval`: Evaluation `∑' n, aₙ zⁿ` at a real point `z` (defined for every `z` by
   `tsum`; summability and the algebra laws are proved for `|z| ≤ ν`)
 * `l1Weighted.eval_mul`: Evaluation is a ring homomorphism (Mertens' theorem)
@@ -30,22 +27,6 @@ variable {ν : PosReal}
 namespace l1Weighted
 
 private abbrev seq (a : l1Weighted ν) := l1Weighted.toSeq a
-
-/-! ## Formal Power Series Embedding -/
-
-def toPowerSeries (a : l1Weighted ν) : PowerSeries ℝ :=
-  PowerSeries.mk (seq a)
-
-@[simp]
-theorem coeff_toPowerSeries (a : l1Weighted ν) (n : ℕ) :
-    (PowerSeries.coeff n) (toPowerSeries a) = seq a n :=
-  PowerSeries.coeff_mk n _
-
-theorem coeff_mul_eq_cauchyProduct (a b : l1Weighted ν) (n : ℕ) :
-    (PowerSeries.coeff n) (toPowerSeries a * toPowerSeries b) =
-    CauchyProduct (seq a) (seq b) n := by
-  rw [PowerSeries.coeff_mul]
-  simp only [coeff_toPowerSeries, CauchyProduct.apply]
 
 /-! ## Analytic Evaluation -/
 
@@ -258,26 +239,6 @@ lemma eval_mul_trunc (a b : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) (N : ℕ)
   rw [l1Weighted.single_mul, eval_single, eval_single, eval_single, pow_add]
   ring
 
--- ARCHIVED: classical Cauchy-product proof (kept for reference).
--- Replaced 2026-04-29 by the density-based proof below. Equivalent statement;
--- the classical version threads `tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm`
--- and explicit antidiagonal index manipulation, while the density version
--- factors through the categorical structure (monomial → finite sum → limit).
--- A classical-math write-up of both versions and the performance pitfall was kept at
--- `exterior/tmp/eval_mul_density/eval_mul_density.tex`; that file is no longer present.
---
--- theorem eval_mul (a b : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
---     eval a z * eval b z = eval (a * b) z := by
---   unfold eval
---   rw [tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm
---     (summable_norm_eval a hz) (summable_norm_eval b hz)]
---   congr 1; ext n
---   simp only [seq, l1Weighted.toSeq_mul, CauchyProduct.apply, Finset.sum_mul]
---   apply Finset.sum_congr rfl
---   intro ⟨k, l⟩ hkl
---   simp only [Finset.mem_antidiagonal] at hkl
---   rw [mul_mul_mul_comm, ← pow_add, hkl]
-
 /-- **Mertens' theorem** for `l1Weighted ν`: pointwise evaluation is multiplicative.
 
 Density-based proof:
@@ -359,14 +320,6 @@ def evalAlgHom (z : ℝ) (hz : |z| ≤ ν) : l1Weighted ν →ₐ[ℝ] ℝ :=
 
 @[simp] theorem evalAlgHom_apply (z : ℝ) (hz : |z| ≤ ν) (a : l1Weighted ν) :
     evalAlgHom z hz a = eval a z := rfl
-
-/-- The ℝ-algebra hom `evalAlgHom` restricted to ℚ scalars. Used to compose with
-`MvPolynomial.aeval` (which is over the ℚ base ring) in the Mertens-recursive bridge. -/
-def evalAlgHomQ (z : ℝ) (hz : |z| ≤ ν) : l1Weighted ν →ₐ[ℚ] ℝ :=
-  ((evalContinuousAlgHom z hz).restrictScalars ℚ).toAlgHom
-
-@[simp] theorem evalAlgHomQ_apply (z : ℝ) (hz : |z| ≤ ν) (a : l1Weighted ν) :
-    evalAlgHomQ z hz a = eval a z := rfl
 
 end l1Weighted
 

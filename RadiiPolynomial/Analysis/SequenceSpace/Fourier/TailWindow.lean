@@ -21,7 +21,7 @@ ratio at an atom (`defect_attained`). This holds for every bounded `M` and `r`. 
 (`colRatio_defect_explicit`, `opNorm_defect_eq_sup'_explicit`), also in the joint form with a
 head block `Z` (`opNorm_joint_defect_eq_sup'`, `opNorm_joint_defect_sub_eq_sup'`).
 
-The aggregation laws are the L001 faces `lpOneAlg.colRatio_add_of_head_tail`,
+The aggregation laws are the `WeightedL1/Diagonal.lean` faces `lpOneAlg.colRatio_add_of_head_tail`,
 `lpOneAlg.opNorm_add_eq_iSup`, `lpOneAlg.opNorm_joint_eq_iSup`; the window maximum principle is
 `iSup_eq_sup'_of_far_antitone` (`Fourier/Support.lean`).
 
@@ -44,7 +44,7 @@ section Columns
 variable {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal}
 variable {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
 
-/-- **(T14, L002.)** On the geometric carrier the weighted column ratio is
+/-- On the geometric carrier the weighted column ratio is
 `‖T e_j‖ / ν^|j|`. -/
 theorem colRatio_geom (T : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →L[𝕜] F) (j : ℤ) :
     lpOneAlg.colRatio T j = ‖T (lpOneAlg.single j 1)‖ / (ν : ℝ) ^ j.natAbs := by
@@ -58,7 +58,7 @@ section TailCol
 
 variable {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal}
 
-/-- **(T21, L002.)** The explicit tail column
+/-- The explicit tail column
 `s_j = (Σ_{|i| ≤ m} ‖r_{j+i}‖ ‖b_i‖ ν^{|j+i|}) / ν^{|j|}`. -/
 def tailCol (m : ℕ) (r : ℤ → 𝕜) (b : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (j : ℤ) : ℝ :=
   (∑ i ∈ winZ m, ‖r (j + i)‖ * ‖lpOneAlg.toRealSeq b i‖ * (ν : ℝ) ^ (j + i).natAbs)
@@ -79,25 +79,25 @@ local notation "𝓡[" r ", " C ",
     " hr "]" => (lpOneAlg.diagCLM (G := geomFiberZ 𝕜 ν) r C hr : 𝓔 →L[𝕜] 𝓔)
 local notation "𝓛[" b "]" => (lpOneAlg.mulLeftCLM (𝕜 := 𝕜) b : 𝓔 →L[𝕜] 𝓔)
 
-/-- **(T15, L002.)** The head (leakage) term `M P L_b Q`. -/
+/-- The head (leakage) term `M P L_b Q`. -/
 def defectHead (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔) : 𝓔 →L[𝕜] 𝓔 :=
   M ∘L 𝓟[N] ∘L 𝓛[b] ∘L 𝓠[N]
 
-/-- **(T16, L002.)** The tail term `R L_b`. -/
+/-- The tail term `R L_b`. -/
 def defectTail (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) : 𝓔 →L[𝕜] 𝓔 :=
   𝓡[r, C, hr] ∘L 𝓛[b]
 
-/-- **(T17, L002.)** The bounded preconditioned defect `M P L_b Q + R L_b`. -/
+/-- The bounded preconditioned defect `M P L_b Q + R L_b`. -/
 def defect (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) :
     𝓔 →L[𝕜] 𝓔 :=
   M ∘L 𝓟[N] ∘L 𝓛[b] ∘L 𝓠[N] + 𝓡[r, C, hr] ∘L 𝓛[b]
 
-/-- **(T17, L002.)** The defect is the sum of its head and tail terms. -/
+/-- The defect is the sum of its head and tail terms. -/
 theorem defect_eq (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) :
     defect N M r C hr b = defectHead N M b + defectTail r C hr b :=
   rfl
 
-/-- **(T18, L002.)** The head-term column at an atom. -/
+/-- The head-term column at an atom. -/
 theorem defectHead_single (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔) (j : ℤ) :
     defectHead N M b (lpOneAlg.single j 1)
       = if j.natAbs ≤ N then 0 else M (𝓟[N] (b * lpOneAlg.single j 1)) := by
@@ -106,23 +106,23 @@ theorem defectHead_single (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔) (j : �
   · simp only [map_zero]
   · rfl
 
-/-- **(T18, L002.)** The tail-term column at an atom. -/
+/-- The tail-term column at an atom. -/
 theorem defectTail_single (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) (j : ℤ) :
     defectTail r C hr b (lpOneAlg.single j 1) = 𝓡[r, C, hr] (b * lpOneAlg.single j 1) :=
   rfl
 
-/-- **(T19, L002.)** The head term has zero head columns. -/
+/-- The head term has zero head columns. -/
 theorem colRatio_defectHead_head (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔) (j : ℤ) (hj : j.natAbs ≤ N) :
     lpOneAlg.colRatio (defectHead N M b) j = 0 := by
   rw [colRatio_geom, defectHead_single, ite_eq_left hj, norm_zero, zero_div]
 
-/-- **(T19, L002.)** The head-term column for a tail input. -/
+/-- The head-term column for a tail input. -/
 theorem colRatio_defectHead_eq (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔) (j : ℤ) (hj : N < j.natAbs) :
     lpOneAlg.colRatio (defectHead N M b) j
       = ‖M (𝓟[N] (b * lpOneAlg.single j 1))‖ / (ν : ℝ) ^ j.natAbs := by
   rw [colRatio_geom, defectHead_single, ite_eq_right (show ¬j.natAbs ≤ N by omega)]
 
-/-- **(T19, L002.)** Under the band of `b`, the head term vanishes beyond the shell `N + m`. -/
+/-- Under the band of `b`, the head term vanishes beyond the shell `N + m`. -/
 theorem colRatio_defectHead_far (N m : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔)
     (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0) (j : ℤ) (hj : N + m < j.natAbs) :
     lpOneAlg.colRatio (defectHead N M b) j = 0 := by
@@ -135,11 +135,11 @@ theorem colRatio_defectHead_far (N m : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔
     · rfl
   rw [colRatio_defectHead_eq N M b j (by omega), h0, map_zero, norm_zero, zero_div]
 
-/-- **(T20, L002.)** The explicit head column `a_j = 1_{|j|>N} ‖M P (b e_j)‖ / ν^{|j|}`. -/
+/-- The explicit head column `a_j = 1_{|j|>N} ‖M P (b e_j)‖ / ν^{|j|}`. -/
 def headCol (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔) (j : ℤ) : ℝ :=
   if j.natAbs ≤ N then 0 else ‖M (𝓟[N] (b * lpOneAlg.single j 1))‖ / (ν : ℝ) ^ j.natAbs
 
-/-- **(T20, L002.)** The head-term column is the explicit head column. -/
+/-- The head-term column is the explicit head column. -/
 theorem colRatio_defectHead_eq_headCol (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔) (j : ℤ) :
     lpOneAlg.colRatio (defectHead N M b) j = headCol N M b j := by
   unfold headCol
@@ -147,7 +147,7 @@ theorem colRatio_defectHead_eq_headCol (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b :
   · exact colRatio_defectHead_head N M b j hj
   · exact colRatio_defectHead_eq N M b j (by omega)
 
-/-- **(T21, L002.)** Under the band of `b`, the tail-term column is the explicit tail column. -/
+/-- Under the band of `b`, the tail-term column is the explicit tail column. -/
 theorem colRatio_defectTail (m : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
     (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0) (j : ℤ) :
     lpOneAlg.colRatio (defectTail r C hr b) j = tailCol m r b j := by
@@ -166,7 +166,7 @@ theorem colRatio_defectTail (m : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, 
   refine Finset.sum_congr rfl fun i _ => ?_
   rw [lpOneAlg.toRealSeq_diagCLM, toRealSeq_mul_single, add_sub_cancel_left, norm_mul]
 
-/-- **(T22, L002.)** The right far ray `m ≤ j`: `colRatio (R L_b) j = Σ_i ‖r_{j+i}‖ ‖b_i‖ ν^i`. -/
+/-- The right far ray `m ≤ j`: `colRatio (R L_b) j = Σ_i ‖r_{j+i}‖ ‖b_i‖ ν^i`. -/
 theorem colRatio_defectTail_far_pos (m : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
     (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0) (j : ℤ) (hj : (m : ℤ) ≤ j) :
     lpOneAlg.colRatio (defectTail r C hr b) j
@@ -180,7 +180,7 @@ theorem colRatio_defectTail_far_pos (m : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr :
       show (((j + i).natAbs : ℕ) : ℤ) - (j.natAbs : ℕ) = i by omega]
   rw [← e2, mul_div_assoc]
 
-/-- **(T22, L002.)** The left far ray `j ≤ −m`:
+/-- The left far ray `j ≤ −m`:
 `colRatio (R L_b) j = Σ_i ‖r_{j+i}‖ ‖b_i‖ ν^{−i}`. -/
 theorem colRatio_defectTail_far_neg (m : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
     (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0) (j : ℤ) (hj : j ≤ -(m : ℤ)) :
@@ -195,25 +195,25 @@ theorem colRatio_defectTail_far_neg (m : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr :
       show (((j + i).natAbs : ℕ) : ℤ) - (j.natAbs : ℕ) = -i by omega]
   rw [← e2, mul_div_assoc]
 
-/-- **(T23, L002.)** `P (M P L_b Q) = M P L_b Q` when `P M = M`. -/
+/-- `P (M P L_b Q) = M P L_b Q` when `P M = M`. -/
 theorem headProj_comp_defectHead (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔) (hPM : 𝓟[N] ∘L M = M) :
     𝓟[N] ∘L defectHead N M b = defectHead N M b := by
   rw [defectHead, ← ContinuousLinearMap.comp_assoc, hPM]
 
-/-- **(T23, L002.)** `(M P L_b Q) P = 0`: the input side of the head term is the tail. -/
+/-- `(M P L_b Q) P = 0`: the input side of the head term is the tail. -/
 theorem defectHead_comp_headProj (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (b : 𝓔) :
     defectHead N M b ∘L 𝓟[N] = 0 := by
   simp only [defectHead, ContinuousLinearMap.comp_assoc, lpOneAlg.tailProj_comp_headProj,
     ContinuousLinearMap.comp_zero]
 
-/-- **(T23, L002.)** `Q (R L_b) = R L_b` when `r` vanishes on the head. -/
+/-- `Q (R L_b) = R L_b` when `r` vanishes on the head. -/
 theorem tailProj_comp_defectTail (N : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
     (hr0 : ∀ k : ℤ, k.natAbs ≤ N → r k = 0) :
     𝓠[N] ∘L defectTail r C hr b = defectTail r C hr b := by
   rw [defectTail, ← ContinuousLinearMap.comp_assoc,
     lpOneAlg.tailProj_comp_diagCLM (winZ N) r C hr fun k hk => hr0 k (mem_winZ.mp hk)]
 
-/-- **(T24, L002.)** Under range (`P M = M`) and head vanishing, the defect columns are the sums
+/-- Under range (`P M = M`) and head vanishing, the defect columns are the sums
 of the head-term and tail-term columns. -/
 theorem colRatio_defect (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C)
     (b : 𝓔) (hPM : 𝓟[N] ∘L M = M) (hr0 : ∀ k : ℤ, k.natAbs ≤ N → r k = 0) (j : ℤ) :
@@ -222,7 +222,7 @@ theorem colRatio_defect (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) 
   lpOneAlg.colRatio_add_of_head_tail (winZ N) _ _ (headProj_comp_defectHead N M b hPM)
     (tailProj_comp_defectTail N r C hr b hr0) j
 
-/-- **(T26, L002.)** Beyond the shell `N + m` the defect column is the tail column, for every
+/-- Beyond the shell `N + m` the defect column is the tail column, for every
 bounded `M` and `r` (only the band of `b` is used). -/
 theorem colRatio_defect_far_eq_defectTail (N m : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ)
     (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0)
@@ -234,7 +234,7 @@ theorem colRatio_defect_far_eq_defectTail (N m : ℕ) (M : 𝓔 →L[𝕜] 𝓔)
     exact norm_eq_zero.mp (h.resolve_right (pow_pos ν.2 _).ne')
   rw [colRatio_geom, colRatio_geom, defect_eq, add_apply, h0, zero_add]
 
-/-- **(T27, L002.)** The far tail columns are antitone outward on the right (window `W ≥ m`). -/
+/-- The far tail columns are antitone outward on the right (window `W ≥ m`). -/
 theorem colRatio_defectTail_succ_le (m W : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
     (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0) (hmW : m ≤ W)
     (hmono : ∀ n : ℕ, W ≤ n + m →
@@ -253,7 +253,7 @@ theorem colRatio_defectTail_succ_le (m W : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr
   exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right hn (norm_nonneg _))
     (zpow_nonneg hν.le _)
 
-/-- **(T27, L002.)** The far tail columns are antitone outward on the left. -/
+/-- The far tail columns are antitone outward on the left. -/
 theorem colRatio_defectTail_pred_le (m W : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
     (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0) (hmW : m ≤ W)
     (hmono : ∀ n : ℕ, W ≤ n + m →
@@ -272,7 +272,7 @@ theorem colRatio_defectTail_pred_le (m W : ℕ) (r : ℤ → 𝕜) (C : ℝ) (hr
   exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right hn (norm_nonneg _))
     (zpow_nonneg hν.le _)
 
-/-- **(T28, L002.)** Far antitonicity of the defect columns on the right, any window
+/-- Far antitonicity of the defect columns on the right, any window
 `W > N + m` such that the moduli are monotone from `W − m` on (`W ≤ n + m`). -/
 theorem colRatio_defect_succ_le_of (N m W : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ)
     (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0)
@@ -286,7 +286,7 @@ theorem colRatio_defect_succ_le_of (N m W : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r :
     colRatio_defect_far_eq_defectTail N m M r C hr b hb j (by omega)]
   exact colRatio_defectTail_succ_le m W r C hr b hb (by omega) hmono j hj
 
-/-- **(T28, L002.)** Far antitonicity of the defect columns on the left. -/
+/-- Far antitonicity of the defect columns on the left. -/
 theorem colRatio_defect_pred_le_of (N m W : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ)
     (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0)
     (hWN : N + m < W)
@@ -299,7 +299,7 @@ theorem colRatio_defect_pred_le_of (N m W : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r :
     colRatio_defect_far_eq_defectTail N m M r C hr b hb j (by omega)]
   exact colRatio_defectTail_pred_le m W r C hr b hb (by omega) hmono j hj
 
-/-- **(T30, L002.)** The defect columns are antitone outward beyond
+/-- The defect columns are antitone outward beyond
 `W = m + max (N + 1) K₀`, on both rays. -/
 theorem colRatio_defect_far_antitone (N m K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ)
     (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0)
@@ -318,7 +318,7 @@ theorem colRatio_defect_far_antitone (N m K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔)
   exact ⟨colRatio_defect_succ_le_of N m _ M r C hr b hb hWN hm,
     colRatio_defect_pred_le_of N m _ M r C hr b hb hWN hm⟩
 
-/-- **(T32, L002.)** Under band, range and head vanishing, the defect columns in explicit form
+/-- Under band, range and head vanishing, the defect columns in explicit form
 `a_j + s_j`. -/
 theorem colRatio_defect_explicit (N m : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ)
     (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) (hb : ∀ i : ℤ, m < i.natAbs → lpOneAlg.toRealSeq b i = 0)
@@ -340,7 +340,7 @@ local notation "𝓔" => lpOneAlg ℤ (geomFiberZ 𝕜 ν)
 local notation "𝓟[" N "]" => (lpOneAlg.headProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : 𝓔 →L[𝕜] 𝓔)
 local notation "𝓠[" N "]" => (lpOneAlg.tailProj (𝕜 := 𝕜) (G := geomFiberZ 𝕜 ν) (winZ N) : 𝓔 →L[𝕜] 𝓔)
 
-/-- **(T25, L002.)** Under range and head vanishing, `‖D‖ = ⨆ j (a_j + s_j)` in column-ratio
+/-- Under range and head vanishing, `‖D‖ = ⨆ j (a_j + s_j)` in column-ratio
 form (the exact aggregate of a head-valued and a tail-valued map). -/
 theorem opNorm_defect_eq_iSup (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ)
     (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔) (hPM : 𝓟[N] ∘L M = M)
@@ -351,7 +351,7 @@ theorem opNorm_defect_eq_iSup (N : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 
   lpOneAlg.opNorm_add_eq_iSup (winZ N) _ _ (headProj_comp_defectHead N M b hPM)
     (tailProj_comp_defectTail N r C hr b hr0)
 
-/-- **(T29, L002.)** The operator norm of the defect is the finite maximum of its column ratios
+/-- The operator norm of the defect is the finite maximum of its column ratios
 over `winZ W`, any window `W > N + m` such that the moduli are monotone from `W − m` on
 (`W ≤ n + m`). -/
 theorem opNorm_defect_eq_sup'_of (N m W : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ)
@@ -365,7 +365,7 @@ theorem opNorm_defect_eq_sup'_of (N m W : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : �
     (colRatio_defect_succ_le_of N m W M r C hr b hb hWN hmono)
     (colRatio_defect_pred_le_of N m W M r C hr b hb hWN hmono))
 
-/-- **(T31, L002; the statement of record.)** Under the band of `b`, a bounded tail diagonal and
+/-- The main theorem: under the band of `b`, a bounded tail diagonal and
 moduli `‖r‖` two-ray nonincreasing from `max (N + 1) K₀` on, the full operator norm of the
 defect is the finite maximum of its column ratios over `|j| ≤ m + max (N + 1) K₀`. For every
 bounded `M` and `r`. -/
@@ -381,7 +381,7 @@ theorem opNorm_defect_eq_sup' (N m K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : �
     (colRatio_defect_far_antitone N m K₀ M r C hr b hb hmono).1
     (colRatio_defect_far_antitone N m K₀ M r C hr b hb hmono).2)
 
-/-- **(T33, L002.)** The exact finite window in explicit form: under band, range and head
+/-- The exact finite window in explicit form: under band, range and head
 vanishing, `‖D‖ = max_{|j| ≤ W} (a_j + s_j)` with `W = m + max (N + 1) K₀`. -/
 theorem opNorm_defect_eq_sup'_explicit (N m K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜)
     (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
@@ -395,7 +395,7 @@ theorem opNorm_defect_eq_sup'_explicit (N m K₀ : ℕ) (M : 𝓔 →L[𝕜] �
   rw [opNorm_defect_eq_sup' N m K₀ M r C hr b hb hmono]
   exact Finset.sup'_congr _ rfl fun j _ => colRatio_defect_explicit N m M r C hr b hb hPM hr0 j
 
-/-- **(T34, L002.)** The operator norm is attained as a weighted column ratio at an atom inside
+/-- The operator norm is attained as a weighted column ratio at an atom inside
 the window: `‖D e_j‖ = ‖D‖ ν^|j|` for some `|j| ≤ m + max (N + 1) K₀`. This is attainment of
 the column ratio at `single j 1`, not a unit-norm atom (a scalar of norm `ν^(-|j|)` need not
 exist over a general field). -/
@@ -413,7 +413,7 @@ theorem defect_attained (N m K₀ : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ →
   rw [opNorm_defect_eq_sup' N m K₀ M r C hr b hb hmono, heq, colRatio_geom,
     div_mul_cancel₀ _ (pow_pos hν _).ne']
 
-/-- **(T36, L002.)** Moduli monotone from the first tail index give the window
+/-- Moduli monotone from the first tail index give the window
 `|j| ≤ N + m + 1`. -/
 theorem opNorm_defect_eq_sup'_first (N m : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜) (C : ℝ)
     (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
@@ -425,7 +425,7 @@ theorem opNorm_defect_eq_sup'_first (N m : ℕ) (M : 𝓔 →L[𝕜] 𝓔) (r : 
           (fun j => lpOneAlg.colRatio (defect N M r C hr b) j) :=
   opNorm_defect_eq_sup'_of N m _ M r C hr b hb (by omega) fun n hn => hmono n (by omega)
 
-/-- **(T37, L002.)** Joint form with a head block `Z` (`P Z = Z`, `Z Q = 0`): under band, range
+/-- Joint form with a head block `Z` (`P Z = Z`, `Z Q = 0`): under band, range
 and head vanishing, `‖Z + D‖ = max_{|j| ≤ W} (z_j + a_j + s_j)` in column-ratio form, with
 `W = m + max (N + 1) K₀`. A norm identity only: it does not replace injectivity of `A` or the
 `Z₀` obligations. -/
@@ -462,8 +462,8 @@ theorem opNorm_joint_defect_eq_sup' (N m K₀ : ℕ) (Z M : 𝓔 →L[𝕜] 𝓔
     simp only [zero_add]
     exact colRatio_defectTail_pred_le m _ r C hr b hb (by omega) hm j hj
 
-/-- **(T38, L002.)** The joint form for `Z − D` (which consumers read as the joint operator
-`I − A·DF`; that identification is not proved here): the same finite maximum, from T37 at
+/-- The joint form for `Z − D` (which consumers read as the joint operator
+`I − A·DF`; that identification is not proved here): the same finite maximum, from `opNorm_joint_defect_eq_sup'` at
 `(−M, −r)`. -/
 theorem opNorm_joint_defect_sub_eq_sup' (N m K₀ : ℕ) (Z M : 𝓔 →L[𝕜] 𝓔) (r : ℤ → 𝕜)
     (C : ℝ) (hr : ∀ k, ‖r k‖ ≤ C) (b : 𝓔)
@@ -505,7 +505,7 @@ end OpNorm
 
 /-! ### Window arithmetic -/
 
-/-- **(T35, L002.)** `m + max (N + 1) K₀ = N + m + 1` when `K₀ ≤ N + 1`. -/
+/-- `m + max (N + 1) K₀ = N + m + 1` when `K₀ ≤ N + 1`. -/
 theorem window_eq_of_le (N m K₀ : ℕ) (hK : K₀ ≤ N + 1) : m + max (N + 1) K₀ = N + m + 1 := by
   rw [max_eq_left hK]; omega
 

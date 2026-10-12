@@ -13,10 +13,17 @@ maps on the finite weighted `ℓ¹` space:
 - `FinWeighted.Space ν N`: finite weighted `ℓ¹` via `PiLp 1 (ScaledReal ν ·)`
 - `FinWeighted.toVec` / `FinWeighted.ofVec`: identity bridge to `Fin (N+1) → ℝ`
 - `FinWeighted.stdBasis`: standard basis with weighted norm `ν^j`
-- `FinWeightedMatrix.toWeightedCLM`: matrix action as a CLM on `FinWeighted.Space`
+- `FinWeighted.vecEquiv`: the bridge `toVec`/`ofVec` as a linear equivalence
+- `FinWeightedMatrix.toWeightedCLM`: matrix action as a CLM on `FinWeighted.Space`, built with
+  the explicit bound `finWeightedMatrixNorm`
+- `FinWeightedMatrix.toWeightedCLMAlgEquiv`: the same map as an algebra equivalence
+  `Matrix ≃ₐ[ℝ] (Space →L[ℝ] Space)` (`toWeightedCLMAlgEquiv_apply`)
 
-Transport lemmas (`toWeightedCLM_one`, `toWeightedCLM_mul`, `toWeightedCLM_one_sub`)
-connect matrix algebra to CLM algebra.
+The algebra equivalence is purely algebraic: no norm on matrices enters it. The norm identity
+for the weighted matrix norm is the separate theorem `finWeightedMatrixNorm_eq_opNorm`
+(`Operators/Matrix/OperatorNorm.lean`). The transport lemmas (`toWeightedCLM_one`,
+`toWeightedCLM_mul`, `toWeightedCLM_one_sub`, `isUnit_toWeightedCLM_iff`) are its `map_*`
+corollaries.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal Matrix
@@ -57,6 +64,15 @@ def ofVec (v : Fin (N + 1) → ℝ) : Space ν N :=
     ofVec (u - v) = (ofVec u : Space ν N) - ofVec v := rfl
 @[simp] lemma ofVec_smul (c : ℝ) (v : Fin (N + 1) → ℝ) :
     ofVec (c • v) = c • (ofVec v : Space ν N) := rfl
+
+/-- The identity bridge `toVec`/`ofVec` as a linear equivalence. -/
+def vecEquiv : Space ν N ≃ₗ[ℝ] (Fin (N + 1) → ℝ) where
+  toFun := toVec
+  invFun := ofVec
+  map_add' := toVec_add
+  map_smul' := toVec_smul
+  left_inv := ofVec_toVec
+  right_inv := toVec_ofVec
 
 end VecBridge
 
@@ -152,20 +168,34 @@ lemma opNorm_toWeightedCLM_le
   · intro x
     exact mulVecWeightedLinear_norm_le A x
 
+/-- Matrices are the bounded operators on the finite weighted space: the algebra
+equivalence `Matrix.toLinAlgEquiv'`, conjugated by `vecEquiv` and followed by
+`Module.End.toContinuousLinearMap` (finite dimension). Its forward map is `toWeightedCLM`
+(`toWeightedCLMAlgEquiv_apply`); multiplication goes to composition in the same order,
+`toWeightedCLM (A * B) = toWeightedCLM A ∘L toWeightedCLM B`. This is an algebra
+equivalence, not an isometry statement: no matrix norm enters it. -/
+def toWeightedCLMAlgEquiv :
+    Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ ≃ₐ[ℝ]
+      (FinWeighted.Space ν N →L[ℝ] FinWeighted.Space ν N) :=
+  Matrix.toLinAlgEquiv'.trans
+    (((vecEquiv (ν := ν) (N := N)).symm.conjAlgEquiv ℝ).trans
+      (Module.End.toContinuousLinearMap (FinWeighted.Space ν N)))
+
+/-- The forward map of `toWeightedCLMAlgEquiv` is `toWeightedCLM`. -/
+lemma toWeightedCLMAlgEquiv_apply (A : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
+    toWeightedCLMAlgEquiv (ν := ν) A = toWeightedCLM A := by
+  ext x i; rfl
+
 lemma toWeightedCLM_one :
     toWeightedCLM (ν := ν) (1 : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) =
       ContinuousLinearMap.id ℝ (FinWeighted.Space ν N) := by
-  ext x i
-  change ((1 : Matrix _ _ ℝ) *ᵥ toVec x) i = (toVec x) i
-  rw [Matrix.one_mulVec]
+  rw [← toWeightedCLMAlgEquiv_apply, map_one, ContinuousLinearMap.one_def]
 
 lemma toWeightedCLM_mul
     (A B : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
     toWeightedCLM (ν := ν) (A * B) =
       (toWeightedCLM (ν := ν) A).comp (toWeightedCLM (ν := ν) B) := by
-  ext x i
-  change ((A * B) *ᵥ toVec x) i = (A *ᵥ (B *ᵥ toVec x)) i
-  rw [Matrix.mulVec_mulVec]
+  simp only [← toWeightedCLMAlgEquiv_apply, map_mul, ContinuousLinearMap.mul_def]
 
 /-- `toWeightedCLM` sends `1 - M` to `id - toWeightedCLM M`.
 
@@ -174,9 +204,13 @@ lemma toWeightedCLM_one_sub
     (M : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
     toWeightedCLM (ν := ν) (1 - M) =
       ContinuousLinearMap.id ℝ (FinWeighted.Space ν N) - toWeightedCLM (ν := ν) M := by
-  ext x i
-  change ((1 - M) *ᵥ toVec x) i = (toVec x - M *ᵥ toVec x) i
-  rw [Matrix.sub_mulVec, Matrix.one_mulVec]
+  simp only [← toWeightedCLMAlgEquiv_apply, map_sub, map_one, ContinuousLinearMap.one_def]
+
+/-- A matrix is a unit iff its weighted CLM is (`isUnit_map_iff` along
+`toWeightedCLMAlgEquiv`). -/
+lemma isUnit_toWeightedCLM_iff (M : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
+    IsUnit (toWeightedCLM (ν := ν) M) ↔ IsUnit M := by
+  rw [← toWeightedCLMAlgEquiv_apply, isUnit_map_iff]
 
 end FinWeightedMatrix
 

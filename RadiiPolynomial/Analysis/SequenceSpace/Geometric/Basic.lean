@@ -13,6 +13,8 @@ This file provides the concrete weighted spaces used by the system-level API:
 - norm/membership bridge lemmas (`norm_eq_tailTsum_of_fin_zero`, `tailTsum_le_norm_of_eq`, `norm_mk_le_of_pointwise`)
 - single-index embedding (`single`, `single_CLM`)
 - coefficient truncation (`trunc`, `trunc_CLM`)
+- the coefficients of a product with a monomial (`toSeq_mul_single`) and the norm of the
+  tail projection (`norm_tailProj_eq_tailTsum`)
 
 Differentiability lemmas (`differentiable_mk_of_finSupp`, `fderiv_mk_of_finSupp_toSeq_tail`)
 are in `Geometric/Derivative.lean` to avoid pulling in `FDeriv` imports.
@@ -54,7 +56,7 @@ def Mem (ν : PosReal) (p : ℝ≥0∞) (a : ℕ → ℝ) : Prop :=
 def mk (a : ℕ → ℝ) (ha : Mem ν p a) : lpWeighted ν p :=
   ⟨fun n => ScaledReal.ofReal (a n), ha⟩
 
-@[simp] lemma toSeq_apply (a : lpWeighted ν p) (n : ℕ) : toSeq a n = a n := rfl
+lemma toSeq_apply (a : lpWeighted ν p) (n : ℕ) : toSeq a n = a n := rfl
 @[simp] lemma mk_apply (a : ℕ → ℝ) (ha : Mem ν p a) (n : ℕ) : toSeq (mk a ha) n = a n := rfl
 
 /-- Bridge: the `lp` coercion of `mk` gives `ScaledReal.ofReal ∘ f` at each index.
@@ -85,11 +87,6 @@ namespace l1Weighted
 
 variable {ν : PosReal}
 
-instance : Fact (1 ≤ (1 : ℝ≥0∞)) := ⟨le_rfl⟩
-
-/-- Access the underlying `lp` element. -/
-def toLpWeighted (a : l1Weighted ν) : lpWeighted ν 1 := a.toLp
-
 /-- Underlying real sequence. -/
 def toSeq (a : l1Weighted ν) : ℕ → ℝ := fun n => ScaledReal.toReal (a n)
 
@@ -103,7 +100,11 @@ def mk (a : ℕ → ℝ) (ha : Mem ν a) : l1Weighted ν := ⟨lpWeighted.mk a h
 lemma ext {a b : l1Weighted ν} (h : ∀ n, toSeq a n = toSeq b n) : a = b :=
   lpOneAlg.ext h
 
-@[simp] lemma toSeq_apply (a : l1Weighted ν) (n : ℕ) : toSeq a n = a n := rfl
+lemma toSeq_apply (a : l1Weighted ν) (n : ℕ) : toSeq a n = a n := rfl
+
+/-- The geometric coefficient map is the generic `lpOneAlg.toRealSeq` (definitionally). -/
+lemma toSeq_eq_toRealSeq (a : l1Weighted ν) : toSeq a = lpOneAlg.toRealSeq a := rfl
+
 @[simp] lemma mk_apply (a : ℕ → ℝ) (ha : Mem ν a) (n : ℕ) : toSeq (mk a ha) n = a n := rfl
 
 @[simp] lemma mk_val_apply (a : ℕ → ℝ) (ha : Mem ν a) (n : ℕ) :
@@ -220,6 +221,18 @@ lemma norm_le_of_fin_zero_tail_eq (a b : l1Weighted ν) (k : ℕ)
     ‖a‖ ≤ ‖b‖ :=
   (norm_eq_tailTsum_of_fin_zero a k hfin).symm ▸ tailTsum_le_norm_of_eq a b k htail
 
+/-- Operator norm domination: if `D` kills finite modes and agrees with `E` on tail modes,
+then `‖D‖ ≤ ‖E‖`. Operator form of `norm_le_of_fin_zero_tail_eq`; core pattern for Z₁-type
+bounds. -/
+lemma opNorm_le_of_fin_kill_tail_eq (N : ℕ)
+    (D E : l1Weighted ν →L[ℝ] l1Weighted ν)
+    (hfin : ∀ h, ∀ n, n ≤ N → l1Weighted.toSeq (D h) n = 0)
+    (htail : ∀ h, ∀ n, N < n → l1Weighted.toSeq (D h) n = l1Weighted.toSeq (E h) n) :
+    ‖D‖ ≤ ‖E‖ :=
+  ContinuousLinearMap.opNorm_le_bound _ (ContinuousLinearMap.opNorm_nonneg E) fun h =>
+    (norm_le_of_fin_zero_tail_eq (D h) (E h) (N + 1) (fun n hn => hfin h n (by omega))
+      (fun n hn => htail h n (by omega))).trans (ContinuousLinearMap.le_opNorm E h)
+
 /-- Pointwise-dominated norm bound: if `|f n| ≤ C * |toSeq a n|`,
 then `‖mk f hf‖ ≤ C * ‖a‖`. -/
 lemma norm_mk_le_of_pointwise (f : ℕ → ℝ) (hf : Mem ν f)
@@ -296,6 +309,11 @@ def single (n : ℕ) (x : ℝ) : l1Weighted ν :=
 lemma single_toSeq_of_ne (n k : ℕ) (x : ℝ) (h : k ≠ n) :
     toSeq (single n x : l1Weighted ν) k = 0 := by
   simp only [single_toSeq, ite_eq_right h]
+
+/-- The geometric `l1Weighted.single` is the generic `lpOneAlg.single`. -/
+theorem single_eq_lpOneAlg_single (n : ℕ) (x : ℝ) :
+    (l1Weighted.single n x : l1Weighted ν) = lpOneAlg.single n x :=
+  ext fun m => by rw [single_toSeq, toSeq_eq_toRealSeq, lpOneAlg.toRealSeq_single]
 
 lemma norm_single (n : ℕ) (x : ℝ) :
     ‖(single n x : l1Weighted ν)‖ = |x| * (ν : ℝ) ^ n := by
@@ -497,6 +515,14 @@ noncomputable def tailProj_CLM (N : ℕ) : l1Weighted ν →L[ℝ] l1Weighted ν
 @[simp] lemma tailProj_CLM_apply (N : ℕ) (a : l1Weighted ν) :
     tailProj_CLM N a = tailProj N a := rfl
 
+/-- The norm of the tail projection is the tail of the weighted norm series. -/
+lemma norm_tailProj_eq_tailTsum (N : ℕ) (x : l1Weighted ν) :
+    ‖tailProj N x‖ = ∑' n, |toSeq x (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) := by
+  rw [norm_eq_tailTsum_of_fin_zero (tailProj N x) (N + 1)
+    (fun n hn => by rw [coeff_tailProj, ite_eq_right (by omega)])]
+  exact tsum_congr fun n => by
+    rw [coeff_tailProj, ite_eq_left (by omega)]
+
 end TailProjection
 
 /-! ### Banach Algebra API (from lpOneAlg + HasAntidiagonal) -/
@@ -519,38 +545,30 @@ witnesses `eval` as the algebra hom lifting the monoid hom `n ↦ z^n` (universa
 of the monoid algebra). -/
 lemma single_mul (m n : ℕ) (r s : ℝ) :
     (single (ν := ν) m r) * single n s = single (m + n) (r * s) := by
-  apply ext; intro k
-  rw [toSeq_mul, CauchyProduct.apply, single_toSeq]
+  simp only [single_eq_lpOneAlg_single]
+  exact lpOneAlg.single_mul_single m n r s
+
+/-- Coefficients of `b * single M 1`: the Cauchy product against a monomial is
+the `M`-fold right shift, `(b · δ_M)_k = b_{k-M}` for `M ≤ k`, else `0`. -/
+lemma toSeq_mul_single (b : l1Weighted ν) (M k : ℕ) :
+    toSeq (b * single M 1) k = if M ≤ k then toSeq b (k - M) else 0 := by
+  rw [toSeq_mul, CauchyProduct.apply_range]
   simp only [single_toSeq]
-  by_cases hk : k = m + n
-  · subst hk
-    rw [Finset.sum_eq_single (m, n)]
-    · simp
-    · rintro ⟨i, j⟩ hij hne
-      simp only [Finset.mem_antidiagonal] at hij
-      by_cases hi : i = m
-      · subst hi
-        have hjn : j = n := by omega
-        subst hjn; exact absurd rfl hne
-      · simp [hi]
-    · intro h
-      exact absurd (Finset.mem_antidiagonal.mpr (rfl : m + n = m + n)) h
-  · rw [ite_eq_right hk]
-    apply Finset.sum_eq_zero
-    rintro ⟨i, j⟩ hij
-    simp only [Finset.mem_antidiagonal] at hij
-    by_cases hi : i = m
-    · subst hi
-      have hjn : j ≠ n := fun h => hk (by subst h; omega)
-      simp [hjn]
-    · simp [hi]
+  by_cases hM : M ≤ k
+  · rw [ite_eq_left hM, Finset.sum_eq_single M
+      (fun j _ hne => by rw [ite_eq_right hne, mul_zero])
+      (fun hM' => absurd (Finset.mem_range.mpr (by omega)) hM')]
+    rw [ite_eq_left rfl, mul_one]
+  · rw [ite_eq_right hM]
+    refine Finset.sum_eq_zero fun j hj => ?_
+    rw [ite_eq_right (by have := Finset.mem_range.mp hj; omega), mul_zero]
 
 /-- `toSeq` of the multiplicative identity. -/
 @[simp] lemma one_toSeq_eq (n : ℕ) :
     toSeq (1 : l1Weighted ν) n = if n = 0 then 1 else 0 := by
   show lpOneAlg.toRealSeq (1 : l1Weighted ν) n = _
   rw [lpOneAlg.toRealSeq_one_fun]
-  simp [DiscreteConvolution.addDelta, Pi.single_apply]
+  simp [RadiiPolynomial.DiscreteConvolution.addDelta, Pi.single_apply]
 
 @[simp] lemma one_toSeq_zero : toSeq (1 : l1Weighted ν) 0 = 1 := by
   rw [one_toSeq_eq]; simp
@@ -637,6 +655,14 @@ lemma leftMul_nsmul (n : ℕ) (a : l1Weighted ν) :
     leftMul (n • a) = (↑n : ℝ) • leftMul a := by
   rw [← Nat.cast_smul_eq_nsmul ℝ n a, leftMul_smul]
 
+/-- Bridge: `a • proj i = leftMul a ∘L proj i` on a finite product of `l1Weighted ν`.
+Used by the `auto_poly_fderiv` automation (`Tactic/AutoPolyFDeriv.lean`), which names it
+explicitly; it is not a simp lemma. -/
+lemma smul_proj_eq_leftMul_comp_proj {ι : Type*} [Fintype ι] (a : l1Weighted ν) (i : ι) :
+    a • (ContinuousLinearMap.proj (R := ℝ) i : (ι → l1Weighted ν) →L[ℝ] l1Weighted ν) =
+    (leftMul a).comp (ContinuousLinearMap.proj i) := by
+  ext h; simp
+
 /-! ### CLM Operator Norm Bounds -/
 
 /-- Operator norm bound: `‖π_N‖ ≤ 1`. -/
@@ -658,14 +684,6 @@ namespace RadiiPolynomial
 namespace l1Weighted
 
 variable {ν : PosReal}
-
-/-- The geometric `l1Weighted.single` is the generic `lpOneAlg.single`. -/
-theorem single_eq_lpOneAlg_single (n : ℕ) (x : ℝ) :
-    (l1Weighted.single n x : l1Weighted ν) = lpOneAlg.single n x :=
-  l1Weighted.ext fun m => by
-    show l1Weighted.toSeq (l1Weighted.single n x : l1Weighted ν) m
-      = lpOneAlg.toRealSeq (lpOneAlg.single n x : l1Weighted ν) m
-    rw [l1Weighted.single_toSeq, lpOneAlg.toRealSeq_single]
 
 section OpNorm
 

@@ -293,7 +293,8 @@ theorem valA_comp_joukowskiAevalSymm {ν r : PosReal} [Fact (1 ≤ (ν : ℝ))]
       joukowskiAeval hgate a :=
   rfl
 
-private lemma add_inv_le_of_inv_le_le {t ν : ℝ} (ht : 0 < t) (hν : 0 < ν)
+/-- On `[ν⁻¹, ν]` the map `t ↦ t + t⁻¹` is bounded by its endpoint value `ν + ν⁻¹`. -/
+theorem add_inv_le_add_inv_of_inv_le_of_le {t ν : ℝ} (ht : 0 < t) (hν : 0 < ν)
     (hlo : ν⁻¹ ≤ t) (hhi : t ≤ ν) : t + t⁻¹ ≤ ν + ν⁻¹ := by
   have hleft : 0 ≤ ν - t := sub_nonneg.mpr hhi
   have hright : 0 ≤ ν * t - 1 := by
@@ -314,7 +315,7 @@ theorem norm_joukowski_le_semiMajor (ν : PosReal) {z : ℂ}
     ‖joukowski z‖ ≤ semiMajor ν := by
   have hz0 : z ≠ 0 := lpOneAlg.ne_zero_of_annulus ν hz
   have hsum : ‖z‖ + ‖z‖⁻¹ ≤ (ν : ℝ) + (ν : ℝ)⁻¹ :=
-    add_inv_le_of_inv_le_le (norm_pos_iff.mpr hz0) ν.coe_pos hz.1 hz.2
+    add_inv_le_add_inv_of_inv_le_of_le (norm_pos_iff.mpr hz0) ν.coe_pos hz.1 hz.2
   rw [joukowski, norm_div]
   norm_num
   calc

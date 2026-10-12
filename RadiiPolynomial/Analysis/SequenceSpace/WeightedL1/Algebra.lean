@@ -1,30 +1,35 @@
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Carrier
 import RadiiPolynomial.Algebra.Convolution.Ring
-import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.FiberTrivialization
-import Mathlib.Analysis.Normed.Lp.lpSpace
-import Mathlib.Analysis.Normed.Module.TransferInstance
 
 /-!
-# Generalized ℓ¹ Banach Algebra with Non-Uniform Fibers
+# The convolution ring on the weighted ℓ¹ carrier
 
-`lpOneAlg M E` wraps `lp E 1` with convolution as multiplication.
+On the carrier `lpOneAlg M E` of `WeightedL1/Carrier.lean`, with a monoid structure on the index
+type, convolution of the coefficient sequences is the multiplication. This file is the ring half of
+the weighted ℓ¹ API.
+
+* The convolution classes `lpOneAlgConvCompat` / `lpOneMulAlgConvCompat` supply the summability
+  and fiber-norm primitives behind one ring instance. They have two instances: the tsum path
+  `instConvCompatOfWeightMul` (submultiplicative weight, complete scalar field) and the finite-fiber
+  path `instConvCompatOfAntidiag` (`Finset.HasAntidiagonal`, priority 1100).
+* The instances `instMul`, `instOne`, `instRing`, `instNormedRing`, with the coefficient faces
+  `toRealSeq_mul_fun` and `toRealSeq_one_fun`; `instAlgebra` and `instNormedAlgebra` over any
+  additive index monoid; `instCommRing` and `instNormedCommRing` over a commutative one;
+  `instNormOneClass`.
+* Convolution evaluation: `toRealSeq_mul_tsum`, `toRealSeq_mul_eq_finsum`.
 
 ## Typeclass convention
 
-The fiber data `lpAlgRingData` and the scalar-compatibility class `lpAlgSmulCompat` are
-monoid-independent and have no additive versions. The weight and convolution classes come in
-pairs: the additive classes (`lpOneAlgWeightMul`, `lpOneAlgWeightSubMul`, `lpOneAlgConvCompat`)
-are declared directly, and the multiplicative ones (`lpOneMulAlgWeightMul`,
-`lpOneMulAlgWeightSubMul`, `lpOneMulAlgConvCompat`) are linked to them by
-`@[to_additive existing]` (the class field `mulConvSummable` corresponds to `convSummable`).
-
-Helper definitions and lemmas are stated in multiplicative spelling and generate their
-additive versions via `@[to_additive]` (`mulToRealSeq` ↦ `toRealSeq`, `mul_memℓp_mul` ↦
-`mul_memℓp`, `norm_mul_le_mul'` ↦ `norm_mul_le'`, etc.); `mulToRealSeq` itself needs no monoid
-structure on `M`. The ring *instances* are generated the same way: `instMulMul`, `instMulOne`,
-`instMulRing`, `instMulNormedRing` (for `[Monoid M]`) give `instMul`, `instOne`, `instRing`,
-`instNormedRing` (for `[AddMonoid M]`) by `@[to_additive (dont_translate := E 𝕜)]`, with the
-fibers and the scalar field excluded from the translation. The `Algebra`, `NormedAlgebra`,
-`CommRing` and `NormOneClass` instances are stated for an additive index monoid only.
+The convolution classes come in pairs: the additive class `lpOneAlgConvCompat` is declared directly
+and the multiplicative one `lpOneMulAlgConvCompat` is linked to it by `@[to_additive existing]` (the
+class field `mulConvSummable` corresponds to `convSummable`). Helper lemmas are stated in
+multiplicative spelling and generate their additive versions via `@[to_additive]`
+(`mul_memℓp_mul` ↦ `mul_memℓp`, `norm_mul_le_mul'` ↦ `norm_mul_le'`, etc.). The ring *instances*
+are generated the same way: `instMulMul`, `instMulOne`, `instMulRing`, `instMulNormedRing` (for
+`[Monoid M]`) give `instMul`, `instOne`, `instRing`, `instNormedRing` (for `[AddMonoid M]`) by
+`@[to_additive (dont_translate := E 𝕜)]`, with the fibers and the scalar field excluded from the
+translation. The `Algebra`, `NormedAlgebra`, `CommRing` and `NormOneClass` instances are stated for
+an additive index monoid only.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal DiscreteConvolution
@@ -33,357 +38,7 @@ noncomputable section
 
 namespace RadiiPolynomial
 
-/-! ### Typeclasses -/
-
-/-- **Legacy (deprecated interface; prefer `FiberTrivialization`).** Ten-field trivialization
-of each fiber `E m` as a weighted copy of the scalar field `𝕜`.
-
-For each `m : M`, the maps `toReal m` and `ofReal m` are mutually inverse additive-group
-isomorphisms between `E m` and `𝕜`. The norm is scaled by the weight
-`ω_m := ‖ofReal m 1‖`, giving `‖ofReal m r‖ = ‖r‖ * ω_m`, so each fiber is isometric
-to `(𝕜, ω_m · ‖·‖)`. Together, these data identify `lpOneAlg M E` with the weighted
-ℓ¹ space of `𝕜`-valued sequences on `M`, with weight `ω`.
-
-Kept as a one-way compatibility layer: every `FiberTrivialization 𝕜 M E` provides an instance
-(`FiberTrivialization.toLpAlgRingData`); there is no instance in the reverse direction (use the
-explicit constructor `FiberTrivialization.ofLpAlgRingData`, which also needs `lpAlgSmulCompat`).
-
-Monoid-independent — the same data works for both `[Monoid M]` and `[AddMonoid M]`. -/
-class lpAlgRingData (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
-    [∀ m, NormedAddCommGroup (E m)] where
-  toReal : ∀ m, E m → 𝕜
-  ofReal : ∀ m, 𝕜 → E m
-  toReal_ofReal : ∀ m r, toReal m (ofReal m r) = r
-  ofReal_toReal : ∀ m x, ofReal m (toReal m x) = x
-  ofReal_add : ∀ m a b, ofReal m (a + b) = ofReal m a + ofReal m b
-  ofReal_zero : ∀ m, ofReal m 0 = 0
-  toReal_add : ∀ m x y, toReal m (x + y) = toReal m x + toReal m y
-  toReal_zero : ∀ m, toReal m 0 = 0
-  toReal_neg : ∀ m x, toReal m (-x) = -(toReal m x)
-  norm_ofReal_eq : ∀ m r, ‖ofReal m r‖ = ‖r‖ * ‖ofReal m 1‖
-
-/-- **Legacy (deprecated interface; prefer `FiberTrivialization`).** Upgrades the fiber
-trivialization from `lpAlgRingData` to a `𝕜`-module isomorphism.
-
-The additive isomorphism `toReal m : E m → 𝕜` from `lpAlgRingData` intertwines scalar
-multiplication: `toReal m (r • x) = r * toReal m x`. Combined with `lpAlgRingData`, each
-fiber `E m` becomes a one-dimensional `𝕜`-module isomorphic to `𝕜` itself, with norm
-scaled by the weight `ω_m`. For data derived from a `FiberTrivialization` this witness is
-the instance `FiberTrivialization.toLpAlgSmulCompat` (it is `map_smul` of `θ_m⁻¹`), indexed by
-the derived data only.
-
-Monoid-independent — separated from `lpAlgRingData` because it requires `NormedSpace 𝕜`. -/
-class lpAlgSmulCompat (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
-    [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)]
-    [lpAlgRingData 𝕜 M E] where
-  toReal_smul : ∀ m (r : 𝕜) (x : E m),
-    lpAlgRingData.toReal m (r • x) = r * lpAlgRingData.toReal m x
-
-/-- The weight `ω_m = ‖ofReal m 1‖` of legacy fiber data. For data derived from a
-`FiberTrivialization` it is definitionally `FiberTrivialization.weight m`. -/
-def lpAlgRingData.weight {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
-    [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] (m : M) : ℝ :=
-  ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖
-
-lemma lpAlgRingData.weight_def {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
-    [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] (m : M) :
-    lpAlgRingData.weight (E := E) m = ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖ := rfl
-
-/-- Beurling weight (additive index monoid): `ω_{j+l} ≤ ω_j ω_l` and `ω_0 = 1`, stated on the
-weight alone. The old two-scalar inequality is the derived lemma `norm_ofReal_mul_le`. -/
-class lpOneAlgWeightMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
-    [AddMonoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] where
-  weight_add_le : ∀ j l : M,
-    lpAlgRingData.weight (E := E) (j + l) ≤
-      lpAlgRingData.weight (E := E) j * lpAlgRingData.weight (E := E) l
-  weight_zero : lpAlgRingData.weight (E := E) (0 : M) = 1
-
-/-- Beurling weight (multiplicative index monoid): `ω_{j*l} ≤ ω_j ω_l` and `ω_1 = 1`.
-Sufficient for Ring on `lpOneAlg` when `[HasMulAntidiagonal M]` (finite fibers,
-`lpOneAlg.instMulConvCompatOfAntidiag`) or when `𝕜` is complete
-(`lpOneAlg.instMulConvCompatOfWeightMul`). -/
-@[to_additive existing (dont_translate := E 𝕜) lpOneAlgWeightMul]
-class lpOneMulAlgWeightMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
-    [Monoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] where
-  weight_mul_le : ∀ j l : M,
-    lpAlgRingData.weight (E := E) (j * l) ≤
-      lpAlgRingData.weight (E := E) j * lpAlgRingData.weight (E := E) l
-  /-- Weight at identity = 1: ensures `‖1‖ = 1` (NormOneClass). -/
-  weight_one : lpAlgRingData.weight (E := E) (1 : M) = 1
-
-class lpOneAlgWeightSubMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
-    [AddMonoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E]
-    extends lpOneAlgWeightMul 𝕜 M E where
-  /-- Weight ≥ 1: provides the fiberwise bound `‖toRealSeq f m‖ ≤ ‖f m‖`,
-  embedding the extracted `𝕜`-sequence into unweighted `ℓ¹`. -/
-  one_le_weight : ∀ m, 1 ≤ lpAlgRingData.weight (E := E) m
-
-/-- Submultiplicative weight with weight ≥ 1.
-Extends `lpOneMulAlgWeightMul`. The weight ≥ 1 axiom is not used for Cauchy
-sum convergence (submultiplicativity alone suffices, see
-`instMulConvCompatOfWeightMul`); it provides the fiberwise bound
-`‖mulToRealSeq f m‖ ≤ ‖f m‖` (see `abs_mulToRealSeq_le`), which embeds the
-extracted `𝕜`-sequence into unweighted `ℓ¹`. -/
-@[to_additive existing (dont_translate := E 𝕜) lpOneAlgWeightSubMul]
-class lpOneMulAlgWeightSubMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
-    [Monoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E]
-    extends lpOneMulAlgWeightMul 𝕜 M E where
-  /-- Weight ≥ 1: provides the fiberwise bound `‖mulToRealSeq f m‖ ≤ ‖f m‖`,
-  embedding the extracted `𝕜`-sequence into unweighted `ℓ¹`. -/
-  one_le_weight : ∀ m, 1 ≤ lpAlgRingData.weight (E := E) m
-
-/-! ### Retained two-scalar forms of the Beurling hypotheses (derived) -/
-
-section BeurlingWrappers
-
-variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
-  [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E]
-
-/-- Old two-scalar form: `‖ofReal (j*l) (a*b)‖ ≤ ‖ofReal j a‖ * ‖ofReal l b‖`
-(derived from `weight_mul_le` and the scaling identity). -/
-@[to_additive (dont_translate := E 𝕜) lpOneAlgWeightMul.norm_ofReal_mul_le]
-theorem lpOneMulAlgWeightMul.norm_ofReal_mul_le [Monoid M] [lpOneMulAlgWeightMul 𝕜 M E]
-    (j l : M) (a b : 𝕜) :
-    ‖lpAlgRingData.ofReal (E := E) (j * l) (a * b)‖ ≤
-      ‖lpAlgRingData.ofReal (E := E) j a‖ * ‖lpAlgRingData.ofReal (E := E) l b‖ := by
-  rw [lpAlgRingData.norm_ofReal_eq, lpAlgRingData.norm_ofReal_eq (E := E) j,
-    lpAlgRingData.norm_ofReal_eq (E := E) l, norm_mul]
-  have h := lpOneMulAlgWeightMul.weight_mul_le (E := E) j l
-  simp only [lpAlgRingData.weight] at h
-  exact (mul_le_mul_of_nonneg_left h (mul_nonneg (norm_nonneg a) (norm_nonneg b))).trans_eq
-    (by ring)
-
-/-- Old form of the unit-weight hypothesis: `‖ofReal 1 1‖ = 1`. -/
-@[to_additive (dont_translate := E 𝕜) lpOneAlgWeightMul.norm_ofReal_one_zero]
-theorem lpOneMulAlgWeightMul.norm_ofReal_one_one [Monoid M] [lpOneMulAlgWeightMul 𝕜 M E] :
-    ‖lpAlgRingData.ofReal (E := E) (1 : M) (1 : 𝕜)‖ = 1 :=
-  lpOneMulAlgWeightMul.weight_one (E := E)
-
-/-- Old form of the weight ≥ 1 hypothesis: `1 ≤ ‖ofReal m 1‖`. -/
-@[to_additive (dont_translate := E 𝕜) lpOneAlgWeightSubMul.norm_ofReal_one_ge]
-theorem lpOneMulAlgWeightSubMul.norm_ofReal_one_ge [Monoid M] [lpOneMulAlgWeightSubMul 𝕜 M E]
-    (m : M) : 1 ≤ ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖ :=
-  lpOneMulAlgWeightSubMul.one_le_weight m
-
-end BeurlingWrappers
-
-/-! ### Compatibility layer: `FiberTrivialization` → legacy data (one-way) -/
-
-namespace FiberTrivialization
-
-variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
-  [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)]
-
-/-- The legacy ten-field data of a fiber trivialization: `toReal m = θ_m⁻¹`,
-`ofReal m = θ_m`. This is the ONLY instance between the two interfaces (one-way). -/
-instance toLpAlgRingData [FiberTrivialization 𝕜 M E] : lpAlgRingData 𝕜 M E where
-  toReal m := (equiv (E := E) m).symm
-  ofReal m := equiv (E := E) m
-  toReal_ofReal m r := LinearEquiv.symm_apply_apply _ r
-  ofReal_toReal m x := LinearEquiv.apply_symm_apply _ x
-  ofReal_add m a b := map_add _ a b
-  ofReal_zero m := map_zero _
-  toReal_add m x y := map_add _ x y
-  toReal_zero m := map_zero _
-  toReal_neg m x := map_neg _ x
-  norm_ofReal_eq m r := by
-    rw [norm_equiv_apply, norm_equiv_apply, norm_one, one_mul]
-
-/-- The scalar-compatibility witness, indexed specifically by the derived data
-`toLpAlgRingData` (never synthesized for independently supplied legacy data). -/
-instance toLpAlgSmulCompat [FiberTrivialization 𝕜 M E] :
-    @lpAlgSmulCompat 𝕜 _ M E _ _ (toLpAlgRingData (𝕜 := 𝕜)) where
-  toReal_smul m r x := map_smul (equiv (E := E) m).symm r x
-
-lemma toLpAlgRingData_toReal [FiberTrivialization 𝕜 M E] (m : M) (x : E m) :
-    lpAlgRingData.toReal (𝕜 := 𝕜) m x = (equiv (E := E) m).symm x := rfl
-
-lemma toLpAlgRingData_ofReal [FiberTrivialization 𝕜 M E] (m : M) (r : 𝕜) :
-    lpAlgRingData.ofReal (E := E) m r = equiv (E := E) m r := rfl
-
-lemma toLpAlgRingData_weight [FiberTrivialization 𝕜 M E] (m : M) :
-    lpAlgRingData.weight (E := E) m = weight (E := E) m := rfl
-
-/-- Explicit constructor (NOT an instance) of a fiber trivialization from a particular legacy
-data instance together with its matching scalar-compatibility witness. -/
-@[instance_reducible]
-def ofLpAlgRingData (d : lpAlgRingData 𝕜 M E) [@lpAlgSmulCompat 𝕜 _ M E _ _ d] :
-    FiberTrivialization 𝕜 M E where
-  equiv m :=
-    { toFun := d.ofReal m
-      invFun := d.toReal m
-      map_add' := d.ofReal_add m
-      map_smul' := fun r a => by
-        show d.ofReal m (r * a) = r • d.ofReal m a
-        conv_rhs => rw [← d.ofReal_toReal m (r • d.ofReal m a)]
-        rw [lpAlgSmulCompat.toReal_smul m r (d.ofReal m a), d.toReal_ofReal]
-      left_inv := d.toReal_ofReal m
-      right_inv := d.ofReal_toReal m }
-
-/-- Not `@[simp]`: as a simp lemma it would unify any `FiberTrivialization` instance with
-`ofLpAlgRingData ?d` and rewrite the primary datum `equiv` into the legacy projection. -/
-lemma ofLpAlgRingData_equiv_apply (d : lpAlgRingData 𝕜 M E)
-    [@lpAlgSmulCompat 𝕜 _ M E _ _ d] (m : M) (r : 𝕜) :
-    (ofLpAlgRingData d).equiv m r = d.ofReal m r := rfl
-
-/-- Not `@[simp]`; see `ofLpAlgRingData_equiv_apply`. -/
-lemma ofLpAlgRingData_equiv_symm_apply (d : lpAlgRingData 𝕜 M E)
-    [@lpAlgSmulCompat 𝕜 _ M E _ _ d] (m : M) (x : E m) :
-    ((ofLpAlgRingData d).equiv m).symm x = d.toReal m x := rfl
-
-end FiberTrivialization
-
-/-! ### lpOneAlg Structure -/
-
-structure lpOneAlg (M : Type*) (E : M → Type*) [∀ m, NormedAddCommGroup (E m)] where
-  toLp : lp E 1
-
-namespace lpOneAlg
-
-variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-
-protected def equiv : lpOneAlg M E ≃ lp E 1 where
-  toFun := toLp
-  invFun := mk
-  left_inv _ := rfl
-  right_inv _ := rfl
-
-instance instNormedAddCommGroup : NormedAddCommGroup (lpOneAlg M E) :=
-  lpOneAlg.equiv.normedAddCommGroup
-
-instance instCompleteSpace [∀ m, CompleteSpace (E m)] : CompleteSpace (lpOneAlg M E) :=
-  (completeSpace_congr (Isometry.isUniformEmbedding
-    (show Isometry lpOneAlg.equiv from fun _ _ => rfl))).mpr inferInstance
-
-instance : CoeFun (lpOneAlg M E) (fun _ => ∀ m, E m) where
-  coe f := f.toLp
-
-/-- NormedSpace 𝕜 for lpOneAlg, transferred from lp. No algebraic constraint on M needed. -/
-instance instNormedSpaceBase {𝕜 : Type*} [NormedField 𝕜] [∀ m, NormedSpace 𝕜 (E m)] :
-    NormedSpace 𝕜 (lpOneAlg M E) :=
-  { lpOneAlg.equiv.addEquiv.module 𝕜 with
-    norm_smul_le := fun r f => by
-      show ‖r • f.toLp‖ ≤ _; exact norm_smul_le r f.toLp }
-
-@[simp] theorem toLp_zero : (0 : lpOneAlg M E).toLp = 0 := rfl
-@[simp] theorem toLp_add (f g : lpOneAlg M E) : (f + g).toLp = f.toLp + g.toLp := rfl
-@[simp] theorem toLp_neg (f : lpOneAlg M E) : (-f).toLp = -f.toLp := rfl
-@[simp] theorem toLp_sub (f g : lpOneAlg M E) : (f - g).toLp = f.toLp - g.toLp := rfl
-
-@[simp] theorem toLp_smul {𝕜 : Type*} [NormedField 𝕜] [∀ m, NormedSpace 𝕜 (E m)]
-    (r : 𝕜) (f : lpOneAlg M E) : (r • f).toLp = r • f.toLp := rfl
-
-theorem ext {f g : lpOneAlg M E} (h : ∀ m, f m = g m) : f = g := by
-  have : f.toLp = g.toLp := lp.ext (funext h)
-  cases f; cases g; simpa using this
-
-theorem norm_def (f : lpOneAlg M E) : ‖f‖ = ‖f.toLp‖ := rfl
-
-theorem norm_eq_tsum (f : lpOneAlg M E) : ‖f‖ = ∑' m, ‖f m‖ := by
-  rw [norm_def, lp.norm_eq_tsum_rpow (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
-  simp only [ENNReal.toReal_one, Real.rpow_one, one_div, inv_one]
-
-theorem summable_norm (f : lpOneAlg M E) : Summable (fun m => ‖f m‖) := by
-  have hf := lp.memℓp f.toLp
-  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)] at hf
-  simpa using hf
-
-/-- Shifted norm sums are summable: `∑ ‖f(m + s)‖ < ∞` for any `s`. -/
-theorem summable_norm_shift [AddRightCancelMonoid M] (f : lpOneAlg M E) (s : M) :
-    Summable (fun m => ‖f (m + s)‖) :=
-  (summable_norm f).comp_injective (add_left_injective s)
-
-/-- Product norm summability: `∑ ‖f a‖ * ‖g b‖ < ∞` over `M × M`. -/
-theorem summable_norm_prod (f g : lpOneAlg M E) :
-    Summable (fun ab : M × M => ‖f ab.1‖ * ‖g ab.2‖) := by
-  have := (summable_norm f).mul_of_nonneg (summable_norm g)
-    (fun _ => norm_nonneg _) (fun _ => norm_nonneg _)
-  exact this
-
-/-! ### Underlying 𝕜-valued Sequence (monoid-independent) -/
-
-section AlgHelpers
-
-variable {𝕜 : Type*} [NormedField 𝕜] [lpAlgRingData 𝕜 M E]
-
-/-- The underlying 𝕜-valued sequence. Monoid-independent. -/
-@[to_additive (dont_translate := E 𝕜) toRealSeq]
-def mulToRealSeq (f : lpOneAlg M E) : M → 𝕜 :=
-  fun m => lpAlgRingData.toReal m (f m)
-
-@[to_additive (dont_translate := E 𝕜) norm_eq_abs_toReal_mul_weight]
-theorem norm_eq_abs_mulToReal_mul_weight (f : lpOneAlg M E) (m : M) :
-    ‖f m‖ = ‖mulToRealSeq f m‖ * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖ := by
-  conv_lhs => rw [show f m = lpAlgRingData.ofReal (E := E) m (mulToRealSeq f m)
-    from (lpAlgRingData.ofReal_toReal m (f m)).symm]
-  exact lpAlgRingData.norm_ofReal_eq m _
-
-/-- Weight at any index is positive (from ofReal/toReal injectivity). -/
-private theorem norm_mulOfReal_one_pos (m : M) :
-    0 < ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖ := by
-  rw [norm_pos_iff]; intro h
-  have h1 := congr_arg (lpAlgRingData.toReal (E := E) m) h
-  rw [lpAlgRingData.toReal_ofReal, lpAlgRingData.toReal_zero] at h1
-  exact one_ne_zero h1
-
-/-- Extensionality via toRealSeq. -/
-@[to_additive (dont_translate := E 𝕜) ext_toRealSeq]
-theorem ext_mulToRealSeq {f g : lpOneAlg M E}
-    (h : mulToRealSeq f = mulToRealSeq g) : f = g :=
-  ext fun m => (lpAlgRingData.ofReal_toReal m (f m)).symm ▸
-    (lpAlgRingData.ofReal_toReal m (g m)).symm ▸ congr_arg _ (congr_fun h m)
-
-@[to_additive (dont_translate := E 𝕜) toRealSeq_add]
-theorem mulToRealSeq_add (f g : lpOneAlg M E) :
-    mulToRealSeq (f + g) = mulToRealSeq f + mulToRealSeq g :=
-  funext fun m => lpAlgRingData.toReal_add m _ _
-
-@[to_additive (dont_translate := E 𝕜) toRealSeq_zero]
-theorem mulToRealSeq_zero : mulToRealSeq (0 : lpOneAlg M E) = 0 :=
-  funext fun m => lpAlgRingData.toReal_zero m
-
-@[to_additive (dont_translate := E 𝕜) toRealSeq_neg]
-theorem mulToRealSeq_neg (f : lpOneAlg M E) :
-    mulToRealSeq (-f) = -(mulToRealSeq f) := by
-  funext m
-  show lpAlgRingData.toReal m ((-f).toLp m) = -(lpAlgRingData.toReal m (f.toLp m))
-  rw [toLp_neg, lp.coeFn_neg, Pi.neg_apply, lpAlgRingData.toReal_neg]
-
-@[to_additive (dont_translate := E 𝕜) toRealSeq_sub]
-theorem mulToRealSeq_sub (f g : lpOneAlg M E) :
-    mulToRealSeq (f - g) = mulToRealSeq f - mulToRealSeq g := by
-  rw [sub_eq_add_neg, mulToRealSeq_add, mulToRealSeq_neg, sub_eq_add_neg]
-
-/-- `ofReal` preserves negation (derived from toReal_neg + injectivity). -/
-private theorem ofReal_neg (m : M) (r : 𝕜) :
-    lpAlgRingData.ofReal (E := E) m (-r) = -(lpAlgRingData.ofReal m r) := by
-  rw [← lpAlgRingData.ofReal_toReal (E := E) m (-(lpAlgRingData.ofReal m r))]
-  congr 1; rw [lpAlgRingData.toReal_neg, lpAlgRingData.toReal_ofReal]
-
-end AlgHelpers
-
-/-! ### Weight-dependent summability (needs [Monoid M] for to_additive) -/
-
-section MulWeightHelpers
-
-variable {𝕜 : Type*} [NormedField 𝕜] [Monoid M] [lpAlgRingData 𝕜 M E]
-variable [lpOneMulAlgWeightSubMul 𝕜 M E]
-
-/-- `‖mulToRealSeq f m‖ ≤ ‖f m‖` (from weight ≥ 1). -/
-@[to_additive (dont_translate := E 𝕜) abs_toRealSeq_le]
-theorem abs_mulToRealSeq_le (f : lpOneAlg M E) (m : M) :
-    ‖mulToRealSeq f m‖ ≤ ‖f m‖ := by
-  rw [norm_eq_abs_mulToReal_mul_weight f m]
-  exact le_mul_of_one_le_right (norm_nonneg _) (lpOneMulAlgWeightSubMul.norm_ofReal_one_ge m)
-
-@[to_additive (dont_translate := E 𝕜) summable_abs_toRealSeq]
-theorem summable_abs_mulToRealSeq (f : lpOneAlg M E) :
-    Summable (fun m => ‖mulToRealSeq f m‖) :=
-  (summable_norm f).of_nonneg_of_le (fun _ => norm_nonneg _) (abs_mulToRealSeq_le f)
-
-end MulWeightHelpers
-
-end lpOneAlg
+open _root_.DiscreteConvolution RadiiPolynomial.DiscreteConvolution
 
 /-! ### Convolution compatibility: abstraction over summability path -/
 
@@ -394,16 +49,16 @@ sum path, priority 1100, no completeness). -/
 class lpOneAlgConvCompat (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
     [AddMonoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] where
   convSummable : ∀ (f g : lpOneAlg M E) (k : M),
-    Summable fun ab : DiscreteConvolution.addFiber k =>
+    Summable fun ab : addFiber k =>
       lpOneAlg.toRealSeq f ab.1.1 * lpOneAlg.toRealSeq g ab.1.2
   tripleConvSummable : ∀ (f g h : lpOneAlg M E) (x : M),
-    DiscreteConvolution.AddTripleConvolutionSummable
+    AddTripleConvolutionSummable
       (lpOneAlg.toRealSeq f) (lpOneAlg.toRealSeq g) (lpOneAlg.toRealSeq h) x
   norm_conv_le_fiber : ∀ (f g : lpOneAlg M E) (k : M),
     ‖lpAlgRingData.ofReal (E := E) k
-      (DiscreteConvolution.addRingConvolution (lpOneAlg.toRealSeq f)
+      (addRingConvolution (lpOneAlg.toRealSeq f)
         (lpOneAlg.toRealSeq g) k)‖ ≤
-    ∑' ab : DiscreteConvolution.addFiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖
+    ∑' ab : addFiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖
 
 /-- Provides the convolution primitives needed for Ring on `lpOneAlg M E` (multiplicative).
 Two instances: from `[lpOneMulAlgWeightMul]` with `[CompleteSpace 𝕜]` (tsum path,
@@ -413,16 +68,16 @@ submultiplicativity alone) or from `[HasMulAntidiagonal M] + [lpOneMulAlgWeightM
 class lpOneMulAlgConvCompat (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
     [Monoid M] [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] where
   mulConvSummable : ∀ (f g : lpOneAlg M E) (k : M),
-    Summable fun ab : DiscreteConvolution.mulFiber k =>
+    Summable fun ab : mulFiber k =>
       lpOneAlg.mulToRealSeq f ab.1.1 * lpOneAlg.mulToRealSeq g ab.1.2
   tripleMulConvSummable : ∀ (f g h : lpOneAlg M E) (x : M),
-    DiscreteConvolution.TripleConvolutionSummable
+    TripleConvolutionSummable
       (lpOneAlg.mulToRealSeq f) (lpOneAlg.mulToRealSeq g) (lpOneAlg.mulToRealSeq h) x
   norm_mulConv_le_fiber : ∀ (f g : lpOneAlg M E) (k : M),
     ‖lpAlgRingData.ofReal (E := E) k
-      (DiscreteConvolution.ringConvolution (lpOneAlg.mulToRealSeq f)
+      (ringConvolution (lpOneAlg.mulToRealSeq f)
         (lpOneAlg.mulToRealSeq g) k)‖ ≤
-    ∑' ab : DiscreteConvolution.mulFiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖
+    ∑' ab : mulFiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖
 
 /-- Pointwise weighted bound for two extracted scalar coefficients. -/
 @[to_additive (dont_translate := E 𝕜) lpOneAlg.norm_toRealSeq_add_weight_le]
@@ -450,21 +105,21 @@ private theorem lpOneAlg.norm_mulConv_le_fiber_generic
     {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
     [Monoid M] [lpAlgRingData 𝕜 M E] [lpOneMulAlgWeightMul 𝕜 M E]
     (f g : lpOneAlg M E) (k : M)
-    (habs : Summable fun ab : DiscreteConvolution.mulFiber k =>
+    (habs : Summable fun ab : mulFiber k =>
       ‖lpOneAlg.mulToRealSeq f ab.1.1‖ * ‖lpOneAlg.mulToRealSeq g ab.1.2‖) :
     ‖lpAlgRingData.ofReal (E := E) k
-      (DiscreteConvolution.ringConvolution (lpOneAlg.mulToRealSeq f)
+      (ringConvolution (lpOneAlg.mulToRealSeq f)
         (lpOneAlg.mulToRealSeq g) k)‖ ≤
-    ∑' ab : DiscreteConvolution.mulFiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖ := by
-  rw [lpAlgRingData.norm_ofReal_eq, DiscreteConvolution.ringConvolution_apply_eq]
-  have hnorm_fiber : Summable (fun ab : DiscreteConvolution.mulFiber k =>
+    ∑' ab : mulFiber k, ‖f ab.1.1‖ * ‖g ab.1.2‖ := by
+  rw [lpAlgRingData.norm_ofReal_eq, ringConvolution_apply]
+  have hnorm_fiber : Summable (fun ab : mulFiber k =>
       ‖f ab.1.1‖ * ‖g ab.1.2‖) := (lpOneAlg.summable_norm_prod f g).subtype _
-  have h_elem (ab : DiscreteConvolution.mulFiber k) :=
+  have h_elem (ab : mulFiber k) :=
     lpOneAlg.norm_mulToRealSeq_mul_weight_le f g
-      (DiscreteConvolution.mem_mulFiber.mp ab.2)
-  have h_tri : ‖∑' ab : DiscreteConvolution.mulFiber k,
+      (mem_mulFiber.mp ab.2)
+  have h_tri : ‖∑' ab : mulFiber k,
       lpOneAlg.mulToRealSeq f ab.1.1 * lpOneAlg.mulToRealSeq g ab.1.2‖ ≤
-      ∑' ab : DiscreteConvolution.mulFiber k,
+      ∑' ab : mulFiber k,
         ‖lpOneAlg.mulToRealSeq f ab.1.1‖ * ‖lpOneAlg.mulToRealSeq g ab.1.2‖ :=
     tsum_of_norm_bounded habs.hasSum
       fun ab => le_of_eq (norm_mul _ _)
@@ -483,18 +138,19 @@ private theorem lpOneAlg.abs_mulConvSummable_of_weightMul
     {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
     [Monoid M] [lpAlgRingData 𝕜 M E] [lpOneMulAlgWeightMul 𝕜 M E]
     (f g : lpOneAlg M E) (k : M) :
-    Summable fun ab : DiscreteConvolution.mulFiber k =>
+    Summable fun ab : mulFiber k =>
       ‖lpOneAlg.mulToRealSeq f ab.1.1‖ * ‖lpOneAlg.mulToRealSeq g ab.1.2‖ := by
-  have hnorm : Summable (fun ab : DiscreteConvolution.mulFiber k => ‖f ab.1.1‖ * ‖g ab.1.2‖) :=
+  have hnorm : Summable
+      (fun ab : mulFiber k => ‖f ab.1.1‖ * ‖g ab.1.2‖) :=
     (lpOneAlg.summable_norm_prod f g).subtype _
-  have hw := lpOneAlg.norm_mulOfReal_one_pos (E := E) k
+  have hw := lpOneAlg.norm_ofReal_one_pos (E := E) k
   refine (hnorm.const_smul (‖lpAlgRingData.ofReal (E := E) k (1 : 𝕜)‖⁻¹)).of_norm_bounded
     fun ab => ?_
   rw [Real.norm_of_nonneg (mul_nonneg (norm_nonneg _) (norm_nonneg _))]
   simp only [smul_eq_mul]
   rw [← div_eq_inv_mul, le_div_iff₀ hw]
   exact lpOneAlg.norm_mulToRealSeq_mul_weight_le f g
-    (DiscreteConvolution.mem_mulFiber.mp ab.2)
+    (mem_mulFiber.mp ab.2)
 
 @[to_additive (dont_translate := E 𝕜) lpOneAlg.convSummable_of_weightMul]
 private theorem lpOneAlg.mulConvSummable_of_weightMul
@@ -502,7 +158,7 @@ private theorem lpOneAlg.mulConvSummable_of_weightMul
     {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
     [Monoid M] [lpAlgRingData 𝕜 M E] [lpOneMulAlgWeightMul 𝕜 M E]
     (f g : lpOneAlg M E) (k : M) :
-    Summable fun ab : DiscreteConvolution.mulFiber k =>
+    Summable fun ab : mulFiber k =>
       lpOneAlg.mulToRealSeq f ab.1.1 * lpOneAlg.mulToRealSeq g ab.1.2 :=
   (lpOneAlg.abs_mulConvSummable_of_weightMul f g k).of_norm_bounded
     fun ⟨⟨_, _⟩, _⟩ => norm_mul_le _ _
@@ -515,7 +171,7 @@ private theorem lpOneAlg.tripleMulConvSummable_of_weightMul
     {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
     [Monoid M] [lpAlgRingData 𝕜 M E] [lpOneMulAlgWeightMul 𝕜 M E]
     (f g h : lpOneAlg M E) (x : M) :
-    Summable fun p : DiscreteConvolution.tripleMulFiber x =>
+    Summable fun p : tripleMulFiber x =>
       lpOneAlg.mulToRealSeq f p.1.1 * lpOneAlg.mulToRealSeq g p.1.2.1 *
         lpOneAlg.mulToRealSeq h p.1.2.2 := by
   have h3 : Summable (fun abc : M × M × M =>
@@ -524,12 +180,12 @@ private theorem lpOneAlg.tripleMulConvSummable_of_weightMul
       (fun _ => norm_nonneg _)
       (fun _ => mul_nonneg (norm_nonneg _) (norm_nonneg _))).congr
       fun _ => (mul_assoc _ _ _).symm
-  have hnorm3 : Summable (fun p : DiscreteConvolution.tripleMulFiber x =>
+  have hnorm3 : Summable (fun p : tripleMulFiber x =>
       ‖f p.1.1‖ * ‖g p.1.2.1‖ * ‖h p.1.2.2‖) := h3.subtype _
-  have hw := lpOneAlg.norm_mulOfReal_one_pos (E := E) x
+  have hw := lpOneAlg.norm_ofReal_one_pos (E := E) x
   refine (hnorm3.const_smul (‖lpAlgRingData.ofReal (E := E) x (1 : 𝕜)‖⁻¹)).of_norm_bounded
     fun p => ?_
-  have hmem := p.2; rw [DiscreteConvolution.mem_tripleMulFiber] at hmem
+  have hmem := p.2; rw [mem_tripleMulFiber] at hmem
   simp only [smul_eq_mul]
   rw [norm_mul, norm_mul]
   rw [lpOneAlg.norm_eq_abs_mulToReal_mul_weight f p.1.1,
@@ -562,45 +218,49 @@ instance lpOneAlg.instMulConvCompatOfWeightMul
     lpOneAlg.norm_mulConv_le_fiber_generic f g k
       (lpOneAlg.abs_mulConvSummable_of_weightMul f g k)
 
-/-- Finiteness of `mulFiber k` from `HasMulAntidiagonal`. -/
-@[to_additive]
-private theorem lpOneAlg.mulFiber_finite
-    {M : Type*} [Monoid M] [Finset.HasMulAntidiagonal M] (k : M) :
-    Set.Finite (DiscreteConvolution.mulFiber k) :=
-  (Finset.mulAntidiagonal k).finite_toSet.subset fun ⟨_, _⟩ h =>
-    Finset.mem_coe.mpr (Finset.mem_mulAntidiagonal.mpr (DiscreteConvolution.mem_mulFiber.mp h))
-
 /-- Instance from `[HasMulAntidiagonal M] + [lpOneMulAlgWeightMul M E]`:
 finite sum path (antidiagonal gives finite fibers, no weight ≥ 1 needed). -/
 @[to_additive (dont_translate := E 𝕜) lpOneAlg.instConvCompatOfAntidiag]
 instance (priority := 1100) lpOneAlg.instMulConvCompatOfAntidiag
     {𝕜 : Type*} [NormedField 𝕜]
     {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-    [Monoid M] [DecidableEq M]
+    [Monoid M]
     [Finset.HasMulAntidiagonal M] [lpAlgRingData 𝕜 M E]
     [lpOneMulAlgWeightMul 𝕜 M E] : lpOneMulAlgConvCompat 𝕜 M E where
-  mulConvSummable f g k := by
-    exact (lpOneAlg.mulFiber_finite k).summable (fun p : M × M =>
+  mulConvSummable f g k :=
+    (mulFiber_finite k).summable (fun p : M × M =>
       lpOneAlg.mulToRealSeq f p.1 * lpOneAlg.mulToRealSeq g p.2)
   tripleMulConvSummable f g h x := by
-    have : ∀ k : M, Finite ↑(DiscreteConvolution.mulFiber k) :=
-      fun k => (lpOneAlg.mulFiber_finite k).to_subtype
-    have : Finite ↑(DiscreteConvolution.tripleMulFiber x) :=
-      (DiscreteConvolution.leftMulAssocEquiv x).finite_iff.mp inferInstance
+    have : ∀ k : M, Finite ↑(mulFiber k) :=
+      fun k => (mulFiber_finite k).to_subtype
+    have : Finite ↑(tripleMulFiber x) :=
+      (leftMulAssocEquiv x).finite_iff.mp inferInstance
     exact (Set.toFinite _).summable
       (fun p : M × M × M =>
         lpOneAlg.mulToRealSeq f p.1 * lpOneAlg.mulToRealSeq g p.2.1 *
           lpOneAlg.mulToRealSeq h p.2.2)
   norm_mulConv_le_fiber f g k := by
-    have : Finite ↑(DiscreteConvolution.mulFiber k) :=
-      (lpOneAlg.mulFiber_finite k).to_subtype
+    have : Finite ↑(mulFiber k) :=
+      (mulFiber_finite k).to_subtype
     exact lpOneAlg.norm_mulConv_le_fiber_generic f g k
-      ((lpOneAlg.mulFiber_finite k).summable (fun p : M × M =>
+      ((mulFiber_finite k).summable (fun p : M × M =>
         ‖lpOneAlg.mulToRealSeq f p.1‖ * ‖lpOneAlg.mulToRealSeq g p.2‖))
 
 namespace lpOneAlg
 
 variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+
+section AlgHelpers
+
+variable {𝕜 : Type*} [NormedField 𝕜] [lpAlgRingData 𝕜 M E]
+
+/-- `ofReal` preserves negation (derived from toReal_neg + injectivity). -/
+private theorem ofReal_neg (m : M) (r : 𝕜) :
+    lpAlgRingData.ofReal (E := E) m (-r) = -(lpAlgRingData.ofReal m r) := by
+  rw [← lpAlgRingData.ofReal_toReal (E := E) m (-(lpAlgRingData.ofReal m r))]
+  congr 1; rw [lpAlgRingData.toReal_neg, lpAlgRingData.toReal_ofReal]
+
+end AlgHelpers
 
 /-! ### Ring Infrastructure (multiplicative primary, additive via @[to_additive]) -/
 
@@ -615,48 +275,51 @@ omit [DecidableEq M] in
 @[to_additive (dont_translate := E 𝕜) mul_memℓp]
 theorem mul_memℓp_mul (f g : lpOneAlg M E) :
     Memℓp (fun k => lpAlgRingData.ofReal (E := E) k
-      (DiscreteConvolution.ringConvolution (mulToRealSeq f) (mulToRealSeq g) k)) 1 := by
+      (ringConvolution (mulToRealSeq f) (mulToRealSeq g) k)) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
   exact Summable.of_nonneg_of_le (fun _ => norm_nonneg _)
     (lpOneMulAlgConvCompat.norm_mulConv_le_fiber f g)
-    (DiscreteConvolution.sigmaMulFiberEquiv.summable_iff.mpr (summable_norm_prod f g)).sigma
+    (sigmaMulFiberEquiv.summable_iff.mpr
+      (summable_norm_prod f g)).sigma
 
 omit [lpOneMulAlgConvCompat 𝕜 M E] in
 /-- `delta r` belongs to ℓ¹. Used by the identity and scalar casts. -/
 @[to_additive (dont_translate := E 𝕜) delta_memℓp]
 private theorem delta_memℓp_mul (r : 𝕜) :
     Memℓp (fun m => lpAlgRingData.ofReal (E := E) m
-      (DiscreteConvolution.delta r m)) 1 := by
+      (delta r m)) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
   exact summable_of_ne_finset_zero (s := {1}) (fun b hb => by
     rw [Finset.mem_singleton] at hb
-    rw [DiscreteConvolution.delta_ne r hb, lpAlgRingData.ofReal_zero, norm_zero])
+    rw [delta_ne r hb, lpAlgRingData.ofReal_zero, norm_zero])
 
 omit [lpOneMulAlgConvCompat 𝕜 M E] in
 @[to_additive (dont_translate := E 𝕜) one_memℓp]
 theorem one_memℓp_mul :
     Memℓp (fun m => lpAlgRingData.ofReal (E := E) m
-      (DiscreteConvolution.delta (1 : 𝕜) m)) 1 := by
-  exact delta_memℓp_mul (1 : 𝕜)
+      (delta (1 : 𝕜) m)) 1 :=
+  delta_memℓp_mul (1 : 𝕜)
 
 omit [DecidableEq M] in
 @[to_additive (dont_translate := E 𝕜) norm_mul_le']
 private theorem norm_mul_le_mul' (f g : lpOneAlg M E) :
     ‖(⟨⟨fun k => lpAlgRingData.ofReal (E := E) k
-        (DiscreteConvolution.ringConvolution (mulToRealSeq f) (mulToRealSeq g) k),
+        (ringConvolution (mulToRealSeq f) (mulToRealSeq g) k),
       mul_memℓp_mul f g⟩⟩ : lpOneAlg M E)‖ ≤ ‖f‖ * ‖g‖ := by
   rw [norm_eq_tsum, norm_eq_tsum, norm_eq_tsum]
-  have hsigma := DiscreteConvolution.sigmaMulFiberEquiv.summable_iff.mpr (summable_norm_prod f g)
+  have hsigma :=
+    sigmaMulFiberEquiv.summable_iff.mpr (summable_norm_prod f g)
   have hmem : Summable (fun k => ‖lpAlgRingData.ofReal (E := E) k
-      (DiscreteConvolution.ringConvolution (mulToRealSeq f) (mulToRealSeq g) k)‖) := by
+      (ringConvolution (mulToRealSeq f) (mulToRealSeq g) k)‖) := by
     simpa using (memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)).mp (mul_memℓp_mul f g)
   refine (Summable.tsum_le_tsum (lpOneMulAlgConvCompat.norm_mulConv_le_fiber f g)
     hmem hsigma.sigma).trans (le_of_eq ?_)
   exact (hsigma.tsum_sigma' hsigma.sigma_factor) ▸
     (summable_norm f).tsum_mul_tsum (summable_norm g) (summable_norm_prod f g) ▸
-    DiscreteConvolution.sigmaMulFiberEquiv.tsum_eq (fun p => ‖f p.1‖ * ‖g p.2‖)
+    sigmaMulFiberEquiv.tsum_eq
+      (fun p => ‖f p.1‖ * ‖g p.2‖)
 
 end MulRingInfrastructure
 
@@ -670,24 +333,24 @@ variable [Monoid M] [lpAlgRingData 𝕜 M E] [lpOneMulAlgConvCompat 𝕜 M E] [D
 @[to_additive (dont_translate := E 𝕜) instMul]
 instance instMulMul : Mul (lpOneAlg M E) where
   mul f g := ⟨⟨fun k => lpAlgRingData.ofReal (E := E) k
-    (DiscreteConvolution.ringConvolution (mulToRealSeq f) (mulToRealSeq g) k),
+    (ringConvolution (mulToRealSeq f) (mulToRealSeq g) k),
     mul_memℓp_mul f g⟩⟩
 
 @[to_additive (dont_translate := E 𝕜) instOne]
 instance instMulOne : One (lpOneAlg M E) where
   one := ⟨⟨fun m => lpAlgRingData.ofReal (E := E) m
-    (DiscreteConvolution.delta (1 : 𝕜) m), one_memℓp_mul⟩⟩
+    (delta (1 : 𝕜) m), one_memℓp_mul⟩⟩
 
 -- Key rewrites: mulToRealSeq of product/one = convolution/delta of mulToRealSeqs
 omit [DecidableEq M] in
 @[to_additive (dont_translate := E 𝕜) (attr := simp) toRealSeq_mul_fun]
 theorem mulToRealSeq_mul_fun (f g : lpOneAlg M E) :
     mulToRealSeq (f * g) =
-      DiscreteConvolution.ringConvolution (mulToRealSeq f) (mulToRealSeq g) := by
+      ringConvolution (mulToRealSeq f) (mulToRealSeq g) := by
   ext k; unfold mulToRealSeq
   show lpAlgRingData.toReal k
     (lpAlgRingData.ofReal (E := E) k
-      (DiscreteConvolution.ringConvolution
+      (ringConvolution
         (fun m => lpAlgRingData.toReal m (f m))
         (fun m => lpAlgRingData.toReal m (g m)) k)) = _
   rw [lpAlgRingData.toReal_ofReal]
@@ -695,10 +358,10 @@ theorem mulToRealSeq_mul_fun (f g : lpOneAlg M E) :
 omit [lpOneMulAlgConvCompat 𝕜 M E] in
 @[to_additive (dont_translate := E 𝕜) (attr := simp) toRealSeq_one_fun]
 theorem mulToRealSeq_one_fun :
-    mulToRealSeq (1 : lpOneAlg M E) = DiscreteConvolution.delta (1 : 𝕜) := by
+    mulToRealSeq (1 : lpOneAlg M E) = delta (1 : 𝕜) := by
   ext m; unfold mulToRealSeq
   show lpAlgRingData.toReal m
-    (lpAlgRingData.ofReal (E := E) m (DiscreteConvolution.delta (1 : 𝕜) m)) = _
+    (lpAlgRingData.ofReal (E := E) m (delta (1 : 𝕜) m)) = _
   rw [lpAlgRingData.toReal_ofReal]
 
 @[to_additive (dont_translate := E 𝕜) instRing]
@@ -706,63 +369,65 @@ instance instMulRing : Ring (lpOneAlg M E) where
   mul_assoc f g h := by
     apply ext_mulToRealSeq; ext k
     simp only [mulToRealSeq_mul_fun]
-    exact congr_fun (DiscreteConvolution.ringConvolution_assoc _ _ _
+    exact congr_fun (ringConvolution_assoc _ _ _
       (lpOneMulAlgConvCompat.mulConvSummable f g)
       (lpOneMulAlgConvCompat.mulConvSummable g h)
       (lpOneMulAlgConvCompat.tripleMulConvSummable f g h)) k
   one_mul f := by
     apply ext_mulToRealSeq; ext k
     simp only [mulToRealSeq_mul_fun, mulToRealSeq_one_fun]
-    rw [DiscreteConvolution.delta_ringConvolution' (1 : 𝕜) _ k, one_mul]
+    rw [delta_ringConvolution' (1 : 𝕜) _ k, one_mul]
   mul_one f := by
     apply ext_mulToRealSeq; ext k
     simp only [mulToRealSeq_mul_fun, mulToRealSeq_one_fun]
-    rw [DiscreteConvolution.ringConvolution_delta' _ (1 : 𝕜) k, mul_one]
+    rw [ringConvolution_delta' _ (1 : 𝕜) k, mul_one]
   left_distrib f g h := by
     apply ext_mulToRealSeq; ext k
     simp only [mulToRealSeq_mul_fun, mulToRealSeq_add]
-    exact congr_fun (DiscreteConvolution.ringConvolution_add _ _ _
+    exact congr_fun (ringConvolution_add _ _ _
       (lpOneMulAlgConvCompat.mulConvSummable f g)
       (lpOneMulAlgConvCompat.mulConvSummable f h)) k
   right_distrib f g h := by
     apply ext_mulToRealSeq; ext k
     simp only [mulToRealSeq_mul_fun, mulToRealSeq_add]
-    exact congr_fun (DiscreteConvolution.add_ringConvolution _ _ _
+    exact congr_fun (add_ringConvolution _ _ _
       (lpOneMulAlgConvCompat.mulConvSummable f h)
       (lpOneMulAlgConvCompat.mulConvSummable g h)) k
   zero_mul f := by
     apply ext_mulToRealSeq; ext k
     simp only [mulToRealSeq_mul_fun, mulToRealSeq_zero]
-    exact congr_fun (DiscreteConvolution.zero_ringConvolution _) k
+    exact congr_fun (zero_ringConvolution _) k
   mul_zero f := by
     apply ext_mulToRealSeq; ext k
     simp only [mulToRealSeq_mul_fun, mulToRealSeq_zero]
-    exact congr_fun (DiscreteConvolution.ringConvolution_zero _) k
+    exact congr_fun (ringConvolution_zero _) k
   natCast n := ⟨⟨fun m => lpAlgRingData.ofReal (E := E) m
-    (DiscreteConvolution.delta ((n : 𝕜)) m), delta_memℓp_mul (n : 𝕜)⟩⟩
+    (delta ((n : 𝕜)) m), delta_memℓp_mul (n : 𝕜)⟩⟩
   natCast_zero := ext fun m => by
     show lpAlgRingData.ofReal (E := E) m
-      (DiscreteConvolution.delta ((0 : ℕ) : 𝕜) m) = 0
-    simp [Nat.cast_zero, DiscreteConvolution.delta, Pi.single_apply,
+      (delta ((0 : ℕ) : 𝕜) m) = 0
+    simp [Nat.cast_zero, delta, Pi.single_apply,
       lpAlgRingData.ofReal_zero]
   natCast_succ n := ext fun m => by
-    show lpAlgRingData.ofReal (E := E) m (DiscreteConvolution.delta ((↑(n + 1) : 𝕜)) m) =
-      lpAlgRingData.ofReal (E := E) m (DiscreteConvolution.delta ((n : 𝕜)) m) +
-      lpAlgRingData.ofReal (E := E) m (DiscreteConvolution.delta ((1 : 𝕜)) m)
+    show lpAlgRingData.ofReal (E := E) m
+        (delta ((↑(n + 1) : 𝕜)) m) =
+      lpAlgRingData.ofReal (E := E) m (delta ((n : 𝕜)) m) +
+      lpAlgRingData.ofReal (E := E) m (delta ((1 : 𝕜)) m)
     rw [← lpAlgRingData.ofReal_add, Nat.cast_succ]
-    congr 1; simp [DiscreteConvolution.delta, Pi.single_apply]; split_ifs <;> ring
+    congr 1; simp [delta, Pi.single_apply]; split_ifs <;> ring
   intCast n := ⟨⟨fun m => lpAlgRingData.ofReal (E := E) m
-    (DiscreteConvolution.delta ((n : 𝕜)) m), delta_memℓp_mul (n : 𝕜)⟩⟩
+    (delta ((n : 𝕜)) m), delta_memℓp_mul (n : 𝕜)⟩⟩
   intCast_ofNat n := ext fun m => by
     simp only [Int.cast_natCast]; rfl
   intCast_negSucc n := ext fun m => by
     show lpAlgRingData.ofReal (E := E) m
-        (DiscreteConvolution.delta ((Int.negSucc n : 𝕜)) m) =
-      -(lpAlgRingData.ofReal (E := E) m (DiscreteConvolution.delta ((↑(n + 1) : 𝕜)) m))
+        (delta ((Int.negSucc n : 𝕜)) m) =
+      -(lpAlgRingData.ofReal (E := E) m
+        (delta ((↑(n + 1) : 𝕜)) m))
     simp only [Int.cast_negSucc]
-    rw [show DiscreteConvolution.delta (-↑(n + 1) : 𝕜) m =
-      -(DiscreteConvolution.delta ((↑(n + 1) : 𝕜)) m) from by
-        simp [DiscreteConvolution.delta, Pi.single_apply]; split_ifs <;> ring]
+    rw [show delta (-↑(n + 1) : 𝕜) m =
+      -(delta ((↑(n + 1) : 𝕜)) m) from by
+        simp [delta, Pi.single_apply]; split_ifs <;> ring]
     exact ofReal_neg m _
 
 @[to_additive (dont_translate := E 𝕜) instNormedRing]
@@ -775,229 +440,7 @@ end MulRingInstances
 
 end lpOneAlg
 
-/-! ### Scalar Multiplication Compatibility -/
-
-section lpOneAlgSmul
-
-variable {𝕜 : Type*} [NormedField 𝕜]
-variable {M : Type*} {E : M → Type*}
-variable [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E]
-variable [∀ m, NormedSpace 𝕜 (E m)]
-variable [lpAlgSmulCompat 𝕜 M E]
-
-theorem lpOneAlg.toRealSeq_smul (r : 𝕜) (f : lpOneAlg M E) :
-    lpOneAlg.toRealSeq (r • f) = r • lpOneAlg.toRealSeq f := by
-  ext m; simp only [lpOneAlg.toRealSeq, Pi.smul_apply, smul_eq_mul]
-  exact lpAlgSmulCompat.toReal_smul m r (f m)
-
-end lpOneAlgSmul
-
-/-! ### Singles, mode expansion, and column-norm bounds
-
-Monoid-independent API (the index `M` needs no algebraic structure except where
-stated). Sequence-mentioning statements use the additive `toRealSeq` spelling,
-matching `toRealSeq_smul` above; both production index types (ℕ, ℤ) are additive.
-
-The column-norm bounds realize the ℓ¹ principle: out of a weighted ℓ¹ space, an
-operator's norm is controlled by the sup of its weighted column norms. Promoted
-from the Example 14.2.1 toolkit (2026-08-25). -/
-
 namespace lpOneAlg
-
-section Single
-
-variable {𝕜 : Type*} [NormedField 𝕜]
-variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-
-theorem norm_apply_le_norm (f : lpOneAlg M E) (m : M) : ‖f m‖ ≤ ‖f‖ :=
-  lp.norm_apply_le_norm one_ne_zero f.toLp m
-
-theorem isometry_mk : Isometry (mk : lp E 1 → lpOneAlg M E) :=
-  fun _ _ => rfl
-
-/-- The wrapper `lp E 1 → lpOneAlg M E` as an additive monoid hom. -/
-def mkAddHom : lp E 1 →+ lpOneAlg M E where
-  toFun := mk
-  map_zero' := rfl
-  map_add' _ _ := rfl
-
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M]
-
-/-- The element with value `x` at index `j` and `0` elsewhere. -/
-def single (j : M) (x : 𝕜) : lpOneAlg M E :=
-  ⟨lp.single 1 j (lpAlgRingData.ofReal (E := E) j x)⟩
-
-theorem toRealSeq_single (j : M) (x : 𝕜) (k : M) :
-    toRealSeq (single (E := E) j x) k = if k = j then x else 0 := by
-  show lpAlgRingData.toReal k ((single (E := E) j x) k) = _
-  by_cases h : k = j
-  · subst h
-    show lpAlgRingData.toReal k
-      (Pi.single k (lpAlgRingData.ofReal (E := E) k x) k) = _
-    rw [Pi.single_eq_same, lpAlgRingData.toReal_ofReal, ite_eq_left rfl]
-  · show lpAlgRingData.toReal k
-      (Pi.single j (lpAlgRingData.ofReal (E := E) j x) k) = _
-    rw [Pi.single_eq_of_ne h, lpAlgRingData.toReal_zero, ite_eq_right h]
-
-theorem norm_single (j : M) (x : 𝕜) :
-    ‖(single (E := E) j x : lpOneAlg M E)‖
-      = ‖x‖ * ‖lpAlgRingData.ofReal (E := E) j (1 : 𝕜)‖ := by
-  show ‖lp.single 1 j (lpAlgRingData.ofReal (E := E) j x)‖ = _
-  rw [lp.norm_single (by norm_num), lpAlgRingData.norm_ofReal_eq]
-
-/-- Every element is the norm-convergent sum of its singles (transfer of
-`lp.hasSum_single` through the wrapper). -/
-theorem hasSum_single (h : lpOneAlg M E) :
-    HasSum (fun m : M => single (E := E) m (toRealSeq h m)) h := by
-  have h0 : HasSum (fun m : M => lp.single 1 m (h.toLp m)) h.toLp :=
-    lp.hasSum_single (by norm_num) h.toLp
-  have h1 := h0.map (mkAddHom (E := E)) (isometry_mk (E := E)).continuous
-  have heq : (⇑(mkAddHom (E := E)) ∘ fun m : M => lp.single 1 m (h.toLp m))
-      = fun m : M => single (E := E) m (toRealSeq h m) := by
-    funext m
-    show mk (lp.single 1 m (h.toLp m)) = single (E := E) m (toRealSeq h m)
-    unfold single
-    rw [show lpAlgRingData.ofReal (E := E) m (toRealSeq h m)
-      = h.toLp m from lpAlgRingData.ofReal_toReal m (h.toLp m)]
-  rw [heq] at h1
-  exact h1
-
-variable [∀ m, NormedSpace 𝕜 (E m)]
-
-/-- Mode expansion pushed through a continuous linear map. -/
-theorem hasSum_single_mapCLM {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
-    (W : lpOneAlg M E →L[𝕜] F) (h : lpOneAlg M E) :
-    HasSum (fun m : M => W (single m (toRealSeq h m))) (W h) :=
-  (hasSum_single h).mapL W
-
-variable [lpAlgSmulCompat 𝕜 M E]
-
-theorem single_smul (j : M) (x : 𝕜) :
-    single (E := E) j x = x • single j 1 := by
-  apply ext_toRealSeq
-  funext k
-  rw [show toRealSeq (x • single (E := E) j 1) k
-      = x * toRealSeq (single (E := E) j 1) k from
-    congr_fun (toRealSeq_smul x _) k]
-  rw [toRealSeq_single, toRealSeq_single]
-  split_ifs <;> ring
-
-end Single
-
-section EvalCLM
-
-variable {𝕜 : Type*} [NormedField 𝕜]
-variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [∀ m, NormedSpace 𝕜 (E m)]
-
-/-- Coordinate evaluation as a continuous linear map (norm ≤ 1). -/
-def evalCLM (m : M) : lpOneAlg M E →L[𝕜] E m :=
-  LinearMap.mkContinuous
-    { toFun := fun f => f m
-      map_add' := fun f g => by
-        show ((f + g).toLp : ∀ k, E k) m = _
-        rw [toLp_add, lp.coeFn_add]
-        rfl
-      map_smul' := fun r f => by
-        show ((r • f).toLp : ∀ k, E k) m = _
-        rw [toLp_smul, lp.coeFn_smul]
-        rfl }
-    1 (fun f => by rw [one_mul]; exact norm_apply_le_norm f m)
-
-@[simp] theorem evalCLM_apply (m : M) (f : lpOneAlg M E) :
-    evalCLM (𝕜 := 𝕜) m f = f m := rfl
-
-end EvalCLM
-
-section ColumnNorm
-
-variable {𝕜 : Type*} [NormedField 𝕜]
-variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
-
-/-- **Column-norm bound.** Out of a weighted ℓ¹ space, an operator norm is
-controlled by the weighted column norms: if `‖W (single m 1)‖ ≤ C · ω_m` for
-every `m` (with `ω_m = ‖ofReal m 1‖` the weight), then `‖W h‖ ≤ C · ‖h‖`. -/
-theorem norm_le_of_cols {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
-    (W : lpOneAlg M E →L[𝕜] F) {C : ℝ}
-    (hcol : ∀ m : M, ‖W (single m 1)‖
-      ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
-    (h : lpOneAlg M E) : ‖W h‖ ≤ C * ‖h‖ := by
-  have hexp := hasSum_single_mapCLM W h
-  have hterm : ∀ m : M, ‖W (single m (toRealSeq h m))‖
-      ≤ ‖toRealSeq h m‖ * (C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖) := by
-    intro m
-    rw [single_smul, map_smul, norm_smul]
-    exact mul_le_mul_of_nonneg_left (hcol m) (norm_nonneg _)
-  have hmaj : Summable (fun m : M =>
-      ‖toRealSeq h m‖ * (C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)) := by
-    refine ((summable_norm h).mul_left C).congr fun m => ?_
-    rw [norm_eq_abs_toReal_mul_weight h m]
-    ring
-  have hsumm : Summable (fun m : M => ‖W (single m (toRealSeq h m))‖) :=
-    Summable.of_nonneg_of_le (fun _ => norm_nonneg _) hterm hmaj
-  rw [← hexp.tsum_eq]
-  refine (norm_tsum_le_tsum_norm hsumm).trans ?_
-  refine (Summable.tsum_le_tsum hterm hsumm hmaj).trans (le_of_eq ?_)
-  rw [norm_eq_tsum, ← tsum_mul_left]
-  exact tsum_congr fun m => by rw [norm_eq_abs_toReal_mul_weight h m]; ring
-
-/-- **Finite-part column-norm bound.** A finite family of output coordinates
-`g : ι → M'` of `W h` is controlled by the same finite sums on the columns:
-if `∑_{n ∈ s} ‖(W (single m 1)) (g n)‖ ≤ ε · ω_m` for every `m`, then
-`∑_{n ∈ s} ‖(W h) (g n)‖ ≤ ε · ‖h‖`. -/
-theorem finsum_norm_le_of_cols {M' : Type*} {E' : M' → Type*}
-    [∀ n, NormedAddCommGroup (E' n)] [∀ n, NormedSpace 𝕜 (E' n)]
-    {ι : Type*} (W : lpOneAlg M E →L[𝕜] lpOneAlg M' E')
-    (s : Finset ι) (g : ι → M') {ε : ℝ}
-    (hcol : ∀ m : M, ∑ n ∈ s, ‖(W (single m 1)) (g n)‖
-      ≤ ε * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
-    (h : lpOneAlg M E) :
-    ∑ n ∈ s, ‖(W h) (g n)‖ ≤ ε * ‖h‖ := by
-  have hterm : ∀ (n : ι) (m : M),
-      ‖(W (single m (toRealSeq h m))) (g n)‖
-        = ‖toRealSeq h m‖ * ‖(W (single (E := E) m 1)) (g n)‖ := by
-    intro n m
-    rw [single_smul, map_smul]
-    show ‖((toRealSeq h m • W (single (E := E) m 1)).toLp : ∀ k, E' k) (g n)‖ = _
-    rw [toLp_smul, lp.coeFn_smul, Pi.smul_apply, norm_smul]
-  have hmaj : Summable (fun m : M =>
-      ‖toRealSeq h m‖ * (ε * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)) := by
-    refine ((summable_norm h).mul_left ε).congr fun m => ?_
-    rw [norm_eq_abs_toReal_mul_weight h m]
-    ring
-  have hsumm : ∀ n ∈ s, Summable
-      (fun m : M => ‖(W (single m (toRealSeq h m))) (g n)‖) := by
-    intro n hn
-    refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun m => ?_) hmaj
-    rw [hterm n m]
-    refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
-    exact (Finset.single_le_sum
-      (f := fun i => ‖(W (single (E := E) m 1)) (g i)‖)
-      (fun i _ => norm_nonneg _) hn).trans (hcol m)
-  have hfib : ∀ n : ι, HasSum
-      (fun m : M => (W (single m (toRealSeq h m))) (g n)) ((W h) (g n)) := fun n =>
-    (hasSum_single_mapCLM W h).mapL (evalCLM (𝕜 := 𝕜) (g n))
-  have hn_le : ∀ n ∈ s, ‖(W h) (g n)‖
-      ≤ ∑' m : M, ‖(W (single m (toRealSeq h m))) (g n)‖ := by
-    intro n hn
-    rw [← (hfib n).tsum_eq]
-    exact norm_tsum_le_tsum_norm (hsumm n hn)
-  refine (Finset.sum_le_sum hn_le).trans ?_
-  rw [← Summable.tsum_finsetSum fun n hn => hsumm n hn]
-  have hcol' : ∀ m : M, ∑ n ∈ s, ‖(W (single m (toRealSeq h m))) (g n)‖
-      ≤ ‖toRealSeq h m‖ * (ε * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖) := by
-    intro m
-    rw [Finset.sum_congr rfl fun n _ => hterm n m, ← Finset.mul_sum]
-    exact mul_le_mul_of_nonneg_left (hcol m) (norm_nonneg _)
-  refine (Summable.tsum_le_tsum hcol'
-    (summable_sum fun n hn => hsumm n hn) hmaj).trans (le_of_eq ?_)
-  rw [norm_eq_tsum, ← tsum_mul_left]
-  exact tsum_congr fun m => by rw [norm_eq_abs_toReal_mul_weight h m]; ring
-
-end ColumnNorm
 
 section ConvolutionEval
 
@@ -1012,10 +455,10 @@ theorem mulToRealSeq_mul_tsum [Group M] [lpOneMulAlgConvCompat 𝕜 M E]
     mulToRealSeq (x * y) k
       = ∑' i : M, mulToRealSeq x (k / i) * mulToRealSeq y i := by
   refine (congr_fun (mulToRealSeq_mul_fun x y) k).trans ?_
-  show (∑' p : DiscreteConvolution.mulFiber k,
+  show (∑' p : mulFiber k,
       mulToRealSeq x p.1.1 * mulToRealSeq y p.1.2) = _
-  exact ((DiscreteConvolution.mulFiberEquiv k).tsum_eq
-    fun p : DiscreteConvolution.mulFiber k =>
+  exact ((mulFiberEquiv k).tsum_eq
+    fun p : mulFiber k =>
       mulToRealSeq x p.1.1 * mulToRealSeq y p.1.2).symm
 
 /-- Convolution against a finitely-supported factor is a finite sum. -/
@@ -1056,12 +499,12 @@ instance lpOneAlg.instAlgebra : Algebra 𝕜 (lpOneAlg M E) :=
     (fun r f g => by
       apply lpOneAlg.ext_toRealSeq
       simp only [lpOneAlg.toRealSeq_mul_fun, lpOneAlg.toRealSeq_smul]
-      exact DiscreteConvolution.smul_addRingConvolution r _ _
+      exact smul_addRingConvolution r _ _
         (lpOneAlgConvCompat.convSummable f g))
     (fun r f g => by
       apply lpOneAlg.ext_toRealSeq
       simp only [lpOneAlg.toRealSeq_mul_fun, lpOneAlg.toRealSeq_smul]
-      exact DiscreteConvolution.addRingConvolution_smul r _ _
+      exact addRingConvolution_smul r _ _
         (lpOneAlgConvCompat.convSummable f g))
 
 instance lpOneAlg.instNormedAlgebra : NormedAlgebra 𝕜 (lpOneAlg M E) where
@@ -1081,7 +524,7 @@ instance lpOneAlg.instCommRing : CommRing (lpOneAlg M E) where
   mul_comm f g := by
     apply lpOneAlg.ext_toRealSeq
     simp only [lpOneAlg.toRealSeq_mul_fun]
-    exact DiscreteConvolution.addRingConvolution_comm _ _
+    exact addRingConvolution_comm _ _
 
 instance lpOneAlg.instNormedCommRing : NormedCommRing (lpOneAlg M E) where
   mul_comm := lpOneAlg.instCommRing.mul_comm
@@ -1105,11 +548,14 @@ theorem norm_one_eq :
       fun m => if m = 0 then ‖lpAlgRingData.ofReal (E := E) (0 : M) (1 : 𝕜)‖ else 0 := by
     ext m; by_cases hm : m = 0
     · subst hm
-      change ‖lpAlgRingData.ofReal (E := E) 0 (DiscreteConvolution.addDelta (1 : 𝕜) 0)‖ = _
-      rw [DiscreteConvolution.addDelta_zero_eq]; simp
+      change ‖lpAlgRingData.ofReal (E := E) 0
+        (addDelta (1 : 𝕜) 0)‖ = _
+      rw [addDelta_zero_eq]; simp
     · rw [ite_eq_right hm]
-      show ‖lpAlgRingData.ofReal (E := E) m (DiscreteConvolution.addDelta (1 : 𝕜) m)‖ = 0
-      rw [DiscreteConvolution.addDelta_ne (1 : 𝕜) hm, lpAlgRingData.ofReal_zero, norm_zero]
+      show ‖lpAlgRingData.ofReal (E := E) m
+        (addDelta (1 : 𝕜) m)‖ = 0
+      rw [addDelta_ne (1 : 𝕜) hm, lpAlgRingData.ofReal_zero,
+        norm_zero]
   rw [h, tsum_ite_eq]
 
 instance instNormOneClass : NormOneClass (lpOneAlg M E) where

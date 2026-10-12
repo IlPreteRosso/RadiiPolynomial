@@ -19,7 +19,7 @@ or base-continuity claim is made.
 
 This file is independent of `lpOneAlg`. The legacy ten-field data `lpAlgRingData` and its
 scalar-compatibility witness `lpAlgSmulCompat` are derived from a `FiberTrivialization` in
-`WeightedL1/Algebra.lean` (one-way compatibility layer).
+`WeightedL1/Carrier.lean` (one-way compatibility layer).
 -/
 
 noncomputable section
@@ -85,9 +85,9 @@ lemma norm_equiv_symm_apply (m : M) (x : E m) :
     (equiv (E := E) m).symm (x + y) = (equiv m).symm x + (equiv m).symm y := map_add _ x y
 @[simp] lemma equiv_symm_neg (m : M) (x : E m) :
     (equiv (E := E) m).symm (-x) = -(equiv m).symm x := map_neg _ x
-@[simp] lemma equiv_symm_apply_equiv (m : M) (r : 𝕜) :
+lemma equiv_symm_apply_equiv (m : M) (r : 𝕜) :
     (equiv (E := E) m).symm (equiv m r) = r := LinearEquiv.symm_apply_apply _ r
-@[simp] lemma equiv_apply_equiv_symm (m : M) (x : E m) :
+lemma equiv_apply_equiv_symm (m : M) (x : E m) :
     equiv (E := E) m ((equiv m).symm x) = x := LinearEquiv.apply_symm_apply _ x
 
 /-! ### Continuity with the scaling constants `ω_m` and `1 / ω_m` -/

@@ -13,8 +13,9 @@ of complex Laurent characters to the physical subalgebra is not injective.
 
 These are the documentary counterexamples behind the physical spectrum and the
 Laurent restriction fibers (`Chebyshev/Spectrum/*`): they pin why the real-character
-route is dead and why the complex route is not one-to-one. (That each restriction
-fiber has at most two points is not proved here.)
+route is dead and why the complex route is not one-to-one. Each restriction fiber has at
+most two points, with generator values `z` and `z⁻¹` (`PhysicalSpectrum.restriction_eq_iff`
+with `LaurentSpectrum.characterEquivAnnulus`; not packaged as a theorem).
 -/
 
 noncomputable section

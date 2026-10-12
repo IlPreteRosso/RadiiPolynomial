@@ -10,11 +10,12 @@ import RadiiPolynomial.Algebra.Polynomial.CompPoly.Core
 
 Takes a single-argument lambda `fun (a : Fin L → R) => body` whose body is a
 polynomial expression in the projections `a 0, a 1, …, a (L-1)`, and produces
-the corresponding `MvPolyBridge.CompPoly L` term. This addresses the dual-write
-pattern in `Example83/Algebra.lean` (where `f_cpoly` is hand-written as
-an AST and `f` is the same expression via `evalBanach`) — with this
-elaborator, the AST can be generated from the `evalBanach`-side lambda
-(`Example83/Algebra.lean` itself still writes `f_cpoly` by hand).
+the corresponding `MvPolyBridge.CompPoly L` term. A certificate can thus generate the AST from
+the `evalBanach`-side lambda. The production `f_cpoly` definitions stay literal (`RENAMES.md`,
+design decision 2): Example 8.1 and Example 14.2.1 check their literal `f_cpoly` against
+`compPolyOf%` by `rfl` (`f_cpoly_reified`), and `Examples/Polynomial/Chebyshev.lean` reifies
+directly over the Chebyshev carrier. Example 8.3 (`Example83/Algebra.lean`) has no parity
+witness; it restates each component as a Banach-algebra lambda in `fderiv_f_0/1/2` and `Df`.
 
 ## Recognition rules
 
@@ -113,8 +114,8 @@ partial def reifyRatScalar (e : Expr) : MetaM Expr := do
     else throwError "reifyRatScalar: malformed Nat.cast at {← ppExpr e}"
   | (``Int.cast, args) | (``IntCast.intCast, args) =>
     if args.size ≥ 1 then
-      -- For prototype: only handle non-negative Int literals (constructed via
-      -- `Int.ofNat`); negation arises from outer `Neg.neg` matching.
+      -- A negative integer literal elaborates as `Neg.neg` of a natural literal and reaches
+      -- the `Neg.neg` branch.
       reifyRatScalar args[args.size - 1]!
     else throwError "reifyRatScalar: malformed Int.cast at {← ppExpr e}"
   | (``Int.ofNat, args) =>

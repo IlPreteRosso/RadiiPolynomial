@@ -80,14 +80,15 @@ theorem coe_gradCLM (p : CompPoly L) (a h : Fin L → symmetricSubalgebra ν) :
 /-- The Galerkin space `E := (FνN)^L`. -/
 abbrev E (ν : PosReal) (N L : ℕ) := Fin L → FνN ν N
 
-/-- Componentwise lift `I : E → (symmetricSubalgebra ν)^L`. -/
+/-- Componentwise lift `I : E → (symmetricSubalgebra ν)^L`: Mathlib's
+`ContinuousLinearMap.piMap` of the isometry `ιN` in every component. -/
 def I : E ν N L →L[ℝ] (Fin L → symmetricSubalgebra ν) :=
-  ContinuousLinearMap.pi fun l => (ιN (ν := ν) (N := N)).toContinuousLinearMap.comp
-    (ContinuousLinearMap.proj l)
+  ContinuousLinearMap.piMap fun _ => (ιN (ν := ν) (N := N)).toContinuousLinearMap
 
-/-- Componentwise projection `Π : (symmetricSubalgebra ν)^L → E`. -/
+/-- Componentwise projection `Π : (symmetricSubalgebra ν)^L → E`: Mathlib's
+`ContinuousLinearMap.piMap` of the projection `πN` in every component. -/
 def Pi' : (Fin L → symmetricSubalgebra ν) →L[ℝ] E ν N L :=
-  ContinuousLinearMap.pi fun l => (πN (ν := ν) (N := N)).comp (ContinuousLinearMap.proj l)
+  ContinuousLinearMap.piMap fun _ => πN (ν := ν) (N := N)
 
 @[simp] theorem I_apply (x : E ν N L) (l : Fin L) : I x l = ιN (x l) := rfl
 @[simp] theorem Pi'_apply (a : Fin L → symmetricSubalgebra ν) (l : Fin L) :

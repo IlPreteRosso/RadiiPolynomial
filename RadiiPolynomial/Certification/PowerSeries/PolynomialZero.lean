@@ -1,6 +1,6 @@
 import RadiiPolynomial.Applications.PowerSeries.PolynomialZero
 import RadiiPolynomial.Algebra.Polynomial.CompPoly.WeightedL1
-import RadiiPolynomial.Certification.LeanCertAdapter
+import RadiiPolynomial.Certification.Rational.Matrix
 import RadiiPolynomial.Certification.Witness
 import RadiiPolynomial.Certification.Rational.Grid
 import RadiiPolynomial.Certification.RadiiPolynomialQ
@@ -256,13 +256,8 @@ lemma norm_A_le :
 
 omit hc in
 /-- `‖x̄‖` = exact ℚ value. -/
-lemma norm_xbar (hsz : d.aQ.size ≤ d.N + 1) : ‖xbar‖ = (d.abarNormQ : ℝ) := by
-  rw [l1Weighted.norm_eq_Icc_sum_of_support _ d.N (fun n hn => by
-    rw [hx, a_eq_zero_of_lt hsz n hn, Rat.cast_zero])]
-  simp_rw [hx, hν]
-  unfold PolyZeroData.abarNormQ
-  push_cast
-  rfl
+lemma norm_xbar (hsz : d.aQ.size ≤ d.N + 1) : ‖xbar‖ = (d.abarNormQ : ℝ) :=
+  l1Weighted.norm_eq_ratCast_sum_of_support _ _ _ hx hν d.N (a_eq_zero_of_lt hsz)
 
 omit hc in
 /-- `Z₂` from the exact ℚ value, through the polynomial-map face (any degree). -/
@@ -322,8 +317,7 @@ theorem certified (d : PolyZeroData) {ν : PosReal} (hν : (ν : ℝ) = (d.νq :
   have hr' : (0 : ℝ) < d.r₀ := by exact_mod_cast hr
   refine ⟨hr', Y₀_le hν hx hc hsz hY, Z₀_le hν h0 hZ0, Z₁_le hν hx hsz hZ1,
     Z₂_le hν hx hsz hZ2, CompPoly.differentiable_polyMap d.P c, ?_, ?_⟩
-  · rw [generalRadiiPolynomial_ratCast]
-    exact_mod_cast hrad
+  · exact generalRadiiPolynomial_neg_of_Q_const _ _ _ _ _ hrad
   refine ScalarBlockDiagData.injective_toScalarCLM_of_finBlock_mul_close_to_one d.toReal.A
     d.toReal.Adag.finBlock0 ((defect_le hν).trans_lt (by exact_mod_cast hZ0.trans_lt hZ0lt)) ?_
   intro n _

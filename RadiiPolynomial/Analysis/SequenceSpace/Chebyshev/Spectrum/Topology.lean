@@ -11,9 +11,6 @@ global instance would compete with the operator-norm topology carried by the und
 continuous linear map, so it is deliberately not introduced. With that topology the
 set-level bijection of `Spectrum/Ellipse.lean` upgrades to a homeomorphism
 `characterHomeomorphEllipse : Character ν ≃ₜ Ellipse ν` in the coordinate `χ ↦ χ(g)`.
-
-Closes the "spectrum as a topological space" gap for the Chebyshev geometry: production
-bundles no topological spectrum object at all.
 -/
 
 noncomputable section
@@ -36,9 +33,8 @@ theorem continuous_character_apply (a : Physical ν) :
     Continuous (fun χ : Character ν => χ a) :=
   Gelfand.continuous_character_apply (R := ℝ) (Physical ν) ℂ a
 
-theorem continuous_ellipseCharacter : Continuous (ellipseCharacter ν) := by
-  apply continuous_induced_rng.mpr
-  exact continuous_pi (fun a => continuous_ellipseCharacter_apply ν a)
+theorem continuous_ellipseCharacter : Continuous (ellipseCharacter ν) :=
+  Gelfand.continuous_of_continuous_apply (continuous_ellipseCharacter_apply ν)
 
 /-- The complex character space of the production real physical algebra,
 with pointwise topology, is homeomorphic to the closed filled Bernstein

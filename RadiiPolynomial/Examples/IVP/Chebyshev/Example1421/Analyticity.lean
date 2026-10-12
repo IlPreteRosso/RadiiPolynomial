@@ -16,8 +16,6 @@ is real analytic on a neighbourhood of every point of `[−1, 1]`, the endpoints
 included. Uniqueness is still stated against the original, weaker competitor class,
 and no new certificate fact is used: the axiom set is the one of
 `main_solution_existsUnique_radius_one`.
-
-Closes the Chebyshev analyticity gap at the end-consumer level.
 -/
 
 open Metric Set RadiiPolynomial ChebyshevIVP Example1421

@@ -1,5 +1,6 @@
 import RadiiPolynomial.Applications.IVP.Chebyshev.Operator
 import RadiiPolynomial.Operators.BlockDiagonal.Lift
+import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided
 
 /-!
 # Block-Diagonal Defect CLM on XCheb (ℤ-Indexed Chebyshev Space)
@@ -8,7 +9,14 @@ Lifts the finite-block action `actionFinite` of a `SystemBlockDiagData` to a con
 linear map on `XCheb ν L` (ℤ-indexed Chebyshev space). The tail part of the data is not
 used; the intended input is a defect, whose tail model is `0`.
 
-The composed approximate derivative is `composedApproxCheb D = id - defectChebCLM D`.
+The lift is the Taylor lift on `XL1 ν L` (`instBlockDiagLiftXL1`) transported along the bundled
+maps `l1Chebyshev.OneSided.restr : ℓ¹_ν(ℤ) →L ℓ¹_ν(ℕ)` (‖restr x‖ ≤ ‖x‖) and
+`l1Chebyshev.natEmbed : ℓ¹_ν(ℕ) →L ℓ¹_ν(ℤ)` (an isometry): restrict each component to its
+nonnegative modes, apply `D.actionFinite`, re-embed with zero negative modes.
+
+The composed approximate derivative `composedApproxCheb D` is the generic
+`BlockDiagLift.composedApproxCLM`; it equals `id − defectChebCLM D`
+(`composedApproxCheb_eq_id_sub`).
 Norm bound, pointwise form: `‖defectCheb_apply D h‖ ≤ finiteBlockMatrixNorm(D.finBlock) * ‖h‖`
 (`defectCheb_norm_le`), from which `defectChebCLM` is built; the operator-norm form is not
 stated separately.
@@ -29,149 +37,103 @@ variable {ν : PosReal} {L N : ℕ} [NeZero L] [Fact (1 ≤ (ν : ℝ))]
 def toCoeffCheb (h : XCheb ν L) : SystemCoeff L :=
   fun l n => l1Chebyshev.toSeq (h l) (↑n : ℤ)
 
-/-! ## General lpOneAlg helpers for finitely-supported ℤ-indexed elements -/
+/-! ## Defect on XCheb -/
 
-/-- Norm of a finitely-supported lpOneAlg element equals the ℕ-finite sum.
-If `f(k) = 0` for `k < 0` and `‖f(↑n)‖ = 0` for `n > N`, then
-`‖f‖ = ∑ n : Fin(N+1), ‖f(↑n)‖`. Uses ℤ = ℕ+ ⊔ ℕ- decomposition. -/
-lemma lpOneAlg.norm_eq_natFinSum_of_finSupp (f : lpOneAlg ℤ (ScaledRealZ ν)) (N : ℕ)
-    (h_neg : ∀ m : ℕ, (f : ∀ k : ℤ, ScaledRealZ ν k) (Int.negSucc m) = 0)
-    (h_tail : ∀ n : ℕ, N < n → ‖(f : ∀ k : ℤ, ScaledRealZ ν k) (↑n : ℤ)‖ = 0) :
-    ‖f‖ = ∑ n : Fin (N + 1), ‖(f : ∀ k : ℤ, ScaledRealZ ν k) (↑(n : ℕ) : ℤ)‖ := by
-  set g : ℤ → ℝ := fun k => ‖(f : ∀ k : ℤ, ScaledRealZ ν k) k‖ with hg_def
-  have hg_summ : Summable g := lpOneAlg.summable_norm f
-  rw [lpOneAlg.norm_eq_tsum f,
-    tsum_of_nat_of_neg_add_one
-      (hg_summ.comp_injective (fun _ _ h => by omega))
-      (hg_summ.comp_injective (fun _ _ h => by omega))]
-  -- Negative part = 0
-  rw [show ∑' n : ℕ, g (-(↑n + 1)) = 0 from by
-    have : (fun n : ℕ => g (-(↑n + 1))) = fun _ => 0 := by
-      ext n; show ‖(f : ∀ k, ScaledRealZ ν k) (-(↑n + 1 : ℤ))‖ = 0
-      have : -(↑n + 1 : ℤ) = Int.negSucc n := by omega
-      rw [this, h_neg]; simp
-    rw [this]; exact tsum_zero]
-  -- ℕ-tsum → finite sum
-  rw [add_zero, tsum_eq_sum (s := Finset.range (N + 1))
-    (fun n hn => h_tail n (by simp [Finset.mem_range] at hn; omega))]
-  rw [← Fin.sum_univ_eq_sum_range]
-
-/-- Chebyshev coefficient subseries bound: `∑_{k≤N} |toSeq(f)(↑k)| * ν^k ≤ ‖f‖`. -/
-lemma l1Chebyshev_finSum_le_norm (f : l1Chebyshev ν) :
-    ∑ k : Fin (N + 1), |l1Chebyshev.toSeq f (↑(k : ℕ) : ℤ)| * (ν : ℝ) ^ (k : ℕ) ≤ ‖f‖ := by
-  have heq : ∀ k : Fin (N + 1),
-      |l1Chebyshev.toSeq f (↑(k : ℕ) : ℤ)| * (ν : ℝ) ^ (k : ℕ) = ‖f (↑(k : ℕ) : ℤ)‖ := fun k => by
-    rw [lpOneAlg.norm_eq_abs_toReal_mul_weight f (↑(k:ℕ) : ℤ)]
-    congr 1; simp [ScaledRealZ.norm_lpAlgRingData_ofReal, Int.natAbs_natCast]
-  simp_rw [heq]
-  calc ∑ k : Fin (N + 1), ‖f (↑(k : ℕ) : ℤ)‖
-      = ∑' k : Fin (N + 1), ‖f (↑(k : ℕ) : ℤ)‖ := (tsum_fintype _).symm
-    _ ≤ ∑' m : ℤ, ‖f m‖ := tsum_comp_le_tsum_of_inj
-          (lpOneAlg.summable_norm f) (fun _ => norm_nonneg _)
-          (fun a b h => by ext; omega)
-    _ = ‖f‖ := (lpOneAlg.norm_eq_tsum _).symm
-
-/-! ## Defect on XCheb: function + Memℓp -/
-
-/-- Raw ℤ-indexed sequence for the defect action: `D.actionFinite` on k ≥ 0, zero on k < 0. -/
-private def defectCheb_seq (D : SystemBlockDiagData L N)
-    (c : SystemCoeff L) (l : Fin L) : ∀ k : ℤ, ScaledRealZ ν k :=
-  fun k => match k with
-  | (n : ℕ) => lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (D.actionFinite c l n)
-  | Int.negSucc _ => 0
-
-section defectMemlp
-omit [NeZero L] [Fact (1 ≤ (ν : ℝ))]
-
-/-- The defect sequence is in ℓ¹ (finitely supported on modes 0..N). -/
-private lemma defectCheb_memℓp (D : SystemBlockDiagData L N)
-    (c : SystemCoeff L) (l : Fin L) :
-    Memℓp (defectCheb_seq (ν := ν) D c l) 1 := by
-  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
-  simp only [ENNReal.toReal_one, Real.rpow_one]
-  apply Summable.of_nat_of_neg_add_one
-  · -- Positive: finitely supported (actionFinite = 0 for n > N)
-    refine summable_of_ne_finset_zero (s := Finset.range (N + 1)) fun n hn => ?_
-    have hlt : N < n := by simp [Finset.mem_range] at hn; omega
-    show ‖defectCheb_seq D c l (↑n : ℤ)‖ = 0
-    simp only [defectCheb_seq, SystemBlockDiagData.actionFinite_tail _ _ _ _ hlt,
-      lpAlgRingData.ofReal_zero, norm_zero]
-  · -- Negative: all zeros
-    have : (fun n : ℕ => ‖defectCheb_seq (ν := ν) D c l (-(↑n + 1 : ℤ))‖) =
-        fun _ => (0 : ℝ) := by
-      ext n; have h : -(↑n + 1 : ℤ) = Int.negSucc n := by omega
-      rw [h]; simp [defectCheb_seq]
-    rw [this]; exact summable_zero
-
-end defectMemlp
-
-/-- The defect applied to XCheb, returning a well-typed XCheb element. -/
+/-- The defect applied to XCheb: the XL1 lift (`D.actionFinite` on `toCoeff`, rebuilt by `ofCoeff`)
+of the restricted components `l1Chebyshev.OneSided.restr (h j)`, re-embedded by
+`l1Chebyshev.natEmbed`. Under `[NeZero L]` this is `BlockDiagLift.liftDefect` at
+`instBlockDiagLiftXL1`, transported (`instBlockDiagLiftXCheb`). -/
 def defectCheb_apply (D : SystemBlockDiagData L N) (h : XCheb ν L) : XCheb ν L := fun l =>
-  ⟨⟨defectCheb_seq D (toCoeffCheb h) l, defectCheb_memℓp D (toCoeffCheb h) l⟩⟩
+  l1Chebyshev.natEmbed
+    (ofCoeff (ν := ν) (D.actionFinite (toCoeff fun j => l1Chebyshev.OneSided.restr (h j)))
+      (fun l => D.actionFinite_mem (toCoeff fun j => l1Chebyshev.OneSided.restr (h j)) l) l)
+
+omit [NeZero L] in
+/-- The restricted components have the ℕ-coefficients of `h`. -/
+private lemma toCoeff_restr (h : XCheb ν L) :
+    toCoeff (ν := ν) (fun j => l1Chebyshev.OneSided.restr (h j)) = toCoeffCheb h :=
+  funext₂ fun j k => l1Chebyshev.OneSided.restr_toSeq (h j) k
+
+/-! ### Coefficient faces of the defect -/
+
+omit [NeZero L] in
+/-- The defect on the nonnegative modes: the finite block action on the ℕ-coefficients. -/
+theorem defectCheb_apply_toSeq_natCast (D : SystemBlockDiagData L N) (h : XCheb ν L)
+    (l : Fin L) (n : ℕ) :
+    l1Chebyshev.toSeq (defectCheb_apply D h l) (n : ℤ) = D.actionFinite (toCoeffCheb h) l n := by
+  rw [defectCheb_apply, l1Chebyshev.natEmbed_toSeq_natCast]
+  change toCoeff (ofCoeff (ν := ν) _ _) l n = _
+  rw [toCoeff_ofCoeff, toCoeff_restr]
+
+omit [NeZero L] in
+/-- The defect vanishes on the negative modes. -/
+theorem defectCheb_apply_toSeq_negSucc (D : SystemBlockDiagData L N) (h : XCheb ν L)
+    (l : Fin L) (m : ℕ) :
+    l1Chebyshev.toSeq (defectCheb_apply D h l) (Int.negSucc m) = 0 := by
+  rw [defectCheb_apply, l1Chebyshev.natEmbed_toSeq_negSucc]
 
 /-! ### Linearity -/
 
 omit [NeZero L] in
 lemma defectCheb_apply_add (D : SystemBlockDiagData L N) (h₁ h₂ : XCheb ν L) :
     defectCheb_apply D (h₁ + h₂) = defectCheb_apply D h₁ + defectCheb_apply D h₂ := by
-  funext l; apply lpOneAlg.ext_toRealSeq; funext k
-  show lpAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb (h₁ + h₂)) l k) =
-    lpAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb h₁) l k) +
-    lpAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb h₂) l k)
-  cases k with
-  | ofNat n =>
-    simp only [defectCheb_seq]
-    rw [show toCoeffCheb (h₁ + h₂) = fun l n => toCoeffCheb h₁ l n + toCoeffCheb h₂ l n from by
-      ext l n; simp [toCoeffCheb, l1Chebyshev.toSeq, lpOneAlg.toRealSeq_add]]
-    exact (SystemBlockDiagData.actionFinite_add D _ _).symm ▸ rfl
-  | negSucc _ => simp [defectCheb_seq, lpAlgRingData.toReal_zero]
+  have hc : toCoeffCheb (h₁ + h₂) = fun l n => toCoeffCheb h₁ l n + toCoeffCheb h₂ l n :=
+    funext₂ fun l n => l1Chebyshev.toSeq_add (h₁ l) (h₂ l) n
+  refine funext fun l => l1Chebyshev.ext_natCast_negSucc (fun n => ?_) (fun m => ?_)
+  · rw [Pi.add_apply, l1Chebyshev.toSeq_add, defectCheb_apply_toSeq_natCast,
+      defectCheb_apply_toSeq_natCast, defectCheb_apply_toSeq_natCast, hc]
+    exact congr_fun (congr_fun (SystemBlockDiagData.actionFinite_add D _ _) l) n
+  · rw [Pi.add_apply, l1Chebyshev.toSeq_add, defectCheb_apply_toSeq_negSucc,
+      defectCheb_apply_toSeq_negSucc, defectCheb_apply_toSeq_negSucc, add_zero]
 
 omit [NeZero L] in
 lemma defectCheb_apply_smul (D : SystemBlockDiagData L N) (r : ℝ) (h : XCheb ν L) :
     defectCheb_apply D (r • h) = r • defectCheb_apply D h := by
-  funext l; apply lpOneAlg.ext_toRealSeq; funext k
-  show lpAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb (r • h)) l k) =
-    r * lpAlgRingData.toReal k (defectCheb_seq D (toCoeffCheb h) l k)
-  cases k with
-  | ofNat n =>
-    simp only [defectCheb_seq]
-    rw [show toCoeffCheb (r • h) = fun l n => r * toCoeffCheb h l n from by
-      ext l n; simp [toCoeffCheb, l1Chebyshev.toSeq, lpOneAlg.toRealSeq_smul]]
-    exact (SystemBlockDiagData.actionFinite_smul D r _).symm ▸ rfl
-  | negSucc _ => simp [defectCheb_seq, lpAlgRingData.toReal_zero]
+  have hc : toCoeffCheb (r • h) = fun l n => r * toCoeffCheb h l n :=
+    funext₂ fun l n => l1Chebyshev.toSeq_smul r (h l) n
+  refine funext fun l => l1Chebyshev.ext_natCast_negSucc (fun n => ?_) (fun m => ?_)
+  · rw [Pi.smul_apply, l1Chebyshev.toSeq_smul, defectCheb_apply_toSeq_natCast,
+      defectCheb_apply_toSeq_natCast, hc]
+    exact congr_fun (congr_fun (SystemBlockDiagData.actionFinite_smul D r _) l) n
+  · rw [Pi.smul_apply, l1Chebyshev.toSeq_smul, defectCheb_apply_toSeq_negSucc,
+      defectCheb_apply_toSeq_negSucc, mul_zero]
 
 /-! ### Norm bound -/
 
-/-- Norm bound: `‖defectCheb(D, h)‖ ≤ finiteBlockMatrixNorm(D.finBlock) * ‖h‖`.
-
-Proof outline: the defect is finitely supported (modes 0..N), so its ℤ-norm equals
-the weighted finite sum of `|actionFinite(c)(l)(n)| * ν^n`. This is bounded by
-`blockRowNorm * ‖h‖` per component (same bound as the ℕ-indexed case via
-`finWeightedMatrixNorm_mulVec_le`), then aggregated to `finiteBlockMatrixNorm * ‖h‖`. -/
+/-- Norm bound: `‖defectCheb(D, h)‖ ≤ finiteBlockMatrixNorm(D.finBlock) * ‖h‖`, inherited from
+the XL1 lift (`liftDefect_norm_le` at `instBlockDiagLiftXL1`) through `‖restr x‖ ≤ ‖x‖` and the
+isometry `natEmbed`. -/
 lemma defectCheb_norm_le (D : SystemBlockDiagData L N) (h : XCheb ν L) :
     ‖defectCheb_apply D h‖ ≤ finiteBlockMatrixNorm ν D.finBlock * ‖h‖ := by
+  have hr : ‖(fun j => l1Chebyshev.OneSided.restr (h j) : XL1 ν L)‖ ≤ ‖h‖ :=
+    (pi_norm_le_iff_of_nonneg (norm_nonneg h)).2 fun j =>
+      (l1Chebyshev.OneSided.norm_restr_le (h j)).trans (norm_le_pi_norm h j)
   refine (pi_norm_le_iff_of_nonneg (mul_nonneg (finiteBlockMatrixNorm_nonneg (ν := ν) _)
     (norm_nonneg _))).2 fun l => ?_
-  set c := toCoeffCheb h
-  -- ℤ-norm → finite sum (defect is finitely supported)
-  have h_norm : ‖defectCheb_apply D h l‖ =
-      ∑ n : Fin (N + 1), |D.actionFinite c l (n : ℕ)| * (ν : ℝ) ^ (n : ℕ) := by
-    conv_lhs => rw [lpOneAlg.norm_eq_natFinSum_of_finSupp (defectCheb_apply D h l) N
-      (fun m => rfl)
-      (fun n hn => by
-        show ‖(defectCheb_seq D c l (↑n : ℤ) : ScaledRealZ ν _)‖ = 0
-        simp [defectCheb_seq, SystemBlockDiagData.actionFinite_tail _ _ _ _ hn,
-          lpAlgRingData.ofReal_zero])]
-    exact Finset.sum_congr rfl fun ⟨n, _⟩ _ => rfl
-  -- Unfold actionFinite + apply general weighted norm bound + aggregate
-  rw [h_norm]
-  have h_unfold : ∀ n : Fin (N + 1), D.actionFinite c l (↑n : ℕ) =
-      ∑ j : Fin L, ∑ k : Fin (N + 1), D.finBlock l j n k * c j ↑k := fun n =>
-    SystemBlockDiagData.actionFinite_finite D c l ↑n (by omega)
-  simp_rw [h_unfold]
-  exact (D.actionFinite_weighted_norm_le (ν := ν) c l fun j =>
-    (l1Chebyshev_finSum_le_norm (h j)).trans (norm_le_pi_norm h j)).trans
-    (mul_le_mul_of_nonneg_right (Finset.le_sup' _ (Finset.mem_univ l)) (norm_nonneg h))
+  rw [defectCheb_apply, l1Chebyshev.norm_natEmbed]
+  exact (norm_le_pi_norm _ l).trans ((@BlockDiagLift.liftDefect_norm_le (XL1 ν L) _ _ L _ ν
+    instBlockDiagLiftXL1 N D _).trans
+      (mul_le_mul_of_nonneg_left hr (finiteBlockMatrixNorm_nonneg (ν := ν) _)))
+
+/-! ## BlockDiagLift Instance for XCheb -/
+
+/-- The Chebyshev system space `XCheb ν L = (l1Chebyshev ν)^L` supports block-diagonal
+defect lifting: the XL1 lift `instBlockDiagLiftXL1` of the restricted components
+(`l1Chebyshev.OneSided.restr`), re-embedded by `l1Chebyshev.natEmbed` (= `defectCheb_apply`). -/
+instance instBlockDiagLiftXCheb : BlockDiagLift (XCheb ν L) L ν where
+  liftDefect D h := fun l => l1Chebyshev.natEmbed
+    (@BlockDiagLift.liftDefect (XL1 ν L) _ _ L _ ν instBlockDiagLiftXL1 _ D
+      (fun j => l1Chebyshev.OneSided.restr (h j)) l)
+  liftDefect_add D h₁ h₂ := defectCheb_apply_add D h₁ h₂
+  liftDefect_smul D r h := defectCheb_apply_smul D r h
+  liftDefect_norm_le D h := defectCheb_norm_le D h
+
+/-- The XCheb instance's defect action is `defectCheb_apply`, so `simp` normalizes
+`composedApproxCheb D h` to `h - defectCheb_apply D h` through the generic
+`composedApproxCLM_apply`. -/
+@[simp] lemma liftDefect_eq_defectCheb_apply (D : SystemBlockDiagData L N) (h : XCheb ν L) :
+    @BlockDiagLift.liftDefect (XCheb ν L) _ _ L _ ν instBlockDiagLiftXCheb N D h =
+      defectCheb_apply D h := rfl
 
 /-! ### CLM construction -/
 
@@ -184,28 +146,18 @@ def defectChebCLM (D : SystemBlockDiagData L N) : XCheb ν L →L[ℝ] XCheb ν 
     (finiteBlockMatrixNorm ν D.finBlock)
     (defectCheb_norm_le D)
 
-/-- Linear map underlying the composed approximate derivative on XCheb. -/
-private def composedApprox_lm (D : SystemBlockDiagData L N) :
-    XCheb ν L →ₗ[ℝ] XCheb ν L where
-  toFun h := h - defectCheb_apply D h
-  map_add' h₁ h₂ := by rw [defectCheb_apply_add]; abel
-  map_smul' r h := by rw [defectCheb_apply_smul]; simp [smul_sub]
-
-private lemma composedApprox_bound (D : SystemBlockDiagData L N) (h : XCheb ν L) :
-    ‖composedApprox_lm D h‖ ≤ (1 + finiteBlockMatrixNorm ν D.finBlock) * ‖h‖ :=
-  calc ‖h - defectCheb_apply D h‖
-      ≤ ‖h‖ + ‖defectCheb_apply D h‖ := norm_sub_le h _
-    _ ≤ ‖h‖ + finiteBlockMatrixNorm ν D.finBlock * ‖h‖ :=
-        add_le_add le_rfl (defectCheb_norm_le D h)
-    _ = (1 + finiteBlockMatrixNorm ν D.finBlock) * ‖h‖ := by ring
-
-/-- The composed approximate derivative on XCheb: `h ↦ h - defect(h)`. -/
-def composedApproxCheb (D : SystemBlockDiagData L N) : XCheb ν L →L[ℝ] XCheb ν L :=
-  LinearMap.mkContinuous (composedApprox_lm D)
-    (1 + finiteBlockMatrixNorm ν D.finBlock) (composedApprox_bound D)
+/-- The composed approximate derivative on XCheb, `h ↦ h - defect(h)`: the generic
+`BlockDiagLift.composedApproxCLM` at the XCheb instance. -/
+abbrev composedApproxCheb (D : SystemBlockDiagData L N) : XCheb ν L →L[ℝ] XCheb ν L :=
+  BlockDiagLift.composedApproxCLM (X := XCheb ν L) (ν := ν) D
 
 @[simp] lemma composedApproxCheb_apply (D : SystemBlockDiagData L N) (h : XCheb ν L) :
     composedApproxCheb D h = h - defectCheb_apply D h := rfl
+
+/-- `composedApproxCheb D = id − defectChebCLM D`. -/
+theorem composedApproxCheb_eq_id_sub (D : SystemBlockDiagData L N) :
+    composedApproxCheb (ν := ν) D = ContinuousLinearMap.id ℝ _ - defectChebCLM D := by
+  ext1 h; rfl
 
 /-! ### Key properties -/
 
@@ -213,45 +165,32 @@ def composedApproxCheb (D : SystemBlockDiagData L N) : XCheb ν L →L[ℝ] XChe
 lemma composedApproxCheb_Z₀ (D : SystemBlockDiagData L N) {Z₀ : ℝ}
     (hZ₀ : finiteBlockMatrixNorm ν D.finBlock ≤ Z₀) :
     ‖ContinuousLinearMap.id ℝ (XCheb ν L) - composedApproxCheb (ν := ν) D‖ ≤ Z₀ := by
-  refine ContinuousLinearMap.opNorm_le_bound _ (le_trans
-    (finiteBlockMatrixNorm_nonneg (ν := ν) _) hZ₀) fun x => ?_
-  -- Use sub_apply to evaluate: (id - composedApprox)(x) = x - (x - defect(x)) = defect(x)
-  rw [sub_apply, ContinuousLinearMap.id_apply, composedApproxCheb_apply,
-    sub_sub_cancel]
-  exact (defectCheb_norm_le D x).trans (mul_le_mul_of_nonneg_right hZ₀ (norm_nonneg x))
+  rw [composedApproxCheb]
+  exact BlockDiagLift.composedApprox_Z₀ (X := XCheb ν L) D hZ₀
+
+/-- The composed approximate derivative on the nonnegative modes. -/
+theorem composedApproxCheb_toSeq_natCast (D : SystemBlockDiagData L N) (h : XCheb ν L)
+    (l : Fin L) (n : ℕ) :
+    l1Chebyshev.toSeq (composedApproxCheb (ν := ν) D h l) (n : ℤ) =
+      l1Chebyshev.toSeq (h l) n - D.actionFinite (toCoeffCheb h) l n := by
+  rw [composedApproxCheb_apply, Pi.sub_apply, l1Chebyshev.toSeq_sub,
+    defectCheb_apply_toSeq_natCast]
+
+/-- The composed approximate derivative is the identity on the negative modes. -/
+theorem composedApproxCheb_toSeq_negSucc (D : SystemBlockDiagData L N) (h : XCheb ν L)
+    (l : Fin L) (m : ℕ) :
+    l1Chebyshev.toSeq (composedApproxCheb (ν := ν) D h l) (Int.negSucc m) =
+      l1Chebyshev.toSeq (h l) (Int.negSucc m) := by
+  rw [composedApproxCheb_apply, Pi.sub_apply, l1Chebyshev.toSeq_sub,
+    defectCheb_apply_toSeq_negSucc, sub_zero]
 
 /-- Tail identity: composedApproxCheb acts as identity on real values at modes n > N. -/
 lemma composedApproxCheb_tail_toReal (D : SystemBlockDiagData L N)
     (h : XCheb ν L) (l : Fin L) (n : ℕ) (hn : N < n) :
     lpOneAlg.toRealSeq (composedApproxCheb (ν := ν) D h l) (↑n : ℤ) =
       lpOneAlg.toRealSeq (h l) (↑n : ℤ) := by
-  -- composedApproxCheb D h = h - defectCheb_apply D h (by rfl)
-  -- composedApproxCheb D h l = (h - defect(h)) l = h l - defect(h) l
-  show lpOneAlg.toRealSeq ((h l - defectCheb_apply D h l : l1Chebyshev ν)) (↑n : ℤ) = _
-  -- toRealSeq(a - b) = toRealSeq(a) - toRealSeq(b)
-  have hsub : lpOneAlg.toRealSeq (h l - defectCheb_apply D h l : l1Chebyshev ν) (↑n : ℤ) =
-      lpOneAlg.toRealSeq (h l) (↑n : ℤ) - lpOneAlg.toRealSeq (defectCheb_apply D h l) (↑n : ℤ) :=
-    congr_fun (lpOneAlg.toRealSeq_add (h l) (-defectCheb_apply D h l)) (↑n : ℤ) ▸ by
-      simp [sub_eq_add_neg, lpOneAlg.toRealSeq]; rfl
-  rw [hsub]
-  -- defect on tail = 0
-  have h_zero : lpOneAlg.toRealSeq (defectCheb_apply D h l) (↑n : ℤ) = 0 := by
-    show lpAlgRingData.toReal (↑n : ℤ) (defectCheb_seq D (toCoeffCheb h) l (↑n : ℤ)) = 0
-    simp [defectCheb_seq, SystemBlockDiagData.actionFinite_tail _ _ _ _ hn,
-      lpAlgRingData.toReal_ofReal]
-  rw [h_zero, sub_zero]
-
-/-! ## BlockDiagLift Instance for XCheb -/
-
-/-- The Chebyshev system space `XCheb ν L = (l1Chebyshev ν)^L` supports block-diagonal
-defect lifting via ℕ-coefficient extraction (`toCoeffCheb`) and ℤ-embedding
-(`defectCheb_apply`). -/
-instance instBlockDiagLiftXCheb : BlockDiagLift (XCheb ν L) L ν where
-  extractCoeff := toCoeffCheb
-  liftDefect D h := defectCheb_apply D h
-  liftDefect_add D h₁ h₂ := defectCheb_apply_add D h₁ h₂
-  liftDefect_smul D r h := defectCheb_apply_smul D r h
-  liftDefect_norm_le D h := defectCheb_norm_le D h
+  rw [← l1Chebyshev.toSeq, composedApproxCheb_toSeq_natCast,
+    SystemBlockDiagData.actionFinite_tail _ _ _ _ hn, sub_zero]; rfl
 
 end ChebyshevIVP
 

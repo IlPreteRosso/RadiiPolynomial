@@ -6,8 +6,11 @@ import RadiiPolynomial.Tactic.AutoPolyFDeriv
 
 One-dimensional infrastructure for f(x) = x² - c: `smulCLM` (scalar CLMs), the
 Fréchet derivative lemmas, and the Z₂ bound pattern. Everything lives in
-`namespace Example245`; the single consumer is `Example245/Certificate.lean`,
-which calls `general_radii_polynomial_theorem` directly.
+`namespace Example245`. `Example245/Certificate.lean` uses only `smulCLM` (in its
+parameter abbreviations `A`, `A_dag`); its `main_theorem` goes through
+`StdFinDimData.existsUniqueC`. The ReferenceBook consumes the rest:
+`ReferenceBook/Ch02/Sec4.lean` (Examples 2.4.5 and 2.4.7) and `ReferenceBook/Ch02/Sec7.lean`
+use ten of its eleven declarations: `smulCLM` and every lemma except `id_eq_smulCLM_one`.
 -/
 
 open scoped Topology BigOperators

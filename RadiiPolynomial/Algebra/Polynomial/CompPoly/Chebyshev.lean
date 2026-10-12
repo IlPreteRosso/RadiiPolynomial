@@ -35,19 +35,17 @@ local instance : IsScalarTower ℚ ℝ (l1Chebyshev ν) :=
 def eval (p : CompPoly L) (a : Fin L → l1Chebyshev ν) : l1Chebyshev ν :=
   p.evalBanach (fun i => l1Chebyshev.symmetrize (a i))
 
-private def physicalInput (a : l1Chebyshev ν) : l1Chebyshev.symmetricSubalgebra ν :=
-  ⟨l1Chebyshev.symmetrize a, l1Chebyshev.symmetrize_isSymmetric a⟩
-
 private theorem coe_physical_eval (p : CompPoly L) (a : Fin L → l1Chebyshev ν) :
-    (↑(p.evalBanach (fun i => physicalInput (a i)) :
+    (↑(p.evalBanach (fun i => l1Chebyshev.symmetricRetract ν (a i)) :
       l1Chebyshev.symmetricSubalgebra ν) : l1Chebyshev ν) = eval p a :=
-  map_evalBanach (l1Chebyshev.symmetricSubalgebra ν).val p (fun i => physicalInput (a i))
+  map_evalBanach (l1Chebyshev.symmetricSubalgebra ν).val p
+    (fun i => l1Chebyshev.symmetricRetract ν (a i))
 
 /-- Polynomial outputs lie in the physical, flip-fixed algebra. -/
 theorem eval_isSymmetric (p : CompPoly L) (a : Fin L → l1Chebyshev ν) :
     (eval p a).IsSymmetric := by
   rw [← coe_physical_eval]
-  exact (p.evalBanach (fun i => physicalInput (a i))).property
+  exact (p.evalBanach (fun i => l1Chebyshev.symmetricRetract ν (a i))).property
 
 /-- Pointwise evaluation commutes with the stored-coefficient nonlinearity. -/
 theorem eval_eval (p : CompPoly L) (a : Fin L → l1Chebyshev ν)
@@ -56,7 +54,7 @@ theorem eval_eval (p : CompPoly L) (a : Fin L → l1Chebyshev ν)
       p.evalBanach (fun i => l1Chebyshev.eval (a i) t) := by
   rw [← coe_physical_eval]
   change (l1Chebyshev.symmetricEvalCharacter ν t ht).toAlgHom
-    (p.evalBanach (fun i => physicalInput (a i))) = _
+    (p.evalBanach (fun i => l1Chebyshev.symmetricRetract ν (a i))) = _
   rw [map_evalBanach]
   congr 1
 

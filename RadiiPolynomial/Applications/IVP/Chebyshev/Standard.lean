@@ -28,8 +28,10 @@ directly: it calls the faces of `Chebyshev/Polynomial.lean`
 (`StdChebIVPData.existsUnique_of_compPoly`, `Z₂_le_of_compPoly_max`) and of
 `Chebyshev/AnalyticPolynomial.lean` (`solution_existsUnique_of_compPoly`,
 `solution_existsUnique_of_two_le_of_compPoly`,
-`analytic_solution_existsUnique_of_two_le_of_compPoly`). The only bound still assembled at
-the example level is `Z₁` (componentwise, `chebyshev_Z₁_le_relaxed`).
+`analytic_solution_existsUnique_of_two_le_of_compPoly`). `Z₁` is assembled at the
+certification layer by `StdChebIVPData.Z₁_le_of_Q` / `Z₁_le_of_checksK`
+(Certification/IVP/Chebyshev.lean) from `chebyshev_Z₁_le_relaxed`; Example 14.2.1 calls
+`Z₁_le_of_checksK`.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -145,21 +147,8 @@ lemma abar_seq_eq_getD (l : Fin L) (k : ℕ) :
 /-- Memℓp proof for the finitely-supported abar embedding. -/
 lemma abar_memℓp (l : Fin L) :
     Memℓp (show ∀ k : ℤ, ScaledRealZ ν k from
-      ChebyshevIVP.embedNatToInt (d.abar_seq l)) 1 := by
-  rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
-  simp only [ENNReal.toReal_one, Real.rpow_one]
-  apply Summable.of_nat_of_neg_add_one
-  · refine summable_of_ne_finset_zero (s := Finset.range (N + 1)) fun n hn => ?_
-    have hlt : N < n := by simp [Finset.mem_range] at hn; omega
-    show ‖(show ∀ k : ℤ, ScaledRealZ ν k from
-      ChebyshevIVP.embedNatToInt (d.abar_seq l)) (↑n : ℤ)‖ = 0
-    simp [d.abar_seq_support l n hlt, lpAlgRingData.ofReal_zero, norm_zero]
-  · have : (fun n : ℕ => ‖(show ∀ k : ℤ, ScaledRealZ ν k from
-        ChebyshevIVP.embedNatToInt (d.abar_seq l)) (-(↑n + 1 : ℤ))‖) =
-        fun _ => (0 : ℝ) := by
-      ext n; have h : -(↑n + 1 : ℤ) = Int.negSucc n := by omega
-      rw [h]; simp
-    rw [this]; exact summable_zero
+      ChebyshevIVP.embedNatToInt (d.abar_seq l)) 1 :=
+  embedNatToInt_memℓp_of_finSupp _ N (d.abar_seq_support l)
 
 /-- Approximate solution as XCheb (ℤ-indexed, zeros on negatives and beyond N). -/
 def abar : XCheb ν L := fun l =>

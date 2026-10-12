@@ -16,9 +16,8 @@ closed annulus `ν⁻¹ ≤ ‖z‖ ≤ ν`, including its circle degeneration a
 Parameter continuity comes from the uniform weighted lift
 `synthesis : l1Chebyshev ν →L[ℝ] (Annulus ν →ᵇ ℂ)` built on `powerColumn`.
 
-Before this module production had the annulus characters `evalLaurentC` and
-`algHom_ext` but no packaged classification or topology; the module is independent
-of `Geometric/Spectrum.lean`.
+The module is independent of its Taylor sibling `Geometric/Spectrum.lean` (disc characters); both
+specialize `Gelfand.pointwiseTopology`.
 -/
 
 noncomputable section
@@ -27,11 +26,14 @@ open scoped BoundedContinuousFunction
 namespace RadiiPolynomial.LaurentSpectrum
 open lpOneAlg
 
+/-- Continuous complex characters of the real bilateral algebra `l1Chebyshev ν`. -/
 abbrev Character (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] := l1Chebyshev ν →A[ℝ] ℂ
+/-- The closed annulus `ν⁻¹ ≤ ‖z‖ ≤ ν` (a circle at `ν = 1`). -/
 abbrev Annulus (ν : PosReal) := {z : ℂ // (ν : ℝ)⁻¹ ≤ ‖z‖ ∧ ‖z‖ ≤ (ν : ℝ)}
 
 variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 
+/-- The Laurent evaluation `a ↦ ∑ₖ aₖ zᵏ` at a point of the annulus, as a character. -/
 def annulusCharacter (z : Annulus ν) : Character ν :=
   l1Chebyshev.evalLaurentC ν z.val z.property
 
@@ -43,6 +45,7 @@ def annulusCharacter (z : Annulus ν) : Character ν :=
     annulusCharacter ν z (single k 1) = z.val^k :=
   l1Chebyshev.evalLaurentC_single ν z.val z.property k
 
+/-- Characters are classified by their generator value `χ e₁`, a point of the annulus. -/
 def characterEquivAnnulus : Character ν ≃ Annulus ν where
   toFun χ := ⟨χ (single 1 1),
     l1Chebyshev.inv_le_norm_genUnit ν χ, l1Chebyshev.norm_genUnit_le ν χ⟩
@@ -55,6 +58,7 @@ theorem annulus_norm_zpow_le (z : Annulus ν) (k : ℤ) : ‖z.val^k‖ ≤ (ν 
   have h := lpOneAlg.norm_annulus_zpow_le ν z.property k
   simpa only [Units.val_zpow_eq_zpow_val, Units.val_mk0, one_mul] using h
 
+/-- The bounded continuous column `z ↦ zᵏ` on the annulus, of sup norm at most `ν^|k|`. -/
 def powerColumn (k : ℤ) : Annulus ν →ᵇ ℂ :=
   BoundedContinuousFunction.ofNormedAddCommGroup (fun z => z.val^k)
     (continuous_subtype_val.zpow₀ k (fun z => Or.inl (lpOneAlg.ne_zero_of_annulus ν z.property)))
@@ -67,6 +71,7 @@ omit [Fact (1 ≤ (ν : ℝ))] in
 theorem norm_powerColumn_le (k : ℤ) : ‖powerColumn ν k‖ ≤ (ν : ℝ)^k.natAbs :=
   BoundedContinuousFunction.norm_ofNormedAddCommGroup_le _ (pow_nonneg ν.coe_nonneg k.natAbs) _
 
+/-- All annulus evaluations at once: the weighted-ℓ¹ lift of the columns `powerColumn`. -/
 def synthesis : l1Chebyshev ν →L[ℝ] (Annulus ν →ᵇ ℂ) :=
   liftCLM (powerColumn ν) 1 (fun k => by
     rw [ScaledRealZ.norm_lpAlgRingData_ofReal]
@@ -91,6 +96,8 @@ theorem continuous_annulusCharacter_apply (a : l1Chebyshev ν) :
   rw [he]
   exact (synthesis ν a).continuous
 
+/-- Topology of pointwise convergence on the actual bilateral coefficient
+vectors. Kept explicit to avoid changing any global topology instance. -/
 @[instance_reducible]
 def pointwiseTopology : TopologicalSpace (Character ν) :=
   Gelfand.pointwiseTopology ℝ (l1Chebyshev ν) ℂ
@@ -101,9 +108,8 @@ theorem continuous_character_apply (a : l1Chebyshev ν) :
     Continuous (fun χ : Character ν => χ a) :=
   Gelfand.continuous_character_apply (R := ℝ) (l1Chebyshev ν) ℂ a
 
-theorem continuous_annulusCharacter : Continuous (annulusCharacter ν) := by
-  apply continuous_induced_rng.mpr
-  exact continuous_pi (fun a => continuous_annulusCharacter_apply ν a)
+theorem continuous_annulusCharacter : Continuous (annulusCharacter ν) :=
+  Gelfand.continuous_of_continuous_apply (continuous_annulusCharacter_apply ν)
 
 /-- Complex characters of the actual real bilateral coefficient algebra form
 the closed annulus, including its circle degeneration at ν=1. -/

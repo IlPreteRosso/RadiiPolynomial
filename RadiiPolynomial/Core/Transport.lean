@@ -5,8 +5,8 @@ import RadiiPolynomial.Core.Theorem
 
 A radii-polynomial certificate transports along continuous linear equivalences
 of the ambient spaces, at a price κ = αβ set by the operator norms of the
-domain equivalence and its inverse. Developed 2026-08-24 as the
-`tmp/kappa_transport` experiment; promoted to `Core` 2026-08-25.
+domain equivalence and its inverse. Developed 2026-08-24 as an experiment;
+promoted to `Core` 2026-08-25.
 
 Contents:
 * `transported_radii_identity` — the exact price algebra
@@ -36,6 +36,8 @@ Instances: `Examples/Transport/KappaToy.lean` (toy, κ = 8/3 through
 -/
 
 open Metric ContinuousLinearMap
+
+namespace RadiiPolynomial
 
 section PriceAlgebra
 
@@ -273,8 +275,6 @@ Engine-level transport along continuous linear equivalences and isometries (name
 * `existsUnique_zero_transport(_linear)` — a unique zero in a closed ball transports along an
   isometric equivalence.
 -/
-
-namespace RadiiPolynomial
 
 section PulledBackNorms
 

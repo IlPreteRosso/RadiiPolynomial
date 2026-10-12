@@ -30,7 +30,7 @@ a finite-support computation of `eval(c, t)`.
 
 Branch *uniqueness* among analytic candidates with the right initial value
 and trajectory bound (using IFT or elementary continuity since `2x_0 ≠ 0`)
-is currently not formalized — deferred until paper section needs it.
+is not formalized here.
 -/
 
 open Set Metric RadiiPolynomial

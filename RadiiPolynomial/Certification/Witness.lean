@@ -1,7 +1,7 @@
 import RadiiPolynomial.Operators.BlockDiagonal.Scalar
 
 /-!
-# WitnessSpec — General Block-Diagonal Witness Infrastructure
+# Witness reductions — block-diagonal norms on finitely supported vectors
 
 Equation-independent structural lemmas that reduce the norm of a `SystemBlockDiagData` operator
 applied to a finitely supported vector to evaluable finite sums. These bridge the gap between
@@ -135,6 +135,17 @@ noncomputable def l1OfArrayQ {ν : PosReal} (arr : Array ℚ) : l1Weighted ν :=
 /-- General in `ν`, `arr`. -/
 @[simp] theorem l1OfArrayQ_toSeq {ν : PosReal} (arr : Array ℚ) (n : ℕ) :
     l1Weighted.toSeq (l1OfArrayQ (ν := ν) arr) n = ((arr.getD n 0 : ℚ) : ℝ) := rfl
+
+/-- Bridge: an element of `ℓ¹_ν` whose coefficients are the casts of rationals `q` supported in
+`[0, M]`, at a weight `ν` that is the cast of `ν_q`, has norm equal to the cast of the exact
+rational sum `Σ_{n ≤ M} |q n| ν_q ^ n`. -/
+theorem l1Weighted.norm_eq_ratCast_sum_of_support {ν : PosReal}
+    (x : l1Weighted ν) (q : ℕ → ℚ) (ν_q : ℚ) (hx : ∀ n, l1Weighted.toSeq x n = (q n : ℝ))
+    (hν : (ν : ℝ) = (ν_q : ℝ)) (M : ℕ) (hsupp : ∀ n, M < n → q n = 0) :
+    ‖x‖ = ((∑ n ∈ Finset.Icc 0 M, |q n| * ν_q ^ n : ℚ) : ℝ) := by
+  rw [l1Weighted.norm_eq_Icc_sum_of_support _ M (fun n hn => by rw [hx, hsupp n hn, Rat.cast_zero])]
+  push_cast
+  simp_rw [hx, hν]
 
 end ArrayElements
 

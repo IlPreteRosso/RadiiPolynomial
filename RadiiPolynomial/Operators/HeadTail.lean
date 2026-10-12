@@ -24,7 +24,7 @@ namespace RadiiPolynomial
 
 namespace HeadTail
 
-/-- **(T37, L001.)** Composition identity for bounded operators: for an idempotent `P` and
+/-- Composition identity for bounded operators: for an idempotent `P` and
 `R ∘ P = 0`, `(M P + R)(P L (1 - P) + (1 - P) L) = M P L (1 - P) + R L`. -/
 theorem composition_identity {𝕜 : Type*} [NormedField 𝕜] {E : Type*} [NormedAddCommGroup E]
     [NormedSpace 𝕜 E] (P M R L : E →L[𝕜] E) (hP : IsIdempotentElem P) (hRP : R ∘L P = 0) :
@@ -33,7 +33,7 @@ theorem composition_identity {𝕜 : Type*} [NormedField 𝕜] {E : Type*} [Norm
   simp only [← ContinuousLinearMap.mul_def] at hRP ⊢
   simpa only [mul_assoc] using composition_identity_ring P M R L hP hRP
 
-/-- **(T37b, L001; optional.)** The composition identity at the finite-head projection
+/-- The composition identity at the finite-head projection
 `P = headProj H` of `lpOneAlg J G`. -/
 theorem composition_identity_headProj {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
     [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)] [DecidableEq J]
@@ -45,7 +45,7 @@ theorem composition_identity_headProj {𝕜 : Type*} [NormedField 𝕜] {J : Typ
       M ∘L lpOneAlg.headProj H ∘L L ∘L (1 - lpOneAlg.headProj H) + R ∘L L :=
   composition_identity _ M R L (lpOneAlg.isIdempotentElem_headProj H) hRP
 
-/-- **(T38a, L001.)** Norm-one scalar face of the composition identity:
+/-- Norm-one scalar face of the composition identity:
 `‖σ • ((M P + R)(P L (1 - P) + (1 - P) L))‖ = ‖M P L (1 - P) + R L‖` for `‖σ‖ = 1`. -/
 theorem norm_smul_composition_identity {𝕜 : Type*} [NontriviallyNormedField 𝕜] {E : Type*}
     [NormedAddCommGroup E] [NormedSpace 𝕜 E] (P M R L : E →L[𝕜] E) (σ : 𝕜)
@@ -54,7 +54,6 @@ theorem norm_smul_composition_identity {𝕜 : Type*} [NontriviallyNormedField �
       ‖M ∘L P ∘L L ∘L (1 - P) + R ∘L L‖ := by
   rw [norm_smul, hσ, one_mul, composition_identity P M R L hP hRP]
 
--- (T38b, L001.) Statement and docstring verbatim from S027 HeadTailColumns.lean:284–291.
 /-- `hZ` is a model-discrepancy hypothesis. It stays conditional until the book's
 E → Y → E maps discharge it; no unbounded book operator is identified with a CLM on E. -/
 theorem signed_transfer {𝕜 : Type*} [NontriviallyNormedField 𝕜] {E : Type*}

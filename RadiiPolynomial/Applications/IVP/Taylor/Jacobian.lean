@@ -35,7 +35,7 @@ noncomputable section
 
 namespace IVP
 
-variable {ν : PosReal} {L N : ℕ} [NeZero L]
+variable {ν : PosReal} {L N : ℕ}
 
 /-! ## 1. Computable DF Expected Formula -/
 
@@ -63,14 +63,12 @@ def ivp_DF_of_Dφ (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (j m : Fin L) (k p : Fin (N + 1)) : ℚ :=
   ivp_DF_of_Dφ_nat Dφ_Q j m (k : ℕ) (p : ℕ)
 
-omit [NeZero L] in
 /-- `ivp_DF_of_Dφ_nat` agrees with `ivp_DF_of_Dφ` on `Fin` indices. -/
 lemma ivp_DF_of_Dφ_nat_eq (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (j m : Fin L) (k p : Fin (N + 1)) :
     ivp_DF_of_Dφ_nat Dφ_Q j m (k : ℕ) (p : ℕ) = ivp_DF_of_Dφ (N := N) Dφ_Q j m k p := by
   rfl
 
-omit [NeZero L] in
 /-- A rational Kronecker delta selects one matrix-vector coordinate after casting. -/
 private lemma sum_delta_cast_mul {M : ℕ}
     (v : Fin L → Fin M → ℝ) (j : Fin L) (q : ℕ) (hq : q < M) (c : ℚ) :
@@ -90,7 +88,6 @@ private lemma sum_delta_cast_mul {M : ℕ}
 
 /-! ## 2. Bridge Lemma: Dφ_Q matches analytical pderiv -/
 
-omit [NeZero L] in
 /-- Internal bridge: if `Dφ_Q j m k` matches `toSeq(evalInBanach(pderiv m (spec j), ā)) k`,
 then the Toeplitz extension matches `toSeq_fderiv_evalInBanach`. -/
 private lemma ivp_Dφ_jacobian_bridge
@@ -111,7 +108,6 @@ private lemma ivp_Dφ_jacobian_bridge
   · exact_mod_cast (hDφ_Q j m _).symm
   · simp
 
-omit [NeZero L] in
 /-- A positive expected-Jacobian row acts as the IVP diagonal minus its Toeplitz row. -/
 private lemma sum_ivp_DF_succ
     (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
@@ -130,7 +126,6 @@ private lemma sum_ivp_DF_succ
 
 /-! ## 3. Main Generic Theorem -/
 
-omit [NeZero L] in
 /-- **Generic DF block correctness for IVP systems.**
 
 Given:
@@ -190,7 +185,6 @@ theorem ivp_hDF_block
 
 /-! ## 4. Generic Dφ Operator Norm Bound -/
 
-omit [NeZero L] in
 /-- **Generic Dφ operator norm bound for IVP systems.**
 
 Given `φ_spec` and a per-component bound `K` on `Σ_m ‖pderiv_m(φ_spec l) at ā‖`,
@@ -223,7 +217,6 @@ lemma ivp_Dφ_norm_le
   exact (norm_sum_mul_pi_le _ _).trans
     (mul_le_mul_of_nonneg_right (hDφ_le l) (norm_nonneg _))
 
-omit [NeZero L] in
 /-- **Syntactic Dφ operator norm bound.** For a `CompPoly` system the per-component sum
 `Σ_m ‖∂_m φ_l (ā)‖` is bounded by `CompPoly.derivativeBound (f l) R` whenever `‖ā i‖ ≤ R i`,
 so `K` can be read off the syntax and checked by `norm_num`/`native_decide`. -/
@@ -243,7 +236,6 @@ lemma ivp_Dφ_norm_le_of_compPoly
 
 /-! ## 5. Convenience: ivp_hDF_block_nat -/
 
-omit [NeZero L] in
 /-- Convenience version of `ivp_hDF_block` accepting a `Fin`-bounded `native_decide` proof.
 
 The user provides the stored columns `DF_cols`, their identification with the block

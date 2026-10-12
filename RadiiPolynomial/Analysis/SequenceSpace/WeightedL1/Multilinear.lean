@@ -89,18 +89,6 @@ namespace RadiiPolynomial
 
 namespace lpOneAlg
 
-/-- Every fiber weight `‖ofReal m 1‖` is positive: `ofReal m` has the left
-inverse `toReal m`, so `ofReal m 1 ≠ 0`. (The same fact as the private
-`norm_mulOfReal_one_pos` of `WeightedL1/Algebra.lean`.) -/
-private theorem norm_ofReal_one_pos {𝕜 : Type*} [NormedField 𝕜] {M : Type*}
-    {E : M → Type*} [∀ m, NormedAddCommGroup (E m)] [lpAlgRingData 𝕜 M E] (m : M) :
-    0 < ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖ := by
-  rw [norm_pos_iff]
-  intro h
-  have h1 := congr_arg (lpAlgRingData.toReal (E := E) m) h
-  rw [lpAlgRingData.toReal_ofReal, lpAlgRingData.toReal_zero] at h1
-  exact one_ne_zero h1
-
 section Multilinear
 
 variable {𝕜 : Type*}

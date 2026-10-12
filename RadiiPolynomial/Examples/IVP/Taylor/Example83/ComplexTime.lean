@@ -8,10 +8,8 @@ The same real coefficient arrays that `Analyticity.lean` turns into a real-analy
 canonical solution give a holomorphic solution of the complexified Lorenz equation
 on `|z| < 3/20` which restricts to the real solution on the interval.
 
-Consumers of the generic `Applications/IVP/Taylor/ComplexTime.lean`. The
-certificate, the competitor class `IVP.IsAnalyticSolution` and the public
-surface of `Analytic.lean` are untouched; every theorem here carries exactly the
-axiom set of `Example83.Cert.main_theorem`.
+Consumers of the generic `Applications/IVP/Taylor/ComplexTime.lean`; every theorem
+here carries exactly the axiom set of `Example83.Cert.main_theorem`.
 -/
 
 open Set Metric RadiiPolynomial MvPolyBridge IVP

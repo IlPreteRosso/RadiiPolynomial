@@ -36,9 +36,9 @@ namespace Example81.Cert
 
 /-! ## Z₀ — Defect bound (exact inverse → zero defect) -/
 
-/-- The ν-free record of `data` (`dataQ.toStdIVPData ν_val ν_val_eq_q = data` by `rfl`). -/
-private def dataQ : IVP.StdIVPDataQ L N :=
-  ⟨Example81.A_col, Example81.DF_col, fun _ => abar_0, ν_q, data.habar_size⟩
+/-- The ν-free record of `data`; its realization at `ν_val` is `data`
+(`IVP.StdIVPDataQ.toStdIVPData_ofStd`). -/
+private def dataQ : IVP.StdIVPDataQ L N := IVP.StdIVPDataQ.ofStd data
 
 /-- The `Z₀` clause at the exact-columns slot, grid denominator `10⁶⁰`. -/
 private theorem z0_slot10 : dataQ.ChecksZ₀By .exactCols (10 ^ 60) Z₀_bound := by decide +kernel
@@ -64,21 +64,6 @@ lemma A_norm_le :
 
 /-! ## Y₀ bound: ‖G(ābar)‖ ≤ Y₀_bound -/
 
-private noncomputable def F_abar : XL1 ν_val L :=
-  ofCoeff (F data.abar) F_abar_mem
-
-private lemma G_eq_toCLM_F_abar :
-    data.G f x₀ data.abar = data.approxInverse.toCLM (ν := ν_val) F_abar := by
-  funext l; apply l1Weighted.ext; intro n
-  exact (data.G_coeff f x₀ data.abar l n).trans (by
-    have := SystemBlockDiagData.toCoeff_toCLM (ν := ν_val) data.approxInverse F_abar l n
-    simp only [toCoeff] at this; exact this.symm)
-
-private lemma F_abar_toCoeff_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
-    toCoeff (ν := ν_val) F_abar l n = 0 := by
-  simp [F_abar, toCoeff, ofCoeff, F,
-    F_abar_support l n hn]
-
 private def Y₀_eval (l : Fin L) :=
   systemBlockDiagActionEval ABlockCols (fun _l n => F_Q n)
     (fun _l n => 1 / (n : ℚ)) ν_q l
@@ -97,15 +82,11 @@ lemma Y₀_le :
     Y₀_norm (data.G f x₀) data.abar
       (ContinuousLinearMap.id ℝ (XL1 ν_val L)) ≤ (Y₀_bound : ℝ) := by
   show ‖data.G f x₀ data.abar‖ ≤ _
-  rw [G_eq_toCLM_F_abar]
-  have hc : toCoeff (ν := ν_val) F_abar = F data.abar := by
-    ext l n; simp [F_abar, toCoeff_ofCoeff]
-  refine data.approxInverse.norm_toCLM_apply_le F_abar (2 * N + 1) (by omega)
-    F_abar_toCoeff_support (by unfold Y₀_bound; positivity)
-    (fun l => ?_)
-  simp_rw [hc]; unfold Y₀_bound
+  refine IVP.ivp_Y₀_le data.approxInverse f x₀ _ data.abar (2 * N + 1) (by omega)
+    F_abar_support (by unfold Y₀_bound; positivity) (fun l => ?_)
+  unfold Y₀_bound
   have hl : l = 0 := Subsingleton.elim l 0; subst hl
-  -- `finsum_bound` now requires a literal range endpoint, so unfold `N` first.
+  -- `finsum_bound` requires a literal range endpoint, so unfold `N` first.
   simp only [N]
   finsum_bound using (Y₀_eval 0) (fun k _ _ => Y₀_eval_correct 0 k)
 
@@ -133,7 +114,7 @@ private lemma Df_norm_le (h : XL1 ν_val L) (l : Fin L) :
       _ = ↑Z₁_bound * (↑↑N + 1) / ↑ν_q * ‖h‖ := by push_cast; ring
   rw [l1Weighted.norm_eq_Icc_sum_of_support _ N two_abar_sub_one_support]
   show _ ≤ ((396482 / 725760 : ℚ) : ℝ)
-  -- `finsum_bound` now requires a literal range endpoint, so unfold `N` first.
+  -- `finsum_bound` requires a literal range endpoint, so unfold `N` first.
   simp only [N]
   finsum_bound using
     (weightedTermEval two_abar_sub_one_Q ν_q)
@@ -161,11 +142,11 @@ below certifies it through the column `Z₁` slot of the Taylor certification ad
 `Certification/ColumnTailBound.lean`). The final validation and analytic corollaries
 use this sharper bound; `Z₁_le_cert` and `Z₁_bound` remain available for comparison. -/
 
-/-- Exact column-sup value of the Z₁ tail operator (tightening B): the maximum
+/-- Exact column-sup value of the Z₁ tail operator: the maximum
 over `M ∈ [0..N]` of the exact ℚ column tail masses
 `colTailQ two_abar_sub_one_Q ν_q N M 10`, attained at `M = 9`:
 `1/22 + 1/312 + 1/3600 + 1/40320 + 31/13789440 = 482763031/9859449600
-≈ 0.0489645` (exact ℚ computation, 2026-09-02; columns above `N` are covered
+≈ 0.0489645` (exact ℚ computation; columns above `N` are covered
 by `shiftDivN_leftMul_tail_col_antitone`). Strictly below the recipe
 `Z₁_bound = 396482/7983360 ≈ 0.0496636` (ratio ≈ 0.986). -/
 def Z₁_exact_bound : ℚ := 482763031 / 9859449600
@@ -175,7 +156,7 @@ private theorem z1_checks :
     dataQ.ChecksDF f_cpoly ∧ dataQ.ChecksZ₁col f_cpoly Z₁_exact_bound := by
   decide +kernel
 
-/-- **Exact Z₁ bound** (tightening B): same LHS as `Z₁_le_cert`, with the
+/-- **Exact Z₁ bound**: same LHS as `Z₁_le_cert`, with the
 recipe `ν/(N+1) · ‖2ā₀ − 1‖` replaced by the exact weighted column-sup,
 certified through the column `Z₁` slot (`IVP.StdIVPDataQ.Z₁col_sound`) by one
 `decide +kernel` (`z1_checks`) over the finite column range `M ≤ N`. -/

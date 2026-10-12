@@ -14,8 +14,8 @@ installed as a `local instance` only (no global instance), and
 complex disc of radius `ν`. Continuity in the parameter comes from the uniform
 weighted lift `synthesis : l1Weighted ν →L[ℝ] (Disc ν →ᵇ ℂ)` built on `powerColumn`.
 
-Before this module production identified the characters pointwise
-(`character_classification_evalC`) but bundled no topological spectrum object.
+`characterEquivDisc` bundles the pointwise classification `character_classification_evalC`
+(EvalC.lean).
 
 Main declarations: `TaylorSpectrum.Character`, `Disc`, `discCharacter`,
 `powerColumn`, `synthesis`, `characterEquivDisc`, `pointwiseTopology`,
@@ -93,9 +93,8 @@ theorem continuous_character_apply (a : l1Weighted ν) :
     Continuous (fun χ : Character ν => χ a) :=
   Gelfand.continuous_character_apply (R := ℝ) (l1Weighted ν) ℂ a
 
-theorem continuous_discCharacter : Continuous (discCharacter ν) := by
-  apply continuous_induced_rng.mpr
-  exact continuous_pi (fun a => continuous_discCharacter_apply ν a)
+theorem continuous_discCharacter : Continuous (discCharacter ν) :=
+  Gelfand.continuous_of_continuous_apply (continuous_discCharacter_apply ν)
 
 /-- Complex characters of the real Taylor coefficient algebra form its closed
 disc, for every positive weight radius, with pointwise character topology. -/

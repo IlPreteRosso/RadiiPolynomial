@@ -5,15 +5,13 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Holomorphic
 # Analyticity of the canonical Chebyshev solution
 
 Application layer. `Chebyshev/Analytic.lean` builds the canonical solution
-`ChebyshevIVP.x_sol` out of a sequence-space zero and claims continuity on `[-1, 1]` plus
-a one-sided derivative on `[-1, 1)` — deliberately no analyticity, for want of a
-Bernstein-ellipse statement. `Analysis/SequenceSpace/Chebyshev/Spectrum/Holomorphic.lean`
-now supplies exactly that statement, so the canonical realization is here shown to be
-real analytic on a neighbourhood of every point of the closed reference interval,
-endpoints included, as soon as the coefficient weight satisfies `1 < ν`.
-
-Closes the Chebyshev analyticity gap at the application level; the certified instance
-is `Examples/IVP/Chebyshev/Example1421/Analyticity.lean`.
+`ChebyshevIVP.x_sol` from a sequence-space zero and proves continuity on `[-1, 1]` and a
+one-sided derivative on `[-1, 1)`. This module adds real analyticity: for a coefficient weight
+`1 < ν`, each component `l1Chebyshev.eval (a l)` is analytic on a neighbourhood of every point
+of `[-1, 1]`, endpoints included (`PhysicalSpectrum.analyticOnNhd_eval_Icc`, from holomorphy on
+the Bernstein ellipse), hence so is `x_sol a`. The statement holds for every coefficient vector
+`a`, certified or not. The certified instance is
+`Examples/IVP/Chebyshev/Example1421/Analyticity.lean`.
 -/
 
 open RadiiPolynomial Set

@@ -6,7 +6,7 @@ import RadiiPolynomial.Applications.PowerSeries.AffineZ2
 # Example 7.7 — Algebraic Infrastructure
 
 Problem-specific algebra for the parameterized equilibrium `x² - λ = 0`.
-Uses the `RadiiPolynomial/BlockDiagSystem` API exclusively.
+Uses the `Operators/BlockDiagonal/Scalar` API (`ScalarBlockDiagData`).
 
 ## Contents
 
@@ -35,7 +35,7 @@ variable {ν : PosReal}
 /-! ## 1. Fréchet Derivative for F(a) = a*a - c
 
 `leftMul`, `smul_id_eq_leftMul`, and related lemmas are in
-`RadiiPolynomial.l1Weighted` (LpOneBanachAlgebra.lean). -/
+`RadiiPolynomial.l1Weighted` (`Analysis/SequenceSpace/Geometric/Basic.lean`). -/
 
 namespace Example77
 
@@ -297,7 +297,7 @@ lemma Z₁_le_via_eval {N : ℕ} {ν : PosReal}
     _ ((-2 : ℝ) • leftMul (shiftedL1 sol))
     (fun h n hn => approxDeriv_sub_fderiv_fin_kill sol lam0 h n hn)
     (fun h n hn => by
-      rw [approxDeriv_sub_fderiv_tail_eq sol lam0 h n hn]; simp; rfl)
+      rw [approxDeriv_sub_fderiv_tail_eq sol lam0 h n hn]; simp)
     C (hbound.trans' (mul_le_mul_of_nonneg_left
       ((norm_smul (-2 : ℝ) (leftMul (shiftedL1 sol : l1Weighted ν)) ▸ by
         rw [norm_neg, Real.norm_ofNat]

@@ -1,7 +1,8 @@
 import RadiiPolynomial.Operators.BlockDiagonal.WeightedL1
+import RadiiPolynomial.Operators.Matrix.OperatorNorm
 
 /-!
-# BlockDiagSystem Scalar
+# Scalar (L = 1) block-diagonal operators
 
 `L = 1` convenience layer on top of `SystemBlockDiagData`:
 - scalar accessors and constructors
@@ -16,7 +17,7 @@ noncomputable section
 
 namespace RadiiPolynomial
 
-/-! ## 7. Scalar (`L = 1`) Convenience Layer
+/-! ## 1. Scalar (`L = 1`) Convenience Layer
 
 This specialization exposes the `SystemBlockDiagData` API in a scalar shape.
 It keeps the same underlying system operator, but removes `Fin 1` boilerplate
@@ -105,6 +106,12 @@ def ScalarBlockDiagData.toScalarCLM (A : ScalarBlockDiagData N) :
     A.toScalarCLM (ν := ν) x = (A.toCLM (ν := ν) (fun _ => x)) 0 := by
   have hconst : (Function.const (Fin 1) x) = (fun _ => x) := rfl
   simp [ScalarBlockDiagData.toScalarCLM, scalarSpaceEquiv, hconst]
+
+/-- `toScalarCLM` is conjugation of the system CLM by the `Fin 1` collapse `scalarSpaceEquiv ν`,
+through the algebra equivalence `ContinuousLinearEquiv.conjContinuousAlgEquiv`. -/
+theorem ScalarBlockDiagData.toScalarCLM_eq_conj (A : ScalarBlockDiagData N) :
+    A.toScalarCLM (ν := ν) = (scalarSpaceEquiv ν).conjContinuousAlgEquiv (A.toCLM (ν := ν)) :=
+  rfl
 
 /-- Scalar injectivity criterion for the underlying `L=1` system CLM:
 invertible finite block + nonvanishing tail diagonal implies injectivity. -/
@@ -197,7 +204,7 @@ lemma ScalarBlockDiagData.injective_toScalarCLM_of_finBlock_mul_close_to_one
 
 end ScalarSpecialization
 
-/-! ## 8. Scalar CLM API: Coefficient Access And Theorem Entry Point
+/-! ## 2. Scalar CLM API: Coefficient Access And Theorem Entry Point
 
 This section completes the scalar (`L = 1`) API by providing:
 1. Coefficient-level access for `toScalarCLM` (finite/tail decomposition)
@@ -219,11 +226,6 @@ variable {ν : PosReal} {N : ℕ}
 lemma norm_XL1_fin1 (x : XL1 ν 1) : ‖x‖ = ‖x 0‖ := by
   have hx : x = fun _ => x 0 := funext fun i => congrArg x (Subsingleton.elim i 0)
   rw [hx, pi_norm_const]
-
-/-- Embedding `l1Weighted ν` as a constant function in `XL1 ν 1` preserves the norm. -/
-lemma norm_const_XL1_fin1 (a : l1Weighted ν) :
-    ‖(fun _ : Fin 1 => a : XL1 ν 1)‖ = ‖a‖ :=
-  norm_XL1_fin1 _
 
 /-- Helper: for `L = 1`, any `x : XL1 ν 1` equals the constant function at `x 0`. -/
 lemma XL1_fin1_eq_const (x : XL1 ν 1) : x = fun _ => x 0 :=
@@ -292,6 +294,16 @@ lemma ScalarBlockDiagData.toScalarCLM_toSeq_fin_eq_cauchy
 
 /-! ### Z₀ residual at scalar CLM level -/
 
+/-- The scalar residual is the conjugate of the system residual by `scalarSpaceEquiv ν`. -/
+theorem ScalarBlockDiagData.id_sub_comp_toScalarCLM_eq_conj (A B : ScalarBlockDiagData N) :
+    ContinuousLinearMap.id ℝ (l1Weighted ν) -
+        (A.toScalarCLM (ν := ν)).comp (B.toScalarCLM (ν := ν)) =
+      (scalarSpaceEquiv ν).conjContinuousAlgEquiv
+        (ContinuousLinearMap.id ℝ (XL1 ν 1) - (A.toCLM (ν := ν)).comp (B.toCLM (ν := ν))) := by
+  rw [toScalarCLM_eq_conj, toScalarCLM_eq_conj, map_sub, ← ContinuousLinearMap.mul_def,
+    ← ContinuousLinearMap.mul_def, map_mul, ← ContinuousLinearMap.one_def,
+    ← ContinuousLinearMap.one_def, map_one]
+
 /-- The scalar residual `(id - A ∘ B) x` equals the system residual at component 0. -/
 lemma ScalarBlockDiagData.id_sub_comp_toScalarCLM_apply_eq
     (A B : ScalarBlockDiagData N) (x : l1Weighted ν) :
@@ -299,10 +311,8 @@ lemma ScalarBlockDiagData.id_sub_comp_toScalarCLM_apply_eq
       (A.toScalarCLM (ν := ν)).comp (B.toScalarCLM (ν := ν))) x =
     ((ContinuousLinearMap.id ℝ (XL1 ν 1) -
       (A.toCLM (ν := ν)).comp (B.toCLM (ν := ν))) (fun _ => x)) 0 := by
-  simp only [sub_apply, ContinuousLinearMap.coe_id', id_eq,
-    ContinuousLinearMap.coe_comp, Function.comp_apply, Pi.sub_apply,
-    ScalarBlockDiagData.toScalarCLM_apply]
-  rw [← XL1_fin1_eq_const (B.toCLM (ν := ν) (fun _ => x))]
+  rw [id_sub_comp_toScalarCLM_eq_conj]
+  rfl
 
 /-- Scalar-to-system norm transfer for the residual `id - A ∘ B`. -/
 lemma ScalarBlockDiagData.norm_id_sub_comp_toScalarCLM_le
@@ -415,7 +425,8 @@ lemma ScalarBlockDiagData.norm_toScalarCLM_le_max
 
 Three APIs for Z₁-type bounds:
 - `norm_comp_of_fin_kill`: ‖A.comp T‖ ≤ tailBound * ‖T‖ when T kills finite modes
-- `opNorm_le_of_fin_kill_tail_eq`: ‖D‖ ≤ ‖E‖ when D kills finite modes and matches E on tail
+- `l1Weighted.opNorm_le_of_fin_kill_tail_eq` (in `Geometric/Basic.lean`): ‖D‖ ≤ ‖E‖ when D kills
+  finite modes and matches E on tail
 - `Z₁_le_of_fin_kill_tail_dom`: full pipeline chaining both into ‖A.comp T‖ ≤ C
 -/
 
@@ -471,24 +482,10 @@ lemma ScalarBlockDiagData.Z₀_le_finWeightedMatrixNorm_of_tailCancel
   -- finiteBlockMatrixNorm for L=1 = finWeightedMatrixNorm of the single block
   rw [show (A.defectOfTailCancel B htail_L).finBlock = fun _ _ =>
       (1 - A.finBlock0 * B.finBlock0) from by
-    ext l j; simp [SystemBlockDiagData.defectOfTailCancel, ScalarBlockDiagData.finBlock0,
-      show l = (0 : Fin 1) from Fin.eq_zero l, show j = (0 : Fin 1) from Fin.eq_zero j]]
+    ext l j; simp [SystemBlockDiagData.defectOfTailCancel, defectOfBlockDiagOp,
+      ScalarBlockDiagData.finBlock0, show l = (0 : Fin 1) from Fin.eq_zero l, show j = (0 : Fin 1) from Fin.eq_zero j]]
   exact le_of_eq (ScalarBlockDiagData.finiteBlockMatrixNorm_eq (ν := ν)
     (A := ⟨fun _ _ => 1 - A.finBlock0 * B.finBlock0, fun _ _ => 0, 0, by intro l n _; simp⟩))
-
-/-- Operator norm domination: if `D` kills finite modes and agrees with `E` on tail modes,
-then `‖D‖ ≤ ‖E‖`. General (not scalar-specific); lives here for import reasons
-(needs CLM operator norm API). Core pattern for Z₁-type bounds. -/
-lemma l1Weighted.opNorm_le_of_fin_kill_tail_eq (N : ℕ)
-    (D E : l1Weighted ν →L[ℝ] l1Weighted ν)
-    (hfin : ∀ h, ∀ n, n ≤ N → l1Weighted.toSeq (D h) n = 0)
-    (htail : ∀ h, ∀ n, N < n → l1Weighted.toSeq (D h) n = l1Weighted.toSeq (E h) n) :
-    ‖D‖ ≤ ‖E‖ := by
-  apply ContinuousLinearMap.opNorm_le_bound _ (ContinuousLinearMap.opNorm_nonneg E)
-  intro h
-  rw [l1Weighted.norm_eq_tailTsum_of_fin_zero (D h) (N + 1) (fun n hn => hfin h n (by omega))]
-  exact (l1Weighted.tailTsum_le_norm_of_eq (D h) (E h) (N + 1)
-    (fun n hn => htail h n (by omega))).trans (ContinuousLinearMap.le_opNorm E h)
 
 /-- Z₁ pipeline: if `T` kills finite modes and is dominated by `E` on tail,
 then `‖A.comp T‖ ≤ A.tailBound * ‖E‖ ≤ C`. Equation-independent. -/

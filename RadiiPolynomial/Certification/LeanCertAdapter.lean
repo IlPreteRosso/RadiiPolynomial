@@ -1,35 +1,28 @@
 import LeanCert
-import RadiiPolynomial.Operators.BlockDiagonal.Scalar
+import RadiiPolynomial.Certification.Rational.Matrix
 
 /-!
 # LeanCert Evaluators for Block-Diagonal Witness Verification
 
-Equation-independent evaluators and correctness proofs that bridge structural
-norm reductions to `finsum_bound`, `finmatrix_bound`, and `native_decide`.
+Equation-independent dyadic-interval evaluators and their correctness proofs, bridging the
+structural norm reductions to LeanCert's `finsum_bound` and to the dyadic matrix-norm checker.
+The exact ℚ matrices, norms and their real bridges are in `Certification/Rational/Matrix.lean`
+(imported here).
 
 ## Contents
 
 1. `colNormTermEval` / `weightedTermEval` — per-term evaluators for column norms and weighted
    ℓ¹ norms
-2. `defectMatQ` / `blockDefectMatQ` — exact ℚ I-AB defect computation; `defectCols` — its
-   columns as arrays, for any block operator pair (`finiteBlockMatrixNorm_defect_le_of_Q`)
-3. `FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le` — single `native_decide` matrix norm
-   bridge; `FiniteWeightedNorm.finWeightedMatrixNorm_le_of_dyadic` — its dyadic-interval variant
-   (`checkMatrixNormDyadic`)
-4. `finiteBlockMatrixNorm_le_of_Q_le` — system-level block matrix norm bridge
-5. `norm_toCLM_le_of_Q` / `norm_toScalarCLM_le_of_Q` — CLM norm bridges
-6. `scalarBlockDiagActionEval` — scalar block-diagonal action evaluator (Y₀)
-7. `systemBlockDiagActionEval` — system block-diagonal action evaluator (Y₀)
-8. `activeBlockNormQ` — active-block norm evaluator with a caller-computed scale
-   (`activeBlockNorm_component_le`); `Z₂_blockNormQ_gen` — its weighted form
-   (`Z₂_blockNormQ_gen_eq`)
+2. `colNormSumDyadic`, `checkMatrixNormDyadic` and
+   `FiniteWeightedNorm.finWeightedMatrixNorm_le_of_dyadic` — the dyadic matrix-norm checker;
+   `FiniteWeightedNorm.finWeightedMatrixNorm_le_via_cols` — the per-column decomposition used by
+   `finmatrix_dyadic`
+3. `scalarBlockDiagActionEval` — scalar block-diagonal action evaluator (Y₀)
+4. `systemBlockDiagActionEval` — system block-diagonal action evaluator (Y₀)
 
 ## Usage Pattern
 
 ```lean
--- Matrix norm via single native_decide:
-finmatrix_bound (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le _ cols ν_q hcols hν)
-
 -- Weighted norm via finsum_bound:
 finsum_bound using (weightedTermEval arr ν) (fun k _ _ => weightedTermEval_correct ...)
 ```
@@ -69,75 +62,6 @@ theorem weightedTermEval_correct (arr : Array ℚ) (ν : ℚ) (k : ℕ)
     (|f k| * ν_r ^ k : ℝ) ∈ weightedTermEval arr ν k cfg := by
   simp only [weightedTermEval, hf, hν]
   exact_mod_cast IntervalDyadic.mem_ofIntervalRat (IntervalRat.mem_singleton _) cfg.precision hprec
-
-/-! ## I - AB defect column computation -/
-
-/-- Build a ℚ matrix from column arrays. -/
-def matOfCols {N : ℕ} (cols : Fin (N + 1) → Array ℚ) :
-    Matrix (Fin (N + 1)) (Fin (N + 1)) ℚ :=
-  fun i j => (cols j).getD (i : ℕ) 0
-
-/-- Compute the defect matrix `I - A * B` in ℚ from column arrays of A and B. -/
-def defectMatQ {N : ℕ} (A_cols B_cols : Fin (N + 1) → Array ℚ) :
-    Matrix (Fin (N + 1)) (Fin (N + 1)) ℚ :=
-  1 - matOfCols A_cols * matOfCols B_cols
-
-
-/-- Bridge: if real matrix entries = ℚ cast of column array entries, then
-`(I - A * B)` entries = ℚ cast of `defectMatQ` entries.
-
-This is the **equation-independent `I - AB` lemma**. The certificate provides
-`A_cols` and `B_cols`, the API computes defect entries automatically. -/
-theorem defectMatQ_correct {N : ℕ}
-    (A B : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
-    (A_cols B_cols : Fin (N + 1) → Array ℚ)
-    (hA : ∀ j i : Fin (N + 1), A i j = ((A_cols j).getD (i : ℕ) 0 : ℝ))
-    (hB : ∀ j i : Fin (N + 1), B i j = ((B_cols j).getD (i : ℕ) 0 : ℝ))
-    (i j : Fin (N + 1)) :
-    (1 - A * B) i j = ((defectMatQ A_cols B_cols i j : ℚ) : ℝ) := by
-  simp only [Matrix.sub_apply, Matrix.one_apply, Matrix.mul_apply,
-    defectMatQ, matOfCols]
-  simp_rw [hA, hB]
-  push_cast
-  simp only [apply_ite (Rat.cast (K := ℝ)), Rat.cast_one, Rat.cast_zero]
-
-/-! ## Block-level defect: δ_{l,j}·I - Σ_m A[l,m]·B[m,j] -/
-
-/-- Block-level defect matrix `δ_{l,j}·I - Σ_m A[l,m]·B[m,j]` from per-block column arrays.
-For system-level (L > 1) certificate pipelines. -/
-def blockDefectMatQ {L N : ℕ}
-    (A_cols B_cols : Fin L → Fin L → Fin (N + 1) → Array ℚ)
-    (l j : Fin L) : Matrix (Fin (N + 1)) (Fin (N + 1)) ℚ :=
-  (if l = j then 1 else 0) - ∑ m, matOfCols (A_cols l m) * matOfCols (B_cols m j)
-
-/-- Bridge: block defect entries = ℚ cast of `blockDefectMatQ` entries. -/
-theorem blockDefectMatQ_correct {L N : ℕ} [DecidableEq (Fin L)]
-    (A B : Fin L → Fin L → Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
-    (A_cols B_cols : Fin L → Fin L → Fin (N + 1) → Array ℚ)
-    (hA : ∀ l m j i, A l m i j = ((A_cols l m j).getD (i : ℕ) 0 : ℝ))
-    (hB : ∀ m j k i, B m j i k = ((B_cols m j k).getD (i : ℕ) 0 : ℝ))
-    (l j : Fin L) (i k : Fin (N + 1)) :
-    ((if l = j then (1 : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) else 0) -
-      ∑ m : Fin L, A l m * B m j) i k =
-    ((blockDefectMatQ A_cols B_cols l j i k : ℚ) : ℝ) := by
-  simp only [Matrix.sub_apply, Matrix.sum_apply, Matrix.mul_apply,
-    blockDefectMatQ, matOfCols]
-  simp_rw [hA, hB]; push_cast
-  by_cases hlj : l = j <;> simp [hlj, Matrix.one_apply, apply_ite (Rat.cast (K := ℝ))]
-
-section Defect
-
-variable {L N : ℕ}
-
-/-- ℚ columns of the defect block `(l, j)`: column `k` of `δ_{lj} I − Σ_m A_{lm} B_{mj}`,
-where `A_col l m k` and `DF_col m j k` store column `k` of the blocks. -/
-def defectCols (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ) (l j : Fin L)
-    (k : Fin (N + 1)) : Array ℚ :=
-  Array.ofFn fun (i : Fin (N + 1)) =>
-    blockDefectMatQ (fun l m k => A_col l m (k : ℕ)) (fun m j k => DF_col m j (k : ℕ))
-      l j i k
-
-end Defect
 
 /-! ## Dyadic matrix norm checker (single native_decide, O(1) proof term)
 
@@ -189,8 +113,7 @@ private theorem mem_foldl_colNorm (col : Array ℚ) (ν : ℚ) (j : ℕ)
       (IntervalDyadic.mem_add (ih acc val hval)
         (colNormTermEval_correct col ν j (n + 1) cfg hprec)) _
 
-/-- Correctness: the real `arrayColNormIccSum` is contained in the dyadic interval.
-Absorbs the `unfold arrayColNormIccSum; rw [hν]` step so the bridge theorem is clean. -/
+/-- Correctness: the real `arrayColNormIccSum` lies in the dyadic accumulator. -/
 theorem mem_colNormSumDyadic (col : Array ℚ) (ν_q : ℚ) (N j : ℕ) {ν : PosReal}
     (hν : (ν : ℝ) = (ν_q : ℝ))
     (cfg : DyadicConfig) (hprec : cfg.precision ≤ 0 := by norm_num) :
@@ -238,260 +161,6 @@ lemma FiniteWeightedNorm.finWeightedMatrixNorm_le_via_cols {N : ℕ} {ν : PosRe
   FiniteWeightedNorm.finWeightedMatrixNorm_le_of_matrixColNorm_le (ν := ν) (A := M) (C := C)
     (fun j => FiniteWeightedNorm.matrixColNorm_le_of_arrayColNormIccSum ν N M (cols j) j C
       (hcols j) (hbound j))
-
-/-! ## ℚ norm evaluator (single native_decide for full matrix norm)
-
-Instead of one `finsum_bound` call per column (`N + 1` per block), compute the full
-`finWeightedMatrixNorm` in exact ℚ arithmetic and verify `≤ C` by one `native_decide`.
--/
-
-/-- Column norm in ℚ: `∑ i, |col(i)| * ν^i / ν^j`. -/
-def colNormQ (col : Array ℚ) (ν : ℚ) (N : ℕ) (j : ℕ) : ℚ :=
-  ∑ i ∈ Finset.Icc (0 : ℕ) N, |col.getD i 0| * ν ^ i / ν ^ j
-
-/-- Matrix norm in ℚ: `max_j (colNormQ col_j ν N j)`. -/
-def finWeightedMatrixNormQ {N : ℕ} (cols : Fin (N + 1) → Array ℚ) (ν : ℚ) : ℚ :=
-  Finset.univ.sup' Finset.univ_nonempty fun j => colNormQ (cols j) ν N j
-
-/-- Bridge: if ℚ norm ≤ C (decidable), then ℝ norm ≤ C.
-Single `native_decide` replaces N+1 `finsum_bound` calls. -/
-lemma FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le {N : ℕ} {ν : PosReal}
-    (M : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
-    (cols : Fin (N + 1) → Array ℚ) (ν_q : ℚ) {C : ℚ}
-    (hcols : ∀ j i : Fin (N + 1), M i j = ((cols j).getD (i : ℕ) 0 : ℝ))
-    (hν : (ν : ℝ) = (ν_q : ℝ))
-    (hle : finWeightedMatrixNormQ cols ν_q ≤ C) :
-    FiniteWeightedNorm.finWeightedMatrixNorm ν M ≤ (C : ℝ) := by
-  -- Step 1: each matrixColNorm = (colNormQ : ℝ) via column bridge + cast
-  have hcol : ∀ j : Fin (N + 1), FiniteWeightedNorm.matrixColNorm ν M j =
-      ((colNormQ (cols j) ν_q N j : ℚ) : ℝ) := by
-    intro j
-    rw [FiniteWeightedNorm.matrixColNorm_eq_arrayColNormIccSum ν N M (cols j) j (hcols j)]
-    simp only [FiniteWeightedNorm.arrayColNormIccSum, colNormQ, hν]
-    push_cast; rfl
-  -- Step 2: finWeightedMatrixNorm = sup' of (colNormQ : ℝ) ≤ (sup' of colNormQ : ℝ) ≤ (C : ℝ)
-  show Finset.sup' _ _ (fun j => FiniteWeightedNorm.matrixColNorm ν M j) ≤ _
-  simp_rw [hcol]
-  have : Finset.sup' Finset.univ Finset.univ_nonempty
-      (fun j => (colNormQ (cols j) ν_q N j : ℝ)) ≤
-      ((Finset.sup' Finset.univ Finset.univ_nonempty
-        (fun j => colNormQ (cols j) ν_q N j) : ℚ) : ℝ) := by
-    apply Finset.sup'_le _ _ (fun j _ => ?_)
-    exact_mod_cast Finset.le_sup' (fun j => colNormQ (cols j) ν_q N j) (Finset.mem_univ j)
-  exact this.trans (by exact_mod_cast hle)
-
-/-! ## Block matrix norm in ℚ (single native_decide for L×L block operator) -/
-
-/-- Block matrix norm in ℚ: max_l (∑_j finWeightedMatrixNormQ(block_lj)). -/
-def finiteBlockMatrixNormQ (L N : ℕ) [NeZero L]
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν : ℚ) : ℚ :=
-  Finset.univ.sup' Finset.univ_nonempty fun l =>
-    ∑ j : Fin L, finWeightedMatrixNormQ (blockCols l j) ν
-
-/-- `C_q · max_l (Σ_{j ∈ active} ‖A_{lj}‖ + [l ∈ active] · tail)`: the exact ℚ block norm of a
-block-diagonal operator restricted to the active columns, scaled by a caller-computed
-`C_q`. -/
-def activeBlockNormQ (L N : ℕ) [NeZero L]
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν tailBound C_q : ℚ)
-    (active : Finset (Fin L)) : ℚ :=
-  C_q * Finset.univ.sup' Finset.univ_nonempty fun l =>
-    (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν) +
-    if l ∈ active then tailBound else 0
-
-/-- Per-component bridge of `activeBlockNormQ`. -/
-theorem activeBlockNorm_component_le {L N : ℕ} [NeZero L] {ν : PosReal}
-    (A : SystemBlockDiagData L N)
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν_q tailBound_q C_q : ℚ)
-    (active : Finset (Fin L)) {bound : ℚ}
-    (hcols : ∀ l j : Fin L, ∀ k i : Fin (N + 1),
-      A.finBlock l j i k = ((blockCols l j k).getD (i : ℕ) 0 : ℝ))
-    (hν : (ν : ℝ) = (ν_q : ℝ))
-    (htail : A.tailBound = (tailBound_q : ℝ))
-    (hC_nn : 0 ≤ C_q)
-    (hle : activeBlockNormQ L N blockCols ν_q tailBound_q C_q active ≤ bound)
-    (l : Fin L) :
-    (C_q : ℝ) * ((∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
-      if l ∈ active then A.tailBound else 0) ≤ (bound : ℝ) := by
-  have hentry : ∀ j : Fin L,
-      blockEntryNorm ν A.finBlock l j ≤
-        ((finWeightedMatrixNormQ (blockCols l j) ν_q : ℚ) : ℝ) :=
-    fun j => FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le
-      (A.finBlock l j) (blockCols l j) ν_q (hcols l j) hν (le_refl _)
-  have hrow : (∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
-      (if l ∈ active then A.tailBound else (0 : ℝ)) ≤
-      ((((∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q) +
-        if l ∈ active then tailBound_q else 0 : ℚ) : ℝ)) := by
-    push_cast; exact add_le_add (Finset.sum_le_sum fun j _ => hentry j) (by split <;> simp [htail])
-  have hC : (0 : ℝ) ≤ (C_q : ℝ) := by exact_mod_cast hC_nn
-  have hsup := Finset.le_sup' (f := fun l =>
-    (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q) +
-    if l ∈ active then tailBound_q else 0) (Finset.mem_univ l)
-  have hX : C_q * ((∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν_q) +
-      if l ∈ active then tailBound_q else 0) ≤ bound :=
-    (mul_le_mul_of_nonneg_left hsup hC_nn).trans hle
-  refine (mul_le_mul_of_nonneg_left hrow hC).trans ?_
-  exact_mod_cast hX
-
-/-- Generalized Z₂ block norm evaluator with variable factor `C_q`. -/
-def Z₂_blockNormQ_gen (L N : ℕ) [NeZero L]
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν tailBound C_q : ℚ)
-    (active : Finset (Fin L)) : ℚ :=
-  C_q * ν * Finset.sup' Finset.univ Finset.univ_nonempty fun l =>
-    (∑ j ∈ active, finWeightedMatrixNormQ (blockCols l j) ν) +
-    if l ∈ active then tailBound else 0
-
-/-- The weighted evaluator `Z₂_blockNormQ_gen` is `activeBlockNormQ` at `C_q := ν · C`. -/
-theorem Z₂_blockNormQ_gen_eq (L N : ℕ) [NeZero L]
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν tailBound C : ℚ)
-    (active : Finset (Fin L)) :
-    Z₂_blockNormQ_gen L N blockCols ν tailBound C active =
-      activeBlockNormQ L N blockCols ν tailBound (ν * C) active := by
-  unfold Z₂_blockNormQ_gen activeBlockNormQ; ring
-
-/-- Generalized Z₂ per-component bridge with variable factor.
-If `Z₂_blockNormQ_gen ... C_q ≤ bound`, then `C_q*ν*(∑ blockNorm + tail_if) ≤ bound` for each `l`.
-The instance at scale `ν_q * C_q` of `activeBlockNorm_component_le` (`Z₂_blockNormQ_gen_eq`). -/
-lemma Z₂_blockNorm_component_le_gen {L N : ℕ} [NeZero L] {ν : PosReal}
-    (A : SystemBlockDiagData L N)
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν_q tailBound_q C_q : ℚ)
-    (active : Finset (Fin L)) {bound : ℚ}
-    (hcols : ∀ l j : Fin L, ∀ k i : Fin (N + 1),
-      A.finBlock l j i k = ((blockCols l j k).getD (i : ℕ) 0 : ℝ))
-    (hν : (ν : ℝ) = (ν_q : ℝ))
-    (htail : A.tailBound = (tailBound_q : ℝ))
-    (hC_nn : 0 ≤ C_q)
-    (hle : Z₂_blockNormQ_gen L N blockCols ν_q tailBound_q C_q active ≤ bound)
-    (l : Fin L) :
-    (C_q : ℝ) * (ν : ℝ) * ((∑ j ∈ active, blockEntryNorm ν A.finBlock l j) +
-      if l ∈ active then A.tailBound else 0) ≤ (bound : ℝ) := by
-  have hν0 : (0 : ℚ) ≤ ν_q := by
-    have : (0 : ℝ) ≤ ((ν_q : ℚ) : ℝ) := by rw [← hν]; exact ν.coe_nonneg
-    exact_mod_cast this
-  have h := activeBlockNorm_component_le A blockCols ν_q tailBound_q (ν_q * C_q) active hcols hν
-    htail (mul_nonneg hν0 hC_nn)
-    (le_of_eq_of_le (Z₂_blockNormQ_gen_eq L N blockCols ν_q tailBound_q C_q active).symm hle) l
-  have e : (C_q : ℝ) * (ν : ℝ) = ((ν_q * C_q : ℚ) : ℝ) := by rw [hν]; push_cast; ring
-  rw [e]; exact h
-
-/-- Bridge: if ℚ block norm ≤ C, then ℝ block norm ≤ C.
-Single `native_decide` replaces L×L `finWeightedMatrixNorm_le_of_Q_le` calls. -/
-lemma finiteBlockMatrixNorm_le_of_Q_le {L N : ℕ} [NeZero L] {ν : PosReal}
-    (A : FiniteBlockMatrix L N)
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν_q : ℚ) {C : ℚ}
-    (hcols : ∀ l j : Fin L, ∀ k i : Fin (N + 1),
-      A l j i k = ((blockCols l j k).getD (i : ℕ) 0 : ℝ))
-    (hν : (ν : ℝ) = (ν_q : ℝ))
-    (hle : finiteBlockMatrixNormQ L N blockCols ν_q ≤ C) :
-    finiteBlockMatrixNorm ν A ≤ (C : ℝ) := by
-  -- Per-block: reuse scalar bridge with C = finWeightedMatrixNormQ
-  have hentry : ∀ l j : Fin L,
-      blockEntryNorm ν A l j ≤
-        ((finWeightedMatrixNormQ (blockCols l j) ν_q : ℚ) : ℝ) :=
-    fun l j => FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le
-      (A l j) (blockCols l j) ν_q (hcols l j) hν (le_refl _)
-  -- Aggregate: sup'_l (∑_j blockEntryNorm) ≤ (C : ℝ)
-  unfold finiteBlockMatrixNorm blockRowNorm
-  apply Finset.sup'_le _ _ (fun l _ => ?_)
-  calc ∑ j, blockEntryNorm ν A l j
-      ≤ ∑ j, ((finWeightedMatrixNormQ (blockCols l j) ν_q : ℚ) : ℝ) :=
-        Finset.sum_le_sum (fun j _ => hentry l j)
-    _ = ((∑ j, finWeightedMatrixNormQ (blockCols l j) ν_q : ℚ) : ℝ) := by
-        push_cast; rfl
-    _ ≤ ((Finset.sup' Finset.univ Finset.univ_nonempty
-          (fun l => ∑ j, finWeightedMatrixNormQ (blockCols l j) ν_q) : ℚ) : ℝ) := by
-        exact_mod_cast Finset.le_sup'
-          (fun l => ∑ j, finWeightedMatrixNormQ (blockCols l j) ν_q) (Finset.mem_univ l)
-    _ ≤ (C : ℝ) := by exact_mod_cast hle
-
-/-- **Operator bridge, family-neutral**: for any block operator pair `(A, B)` whose finite
-blocks are the casts of the stored columns, the exact ℚ block norm of `defectCols` bounds the
-finite block norm of `I − A B`. -/
-theorem finiteBlockMatrixNorm_defect_le_of_Q {L N : ℕ} [NeZero L] {ν : PosReal}
-    (A : SystemBlockDiagData L N) (B : BlockDiagOp L N)
-    (A_col DF_col : Fin L → Fin L → ℕ → Array ℚ) (ν_q : ℚ)
-    (hA : ∀ (l m : Fin L) (i k : Fin (N + 1)),
-      A.finBlock l m i k = ((A_col l m (k : ℕ)).getD (i : ℕ) 0 : ℝ))
-    (hB : ∀ (m j : Fin L) (i k : Fin (N + 1)),
-      B.finBlock m j i k = ((DF_col m j (k : ℕ)).getD (i : ℕ) 0 : ℝ))
-    (hν : (ν : ℝ) = ((ν_q : ℚ) : ℝ)) {Z₀ : ℚ}
-    (h : finiteBlockMatrixNormQ L N (defectCols A_col DF_col) ν_q ≤ Z₀) :
-    finiteBlockMatrixNorm ν (defectOfBlockDiagOp A B).finBlock ≤ (Z₀ : ℝ) :=
-  finiteBlockMatrixNorm_le_of_Q_le _ (defectCols A_col DF_col) ν_q
-    (fun l j k i => by
-      unfold defectCols
-      rw [show ∀ f : Fin (N + 1) → ℚ, (Array.ofFn f).getD (i : ℕ) 0 = f i from fun f => by
-        simp [Array.getD, Array.size_ofFn, i.isLt, Array.getElem_ofFn]]
-      have := blockDefectMatQ_correct
-        (fun l m => A.finBlock l m) (fun m j => B.finBlock m j)
-        (fun l m (k : Fin (N + 1)) => A_col l m (k : ℕ))
-        (fun m j (k : Fin (N + 1)) => DF_col m j (k : ℕ))
-        (fun l m j i => hA l m i j) (fun m j k i => hB m j i k) l j i k
-      show ((if l = j then 1 else 0) - ∑ m, A.finBlock l m * B.finBlock m j) i k = _
-      exact this)
-    hν h
-
-/-- Combined CLM norm bound from ℚ block columns + ℚ tail bound.
-`‖A.toCLM‖ ≤ finiteBlockMatrixNormQ + tailBound_q ≤ C` — no intermediate named constants. -/
-lemma norm_toCLM_le_of_Q {L N : ℕ} [NeZero L] {ν : PosReal}
-    (A : SystemBlockDiagData L N)
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν_q tailBound_q : ℚ) {C : ℚ}
-    (hcols : ∀ l j : Fin L, ∀ k i : Fin (N + 1),
-      A.finBlock l j i k = ((blockCols l j k).getD (i : ℕ) 0 : ℝ))
-    (hν : (ν : ℝ) = (ν_q : ℝ))
-    (htail : A.tailBound = (tailBound_q : ℝ))
-    (hle : finiteBlockMatrixNormQ L N blockCols ν_q + tailBound_q ≤ C) :
-    ‖A.toCLM (ν := ν)‖ ≤ (C : ℝ) :=
-  (A.norm_toCLM_le (ν := ν)).trans <|
-    (add_le_add
-      (finiteBlockMatrixNorm_le_of_Q_le A.finBlock blockCols ν_q hcols hν (le_refl _))
-      (le_of_eq htail)).trans (by exact_mod_cast hle)
-
-/-- Combined scalar CLM norm bound from ℚ columns + ℚ tail bound.
-`‖A.toScalarCLM‖ ≤ max(finWeightedMatrixNormQ, tailBound_q) ≤ C` — single `native_decide`.
-Scalar analogue of `norm_toCLM_le_of_Q`. Uses the tight `max` bound (Exercise 2.7.2). -/
-lemma norm_toScalarCLM_le_of_Q {N : ℕ} {ν : PosReal}
-    (A : ScalarBlockDiagData N)
-    (cols : Fin (N + 1) → Array ℚ) (ν_q tailBound_q : ℚ) {C : ℚ}
-    (hcols : ∀ j i : Fin (N + 1), A.finBlock0 i j = ((cols j).getD (i : ℕ) 0 : ℝ))
-    (hν : (ν : ℝ) = (ν_q : ℝ))
-    (htail : A.tailBound = (tailBound_q : ℝ))
-    (hle : max (finWeightedMatrixNormQ cols ν_q) tailBound_q ≤ C) :
-    ‖A.toScalarCLM (ν := ν)‖ ≤ (C : ℝ) :=
-  (ScalarBlockDiagData.norm_toScalarCLM_le_max (ν := ν) A).trans <|
-    (max_le_max
-      (FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le A.finBlock0 cols ν_q hcols hν (le_refl _))
-      (le_of_eq htail)).trans (by exact_mod_cast hle)
-
-/-! ## Norm-to-witness bridge for block-diagonal action
-
-Bridges `|toSeq(A.toScalarCLM v)[n]| * ν^n` to a witness evaluator.
-The ℚ computation is internal to the evaluator; the certificate provides
-ℚ-valued data (column arrays, vector, tail coefficient) and ℝ-to-ℚ bridges. -/
-
-/-- Block-diagonal action in ℝ: finite modes use matrix-vector product,
-tail modes use diagonal multiplication. Certificate-facing API. -/
-noncomputable def scalarBlockDiagAction {N : ℕ} (matCols : Fin (N + 1) → Array ℝ)
-    (vec : ℕ → ℝ) (tailCoeff : ℝ) (n : ℕ) : ℝ :=
-  if n ≤ N then ∑ j : Fin (N + 1), (matCols j).getD n 0 * vec j
-  else tailCoeff * vec n
-
-/-- Bridge: `toSeq(A.toScalarCLM v)[n] = scalarBlockDiagAction ...`.
-Pure ℝ signature — no ℚ types in parameters or hypotheses. -/
-lemma ScalarBlockDiagData.toScalarCLM_toSeq_eq_action {N : ℕ} {ν : PosReal}
-    (A : ScalarBlockDiagData N) (v : l1Weighted ν)
-    (matCols : Fin (N + 1) → Array ℝ) (vec : ℕ → ℝ) (tailCoeff : ℝ)
-    (hmat : ∀ j i : Fin (N + 1), A.finBlock0 i j = (matCols j).getD (i : ℕ) 0)
-    (hvec : ∀ n, l1Weighted.toSeq v n = vec n)
-    (htail : ∀ n, N < n → A.tailDiag0 n = tailCoeff)
-    (n : ℕ) :
-    l1Weighted.toSeq (A.toScalarCLM (ν := ν) v) n =
-      scalarBlockDiagAction matCols vec tailCoeff n := by
-  simp only [scalarBlockDiagAction]
-  by_cases hn : n ≤ N
-  · rw [ite_eq_left hn, A.toScalarCLM_toSeq_fin (ν := ν) v ⟨n, Nat.lt_succ_of_le hn⟩]
-    simp_rw [hmat, hvec]
-  · push Not at hn
-    rw [ite_eq_right (not_le.mpr hn), A.toScalarCLM_toSeq_tail v n hn, htail n hn, hvec]
 
 /-- Per-term evaluator for `‖A · v‖` norm sums.
 ℚ parameters for computable interval arithmetic. -/
