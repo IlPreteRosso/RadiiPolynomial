@@ -353,6 +353,30 @@ thinness before specifying what the theorem means.
   content fingerprints — command choice is not isolation (guarded `lake build` when
   dependencies change, `lake env lean` when they are freshly built); audit the bound actually
   USED; bounded probes + independent criticism for uncertain design claims.
+- **Quality review** (the existing critic and golf review; no new stage): organize relevant findings by
+  library reuse, automation fit, structural clarity, statement/API quality, and repository conventions
+  (the five dimensions of ProofJudge, arXiv:2608.20432, 2026, a Mathlib-reviewer-alignment benchmark;
+  its reported judge instability across re-runs is that benchmark's result, quoted in the reference
+  memory, not a rule here). For a refactor or golf, compare the candidate with the frozen baseline; for
+  a new declaration, assess it against its stated contract and concrete consumers. Do not use absolute
+  numerical scores as acceptance gates. Support a claimed API replacement with a pinned declaration
+  signature and the instantiation or bridge to the actual target; a name hit alone is not enough. Give
+  source locations and reasons for design judgments, and use the existing compilation, fidelity, trust
+  and measurement gates for the claims they settle. A repeated model verdict can reveal instability but
+  never substitutes for missing evidence; unresolved disagreement is recorded for the coordinator.
+  Preserve the critic's independent assessment before it sees the author's report. The project skill
+  supplies the family/generalization policy; 'statement quality' does not authorize changing a
+  statement in a proof-only task.
+- **Abstraction-boundary review** (the judgment Avigad's divisibility example motivates — Modularity in
+  mathematics, 2017 preprint §5.1 / RSL 2020 — not a prohibition tied to tactic names): when a consumer
+  depends on another layer's implementation rather than its intended public contract, record the source
+  location, the representation detail used, and the property the consumer actually needs. Search for an
+  existing interface lemma; if a reusable bridge is missing, propose its statement and owning layer in
+  API_INSIGHTS. Unfolding, definitional reduction, projections or witness elimination are signals to
+  inspect, not violations by themselves. Public computation equations, transparent constructors,
+  intended replay hooks, coherent instance synonyms, and elimination of an existential supplied as the
+  public specification are legitimate uses. Do not manufacture a helper solely to hide a routine one-off
+  proof step.
 
 ## Autonomy Pacing: the frontier plan (2026-09-24T19:59:57Z; amended per Codex DEBATE 7; user question on busywork vs premature stop)
 

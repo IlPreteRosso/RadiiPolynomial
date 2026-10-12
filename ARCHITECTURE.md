@@ -22,7 +22,7 @@ layers, but the mathematical layers must not depend on them.
 
 | Directory | Mathematical role |
 | --- | --- |
-| `Algebra/Convolution` | Discrete convolution, ring convolution, and Cauchy products |
+| `Algebra/Convolution` | Discrete convolution, ring convolution, and Cauchy products; the topology-free finite-fiber core `Finite` (`finiteMulConvolution` over any `Mul` index with `Finset.HasMulAntidiagonal`, `finiteAddConvolution` by `to_additive`; laws at their weakest hypotheses), of which `CauchyProduct` is the natural-index specialization (`CauchyProduct_eq_finiteAddConvolution`) |
 | `Algebra/Polynomial` | Semantic `MvPolynomial` calculus and computable `CompPoly` syntax, with Taylor and finite Laurent/Chebyshev interpreters, and certificate constants read off the syntax (`CompPoly/Bounds`, `CompPoly/Chebyshev/Bounds`: `normBound`, `lipschitzBound`, `derivativeBound`) |
 | `Algebra/Ring` | Mathlib-only ring identities for an idempotent head `P` and its complement `1 - P` (`HeadTailIdentities`: composition, defect and inverse-defect identities) |
 | `Algebra/Rees/Laurent` | Laurent/\|k\|-filtered Rees family `U R ⊆ R[X][T;T⁻¹]` with its atoms, tail ideal and structure constants (`Family`); the Euler derivation and the finite-core diagonal/cutoff calculus with the tail-inverse criterion (`Euler`, whose operator-level identities need the documented local instance opt-in); the carrier-free Γ exponent identities (`Gamma`, `GammaCutoff`); Mathlib-only |
@@ -153,4 +153,6 @@ Book example numbers remain in paths and namespaces, while the parent directorie
 the mathematical problem family and discretization.
 
 `Examples/tests/<family>` holds regression witnesses outside the default build: no library module
-imports them, and each is built by its module name.
+imports them, and each is built by its module name. Families: `CH`, `FD`, `FZ`, `GC`, `K`, `PS`, `RS`, and `CV`
+(finite-fiber convolution: additive `ℕ`, `Multiplicative ℕ`, the noncommutative `Function.End (Fin 2)`,
+`2×2` matrices over `ℕ`, and the `IsEmpty` rejection controls for additive `ℤ` and multiplicative `ℕ`).

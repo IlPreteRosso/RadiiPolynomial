@@ -28,6 +28,14 @@ Codex and Antigravity mirrors byte-identical to it (symlinks under `~/.claude/sk
 - Let the determining data set the parameters and assumptions: indices, weights, fibers,
   scalars, and targets remain general where the proof permits. Pass varying bounds or
   summability witnesses explicitly rather than strengthening typeclasses.
+- Explicit-data criterion: if a downstream statement must use a particular bound, radius or rate, expose
+  it as a parameter or as data with its specification. Executable certificate inputs belong in a
+  computable Type-level representation, with a Prop-valued correctness predicate or soundness theorem
+  over that data; an existential proof or noncomputable choice is not an executable witness. Preserve
+  qualitative existence interfaces when the consumer needs only existence, and hide implementation
+  witnesses that no public specification or computation needs. When a quantitative interface is
+  requested, identify whether the witness is already supplied, constructible from the existing
+  assumptions, or needs a new mathematical/effectivity hypothesis.
 - Use universal properties at design time and ordinary algebra/linear maps at proof time.
   Do not introduce categorical packaging when the existing lift/ext API expresses the result.
 - Reuse the weighted `l1` lift and column-bound APIs for operators, and algebra lifts for
@@ -38,7 +46,9 @@ Codex and Antigravity mirrors byte-identical to it (symlinks under `~/.claude/sk
 Work from a concrete consumer through repeated friction to a reusable bridge and a second
 consumer. Classify obligations as equation-specific, representation-specific, or structural.
 Keep incidental finite/numeric cleanup in examples; extract reusable mathematics at its owning
-layer. Proof ugliness alone does not justify an abstraction. Preserve public interfaces
+layer. Proof ugliness alone does not justify an abstraction. Treat repeated consumer dependence on an internal representation as possible
+structural friction: name the stable property needed and its owning layer before proposing an
+interface lemma; distinguish this from intended public computation and witness use. Preserve public interfaces
 by default; record authorized renames and retirements in `RENAMES.md`.
 
 ## Preserve Core Boundaries
@@ -46,6 +56,13 @@ by default; record authorized renames and retirements in `RENAMES.md`.
 - Follow `Algebra/Analysis → Core/Operators → Applications → Examples`.
   `Certification` and `Tactic` are adapter layers; reusable modules never import `Examples`.
   Use facades at application boundaries and narrow owning imports inside the library.
+- Boundary test: for a proposed module or face, name its coherent mathematical capability and public
+  contract, the representation or design choice it hides where applicable, and the consumers/dependencies
+  it simplifies. Likely changes in carrier implementation, norm registration, computable-versus-semantic
+  representation or checker implementation are useful tests, not the only justification. Keep
+  mathematically relevant parameters and trust assumptions visible. A file split alone does not establish
+  a new abstraction boundary. A second consumer is useful evidence of reuse, but a concrete first
+  application can already justify a boundary when it removes irrelevant dependencies.
 - Keep `general_radii_polynomial_theorem` in `RadiiPolynomial.Core` as the basis-independent
   anchor. Application layers should reduce their work to its bounds and hypotheses.
 - Keep `CompPoly` as the computable certificate representation and `MvPolynomial` as the
