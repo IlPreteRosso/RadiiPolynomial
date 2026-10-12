@@ -1,4 +1,5 @@
 import RadiiPolynomial.Algebra.Convolution.Basic
+import RadiiPolynomial.Algebra.Convolution.Finite
 import RadiiPolynomial.Algebra.Convolution.Ring
 import RadiiPolynomial.Algebra.Convolution.CauchyProduct
 

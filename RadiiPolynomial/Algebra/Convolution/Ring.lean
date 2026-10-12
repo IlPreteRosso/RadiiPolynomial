@@ -437,7 +437,7 @@ theorem eq_addRingConvolution (a b : ℕ → R) :
     CauchyProduct a b = DiscreteConvolution.addRingConvolution (M := ℕ) a b := by
   funext n
   simpa [CauchyProduct, DiscreteConvolution.addRingConvolution] using
-    (DiscreteConvolution.addConvolution_eq_sum_antidiagonal
+    (DiscreteConvolution.addConvolution_eq_sum_finset_antidiagonal
       (M := ℕ) (S := ℕ) (E := R) (E' := R) (F := R)
       (L := LinearMap.mul ℕ R) a b n).symm
 

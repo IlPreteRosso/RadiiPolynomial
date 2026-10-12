@@ -12,7 +12,7 @@ This file keeps discrete-convolution pieces currently used by
 
 - `convolution` / `addConvolution`
 - `ringConvolution` / `addRingConvolution`
-- `convolution_eq_sum_mulAntidiagonal` / `addConvolution_eq_sum_antidiagonal`
+- `convolution_eq_sum_finset_mulAntidiagonal` / `addConvolution_eq_sum_finset_antidiagonal`
 
 The multiplicative versions are primary; additive versions are generated via `@[to_additive]`.
 -/
@@ -86,7 +86,7 @@ variable [CommSemiring S] [AddCommMonoid E] [Module S E]
 /-- For types with `HasMulAntidiagonal`, the multiplicative fiber equals the mulAntidiagonal. -/
 @[to_additive
   /-- For types with `HasAntidiagonal`, the additive fiber equals the antidiagonal. -/]
-private lemma mulFiber_eq_mulAntidiagonal (x : M) :
+private lemma mulFiber_eq_finset_mulAntidiagonal (x : M) :
     mulFiber x = ↑(Finset.mulAntidiagonal x) := by
   ext ⟨a, b⟩
   simp only [Finset.mem_coe, Finset.mem_mulAntidiagonal, mem_mulFiber]
@@ -95,15 +95,15 @@ variable [AddCommMonoid E'] [Module S E'] [AddCommMonoid F] [Module S F]
 variable [TopologicalSpace F]
 
 /-- For `HasMulAntidiagonal` types, convolution equals a finite sum over the mulAntidiagonal. -/
-@[to_additive (dont_translate := S) addConvolution_eq_sum_antidiagonal
+@[to_additive (dont_translate := S) addConvolution_eq_sum_finset_antidiagonal
   /-- For `HasAntidiagonal` types, additive convolution equals a finite sum
   over the antidiagonal. -/]
-lemma convolution_eq_sum_mulAntidiagonal
+lemma convolution_eq_sum_finset_mulAntidiagonal
     (L : E →ₗ[S] E' →ₗ[S] F) (f : M → E) (g : M → E') (x : M) :
     (f ⋆[L] g) x = ∑ ab ∈ Finset.mulAntidiagonal x, L (f ab.1) (g ab.2) := by
   simp only [convolution]
   rw [← (Finset.mulAntidiagonal x).tsum_subtype fun ab => L (f ab.1) (g ab.2)]
-  exact (Set.equivOfEq (mulFiber_eq_mulAntidiagonal x)).tsum_eq
+  exact (Set.equivOfEq (mulFiber_eq_finset_mulAntidiagonal x)).tsum_eq
     (fun ab => (L (f ab.1.1)) (g ab.1.2))
 
 end AntidiagonalBridge

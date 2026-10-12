@@ -1,6 +1,20 @@
 import Mathlib.Algebra.BigOperators.NatAntidiagonal
 import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.Basic.Real.Basic
+import RadiiPolynomial.Algebra.Convolution.Finite
+
+/-!
+# Cauchy product of natural-index sequences
+
+This module defines the finite-sum Cauchy product of natural-index sequences over a semiring.
+It is the finite-fiber convolution `finiteAddConvolution` on the additive index `ℕ`
+(`CauchyProduct_eq_finiteAddConvolution`). That general operation owns the algebraic laws:
+associativity, distributivity, the zero laws, commutativity, the scalar laws and the two-atom
+rule are specializations of its laws. The coefficient map to formal power series identifies
+this product with power-series multiplication and supplies the unit laws. Atom, support and
+finite Toeplitz formulas provide the concrete coefficient API. Raw sequence multiplication
+remains pointwise; the bridge records compatibility with the separately named Cauchy product.
+-/
 
 open scoped BigOperators
 
@@ -17,7 +31,13 @@ Ref: Def. 7.4.2, Eq. (7.15). -/
 def CauchyProduct [Semiring R] (a b : ℕ → R) : ℕ → R :=
   fun n => ∑ kl ∈ Finset.antidiagonal n, a kl.1 * b kl.2
 
+/-- The Cauchy product is the finite-fiber convolution over the additive index `ℕ`. -/
+theorem CauchyProduct_eq_finiteAddConvolution [Semiring R] (a b : ℕ → R) :
+    CauchyProduct a b = finiteAddConvolution a b := rfl
+
 namespace CauchyProduct
+
+scoped infixr:67 " ⋆ " => RadiiPolynomial.CauchyProduct
 
 section Semiring
 
@@ -28,55 +48,8 @@ lemma apply (a b : ℕ → R) (n : ℕ) :
 
 lemma apply_range (a b : ℕ → R) (n : ℕ) :
     CauchyProduct a b n = ∑ j ∈ Finset.range (n + 1), a (n - j) * b j := by
-  simp only [apply]
-  rw [Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun i j => a i * b j)]
-  rw [← Finset.sum_range_reflect]
-  apply Finset.sum_congr rfl
-  intro j hj
-  simp only [Nat.succ_sub_succ_eq_sub, tsub_zero]
-  rw [Nat.sub_sub_self (Nat.lt_succ_iff.mp (Finset.mem_range.mp hj))]
-
-/-- Associativity of Cauchy product.
-
-Ref: Def. 7.4.1, Eq. (7.11). -/
-theorem assoc (a b c : ℕ → R) :
-    CauchyProduct (CauchyProduct a b) c = CauchyProduct a (CauchyProduct b c) := by
-  ext n
-  simp only [apply, Finset.sum_mul, Finset.mul_sum]
-  rw [Finset.sum_sigma', Finset.sum_sigma']
-  refine Finset.sum_nbij'
-    (fun x => ⟨(x.2.1, x.2.2 + x.1.2), (x.2.2, x.1.2)⟩)
-    (fun x => ⟨(x.1.1 + x.2.1, x.2.2), (x.1.1, x.2.1)⟩)
-    ?_ ?_ ?_ ?_ ?_
-  all_goals intro x hx
-  all_goals simp_all only [Finset.mem_sigma, Finset.mem_antidiagonal, Prod.mk.eta, Sigma.eta]
-  · exact ⟨by rw [← hx.1, ← hx.2, add_assoc], trivial⟩
-  · exact ⟨by rw [← hx.1, ← hx.2, add_assoc], trivial⟩
-  · exact mul_assoc _ _ _
-
-/-- Left distributivity of Cauchy product.
-
-Ref: Def. 7.4.1, Eq. (7.12). -/
-theorem left_distrib (a b c : ℕ → R) :
-    CauchyProduct a (b + c) = CauchyProduct a b + CauchyProduct a c := by
-  ext n
-  simp only [Pi.add_apply, apply, mul_add, Finset.sum_add_distrib]
-
-/-- Right distributivity of Cauchy product.
-
-Ref: Def. 7.4.1, Eq. (7.12). -/
-theorem right_distrib (a b c : ℕ → R) :
-    CauchyProduct (a + b) c = CauchyProduct a c + CauchyProduct b c := by
-  ext n
-  simp only [Pi.add_apply, apply, add_mul, Finset.sum_add_distrib]
-
-theorem zero_mul (a : ℕ → R) : CauchyProduct 0 a = 0 := by
-  ext n
-  simp only [apply, Pi.zero_apply, MulZeroClass.zero_mul, Finset.sum_const_zero]
-
-theorem mul_zero (a : ℕ → R) : CauchyProduct a 0 = 0 := by
-  ext n
-  simp only [apply, Pi.zero_apply, MulZeroClass.mul_zero, Finset.sum_const_zero]
+  rw [apply, ← Finset.Nat.sum_antidiagonal_swap (f := fun p => a p.1 * b p.2)]
+  exact Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun i j => a j * b i) n
 
 /-- Multiplicative identity sequence (`1,0,0,...`). -/
 def one : ℕ → R := fun n => if n = 0 then 1 else 0
@@ -84,90 +57,181 @@ def one : ℕ → R := fun n => if n = 0 then 1 else 0
 @[simp] lemma one_zero : (one : ℕ → R) 0 = 1 := rfl
 @[simp] lemma one_succ (n : ℕ) : (one : ℕ → R) (n + 1) = 0 := rfl
 
+end Semiring
+
+/-! ### The bridge to formal power series -/
+
+section ToPowerSeries
+
+/-- Bridge object: the sequence `a : ℕ → R` as a formal power series. -/
+def toPowerSeries (a : ℕ → R) : PowerSeries R := PowerSeries.mk a
+
+/-- A sequence is determined by its power series. -/
+theorem toPowerSeries_injective : Function.Injective (toPowerSeries (R := R)) :=
+  fun a b h => funext fun n => by
+    simpa only [toPowerSeries, PowerSeries.mk, Finsupp.single_eq_same] using
+      congrFun h (Finsupp.single () n)
+
+variable [Semiring R]
+
+@[simp] lemma coeff_toPowerSeries (a : ℕ → R) (n : ℕ) :
+    PowerSeries.coeff n (toPowerSeries a) = a n := PowerSeries.coeff_mk n a
+
+theorem toPowerSeries_add (a b : ℕ → R) :
+    toPowerSeries (a + b) = toPowerSeries a + toPowerSeries b := by
+  ext n
+  simp only [coeff_toPowerSeries, Pi.add_apply, map_add]
+
+theorem toPowerSeries_zero : toPowerSeries (0 : ℕ → R) = 0 := by
+  ext n
+  simp only [coeff_toPowerSeries, Pi.zero_apply, map_zero]
+
+theorem toPowerSeries_smul (c : R) (a : ℕ → R) :
+    toPowerSeries (c • a) = c • toPowerSeries a := by
+  ext n
+  simp only [coeff_toPowerSeries, Pi.smul_apply, PowerSeries.coeff_smul]
+
+theorem toPowerSeries_one : toPowerSeries (one : ℕ → R) = 1 := by
+  ext n
+  rw [coeff_toPowerSeries, PowerSeries.coeff_one]
+  rfl
+
+/-- The atom `Pi.single i a` is the monomial `a X^i`. -/
+theorem toPowerSeries_single (i : ℕ) (a : R) :
+    toPowerSeries (Pi.single i a) = PowerSeries.monomial i a := by
+  ext n
+  rw [coeff_toPowerSeries, PowerSeries.coeff_monomial, Pi.single_apply]
+
+/-- On index `ℕ`, Cauchy product matches power-series multiplication coefficients. -/
+theorem toPowerSeries_mul (a b : ℕ → R) :
+    toPowerSeries (CauchyProduct a b) = toPowerSeries a * toPowerSeries b := by
+  ext n
+  simp only [coeff_toPowerSeries, PowerSeries.coeff_mul, apply]
+
+/-- Coefficient form of the bridge:
+`(a ⋆ b)_n = coeff n ((toPowerSeries a) * (toPowerSeries b))`. -/
+theorem eq_coeff_mul (a b : ℕ → R) (n : ℕ) :
+    CauchyProduct a b n = PowerSeries.coeff n (toPowerSeries a * toPowerSeries b) := by
+  rw [← coeff_toPowerSeries (CauchyProduct a b) n, toPowerSeries_mul]
+
+end ToPowerSeries
+
+section Semiring
+
+variable [Semiring R]
+
+/-! ### Algebraic laws
+
+Specializations of the finite-fiber convolution laws (`finiteAddConvolution`), except the unit
+laws, which are transported along the power-series bridge. -/
+
+/-- Associativity of Cauchy product.
+
+Ref: Def. 7.4.1, Eq. (7.11). -/
+theorem assoc (a b c : ℕ → R) :
+    CauchyProduct (CauchyProduct a b) c = CauchyProduct a (CauchyProduct b c) := by
+  simpa only [CauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.assoc a b c
+
+/-- Left distributivity of Cauchy product.
+
+Ref: Def. 7.4.1, Eq. (7.12). -/
+theorem left_distrib (a b c : ℕ → R) :
+    CauchyProduct a (b + c) = CauchyProduct a b + CauchyProduct a c := by
+  simpa only [CauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.add_right a b c
+
+/-- Right distributivity of Cauchy product.
+
+Ref: Def. 7.4.1, Eq. (7.12). -/
+theorem right_distrib (a b c : ℕ → R) :
+    CauchyProduct (a + b) c = CauchyProduct a c + CauchyProduct b c := by
+  simpa only [CauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.add_left a b c
+
+theorem zero_mul (a : ℕ → R) : CauchyProduct 0 a = 0 := by
+  simpa only [CauchyProduct_eq_finiteAddConvolution] using
+    finiteAddConvolution.zero_left MulZeroClass.zero_mul a
+
+theorem mul_zero (a : ℕ → R) : CauchyProduct a 0 = 0 := by
+  simpa only [CauchyProduct_eq_finiteAddConvolution] using
+    finiteAddConvolution.zero_right MulZeroClass.mul_zero a
+
 /-- Left identity for Cauchy product.
 
 Ref: Def. 7.4.1 (unit element). -/
-theorem one_mul (a : ℕ → R) : CauchyProduct one a = a := by
-  ext n
-  simp only [apply, one]
-  rw [Finset.sum_eq_single (0, n)]
-  · simp
-  · intro kl hkl hne
-    have hsum : kl.1 + kl.2 = n := Finset.mem_antidiagonal.mp hkl
-    have hk : kl.1 ≠ 0 := by
-      intro hk0
-      apply hne
-      apply Prod.ext
-      · exact hk0
-      · simpa [hk0] using hsum
-    simp [hk]
-  · simp [Finset.mem_antidiagonal]
+theorem one_mul (a : ℕ → R) : CauchyProduct one a = a :=
+  toPowerSeries_injective <| by rw [toPowerSeries_mul, toPowerSeries_one, _root_.one_mul]
 
 /-- Right identity for Cauchy product.
 
 Ref: Def. 7.4.1 (unit element). -/
-theorem mul_one (a : ℕ → R) : CauchyProduct a one = a := by
-  ext n
-  simp only [apply, one]
-  rw [Finset.sum_eq_single (n, 0)]
-  · simp
-  · intro kl hkl hne
-    have hsum : kl.1 + kl.2 = n := Finset.mem_antidiagonal.mp hkl
-    have hk : kl.2 ≠ 0 := by
-      intro hk0
-      apply hne
-      apply Prod.ext
-      · simpa [hk0] using hsum
-      · exact hk0
-    simp [hk]
-  · simp [Finset.mem_antidiagonal]
+theorem mul_one (a : ℕ → R) : CauchyProduct a one = a :=
+  toPowerSeries_injective <| by rw [toPowerSeries_mul, toPowerSeries_one, _root_.mul_one]
 
 /-- Scalar compatibility on the left.
 
 Ref: Def. 7.4.1, Eq. (7.13). -/
 theorem smul_mul (c : R) (a b : ℕ → R) :
     CauchyProduct (c • a) b = c • CauchyProduct a b := by
-  ext n
-  simp only [apply, Pi.smul_apply, smul_eq_mul, Finset.mul_sum, mul_assoc]
+  simpa only [CauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.smul_left c a b
+
+end Semiring
+
+section CommSemiring
+
+variable [CommSemiring R]
+
+/-- Commutativity of Cauchy product.
+
+Ref: Thm. 7.4.4 and Cor. 7.4.5. -/
+theorem comm (a b : ℕ → R) : CauchyProduct a b = CauchyProduct b a := by
+  simpa only [CauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.comm a b
+
+/-- Scalar compatibility on the right.
+
+Ref: Def. 7.4.1, Eq. (7.13). -/
+theorem mul_smul (c : R) (a b : ℕ → R) :
+    CauchyProduct a (c • b) = c • CauchyProduct a b := by
+  simpa only [CauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.smul_right c a b
+
+end CommSemiring
+
+section Semiring
+
+variable [Semiring R]
+
+/-! ### Atom, support and finite Toeplitz formulas -/
+
+/-- The unit sequence is the atom `Pi.single 0 1`. -/
+theorem one_eq_single : (one : ℕ → R) = Pi.single 0 1 :=
+  funext fun n => (Pi.single_apply 0 1 n).symm
+
+/-- Two-atom rule: the Cauchy product of two atoms is the atom at the summed index,
+with the ordered product of the values. -/
+theorem single_mul_single (i j : ℕ) (a b : R) :
+    CauchyProduct (Pi.single i a) (Pi.single j b) = Pi.single (i + j) (a * b) := by
+  simpa only [CauchyProduct_eq_finiteAddConvolution] using
+    finiteAddConvolution.single_single MulZeroClass.zero_mul MulZeroClass.mul_zero i j a b
 
 lemma zero_of_support {a b : ℕ → R} {M : ℕ}
     (ha : ∀ n, M < n → a n = 0) (hb : ∀ n, M < n → b n = 0)
     (n : ℕ) (hn : 2 * M < n) :
     CauchyProduct a b n = 0 := by
-  rw [apply]
-  apply Finset.sum_eq_zero
-  intro ⟨k, l⟩ hkl
-  simp only [Finset.mem_antidiagonal] at hkl
+  refine Finset.sum_eq_zero fun ⟨k, l⟩ hkl => ?_
+  have hkl := Finset.mem_antidiagonal.mp hkl
   by_cases hk : M < k
   · simp [ha k hk]
-  · push Not at hk
-    have hl : M < l := by omega
-    simp [hb l hl]
+  · simp [hb l (by omega)]
 
 lemma apply_of_support_le_split {a h : ℕ → R} {N n : ℕ}
     (ha : ∀ k, N < k → a k = 0) (hn : N < n) :
     CauchyProduct a h n = a 0 * h n + ∑ k ∈ Finset.Icc 1 N, a k * h (n - k) := by
   rw [apply, Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun k l => a k * h l)]
-  have h_restrict : ∑ k ∈ Finset.range (n + 1), a k * h (n - k) =
-      ∑ k ∈ Finset.range (N + 1), a k * h (n - k) := by
-    symm
-    apply Finset.sum_subset
-    · intro k hk
-      simp only [Finset.mem_range] at hk ⊢
-      omega
-    · intro k hk hk'
-      simp only [Finset.mem_range] at hk hk'
-      push Not at hk'
-      rw [ha k hk', MulZeroClass.zero_mul]
-  rw [h_restrict]
-  have h_range_eq : Finset.range (N + 1) = insert 0 (Finset.Icc 1 N) := by
-    ext k
-    simp only [Finset.mem_range, Finset.mem_insert, Finset.mem_Icc]
-    omega
-  rw [h_range_eq, Finset.sum_insert]
-  · simp only [Nat.sub_zero]
-  · simp only [Finset.mem_Icc]
-    omega
+  refine (Finset.sum_subset
+    (Finset.range_mono (show N + 1 ≤ n + 1 by omega)) ?_).symm.trans ?_
+  · intro k _ hk
+    simp only [Finset.mem_range, not_lt] at hk
+    rw [ha k (by omega), MulZeroClass.zero_mul]
+  · rw [Finset.sum_range_eq_add_Ico _ (Nat.succ_pos N),
+      Nat.succ_eq_add_one, Finset.Ico_add_one_right_eq_Icc, Nat.sub_zero]
 
 /-- CauchyProduct as `Fin (N+1)`-indexed sum (Toeplitz form).
 
@@ -181,101 +245,34 @@ the Cauchy product (from `fderiv_evalInBanach`) to Jacobian matrix entries. -/
 lemma eq_sum_fin {N : ℕ} (f g : ℕ → R) {n : ℕ} (hn : n ≤ N) :
     CauchyProduct f g n =
       ∑ p : Fin (N + 1), (if (p : ℕ) ≤ n then f (n - (p : ℕ)) else 0) * g p := by
-  rw [apply_range]
-  -- Extend range(n+1) sum to range(N+1) with if-guarded zero padding
-  have hext : (∑ j ∈ Finset.range (n + 1), f (n - j) * g j) =
-      ∑ j ∈ Finset.range (N + 1), if j ≤ n then f (n - j) * g j else 0 := by
-    rw [← Finset.sum_filter]
-    congr 1; ext j; simp only [Finset.mem_filter, Finset.mem_range]; omega
-  rw [hext, ← Fin.sum_univ_eq_sum_range]
-  congr 1; ext p; split_ifs <;> simp
+  rw [apply_range, Fin.sum_univ_eq_sum_range
+    (fun j => (if j ≤ n then f (n - j) else 0) * g j)]
+  simp_rw [ite_mul, MulZeroClass.zero_mul]
+  rw [← Finset.sum_filter]
+  congr 1
+  ext j
+  simp only [Finset.mem_filter, Finset.mem_range]
+  omega
 
 /-- CauchyProduct with a Kronecker delta: `δ₀ · r ∗ f = r · f`.
 Scalar multiplication in the power series ring. -/
 @[simp] lemma delta_left (r : R) (f : ℕ → R) (n : ℕ) :
     CauchyProduct (fun k => if k = 0 then r else 0) f n = r * f n := by
-  rw [apply_range]
-  rw [Finset.sum_eq_single n
-    (fun j hm hj => by have := Finset.mem_range.mp hm; simp [show n - j ≠ 0 from by omega])
-    (fun h => absurd (Finset.mem_range.mpr (by omega)) h)]
-  simp
+  simpa only [CauchyProduct, PowerSeries.coeff_mul, PowerSeries.coeff_C,
+    PowerSeries.coeff_mk] using PowerSeries.coeff_C_mul n (PowerSeries.mk f) r
 
 /-- CauchyProduct with a Kronecker delta on the right: `f ∗ δ₀ · r = f · r`. -/
 @[simp] lemma delta_right (f : ℕ → R) (r : R) (n : ℕ) :
     CauchyProduct f (fun k => if k = 0 then r else 0) n = f n * r := by
-  rw [apply_range]
-  rw [Finset.sum_eq_single 0
-    (fun j _ hj => by simp [hj])
-    (fun h => absurd (Finset.mem_range.mpr (by omega)) h)]
-  simp
+  simp [apply_range, mul_ite]
 
 end Semiring
-
-section CommSemiring
-
-variable [CommSemiring R]
-
-/-- Commutativity of Cauchy product.
-
-Ref: Thm. 7.4.4 and Cor. 7.4.5. -/
-theorem comm (a b : ℕ → R) : CauchyProduct a b = CauchyProduct b a := by
-  ext n
-  rw [apply, apply]
-  have hleft :
-      (∑ p ∈ Finset.antidiagonal n, a p.1 * b p.2) =
-        ∑ p ∈ Finset.antidiagonal n, b p.2 * a p.1 := by
-    apply Finset.sum_congr rfl
-    intro p hp
-    rw [mul_comm]
-  have hswap :
-      (∑ p ∈ Finset.antidiagonal n, b p.2 * a p.1) =
-        ∑ p ∈ Finset.antidiagonal n, b p.1 * a p.2 := by
-    simpa using
-      (Finset.Nat.sum_antidiagonal_swap (n := n) (f := fun p : ℕ × ℕ => b p.1 * a p.2))
-  exact hleft.trans hswap
-
-/-- Scalar compatibility on the right.
-
-Ref: Def. 7.4.1, Eq. (7.13). -/
-theorem mul_smul (c : R) (a b : ℕ → R) :
-    CauchyProduct a (c • b) = c • CauchyProduct a b := by
-  ext n
-  simp only [apply, Pi.smul_apply, smul_eq_mul, Finset.mul_sum]
-  apply Finset.sum_congr rfl
-  intro kl _
-  ring
-
-end CommSemiring
-
-section PowerSeriesBridge
-
-variable [Semiring R]
-
-/-- Bridge object: the sequence `a : ℕ → R` as a formal power series. -/
-def toPowerSeries (a : ℕ → R) : PowerSeries R := PowerSeries.mk a
-
-@[simp] lemma coeff_toPowerSeries (a : ℕ → R) (n : ℕ) :
-    PowerSeries.coeff n (toPowerSeries a) = a n := PowerSeries.coeff_mk n a
-
-/-- On index `ℕ`, Cauchy product matches power-series multiplication coefficients. -/
-theorem toPowerSeries_mul (a b : ℕ → R) :
-    toPowerSeries (CauchyProduct a b) = toPowerSeries a * toPowerSeries b := by
-  ext n
-  simp only [CauchyProduct.apply, toPowerSeries, PowerSeries.coeff_mul, PowerSeries.coeff_mk]
-
-/-- Coefficient form of the bridge:
-`(a ⋆ b)_n = coeff n ((toPowerSeries a) * (toPowerSeries b))`. -/
-theorem eq_coeff_mul (a b : ℕ → R) (n : ℕ) :
-    CauchyProduct a b n = PowerSeries.coeff n (toPowerSeries a * toPowerSeries b) := by
-  rw [← coeff_toPowerSeries (CauchyProduct a b) n, toPowerSeries_mul]
-
-end PowerSeriesBridge
 
 /-- Cauchy product commutes with ring homomorphisms. -/
 lemma map_CauchyProduct {S : Type*} [Semiring R] [Semiring S] (f : R →+* S)
     (a b : ℕ → R) (n : ℕ) :
     CauchyProduct (f ∘ a) (f ∘ b) n = f (CauchyProduct a b n) := by
-  unfold CauchyProduct; rw [map_sum]; congr 1; ext kl; exact (map_mul f _ _).symm
+  simp [CauchyProduct]
 
 end CauchyProduct
 
