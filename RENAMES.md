@@ -2329,6 +2329,31 @@ auxiliary and Ex83 7, under the names of the C14b trust record (`p3/evidence_D1/
 `p3/evidence_D2/final/axioms_after.out`, `p3/evidence_E2/final/endpoint_axioms_after.out`,
 `p3/evidence_E1b/final/endpoint_axioms_after.out`).
 
+### Read-through cleanups 2026-10-13 (user: "ask codex to golf totalDegree_pderiv_le"; "Cleanup that fits the rule, yah go")
+
+Two proof-level cleanups found during the user's read-through of READING_ORDER.md; no statement, name or binder of a
+surviving declaration changed. Record: `exterior/Unformalization/_records/golf_bridge_20261013/` (unit report,
+source and companion hashes); companions re-drafted as working-tree drafts for the same commit.
+
+- `MvPolynomial.totalDegree_pderiv_le` (`Algebra/Polynomial/MvPolynomial/Core.lean`): proof golfed by Codex, 27 → 9
+  lines, through `MvPolynomial.coeff_pderiv` and the support of `p` (no monomial expansion, no case split).
+- Bridge-first cleanup of the block-matrix composition identity (`Operators/BlockDiagonal/Basic.lean`; Opus unit
+  `exterior/tmp/blockdiag_bridge_20261013`): the finite-mode action is the flattened matrix acting on the flattened
+  coefficient vector, so the composition law is Mathlib's `Matrix.mulVec_mulVec` read through `FiniteBlockMatrix.toMatrix`.
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| — | `RadiiPolynomial.SystemBlockDiagData.action_fin_eq_toMatrix_mulVec` (`A.action b l n = (A.finBlock.toMatrix *ᵥ fun p => b p.1 p.2) (l, n)`) | new | unit REPORT.md |
+| — | `RadiiPolynomial.SystemBlockDiagData.comp_finBlock_toMatrix` (`(A.comp B).finBlock.toMatrix = A.finBlock.toMatrix * B.finBlock.toMatrix`; `= toMatrix_blockMul`) | new | unit REPORT.md |
+| `RadiiPolynomial.blockFinite_mulVec_assoc` | `action_fin_eq_toMatrix_mulVec` + `Matrix.mulVec_mulVec` (+ `toMatrix_blockMul`); both callers (`BlockDiagonal/WeightedL1` `defectOfBlockDiagOp_coeff_finite`, `IVP/Taylor/Theorem` `composedApprox_eq_fderiv_fin`) rerouted and shorter | deleted | unit REPORT.md |
+| `RadiiPolynomial.SystemBlockDiagData.comp_action_finite` | (none: no caller after the re-proof of `comp_action_eq_action_comp_finite`) | deleted | unit REPORT.md |
+| `RadiiPolynomial.NormHelpers.sum4_swap_pairs` (`Analysis/Norm/FiniteSum.lean`) | (none: its only caller was the deleted hand proof) | deleted | unit REPORT.md |
+
+`RadiiPolynomial.SystemBlockDiagData.comp_action_eq_action_comp_finite` is re-proved (statement unchanged) from the two
+new lemmas; `action_comp_finite` and `action_fin_eq_sum_mulVec` stay (callers in `BlockDiagonal/WeightedL1` and
+`BlockDiagonal/Composition`). `open scoped Matrix` added to `BlockDiagonal/Basic`, `BlockDiagonal/WeightedL1` and
+`IVP/Taylor/Theorem` for `*ᵥ`. The ReferenceBook sources name none of the deleted declarations.
+
 ### Supersessions of earlier rows (history kept)
 
 - `RadiiPolynomial.CauchyProduct.*`, `CauchyProduct_eq_finiteAddConvolution` and `map_CauchyProduct` in the

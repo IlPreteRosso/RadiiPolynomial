@@ -20,7 +20,7 @@ Concrete `l1Weighted` realization of `SystemBlockDiagData`:
   the `h_fin` hypothesis of `injective_toCLM_of_finite_part_injective`
 -/
 
-open scoped Topology
+open scoped Topology Matrix
 open Metric Set Filter ContinuousLinearMap
 
 noncomputable section
@@ -604,21 +604,17 @@ private lemma defectOfBlockDiagOp_coeff_finite [NeZero L]
     c_x l n - A.action c_df l n =
       (defectOfBlockDiagOp A B).action c_x l n := by
   set n' : Fin (N + 1) := ⟨n, Nat.lt_succ_of_le hn⟩
-  rw [SystemBlockDiagData.action_fin_eq_sum_mulVec A c_df l n',
-      SystemBlockDiagData.action_fin_eq_sum_mulVec (defectOfBlockDiagOp A B) c_x l n']
-  -- c_df_j = ∑_m B_{j,m}.mulVec(c_x_m) from hfin
-  have hdf : ∀ j : Fin L, (fun k : Fin (N + 1) => c_df j k) =
-      ∑ m, (B.finBlock j m).mulVec (fun k => c_x m k) := by
-    intro j; ext k; simp [hfin j k, Matrix.mulVec, dotProduct]
-  -- Substitute hdf, apply block-matrix associativity at n'
-  conv_lhs => arg 2; arg 2; ext j; rw [hdf j]
-  have hassoc := congr_fun
-    (blockFinite_mulVec_assoc A.finBlock B.finBlock (fun m k => c_x m k) l) n'
-  simp only [Finset.sum_apply] at hassoc ⊢
-  rw [hassoc]
-  simp only [defectOfBlockDiagOp, Matrix.mulVec, dotProduct,
-    Matrix.sub_apply, sub_mul, Finset.sum_sub_distrib]
-  linarith [block_identity_action c_x l n']
+  -- flattened: `c_df = B *ᵥ c_x` and the defect block is `1 - A * B`
+  have hdf : (fun p : Fin L × Fin (N + 1) => c_df p.1 p.2) =
+      B.finBlock.toMatrix *ᵥ fun p => c_x p.1 p.2 :=
+    funext fun ⟨j, k⟩ => by simp [hfin, Matrix.mulVec, dotProduct, Fintype.sum_prod_type]
+  have hD : (defectOfBlockDiagOp A B).finBlock.toMatrix =
+      1 - A.finBlock.toMatrix * B.finBlock.toMatrix := by
+    rw [← FiniteBlockMatrix.toMatrix_blockMul, ← FiniteBlockMatrix.toMatrix_blockId]; rfl
+  rw [SystemBlockDiagData.action_fin_eq_toMatrix_mulVec A c_df l n',
+    SystemBlockDiagData.action_fin_eq_toMatrix_mulVec (defectOfBlockDiagOp A B) c_x l n',
+    hdf, Matrix.mulVec_mulVec, hD, Matrix.sub_mulVec, Matrix.one_mulVec]
+  rfl
 
 /-- Coefficient-level identity for `(I - A∘DF)(x)` on tail modes (N < n):
 equals the defect tail action (= 0) when tails cancel. -/

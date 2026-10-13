@@ -15,7 +15,7 @@ Core structural layer for Section 8.2 operators:
 - coefficient-level block-diagonal data and composition
 -/
 
-open scoped Topology
+open scoped Topology Matrix
 open Metric Set Filter ContinuousLinearMap
 
 noncomputable section
@@ -276,8 +276,9 @@ lemma SystemBlockDiagData.action_fin
 
 /-! ### mulVec bridge for finite-mode action
 
-Expresses the finite-mode block action via `Matrix.mulVec`, enabling
-`Matrix.mulVec_mulVec` for block-matrix associativity. -/
+Expresses the finite-mode block action via `Matrix.mulVec`: per block, and through the
+flattening `FiniteBlockMatrix.toMatrix`, where block-matrix associativity is Mathlib's
+`Matrix.mulVec_mulVec`. -/
 
 /-- Finite-mode action as sum of per-block `mulVec`.
 `A.action b l n = ∑_j (A.finBlock l j *ᵥ b_j) n` for `n ≤ N`. -/
@@ -287,38 +288,14 @@ lemma SystemBlockDiagData.action_fin_eq_sum_mulVec
     A.action b l n = ∑ j : Fin L, (A.finBlock l j).mulVec (fun k => b j k) n := by
   simp [SystemBlockDiagData.action_fin, Matrix.mulVec, dotProduct]
 
-/-- Block-matrix associativity: `∑_j A_{l,j}.mulVec (∑_m B_{j,m}.mulVec x_m) =
-∑_m (∑_j A_{l,j} * B_{j,m}).mulVec x_m`. -/
-lemma blockFinite_mulVec_assoc {L N : ℕ}
-    (A B : Fin L → Fin L → Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
-    (x : Fin L → Fin (N + 1) → ℝ) (l : Fin L) :
-    (∑ j, (A l j).mulVec (∑ m, (B j m).mulVec (x m))) =
-    (∑ m, (∑ j, A l j * B j m).mulVec (x m)) := by
-  -- Both sides are 4-fold sums of A*B*x in different index orders.
-  -- Proof: expand via mulVec/dotProduct, reorder sums, ring.
-  ext n
-  simp only [Matrix.mulVec, dotProduct, Finset.sum_apply, Finset.mul_sum,
-    Matrix.sum_apply, Matrix.mul_apply, Finset.sum_mul]
-  -- LHS: ∑(k:N+1) ∑(j:L) ∑(m:L) ∑(p:N+1) A[l,j,n,k]*B[j,m,k,p]*x[m,p]
-  -- RHS: ∑(m:L) ∑(p:N+1) ∑(j:L) ∑(k:N+1) A[l,j,n,k]*B[j,m,k,p]*x[m,p]
-  -- Reorder (k,j,m,p) → (j,k,m,p) → (m,j,k,p) → (m,p,j,k)
-  conv_lhs =>
-    rw [Finset.sum_comm (s := Finset.univ) (t := Finset.univ)]           -- (k,j) → (j,k)
-    arg 2; ext j
-    rw [Finset.sum_comm (s := Finset.univ) (t := Finset.univ)]           -- (k,m) → (m,k)
-    arg 2; ext m
-    rw [Finset.sum_comm (s := Finset.univ) (t := Finset.univ)]           -- (k,p) → (p,k)
-  -- Now LHS: ∑_j ∑_m ∑_p ∑_k ... , need ∑_m ∑_p ∑_j ∑_k
-  conv_lhs =>
-    rw [Finset.sum_comm (s := Finset.univ) (t := Finset.univ)]           -- (j,m) → (m,j)
-    arg 2; ext m
-    rw [Finset.sum_comm (s := Finset.univ) (t := Finset.univ)]           -- (j,p) → (p,j)
-  -- Now LHS: ∑_m ∑_p ∑_k ∑_j ..., need ∑_m ∑_p ∑_j ∑_k
-  apply Finset.sum_congr rfl; intro m _
-  apply Finset.sum_congr rfl; intro p _
-  rw [Finset.sum_comm (s := Finset.univ) (t := Finset.univ)]
-  apply Finset.sum_congr rfl; intro j _
-  apply Finset.sum_congr rfl; intro k _; ring
+/-- The finite-mode action is the flattened matrix `A.finBlock.toMatrix` acting on the
+flattened coefficient vector `(j, k) ↦ b j k`. -/
+lemma SystemBlockDiagData.action_fin_eq_toMatrix_mulVec
+    (A : SystemBlockDiagData L N) (b : SystemCoeff L)
+    (l : Fin L) (n : Fin (N + 1)) :
+    A.action b l n =
+      (A.finBlock.toMatrix *ᵥ fun p : Fin L × Fin (N + 1) => b p.1 p.2) (l, n) := by
+  simp [SystemBlockDiagData.action_fin, Matrix.mulVec, dotProduct, Fintype.sum_prod_type]
 
 /-! ### Coefficient-level decomposition and composition helpers -/
 
@@ -425,6 +402,12 @@ lemma SystemBlockDiagData.comp_tailDiag
     (A B : SystemBlockDiagData L N) (l : Fin L) (n : ℕ) :
     (A.comp B).tailDiag l n = A.tailDiag l n * B.tailDiag l n := rfl
 
+/-- The flattened finite block of a composition is the product of the flattened finite
+blocks (`FiniteBlockMatrix.toMatrix_blockMul`). -/
+lemma SystemBlockDiagData.comp_finBlock_toMatrix (A B : SystemBlockDiagData L N) :
+    (A.comp B).finBlock.toMatrix = A.finBlock.toMatrix * B.finBlock.toMatrix :=
+  FiniteBlockMatrix.toMatrix_blockMul A.finBlock B.finBlock
+
 /-! ### Composition at coefficient level -/
 
 /-! The next lemmas isolate finite-mode and tail-mode formulas for
@@ -449,16 +432,6 @@ lemma SystemBlockDiagData.action_comp_tail
   rw [SystemBlockDiagData.action_tail (A := B) (b := b) (l := l) (n := n) hn]
   ring
 
-/-- Finite-mode formula for `(A.comp B).action`. -/
-lemma SystemBlockDiagData.comp_action_finite
-    (A B : SystemBlockDiagData L N) (b : SystemCoeff L)
-    (l : Fin L) (n : ℕ) (hn : n ≤ N) :
-    (A.comp B).action b l n =
-      ∑ i : Fin L, ∑ m : Fin (N + 1),
-        ((∑ j : Fin L, A.finBlock l j * B.finBlock j i) ⟨n, Nat.lt_succ_of_le hn⟩ m) * b i m := by
-  rw [SystemBlockDiagData.action_finite (A := A.comp B) (b := b) (l := l) (n := n) hn]
-  simp [SystemBlockDiagData.comp]
-
 /-- Tail-mode formula for `(A.comp B).action`. -/
 lemma SystemBlockDiagData.comp_action_tail
     (A B : SystemBlockDiagData L N) (b : SystemCoeff L)
@@ -474,13 +447,13 @@ lemma SystemBlockDiagData.comp_action_eq_action_comp_finite
     (A B : SystemBlockDiagData L N) (b : SystemCoeff L)
     (l : Fin L) (n : ℕ) (hn : n ≤ N) :
     (A.comp B).action b l n = A.action (B.action b) l n := by
-  rw [SystemBlockDiagData.comp_action_finite (A := A) (B := B) (b := b) (l := l) (n := n) hn]
-  rw [SystemBlockDiagData.action_comp_finite (A := A) (B := B) (b := b) (l := l) (n := n) hn]
-  simp only [SystemBlockDiagData.action_fin, Matrix.sum_apply, Matrix.mul_apply,
-    Finset.mul_sum, mul_left_comm, mul_comm]
-  let f : Fin L → Fin (N + 1) → Fin L → Fin (N + 1) → ℝ :=
-    fun x x₁ x₂ x₃ => b x x₁ * (A.finBlock l x₂ ⟨n, Nat.lt_succ_of_le hn⟩ x₃ * B.finBlock x₂ x x₃ x₁)
-  simpa using NormHelpers.sum4_swap_pairs f
+  set n' : Fin (N + 1) := ⟨n, Nat.lt_succ_of_le hn⟩
+  have hB : (fun p : Fin L × Fin (N + 1) => B.action b p.1 p.2) =
+      B.finBlock.toMatrix *ᵥ fun p => b p.1 p.2 :=
+    funext fun p => B.action_fin_eq_toMatrix_mulVec b p.1 p.2
+  rw [(A.comp B).action_fin_eq_toMatrix_mulVec b l n',
+    A.action_fin_eq_toMatrix_mulVec (B.action b) l n', hB, A.comp_finBlock_toMatrix B,
+    Matrix.mulVec_mulVec]
 
 /-- Tail-mode compatibility for composition:
 `(A.comp B).action = A.action ∘ B.action` on `N < n`. -/

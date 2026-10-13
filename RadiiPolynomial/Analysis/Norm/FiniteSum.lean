@@ -39,25 +39,6 @@ lemma sum_mul_le_sum_mul_const
   (Finset.sum_le_sum fun j _ => mul_le_mul_of_nonneg_left (hb j) (ha j)).trans_eq
     (by rw [Finset.sum_mul])
 
-/-- Reindex a 4-fold finite sum by swapping the first pair of indices with the second pair:
-`(a,b,c,d) ↦ (c,d,a,b)`. -/
-lemma sum4_swap_pairs
-    {α β R : Type*}
-    [Fintype α] [Fintype β]
-    [AddCommMonoid R]
-    (f : α → β → α → β → R) :
-    (∑ a : α, ∑ b : β, ∑ c : α, ∑ d : β, f a b c d) =
-      ∑ a : α, ∑ b : β, ∑ c : α, ∑ d : β, f c d a b := by
-  rw [← Fintype.sum_prod_type', ← Fintype.sum_prod_type', ← Fintype.sum_prod_type']
-  rw [← Fintype.sum_prod_type', ← Fintype.sum_prod_type', ← Fintype.sum_prod_type']
-  let assoc : (((α × β) × α) × β) ≃ ((α × β) × (α × β)) :=
-    Equiv.prodAssoc (α := α × β) (β := α) (γ := β)
-  let e : (((α × β) × α) × β) ≃ (((α × β) × α) × β) :=
-    (assoc.trans (Equiv.prodComm (α × β) (α × β))).trans assoc.symm
-  simpa [e, assoc, Equiv.prodAssoc, Equiv.prodComm] using
-    (Equiv.sum_comp e (fun t : (((α × β) × α) × β) =>
-      f t.1.1.1 t.1.1.2 t.1.2 t.2)).symm
-
 section SumMul
 
 variable {A ι : Type*} [NonUnitalSeminormedRing A] [Fintype ι]

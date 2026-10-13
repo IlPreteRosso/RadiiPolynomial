@@ -24,31 +24,13 @@ variable {σ : Type*} {R : Type*} [CommSemiring R]
 /-- Each partial derivative drops the total degree by at least one. -/
 theorem totalDegree_pderiv_le [DecidableEq σ] (i : σ) (p : MvPolynomial σ R) :
     (pderiv i p).totalDegree ≤ p.totalDegree - 1 := by
-  conv_lhs => rw [p.as_sum]
-  rw [map_sum]
-  refine (totalDegree_finsetSum _ _).trans (Finset.sup_le fun s hs => ?_)
-  rw [pderiv_monomial]
-  by_cases h : p.coeff s * ↑(s i) = 0
-  · simp [h]
-  · refine (totalDegree_monomial _ h).le.trans ?_
-    have hi : 1 ≤ s i := by
-      rcases Nat.eq_zero_or_pos (s i) with h' | h'
-      · exfalso; simp [h'] at h
-      · exact h'
-    have hle : Finsupp.single i 1 ≤ s := fun j => by
-      simp only [Finsupp.single_apply]
-      split_ifs with hij
-      · subst hij; exact hi
-      · exact Nat.zero_le _
-    have hsum : (s - Finsupp.single i 1).sum (fun _ => id) + 1 =
-        s.sum (fun _ => id) := by
-      conv_rhs => rw [← tsub_add_cancel_of_le hle]
-      rw [Finsupp.sum_add_index' (fun _ => rfl) (fun _ _ _ => rfl)]
-      simp [Finsupp.sum_single_index]
-    have h1 : (s - Finsupp.single i 1).sum (fun _ => id) ≤
-        s.sum (fun _ => id) - 1 := by omega
-    show (s - Finsupp.single i 1).sum (fun _ => id) ≤ p.totalDegree - 1
-    exact h1.trans (Nat.sub_le_sub_right (le_totalDegree hs) 1)
+  refine Finset.sup_le fun s hs => ?_
+  have h : s + Finsupp.single i 1 ∈ p.support := by
+    rw [mem_support_iff, coeff_pderiv] at hs
+    exact mem_support_iff.mpr (left_ne_zero_of_mul hs)
+  have hle := le_totalDegree h
+  rw [Finsupp.sum_add_index' (fun _ => rfl) (fun _ _ _ => rfl)] at hle
+  simpa using Nat.sub_le_sub_right hle 1
 
 theorem totalDegree_pderiv_pderiv_eq_zero [DecidableEq σ] (i j : σ)
     (p : MvPolynomial σ R) (hp : p.totalDegree ≤ 2) :

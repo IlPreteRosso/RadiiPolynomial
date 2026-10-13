@@ -21,7 +21,7 @@ The shared block-diagonal composition and defect identities live in
   ball-local form.
 -/
 
-open scoped BigOperators Topology
+open scoped BigOperators Topology Matrix
 open RadiiPolynomial
 
 noncomputable section
@@ -91,20 +91,16 @@ lemma composedApprox_eq_fderiv_fin
   rw [A.fderiv_action_fin (ivpCoeffs φ x₀)
     (fun j k => differentiable_ivpCoeffs φ x₀ hφ j ↑k) l n hn ā h]
   set n' : Fin (N + 1) := ⟨n, Nat.lt_succ_of_le hn⟩
-  rw [SystemBlockDiagData.action_fin_eq_sum_mulVec
-    (A.composedApprox A_dag htail_cancel) _ l n']
-  simp only [SystemBlockDiagData.composedApprox]
-  have hassoc := congr_fun (blockFinite_mulVec_assoc A.finBlock A_dag.finBlock
-    (fun j k => toCoeff (ν := ν) h j ↑k) l) n'
-  conv_lhs => rw [show (∑ x, (∑ m, A.finBlock l m * A_dag.finBlock m x).mulVec
-    (fun k => toCoeff (ν := ν) h x ↑k) n') =
-    (∑ x, (∑ m, A.finBlock l m * A_dag.finBlock m x).mulVec
-      (fun k => toCoeff (ν := ν) h x ↑k)) n' from (Finset.sum_apply _ _ _).symm]
-  rw [← hassoc]
-  rw [SystemBlockDiagData.action_fin_eq_sum_mulVec A _ l n']
-  simp only [Finset.sum_apply, Matrix.mulVec, dotProduct]
-  congr 1; ext m; congr 1; ext p; congr 1
-  exact (hDF_block h m p).symm
+  -- flattened: the derivative coefficients are `A_dag *ᵥ h`, the composed block is `A * A_dag`
+  have hDF : (fun p : Fin L × Fin (N + 1) =>
+      (fderiv ℝ (fun a => ivpCoeffs φ x₀ a p.1 ↑p.2) ā) h) =
+      A_dag.finBlock.toMatrix *ᵥ fun p => toCoeff (ν := ν) h p.1 p.2 :=
+    funext fun ⟨j, k⟩ => by
+      simp [hDF_block, Matrix.mulVec, dotProduct, Fintype.sum_prod_type]
+  rw [SystemBlockDiagData.action_fin_eq_toMatrix_mulVec _ _ l n',
+    SystemBlockDiagData.action_fin_eq_toMatrix_mulVec A _ l n', hDF, Matrix.mulVec_mulVec,
+    ← FiniteBlockMatrix.toMatrix_blockMul]
+  rfl
 
 /-! ## 3. Main Theorem (Theorem 8.2.2) -/
 
