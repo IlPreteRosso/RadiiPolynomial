@@ -30,10 +30,22 @@ Does NOT write `_tools/launch_units.json` / `LAUNCH_UNITS.md` (hand-merged; UNSE
 - Per unit: writes a scratch `.lean` (in `$TMPDIR`) importing the unit's modules + a `run_cmd` that dumps
   every constant of each module, runs `lake env lean <scratch>` with cwd `$LAKE`. Needs current oleans;
   fails closed (`LEAN FAILED …` / `NO OUTPUT <rel>`) if one is missing.
-- Writes `_sidecar/<Dir>/<File>.sig.tsv`, rows sorted by span start, 6 tab-separated columns:
-  `public|private  kind  start-end  authored|generated  FQN  signature`; prints
-  `sidecar <rel>: N declarations (M authored)` per file; then rebuilds `_sidecar/ALL_FQNS.txt` from EVERY
-  `.sig.tsv` present and prints `ALL_FQNS: n` (2026-10-11: 3311 lines). Exit 1 on any failure.
+- Extracts into the staging directory `_sidecar_stage_<run>/` and validates every staged file (6 tab-separated
+  columns `public|private  kind  start-end  authored|generated  FQN  signature`, rows sorted by span start); prints
+  `sidecar <rel>: N declarations (M authored) [staged]` per file. ANY failure (`LEAN FAILED …`, `NO OUTPUT <rel>`,
+  `INVALID …`) → `FAILED: nothing published (live sidecars and _sidecar_prev/ unchanged)`, exit 1.
+- Publication (under `_sidecar.lock`; CONSENSUS_sidecar_archive A2): writes `_sidecar_INCOMPLETE.json`, copies the
+  COMPLETE previous live set (+ `ALL_FQNS.txt`) to `_sidecar_prev/` with `PREV_MANIFEST.json`, replaces the selected
+  `_sidecar/<Dir>/<File>.sig.tsv` (other live files untouched) and `_sidecar/ALL_FQNS.txt` (= names of the live set
+  only), removes the marker; prints `published n sidecar(s) (run <id>); previous generation in _sidecar_prev/` and
+  `ALL_FQNS: n` (2026-10-11: 3311 lines); exit 0.
+- `REFUSED: sidecar lock … is held` / `REFUSED: an earlier publication is INCOMPLETE …` → exit 2. An interrupted
+  publication prints `INTERRUPTED: publication failed at <file> …` (exit 3) and leaves the marker; then
+  `(cd ... && python3 -I _tools/signatures.py --recover)` → `RECOVERED run <id> (phase publish): live set = previous
+  generation (n sidecars, hashes verified)` (or `phase rotate: live set untouched`); `--recover` also restores
+  `_sidecar_prev/` to the generation preceding the failed run. Until then `freeze.py`, `finalize_manifest.py`,
+  `semdiff.py` (live side) and `gates.py` (`G0 sidecar publication INCOMPLETE …`, exit 1) refuse as well.
+- Roots: `--unf DIR --lake DIR`, else env `UNF_ROOT`/`UNF_LAKE`, else the live paths (scratch trials: redirect BOTH).
 
 ## 2. Tool self-test (after ANY tool change)
 
@@ -44,8 +56,11 @@ Does NOT write `_tools/launch_units.json` / `LAUNCH_UNITS.md` (hand-merged; UNSE
 Fixtures `_tools/fixtures/{src,side,cases}`; runs build.py and gates.py with `UNF_ROOT/UNF_SRC/UNF_SIDE`
 overrides on cases good, comment_only (expects G6), index_only (G6), ambiguous_suffix (G7 ambiguous + G6),
 fabricated_name (G7 unresolved), missing_pdf (G2 no pdf + G3 no log), corrupt_pdf (G2 pdfinfo failed),
-plus broken_tex (build.py must exit 1). Prints `ok   <case> -> …` / `WRONG …`, then `SELFTEST PASS` or
-`SELFTEST FAIL (n)`; exit 1 on any surprise. Smoke examples of the macros: `_tools/smoke/smoke.tex`,
+plus broken_tex (build.py must exit 1), the finalization fixtures (`fixtures/finalize/`) and the archive fixtures
+(`fixtures/archive/run_archive_fixtures.py`: freeze archive, `_sidecar_prev/`, interrupted publication + `--recover`,
+`semdiff.py`, planner baseline rows, finalizer restore; cases A1–A13). Prints `ok   <case> -> …` / `WRONG …`, then
+`SELFTEST PASS` or `SELFTEST FAIL (n)`; exit 1 on any surprise. Pass `--tmp <scratch dir>` to keep the fixture worlds
+out of `$TMPDIR`. Smoke examples of the macros: `_tools/smoke/smoke.tex`,
 `_tools/smoke/strand.tex` (G8 stranded-line test).
 
 ## 3. Build one or all companions (fail-closed)
@@ -129,31 +144,52 @@ record: `_records/<unit>/FINDINGS_checker_round1.md` (coordinator rulings are pr
 - Runs `gates.check` on the unit's files → `REFUSED: gates fail: {…}` (exit 1); `git rev-parse HEAD` and
   `git status --porcelain -- RadiiPolynomial/` in `$LAKE` → `REFUSED: unit sources modified in the working
   tree: […]` (exit 1) if a porcelain line ends with a unit file.
-- Writes `_records/<unit>/MANIFEST.json`, `SHA256SUMS`, and copies `ALL_FQNS.frozen.txt`,
-  `EXTERNAL_RESOLVED.frozen.txt`, `CONTRACT.frozen.md`, `unformalization.frozen.sty`. Overwrites an
-  existing MANIFEST.json (rename it first to `MANIFEST_round<k>_<sha8>.json` when a Codex round refers to it).
-- Prints `frozen <unit>: n files; MANIFEST sha256 <16 hex>`; exit 0.
+- `REFUSED: sidecar publication INCOMPLETE …` / `REFUSED: sidecar lock … is held` (exit 1): freeze is serialized with
+  sidecar publication.
+- Archives FIRST (A1): the exact bytes of each unit sidecar → `_records/<unit>/sidecar/<sha256>.sig.tsv` (reused after byte
+  verification; `REFUSED: archive object … exists with different bytes (corrupt); never overwritten`), every reference
+  re-resolved with its digest; then writes `_records/<unit>/MANIFEST.json` (`files[rel].sidecar_archive`), `SHA256SUMS`, and
+  copies `ALL_FQNS.frozen.txt`, `EXTERNAL_RESOLVED.frozen.txt`, `CONTRACT.frozen.md`, `unformalization.frozen.sty`.
+  Overwrites an existing MANIFEST.json (rename it first to `MANIFEST_round<k>_<sha8>.json` when a Codex round refers to
+  it; the archived objects it names stay valid — no rename of `sidecar/` is needed).
+- Prints `frozen <unit>: n files; MANIFEST sha256 <16 hex>; sidecar archive w written, r reused`; exit 0.
+- Backfill for a manifest without archived content (exact digest only, labelled in `sidecar/BACKFILL.json`; the manifest is
+  not rewritten): `(cd ... && python3 -I _tools/freeze.py --backfill <unit> [--manifest MANIFEST_round1_<sha8>.json] [--from <file> …] [--dry])`
+  — candidates `--from` files, the live sidecar, `_sidecar_prev/`; prints `BACKFILL <rel> <- <source>` or
+  `BASELINE_UNAVAILABLE <rel> (no candidate bytes match the recorded digest; nothing substituted)`.
+- Roots: `--unf DIR --lake DIR`, else env `UNF_ROOT`/`UNF_LAKE` (gates run on the same tree).
 - Hand-check the first MANIFEST of a batch: `library_head`, `library_source_porcelain` == "".
 
-## 9. Re-pin finalize (after the user's library commit)
+## 9. Finalize after the user's library commit (generation-aware; FINALIZE_PROCEDURE.md)
 
 ```
-(cd /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/exterior/Unformalization && python3 _tools/repin_finalize.py 5d0fa4f)
-(cd ... && python3 _tools/repin_finalize.py <old7> --dry)
-# source: HANDOFF_20261011.md §2 (exact first line, as executed 2026-10-11 by Haiku 5.5 medium); docstring "Usage: repin_finalize.py <old7> [--dry]"
+(cd /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/exterior/Unformalization && python3 -I _tools/finalize_manifest.py --commit <C> --plan-out FINALIZE_PLAN.json --rows)
+(cd ... && python3 -I _tools/repin_finalize.py --plan FINALIZE_PLAN.json --dry)
+(cd ... && python3 -I _tools/repin_finalize.py --plan FINALIZE_PLAN.json [--run-dir DIR])
+(cd ... && python3 -I _tools/repin_finalize.py --restore <RUN_DIR> --dry)      # then without --dry
+# source: _tools/repin_finalize.py and _tools/finalize_manifest.py docstrings; _tools/FINALIZE_PROCEDURE.md
 ```
-Steps and messages:
-1. `git status --porcelain -- RadiiPolynomial/` in `$LAKE` non-empty → `REFUSED: library working tree not
-   clean under RadiiPolynomial/ (commit first):` + porcelain (exit 1).
-2. new = `git rev-parse --short=7 HEAD`; regex `(\unfheader{[^}]*}{)<old7>(})` must match EXACTLY ONCE in
-   every API companion, else `REFUSED: header field not found exactly once in <tex> (k)`; prints
-   `header <old> -> <new> in n companions` (+ ` (dry)`; `--dry` stops here, writes nothing).
-3. `build.py` on all → last line printed; `BUILD FAILURES:` + FAIL lines (exit 1).
-4. `gates.py` on all → last line (`129/129 pass`); `GATE FAILURES:` (exit 1).
-5. `freeze.py <u>` for every launch unit; prints `<u> frozen <u>: …`; `FREEZE FAILED for <u>` (exit 1).
-6. `RE-PIN FINALIZED at <new7>`.
-2026-10-11 result: `{5d0fa4f}` → `{d6fda60}` in 129/129, build 129/129 OK, gates 129/129, 26 freezes
-(A1 857d7412 … E4 d5c41f8b) (PROGRESS.md).
+- The bare `repin_finalize.py <old7>` form of 2026-10-11 is REFUSED (exit 2, `REFUSED: the bare … form relabels every
+  companion unconditionally`); `--legacy <old7> [--dry]` keeps that recorded whole-set swap, not generation-aware.
+- Planner (read-only; `--target/--commit`, `--out/--plan-out`, `--date`, `--unf`, `--lake`, `--rows`): one row per API
+  companion with `action` ∈ repin · skip-current · finalize-draft · needs-redraft · blocked · missing · orphan and its
+  reasons; prints the summary (`actions:`, `reasons:`, `units:`, `finalize-draft: N (F1 a, F2 b, F3 c)`) and the plan
+  sha256. REFUSED while `_sidecar_INCOMPLETE.json` exists. Under every `sidecar-changed`/`dep-changed` row `--rows`
+  prints the A4 baseline line(s):
+  `baseline sidecar: ARCHIVED _records/<unit>/sidecar/<sha256>.sig.tsv expected <12> observed <12> (manifest _records/<unit>/MANIFEST.json sha256 <12>); comparison complete: REMOVED a ADDED b SIGCHG c META d; hints …; compare: python3 -I _tools/semdiff.py --file <rel> --old frozen`
+  or `baseline sidecar: BASELINE_UNAVAILABLE (<reason>) …; comparison baseline unavailable (no counts)`, and
+  `baseline dep <file>: …` only for a dependency archive demonstrably at the companion's bound head. Diagnostic only:
+  no disposition, reason or decision digest changes (plan JSON `row["propagation"]`).
+- Executor `--plan`: preflight of the whole set (schema, HEAD == plan target, recomputed decision digests, headers,
+  clean sources, finalize-draft rewrite re-derived) → `preflight OK: r repin rows in u units; deferred d; finalize-draft
+  N rows`; `--dry` stops there. Live: run directory `_records/finalize_<C7>_<UTC>/` (PLAN.json, `before/` snapshots +
+  SHA256SUMS, `journal.jsonl` with the archive inventory); per row swap/rewrite → `build.py` → `gates.py`; `freeze.py`
+  per freezable unit; stops at the first failure (`FAILED at …; restore with: …`, exit 1); prints `FINALIZED at <C7>: …`.
+- `--restore RUN_DIR`: copies `before/` back, deletes files the run created; NEVER touches `_records/<unit>/sidecar/`
+  objects: refuses if a recorded object was altered (`append-only store violated`), re-resolves every restored MANIFEST
+  (`archive: restored manifests resolve ARCHIVED n …; … retained as non-current evidence`); `RESTORED n paths from …`.
+- 2026-10-11 (legacy form, as executed): `{5d0fa4f}` → `{d6fda60}` in 129/129, build 129/129 OK, gates 129/129, 26
+  freezes (PROGRESS.md).
 
 ## 10. Library side (only when the user unfreezes the library; NOT part of companion work)
 
@@ -190,7 +226,26 @@ Read-only. Compares each MANIFEST `files[rel].lean` and `.sidecar` sha256 with t
 `CHANGED <unit> <rel> lean|sidecar|lean+sidecar (frozen at <sha7>)`, `NEW (no companion unit) <rel>`,
 `GONE from API_FILES <rel>`, `NO-MANIFEST <unit>`, then `checked n frozen files; m API files`. Run AFTER
 `signatures.py` (else sidecar changes are invisible). Tested 2026-10-11 at d6fda60: no CHANGED lines,
-`checked 129 frozen files; 129 API files`.
+`checked 129 frozen files; 129 API files`. Kept as the small inventory helper (own source/sidecar hashes, not complete
+dependency invalidation; Q3 of CONSENSUS_sidecar_archive); WHAT differs in a sidecar: `semdiff.py` (§12a).
+
+## 12a. Inspection diff of sidecar records (CONSENSUS_sidecar_archive A3)
+
+```
+(cd /Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/exterior/Unformalization && python3 -I _tools/semdiff.py --unit <u> --old frozen)
+(cd ... && python3 -I _tools/semdiff.py --file <Dir/File.lean> ... --old frozen [--manifest _records/<u>/MANIFEST_round1_<sha8>.json] [--prefix RadiiPolynomial.] [--json OUT.json])
+(cd ... && python3 -I _tools/semdiff.py --file <Dir/File.lean> --old prev)          # vs _sidecar_prev/
+(cd ... && python3 -I _tools/semdiff.py --file <Dir/File.lean> --old <dir laid out like _sidecar/> [--new <dir>])
+```
+Read-only; NOT a semantic-equivalence check. Key = (relative file, reported name) — the name column is
+`privateToUserName?`, not a guaranteed kernel FQN. Prints inputs (paths + sha256, manifest + sha256), the rules, the
+completeness status, primary counts (REMOVED · ADDED · SIGCHG = exact signature text, with an inline `[-old-]{+new+}`
+diff · META = kind/visibility/authored/span, span-only flagged · UNCHANGED · AMBIGUOUS_KEY with all rows), observations
+(MOVED: a public name unique on both sides moving files; REMOVED/ADDED kept) and hints separately (RENAMED?, PRINT-ONLY?
+after the explicit `--prefix` normalization at identifier boundaries, MOVED? for private/non-unique names). A missing
+baseline is `BASELINE_UNAVAILABLE` (counts unknown), an empty file a valid baseline, a malformed row → incomplete.
+Exit 0 complete, 1 incomplete, 2 refused (bad prefix without trailing `.`, unknown unit). Record of the F1 regression:
+the deferF F1 scope compares to 306 = REMOVED 72 / ADDED 58 / SIGCHG 176 (the display-name probe showed 304).
 
 ## 13. Navigation page (mention only)
 

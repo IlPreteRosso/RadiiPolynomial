@@ -35,7 +35,7 @@ Do NOT run lake build, do NOT edit any .lean, tool, style or contract file, do N
 ```
 
 Header pin: the drafter writes `\unfheader{<source path>}{<PIN>}{…}{…}{…}`. In a re-pin campaign, `<PIN>` is
-the OLD pin (the one `repin_finalize.py <old7>` will swap); otherwise the current library HEAD (7 chars).
+the OLD pin (the planned `swap_from` that `repin_finalize.py --plan FINALIZE_PLAN.json` swaps after the user's commit); otherwise the current library HEAD (7 chars).
 
 ### ADDENDUM for the next wave (§8 of CONTRACT.md; NOT in any on-disk brief yet — the wave briefs predate §8)
 ```

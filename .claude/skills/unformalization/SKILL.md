@@ -18,7 +18,7 @@ Source of every rule below: `exterior/Unformalization/` (CONTRACT.md v1.2a with 
 `_records/HANDOFF_20261011.md`. Paths below are absolute or relative to
 `UNF=/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/exterior/Unformalization`; the Lake root is
 `LAKE=/Users/ilpreterosso/VSCode/Lean/RadiiPolynomial/RadiiPolynomial`, sources under `$LAKE/RadiiPolynomial`.
-(The variables are notation in this document; the tools hard-code the paths, see §7.)
+(The variables are notation in this document; the tools default to these paths and accept `--unf/--lake` or env `UNF_ROOT`/`UNF_LAKE` (`gates.py`/`build.py`: `UNF_ROOT`/`UNF_SRC`/`UNF_SIDE`), see §7.)
 
 References (load on demand):
 - `references/pipeline_commands.md` — every command verbatim, its cwd, outputs, exit codes.
@@ -59,9 +59,13 @@ Invariants (CONTRACT §1–§3; each is gate-checked or checker-checked):
 7. **Names only in the PDF, binders in the sidecar.** `\lean{…}` = declaration names, byte-exact,
    never in headings or math; `\leanx{…}` = binders, expressions, paths, tactic names. No code blocks.
 8. **Trust boundary sentence** in every Setting (§7.26/§7.30 wording of record).
-9. **Freeze binds everything.** `_records/<unit>/MANIFEST.json` = library HEAD + porcelain + toolchain
+9. **Freeze binds AND archives the sidecar.** `_records/<unit>/MANIFEST.json` = library HEAD + porcelain + toolchain
    + dependency revisions + sha256 of each source, sidecar, olean, tex, pdf, log, the contract, style,
-   tools and registries; per-unit frozen copies of contract, style and both registries.
+   tools and registries; per-unit frozen copies of contract, style and both registries; and, before the manifest is
+   written, the exact bytes of every unit sidecar as the immutable object `_records/<unit>/sidecar/<sha256>.sig.tsv`
+   (MANIFEST `files[rel].sidecar_archive`; reused only after byte verification, never overwritten, resolved only with
+   the digest verified). A manifest older than the archive is `BASELINE_UNAVAILABLE` for sidecar diffs (backfill only
+   from bytes matching the recorded digest, labelled). Contract: CONSENSUS_sidecar_archive A1 (2026-10-14).
 
 Macros a companion uses (`_common/unformalization.sty`; every companion starts
 `\documentclass[11pt]{article}\usepackage{unformalization}`, no other packages, only local
@@ -155,10 +159,15 @@ AT THEIR PIN, so a re-pin is a separate campaign, never automatic (§8 last bull
 R0. Library side is done and BUILT. The library edits (code + docstring sweep) were Opus units; every
     edited file verified with `(cd $LAKE && lake env lean RadiiPolynomial/<Path>.lean)`; a full
     `lake build` from the Lake root in a subshell passed. The user commits (one-line message).
-R1. Regenerate sidecars from the rebuilt oleans: keep a copy of the old registry
-    (`_records/repin_<date>/ALL_FQNS.before.txt` exists; copy command not recorded), then
-    `(cd $UNF && python3 _tools/signatures.py)`; diff the FQN lists (2026-10-11: −1 FQN, the removed
-    private `ChebyshevIVP.summable_norm_shift`).
+R1. Regenerate sidecars from the rebuilt oleans: `(cd $UNF && python3 -I _tools/signatures.py)` (or `--unit`/`--file`).
+    It extracts into a staging directory, validates, and only then publishes under `_sidecar.lock`, after moving the
+    COMPLETE previous live set (+ `ALL_FQNS.txt`, `PREV_MANIFEST.json` with hashes, scope, run id) to the sibling
+    `$UNF/_sidecar_prev/` (outside `_sidecar/`, so retired names never resolve); a failure publishes nothing; a partial
+    run keeps the untouched live files; an interrupted publication leaves `_sidecar_INCOMPLETE.json` and every reader
+    refuses until `python3 -I _tools/signatures.py --recover` (CONSENSUS_sidecar_archive A2). Diff the registries
+    (`diff $UNF/_sidecar_prev/ALL_FQNS.txt $UNF/_sidecar/ALL_FQNS.txt`; 2026-10-11: −1 FQN, the removed private
+    `ChebyshevIVP.summable_norm_shift`). `_sidecar_prev/` is ONE disposable generation: copy it (or its hashes) into
+    the record when a review needs it; the durable baseline is the freeze archive (invariant 9).
 R2. List what changed. AS EXECUTED: the list came from the library-side records — the docstring-sweep
     REPORTs (`_records/docstring_sweep/REPORT_<Group>.md`, one line per edit with
     "answers remark: tex line N") plus the coordinator's list of code-change sites (2a/2b/2c in
@@ -169,6 +178,20 @@ R2. List what changed. AS EXECUTED: the list came from the library-side records 
     `.lean` when an imported definition or Mathlib changes), files new to API_FILES.txt and files gone.
     Then run `(cd $UNF && python3 _tools/gates.py)` over ALL files: a renamed or removed declaration
     breaks G6/G7/G9 in companions that merely cite it, whose own source did not change.
+    WHAT changed in a sidecar: `python3 -I $UNF/_tools/semdiff.py --unit <u> | --file <rel…> --old frozen [--prefix
+    RadiiPolynomial.]` — an INSPECTION diff of sidecar records, keyed by (file, reported name): SIGCHG / META (kind,
+    visibility, authored, span) / REMOVED / ADDED, AMBIGUOUS_KEY for duplicate keys, BASELINE_UNAVAILABLE when the
+    frozen archive is missing (counts unknown, never "0 changes"); MOVED is an observation, RENAMED?/PRINT-ONLY? are
+    hints, none of them certifies unchanged mathematics (`--old prev` compares with `_sidecar_prev/`).
+    `changed_since_freeze.py` stays the small inventory helper (own source/sidecar hashes only, not complete dependency
+    invalidation); the planner (`finalize_manifest.py`) remains the disposition authority and prints, under each
+    `sidecar-changed`/`dep-changed` row, the archived baseline, its hashes, its manifest and the semdiff command.
+    Unchanged-source companions whose sidecar OR tracked dependency changed follow the PROPAGATION route
+    (`$UNF/_tools/FINALIZE_PROCEDURE.md` "Propagation rows"; A5): a CLAIM REVIEW, not a printing edit — every
+    potentially affected claim is checked against the current declaration and the dependency definitions, hypotheses,
+    constants and instances; prose is corrected even where the printed signature is unchanged; bounded Opus drafter +
+    independent Opus checker (≤ 18 files, split by claim count); the draft binds the current source bytes, the header
+    keeps the previous pin until finalization; acceptance = complete final records over the whole coverage set.
 R3. Snapshot every companion before editing: `_records/repin_<date>/before/<Dir>/<File>.tex`
     (129 files on 2026-10-11; copy command not recorded). Checkers diff against it.
 R4. Write `BRIEF_REPIN.md` (template in `references/brief_templates.md`): WHAT CHANGED (all of it,
@@ -184,12 +207,19 @@ R6. Re-pin checkers: one Opus per group, read-only, `CHECK_REPIN.md` (checks C1 
     environments; diff -u against `before/`) → `CHECK_<Group>.md`. 2026-10-11: 0 MAJOR, 7 MINOR, all
     applied by the coordinator.
 R7. Gates over everything: `(cd $UNF && python3 _tools/gates.py)` → `129/129 pass`.
-R8. After the user's commit (freeze.py refuses modified sources):
-    `(cd $UNF && python3 _tools/repin_finalize.py <old7>)` (optionally `--dry` first) — refuses on a
-    dirty tree; swaps `{<old7>}` → `{<new7>}` (from `git rev-parse --short=7 HEAD`) in every
-    `\unfheader`, requiring exactly one hit per companion; rebuilds all; gates all; `freeze.py` for
-    every launch unit; prints `RE-PIN FINALIZED at <new7>`. Haiku 5.5 medium ran it. A gate failure after
-    the swap is a layout flip (G5/G8): `\pagebreak`/`\allowbreak` per §7.70, rebuild, rerun.
+R8. After the user's commit C = HEAD (freeze.py refuses modified sources), the GENERATION-AWARE finalization
+    (`$UNF/_tools/FINALIZE_PROCEDURE.md`; the bare `repin_finalize.py <old7>` form is REFUSED by the tool):
+    plan `(cd $UNF && python3 -I _tools/finalize_manifest.py --commit <C> --plan-out FINALIZE_PLAN.json --rows)` →
+    review the dispositions (repin / skip-current / finalize-draft / needs-redraft / blocked / missing / orphan) and
+    the propagation rows (R2) → dry run `(cd $UNF && python3 -I _tools/repin_finalize.py --plan FINALIZE_PLAN.json --dry)`
+    (`preflight OK …`; re-verifies decision digests, HEAD == C, clean sources) → live run without `--dry` (run dir
+    `_records/finalize_<C7>_<UTC>/`: PLAN.json, `before/` snapshots, `journal.jsonl`; per row header swap or draft →
+    Provenance rewrite, build, gates; `freeze.py` per freezable unit; stops at the first failure) → on failure
+    `(cd $UNF && python3 -I _tools/repin_finalize.py --restore <RUN_DIR> --dry)`, then without `--dry` (the sidecar
+    archive objects are never rolled back; restored manifests are re-resolved, digest verified) → re-plan until the
+    whole coverage set is final. `--legacy <old7>` is only the recorded 2026-10-11 whole-set swap (not
+    generation-aware). Haiku 5.5 medium may run the recipe steps. A gate failure after the swap is a layout flip
+    (G5/G8): `\pagebreak`/`\allowbreak` per §7.70, rebuild, re-plan.
 R9. Hand-check all MANIFESTs (`library_head` = new sha, `library_source_porcelain` = ""), grep that no
     header still carries the old sha, append a dated line to PROGRESS.md, update the memory note,
     write/refresh the HANDOFF. No re-delivery when only headers changed in the PDFs.
@@ -201,8 +231,9 @@ reopened"), and git history as a source (§7.57: "never write history"). Docstri
 to describe the CURRENT docstring, or removed when only a fixed mismatch remains.
 
 Consequences of the tool code (derived, not yet exercised — UNSETTLED until a run needs them):
-- A companion drafted during a re-pin must carry the OLD pin in its header, else `repin_finalize.py`
-  refuses ("header field not found exactly once").
+- A companion drafted during a re-pin must carry the OLD pin in its header: the `--plan` preflight refuses a header
+  that does not carry the planned `swap_from` pin exactly once (and `--legacy <old7>` refuses with "header field not
+  found exactly once").
 - A NEW API file: `inventory.py` adds it to API_FILES.txt, but it belongs to no launch unit until
   `launch_units.json` is edited by hand; `signatures.py`, `freeze.py` and `repin_finalize.py` read only
   launch units / API_FILES. A DELETED or RENAMED file: its stale sidecar stays in `_sidecar/` and its
@@ -316,9 +347,7 @@ taxonomy, §4 gates, §5 pipeline, most §7 rulings), the sidecar extraction fro
 fail-closed build, G0–G10, the freeze/MANIFEST binding, the matrix checker, the re-pin procedure.
 
 Specific — change these to point the skill at another library:
-- Hard-coded paths: `inventory.py` (ROOT, OUT), `signatures.py` (LAKE, SRC), `gates.py` (SRC default;
-  env overrides `UNF_ROOT`, `UNF_SRC`, `UNF_SIDE`), `build.py` (`UNF_ROOT` override),
-  `resolve_external.py`, `freeze.py`, `repin_finalize.py` (LAKE), `gen_reading_order.py` (ROOT).
+- Default paths: `inventory.py` (ROOT, OUT), `gen_reading_order.py` (ROOT), `resolve_external.py` hard-code them; `signatures.py`, `freeze.py`, `semdiff.py`, `finalize_manifest.py` take `--unf/--lake` (else env, else live); `repin_finalize.py --plan/--restore` use the plan's roots, `--legacy` env; `gates.py` (`UNF_ROOT`/`UNF_SRC`/`UNF_SIDE`), `build.py` (`UNF_ROOT`).
 - Module prefix `RadiiPolynomial.` in `signatures.py`/`resolve_external.py` (`module_of`) and the
   `git status --porcelain -- RadiiPolynomial/` path in `freeze.py`/`repin_finalize.py`.
 - `gates.py` SYNTAX whitelist (library-flavoured: `PosReal`, `LeanCert`, `RadiiPolynomial`) and the

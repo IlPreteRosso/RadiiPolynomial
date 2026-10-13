@@ -16,10 +16,24 @@
   `_proof_`, `match_`, `sizeOf`, `noConfusion`, `below`, `brecOn`, `recOn`, `casesOn`, `injEq`, recursors, equation lemmas
   (`eq_<digits>`, `eq_def`, `eq_unfold`). Example row (Core/Bounds):
   `public	def	35-37	authored	RadiiPolynomial.X	RadiiPolynomial.X.{u_2} (Seq : RadiiPolynomial.PosReal → Type u_2) (ν : RadiiPolynomial.PosReal) (L : ℕ) : Type u_2`
-- `ALL_FQNS.txt` — every FQN of every sidecar present (3311 lines on 2026-10-11).
+- `ALL_FQNS.txt` — every FQN of every sidecar of the LIVE set `_sidecar/**/*.sig.tsv` (3311 lines on 2026-10-11); names
+  only in `_sidecar_prev/` never enter it.
 - `EXTERNAL_RESOLVED.txt` — `name<TAB>module` from real `#check`s (983 rows on 2026-10-11), e.g.
   `AddMonoidAlgebra.coeff_add	Mathlib.Algebra.MonoidAlgebra.Defs`; `EXTERNAL_RESOLVED.txt.lock` = the flock file.
   Single registry for Mathlib, LeanCert, Lean core and cross-module library names (§7.64); never edited by hand.
+
+## Sidecar generations (`signatures.py`; CONSENSUS_sidecar_archive A2, 2026-10-14)
+- `_sidecar_prev/` — sibling of `_sidecar/` (never beneath it: `signatures.py`, `gates.py` and `finalize_manifest.py`
+  walk `_sidecar/` only): the COMPLETE previous successful live set (`<Dir>/<File>.sig.tsv` + `ALL_FQNS.txt`) captured by
+  the last publication, with `PREV_MANIFEST.json` (`schema` sidecar-prev/1, `captured_by_run`, `captured_at`,
+  `replacing_scope`, `replaced_files`, `files` rel → sha256, `ALL_FQNS.txt` sha256, `complete`: true). One generation,
+  disposable; a review that needs it pins a copy/hash in its record. `--recover` also restores `_sidecar_prev/` to the
+  generation preceding the failed run.
+- `_sidecar_stage_<run>/` — staging of one extraction (removed after publication or failure).
+- `_sidecar_INCOMPLETE.json` — present only after an interrupted publication (`run_id`, `phase` rotate|publish, `scope`,
+  `files`, `stage`); `freeze.py`, `finalize_manifest.py`, `semdiff.py` (live side), `gates.py` (G0 failure) and
+  `signatures.py` refuse until `signatures.py --recover` restores the previous generation.
+- `_sidecar.lock` — the flock file of the single sidecar writer (`signatures.py` publication, `freeze.py`).
 
 ## `_records/<UNIT>/` (26 directories A1 … E4; file counts across all units in brackets)
 | file | written by | content |
@@ -30,6 +44,8 @@
 | `SHA256SUMS` [26] | `freeze.py` | `<sha256>  <Dir/File>.tex|.pdf|.log`, `<sha256>  lean:<rel>`, `<sha256>  sidecar:<Dir/File>.sig.tsv` |
 | `ALL_FQNS.frozen.txt`, `EXTERNAL_RESOLVED.frozen.txt` [26 each] | `freeze.py` | registry copies at freeze time (Codex E1 acceptance note: shared registries drift) |
 | `CONTRACT.frozen.md`, `unformalization.frozen.sty` [26 each] | `freeze.py` | contract and style copies (Codex B9) |
+| `sidecar/<sha256>.sig.tsv` | `freeze.py` (since 2026-10-14, A1) | immutable, content-addressed copy of the exact sidecar bytes a MANIFEST recorded; written BEFORE the manifest; reused only after byte verification; never overwritten (a differing object = REFUSED); never rolled back by `repin_finalize.py --restore`; objects of an aborted freeze/finalization stay as non-current evidence |
+| `sidecar/BACKFILL.json` | `freeze.py --backfill` | digest → {rel, manifest, source, at, label}: objects stored later for a manifest WITHOUT archived content, only from bytes whose sha256 equals the recorded sidecar digest; the manifest itself is not rewritten |
 | `MANIFEST_round<k>_<sha8>.json`, `MANIFEST_accepted_<sha8>.json` [7, in E1 B9 D2 E4] | coordinator (rename before re-freeze) | the manifests Codex audit rounds referred to; `<sha8>` = first 8 hex of the MANIFEST's sha256 |
 | `probes/` [0] | drafter (§8 P2) | prescribed for the next wave; none exist yet |
 Fixer dispositions have no file of their own (UNSETTLED; they lived in the fixer's hand-back and the PROGRESS "fixes" cell).
@@ -39,10 +55,13 @@ Fixer dispositions have no file of their own (UNSETTLED; they lived in the fixer
 fresh compilation or axiom audit"); `library_source_porcelain` (`git status --porcelain -- RadiiPolynomial/`; must be "" at a
 clean freeze); `lean_toolchain` (e.g. `leanprover/lean4:v4.34.1`); `dependencies` (name → rev from `lake-manifest.json`: LeanCert,
 mathlib, checkdecls, plausible, LeanSearchClient, importGraph, proofwidgets, aesop, Qq, batteries, Cli); `contract_sha256`;
-`style_sha256`; `tools` (sha of build.py, gates.py, signatures.py, freeze.py — NOT resolve_external.py/repin_finalize.py);
+`style_sha256`; `tools` (sha of build.py, gates.py, signatures.py, freeze.py, semdiff.py — NOT resolve_external.py/repin_finalize.py);
 `build_command`; `sidecar_extraction`; `registries` (sha of ALL_FQNS.txt, EXTERNAL_RESOLVED.txt); `checker_records` (sha of every
 `.md` in the unit dir except `*.frozen.*` and `MANIFEST*`); `files` → per `.lean` rel path: `lean`, `sidecar`, `olean` (or null),
-`tex`, `pdf`, `log` sha256s.
+`tex`, `pdf`, `log` sha256s, and (freezes since 2026-10-14) `sidecar_archive` = `sidecar/<sha256 of the sidecar>.sig.tsv`.
+Archive resolution (`semdiff.resolve_archive`) always verifies the digest: `ARCHIVED` (field present, object verified),
+`BACKFILL` (no field; a digest-matching object, labelled), else `BASELINE_UNAVAILABLE` (no field and no object, object
+missing, or digest mismatch) — counts of a sidecar diff are then unknown, never zero, and the older freeze stays valid.
 Hand-check after every batch freeze: `library_head` = intended commit, `library_source_porcelain` = "".
 
 ## `_records/PROGRESS.md` (campaign tracker; "rewritten at every step")
@@ -70,6 +89,11 @@ Groups 2026-10-11: Algebra, Analysis1, Analysis2, Applications1, Applications2, 
 `BRIEF.md` (worker brief), `REMARKS_<TopDir>.md` (from `docstring_remarks.py`: per file, `[tex line N] <paragraph>`),
 `REPORT_<Group>.md` (FILES / EDITS `<file>:<line> <decl> | was | now | answers remark` / NO CHANGE / CHECKS / OBSTACLES),
 `GLOSSARY_FIXES.md` (replacement text for UBIQUITOUS_LANGUAGE.md when the harness refused the edit).
+
+## `_records/finalize_<C7>_<UTC>/` (`repin_finalize.py --plan`, live run)
+`PLAN.json`, `before/` (tex/pdf/log of every touched row and the FROZEN_FILES of every unit to freeze, `before/SHA256SUMS`),
+`journal.jsonl` (start · snapshot with `present`/`absent` and `archive` = {units, objects [path, sha256]} · per-row
+begin/end · freeze · fail|done · restore/restored with the archive report).
 
 ## Other
 `_records/CONTRACT_v0_fc5bb6e5.md` (v0 contract kept for history). Codex review artefacts live on the agents bus
