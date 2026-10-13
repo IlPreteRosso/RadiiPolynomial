@@ -10,7 +10,7 @@ Regression witnesses for `RadiiPolynomial/Algebra/Convolution/FiniteFiber/PowerS
 (contract `CONSENSUS_r10.FINAL_8c6d01a0.md`, unit U-R10b, test requirements 6, 7 and 9). Not
 imported by any library module; the file imports no topology.
 
-1. One variable: the forward map is the raw coefficient map `CauchyProduct.toPowerSeries`, the
+1. One variable: the forward map is the raw coefficient map `cauchyProduct.toPowerSeries`, the
    inverse reads off coefficients, both inverse laws hold, and the product of the `ℕ` wrapper is
    the Cauchy product coefficient by coefficient.
 2. The unit: `1` and the atom `single 0 1` both go to the power series `1`.
@@ -36,7 +36,7 @@ variable {R : Type*} [Semiring R]
 
 /-- The forward map is the raw coefficient map of the underlying function. -/
 example (f : FiniteFiberAddConvolution ℕ R) :
-    toPowerSeriesRingEquiv R f = CauchyProduct.toPowerSeries (toFun f) := rfl
+    toPowerSeriesRingEquiv R f = cauchyProduct.toPowerSeries (toFun f) := rfl
 
 example (f : FiniteFiberAddConvolution ℕ R) :
     toPowerSeriesRingEquiv R f = PowerSeries.mk (toFun f) := rfl
@@ -56,7 +56,7 @@ example (φ : PowerSeries R) : toPowerSeriesRingEquiv R ((toPowerSeriesRingEquiv
 
 /-- The product of the `ℕ` wrapper is the Cauchy product of the underlying functions. -/
 example (f g : FiniteFiberAddConvolution ℕ R) (n : ℕ) :
-    coeff n (f * g) = CauchyProduct (toFun f) (toFun g) n := rfl
+    coeff n (f * g) = cauchyProduct (toFun f) (toFun g) n := rfl
 
 /-- Multiplicativity, read on coefficients through `PowerSeries.coeff_mul`. -/
 example (f g : FiniteFiberAddConvolution ℕ R) (n : ℕ) :
@@ -87,11 +87,11 @@ variable {R : Type*} [Semiring R]
 
 example : toPowerSeriesRingEquiv R 1 = 1 := map_one _
 
-/-- The unit atom `single 0 1` goes to `1`, through `CauchyProduct.one_eq_single` and
-`CauchyProduct.toPowerSeries_one`. -/
+/-- The unit atom `single 0 1` goes to `1`, through `cauchyProduct.one_eq_single` and
+`cauchyProduct.toPowerSeries_one`. -/
 example : toPowerSeriesRingEquiv R (single 0 1) = 1 := by
-  rw [toPowerSeriesRingEquiv_apply, single, toFun_ofFun, ← CauchyProduct.one_eq_single,
-    CauchyProduct.toPowerSeries_one]
+  rw [toPowerSeriesRingEquiv_apply, single, toFun_ofFun, ← cauchyProduct.one_eq_single,
+    cauchyProduct.toPowerSeries_one]
 
 /-- The inverse of `1` is the Kronecker delta at the index `0`. -/
 example (n : ℕ) : coeff n ((toPowerSeriesRingEquiv R).symm 1) = if n = 0 then 1 else 0 := by

@@ -44,7 +44,7 @@ def colsG1 (j : ℤ) : 𝓔 𝕜 ν := if j = 0 then -(lpOneAlg.single 1 1) else
 
 theorem colsG1_bound (j : ℤ) :
     ‖(colsG1 j : 𝓔 𝕜 ν)‖ ≤ (ν : ℝ) *
-      ‖lpAlgRingData.ofReal (E := geomFiberZ 𝕜 ν) j (1 : 𝕜)‖ := by
+      FiberTrivialization.weight (E := geomFiberZ 𝕜 ν) j := by
   rw [geomFiberZ_weight]
   unfold colsG1
   split_ifs with h
@@ -612,11 +612,11 @@ variable {𝕜 : Type*} [RCLike 𝕜]
 
 /-- The fibre values of `b` (`b_k = 2^{−|k|}`). -/
 def bG9Fun (k : ℤ) : geomFiberZ 𝕜 nu1 k :=
-  lpAlgRingData.ofReal (E := geomFiberZ 𝕜 nu1) k
+  FiberTrivialization.equiv (E := geomFiberZ 𝕜 nu1) k
     ((geo k : ℝ) : 𝕜)
 
 theorem norm_bG9Fun (k : ℤ) : ‖(bG9Fun k : WeightedScalar 𝕜 _ k)‖ = geo k := by
-  rw [bG9Fun, lpAlgRingData.norm_ofReal_eq, geomFiberZ_weight, nu1_weight, mul_one,
+  rw [bG9Fun, FiberTrivialization.norm_equiv_apply, geomFiberZ_weight, nu1_weight, mul_one,
     RCLike.norm_ofReal, abs_of_pos (geo_pos k)]
 
 theorem bG9Fun_mem : Memℓp (bG9Fun (𝕜 := 𝕜)) 1 := by
@@ -627,7 +627,7 @@ theorem bG9Fun_mem : Memℓp (bG9Fun (𝕜 := 𝕜)) 1 := by
 def bG9 : 𝓔 𝕜 nu1 := ⟨⟨bG9Fun, bG9Fun_mem⟩⟩
 
 theorem toRealSeq_bG9 (k : ℤ) : lpOneAlg.toRealSeq (bG9 : 𝓔 𝕜 nu1) k = ((geo k : ℝ) : 𝕜) :=
-  lpAlgRingData.toReal_ofReal k _
+  FiberTrivialization.equiv_symm_apply_equiv k _
 
 /-- G9: `rConst 0` is the brief's symbol `r_k = if k = 0 then 0 else 1`. -/
 theorem G9_r_eq (k : ℤ) : (rConst 0 k : 𝕜) = if k = 0 then 0 else 1 := by
@@ -845,7 +845,7 @@ theorem zeroSym_le : ∀ k : ℤ, ‖(0 : ℤ → 𝕜) k‖ ≤ 0 := fun k => b
 def colsZQ (j : ℤ) : 𝓔 𝕜 nu1 := if j = 2 then lpOneAlg.single 0 1 else 0
 
 theorem colsZQ_bound (j : ℤ) :
-    ‖(colsZQ j : 𝓔 𝕜 nu1)‖ ≤ 1 * ‖lpAlgRingData.ofReal (E := geomFiberZ 𝕜 nu1) j (1 : 𝕜)‖ := by
+    ‖(colsZQ j : 𝓔 𝕜 nu1)‖ ≤ 1 * FiberTrivialization.weight (E := geomFiberZ 𝕜 nu1) j := by
   rw [geomFiberZ_weight, nu1_weight, one_mul]
   unfold colsZQ
   split_ifs
@@ -962,7 +962,7 @@ variable {𝕜 : Type*} [RCLike 𝕜]
 def colsZP (j : ℤ) : 𝓔 𝕜 nu1 := if j = 0 then lpOneAlg.single 1 1 else 0
 
 theorem colsZP_bound (j : ℤ) :
-    ‖(colsZP j : 𝓔 𝕜 nu1)‖ ≤ 1 * ‖lpAlgRingData.ofReal (E := geomFiberZ 𝕜 nu1) j (1 : 𝕜)‖ := by
+    ‖(colsZP j : 𝓔 𝕜 nu1)‖ ≤ 1 * FiberTrivialization.weight (E := geomFiberZ 𝕜 nu1) j := by
   rw [geomFiberZ_weight, nu1_weight, one_mul]
   unfold colsZP
   split_ifs

@@ -5,7 +5,7 @@ import Mathlib.Algebra.Algebra.Rat
 /-!
 # Validation witnesses for the bundled power-series bridge
 
-Regression witnesses for the linear equivalence `CauchyProduct.toPowerSeriesLinearEquiv` of
+Regression witnesses for the linear equivalence `cauchyProduct.toPowerSeriesLinearEquiv` of
 `RadiiPolynomial/Algebra/Convolution/CauchyProduct.lean` (consensus
 `CONSENSUS_toPowerSeries_equiv.md`, E4). Not imported by any library module; build with
 `lake build RadiiPolynomial.Examples.tests.CV.PowerSeriesBridge`.
@@ -23,7 +23,7 @@ Regression witnesses for the linear equivalence `CauchyProduct.toPowerSeriesLine
 
 namespace RadiiPolynomial.PowerSeriesBridgeTests
 
-open RadiiPolynomial CauchyProduct
+open RadiiPolynomial cauchyProduct
 
 /-! ## 1. Forward map and inverse computation -/
 
@@ -125,7 +125,7 @@ example (a b : ℕ → Matrix (Fin 2) (Fin 2) ℕ) (n : ℕ) :
     PowerSeries.coeff n
         (toPowerSeriesLinearEquiv (Matrix (Fin 2) (Fin 2) ℕ) a *
           toPowerSeriesLinearEquiv (Matrix (Fin 2) (Fin 2) ℕ) b) =
-      CauchyProduct a b n := by
+      cauchyProduct a b n := by
   rw [toPowerSeriesLinearEquiv_apply, toPowerSeriesLinearEquiv_apply, eq_coeff_mul]
 
 end CoefficientNormalForm
@@ -135,24 +135,24 @@ end CoefficientNormalForm
 Output of `#print axioms` on each declaration (2026-10-12, Lean v4.34.1, Mathlib d13f23b7),
 enforced below by `#guard_msgs`:
 
-* `CauchyProduct.toPowerSeriesLinearEquiv`: `[propext, Classical.choice, Quot.sound]`
-* `CauchyProduct.toPowerSeriesLinearEquiv_apply`: `[propext, Classical.choice, Quot.sound]`
-* `CauchyProduct.toPowerSeriesLinearEquiv_symm_apply`: `[propext, Classical.choice, Quot.sound]`
-* `CauchyProduct.toPowerSeriesLinearEquiv_symm_apply_coeff`:
+* `cauchyProduct.toPowerSeriesLinearEquiv`: `[propext, Classical.choice, Quot.sound]`
+* `cauchyProduct.toPowerSeriesLinearEquiv_apply`: `[propext, Classical.choice, Quot.sound]`
+* `cauchyProduct.toPowerSeriesLinearEquiv_symm_apply`: `[propext, Classical.choice, Quot.sound]`
+* `cauchyProduct.toPowerSeriesLinearEquiv_symm_apply_coeff`:
   `[propext, Classical.choice, Quot.sound]`
-* `CauchyProduct.coeff_toPowerSeriesLinearEquiv`: `[propext, Classical.choice, Quot.sound]`
-* `CauchyProduct.toPowerSeries`: `[propext, Classical.choice, Quot.sound]` (unchanged)
-* `CauchyProduct.toPowerSeries_injective`: `[propext, Classical.choice, Quot.sound]` (unchanged)
+* `cauchyProduct.coeff_toPowerSeriesLinearEquiv`: `[propext, Classical.choice, Quot.sound]`
+* `cauchyProduct.toPowerSeries`: `[propext, Classical.choice, Quot.sound]` (unchanged)
+* `cauchyProduct.toPowerSeries_injective`: `[propext, Classical.choice, Quot.sound]` (unchanged)
 -/
 
 /--
-info: 'RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: 'RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv' depends on axioms: [propext, Classical.choice, Quot.sound]
 -/
 #guard_msgs in
 #print axioms toPowerSeriesLinearEquiv
 
 /--
-info: 'RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv_apply' depends on axioms: [propext,
+info: 'RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv_apply' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
 -/
@@ -160,7 +160,7 @@ info: 'RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv_apply' depends on 
 #print axioms toPowerSeriesLinearEquiv_apply
 
 /--
-info: 'RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv_symm_apply' depends on axioms: [propext,
+info: 'RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv_symm_apply' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
 -/
@@ -168,7 +168,7 @@ info: 'RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv_symm_apply' depend
 #print axioms toPowerSeriesLinearEquiv_symm_apply
 
 /--
-info: 'RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv_symm_apply_coeff' depends on axioms: [propext,
+info: 'RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv_symm_apply_coeff' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
 -/
@@ -176,7 +176,7 @@ info: 'RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv_symm_apply_coeff' 
 #print axioms toPowerSeriesLinearEquiv_symm_apply_coeff
 
 /--
-info: 'RadiiPolynomial.CauchyProduct.coeff_toPowerSeriesLinearEquiv' depends on axioms: [propext,
+info: 'RadiiPolynomial.cauchyProduct.coeff_toPowerSeriesLinearEquiv' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
 -/
@@ -184,13 +184,13 @@ info: 'RadiiPolynomial.CauchyProduct.coeff_toPowerSeriesLinearEquiv' depends on 
 #print axioms coeff_toPowerSeriesLinearEquiv
 
 /--
-info: 'RadiiPolynomial.CauchyProduct.toPowerSeries' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: 'RadiiPolynomial.cauchyProduct.toPowerSeries' depends on axioms: [propext, Classical.choice, Quot.sound]
 -/
 #guard_msgs in
 #print axioms toPowerSeries
 
 /--
-info: 'RadiiPolynomial.CauchyProduct.toPowerSeries_injective' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: 'RadiiPolynomial.cauchyProduct.toPowerSeries_injective' depends on axioms: [propext, Classical.choice, Quot.sound]
 -/
 #guard_msgs in
 #print axioms toPowerSeries_injective

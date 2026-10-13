@@ -302,10 +302,10 @@ end SL25
 
 /-- HTC :55 `opNorm_le_iff_cols` with `C` explicit, by `lpOneAlg.opNorm_le_iff_cols`. -/
 theorem old_HTC_opNorm_le_iff_cols {𝕜 : Type*} [NontriviallyNormedField 𝕜] {I : Type*}
-    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [lpAlgRingData 𝕜 I E] [DecidableEq I]
-    [∀ i, NormedSpace 𝕜 (E i)] [lpAlgSmulCompat 𝕜 I E] {F : Type*} [NormedAddCommGroup F]
+    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [DecidableEq I]
+    [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 I E] {F : Type*} [NormedAddCommGroup F]
     [NormedSpace 𝕜 F] (T : lpOneAlg I E →L[𝕜] F) (C : ℝ) (hC : 0 ≤ C) :
-    ‖T‖ ≤ C ↔ ∀ i, ‖T (single i (1 : 𝕜))‖ ≤ C * ‖lpAlgRingData.ofReal (E := E) i (1 : 𝕜)‖ :=
+    ‖T‖ ≤ C ↔ ∀ i, ‖T (single i (1 : 𝕜))‖ ≤ C * FiberTrivialization.weight (E := E) i :=
   opNorm_le_iff_cols T hC
 
 /-! ### (d) SL25 Part E ring identities with raw hypotheses -/
@@ -346,55 +346,55 @@ variable {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
   [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
 
 /-- T21 in D12, by `lpOneAlg.isIdempotentElem_headProj`. -/
-theorem old_D12_isIdempotentElem_headProj [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G]
+theorem old_D12_isIdempotentElem_headProj [FiberTrivialization 𝕜 J G]
     [DecidableEq J] (H : Finset J) :
     IsIdempotentElem (headProj H : lpOneAlg J G →L[𝕜] lpOneAlg J G) :=
   isIdempotentElem_headProj H
 
 /-- HTC :178 `P_H_comp_P_H` (D12 context), by `lpOneAlg.headProj_comp_headProj`. -/
-theorem old_P_H_comp_P_H_D12 [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+theorem old_P_H_comp_P_H_D12 [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) :
     (headProj H : lpOneAlg J G →L[𝕜] lpOneAlg J G) ∘L headProj H = headProj H :=
   headProj_comp_headProj H
 
 /-- HTC :185 `P_H_comp_Q_H` (D12 context), by `lpOneAlg.headProj_comp_tailProj`. -/
-theorem old_P_H_comp_Q_H_D12 [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+theorem old_P_H_comp_Q_H_D12 [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) :
     (headProj H : lpOneAlg J G →L[𝕜] lpOneAlg J G) ∘L (1 - headProj H) = 0 :=
   headProj_comp_tailProj H
 
 /-- HTC :190 `Q_H_comp_P_H` (D12 context), by `lpOneAlg.tailProj_comp_headProj`. -/
-theorem old_Q_H_comp_P_H_D12 [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+theorem old_Q_H_comp_P_H_D12 [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) :
     (1 - headProj H : lpOneAlg J G →L[𝕜] lpOneAlg J G) ∘L headProj H = 0 :=
   tailProj_comp_headProj H
 
 /-- HTC :195 `Q_H_comp_Q_H` (D12 context), by `lpOneAlg.tailProj_comp_tailProj`. -/
-theorem old_Q_H_comp_Q_H_D12 [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+theorem old_Q_H_comp_Q_H_D12 [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) :
     (1 - headProj H : lpOneAlg J G →L[𝕜] lpOneAlg J G) ∘L (1 - headProj H) = 1 - headProj H :=
   tailProj_comp_tailProj H
 
 /-- HTC :201 `P_H_add_Q_H` (D12 context), by `lpOneAlg.headProj_add_tailProj`. -/
-theorem old_P_H_add_Q_H_D12 [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+theorem old_P_H_add_Q_H_D12 [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) :
     (headProj H : lpOneAlg J G →L[𝕜] lpOneAlg J G) + (1 - headProj H) = 1 :=
   headProj_add_tailProj H
 
 /-- T25 (head face) in D12, by `lpOneAlg.headProj_comp_diagCLM`. -/
-theorem old_D12_headProj_comp_diagCLM [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+theorem old_D12_headProj_comp_diagCLM [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) (r : J → 𝕜) (C : ℝ) (hr : ∀ j, ‖r j‖ ≤ C) (hr0 : ∀ j ∈ H, r j = 0) :
     (headProj H : lpOneAlg J G →L[𝕜] lpOneAlg J G) ∘L diagCLM r C hr = 0 :=
   headProj_comp_diagCLM H r C hr hr0
 
 /-- T25 (tail face) in D12, by `lpOneAlg.tailProj_comp_diagCLM`. -/
-theorem old_D12_tailProj_comp_diagCLM [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+theorem old_D12_tailProj_comp_diagCLM [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) (r : J → 𝕜) (C : ℝ) (hr : ∀ j, ‖r j‖ ≤ C) (hr0 : ∀ j ∈ H, r j = 0) :
     (tailProj H : lpOneAlg J G →L[𝕜] lpOneAlg J G) ∘L diagCLM r C hr = diagCLM r C hr :=
   tailProj_comp_diagCLM H r C hr hr0
 
 /-- HTC :205 `norm_add_of_head_tail` (D12 context), by `lpOneAlg.norm_add_of_head_tail`. -/
-theorem old_norm_add_of_head_tail_D12 [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+theorem old_norm_add_of_head_tail_D12 [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) (x y : lpOneAlg J G) (hx : headProj (𝕜 := 𝕜) H x = x)
     (hy : (1 - headProj (𝕜 := 𝕜) H) y = y) : ‖x + y‖ = ‖x‖ + ‖y‖ :=
   norm_add_of_head_tail H x y hx hy

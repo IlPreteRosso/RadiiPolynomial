@@ -37,7 +37,7 @@ abbrev X := lpOneAlg ℤ (geomFiberZ ℝ nuOne)
 abbrev H0 : Finset ℤ := {0}
 
 /-- Every weight of the unit carrier is `1`. -/
-theorem oneWeight (j : ℤ) : ‖lpAlgRingData.ofReal (E := geomFiberZ ℝ nuOne) j (1 : ℝ)‖ = 1 := by
+theorem oneWeight (j : ℤ) : FiberTrivialization.weight (E := geomFiberZ ℝ nuOne) j = 1 := by
   rw [geomFiberZ_weight]; change (1 : ℝ) ^ j.natAbs = 1; exact one_pow _
 
 /-- Every unit atom of the unit carrier has norm `1`. -/
@@ -51,7 +51,7 @@ theorem atom_ne_zero (j : ℤ) : (single j (1 : ℝ) : X) ≠ 0 := fun h =>
 /-- Column domination of the rank-one family `e_j ↦ [j = k] e_l`. -/
 theorem rankBound (k l j : ℤ) :
     ‖(if j = k then single l (1 : ℝ) else 0 : X)‖ ≤
-      1 * ‖lpAlgRingData.ofReal (E := geomFiberZ ℝ nuOne) j (1 : ℝ)‖ := by
+      1 * FiberTrivialization.weight (E := geomFiberZ ℝ nuOne) j := by
   rw [oneWeight, one_mul]; split_ifs
   · rw [atomNorm]
   · rw [norm_zero]; norm_num
@@ -247,7 +247,7 @@ abbrev EmptyX := lpOneAlg Empty (WeightedScalar ℝ (fun _ : Empty => (1 : ℝ))
 /-- Without `0 ≤ C`, the column bound holds vacuously at `C = -1` while `‖0‖ ≤ -1` fails. -/
 theorem empty_bad_bound :
     (∀ i : Empty, ‖(0 : EmptyX →L[ℝ] ℝ) (single i 1)‖ ≤
-      (-1 : ℝ) * ‖lpAlgRingData.ofReal (E := WeightedScalar ℝ (fun _ : Empty => (1 : ℝ))) i 1‖) ∧
+      (-1 : ℝ) * FiberTrivialization.weight (E := WeightedScalar ℝ (fun _ : Empty => (1 : ℝ))) i) ∧
       ¬ ‖(0 : EmptyX →L[ℝ] ℝ)‖ ≤ (-1 : ℝ) := by
   constructor
   · intro i; exact nomatch i
@@ -256,7 +256,7 @@ theorem empty_bad_bound :
 /-- The `hC`-free iff of T7 is false (T = 0, C = -1, empty index). -/
 theorem drop_hC_iff :
     ¬ (‖(0 : EmptyX →L[ℝ] ℝ)‖ ≤ (-1 : ℝ) ↔ ∀ i : Empty, ‖(0 : EmptyX →L[ℝ] ℝ) (single i 1)‖ ≤
-      (-1 : ℝ) * ‖lpAlgRingData.ofReal (E := WeightedScalar ℝ (fun _ : Empty => (1 : ℝ))) i 1‖) :=
+      (-1 : ℝ) * FiberTrivialization.weight (E := WeightedScalar ℝ (fun _ : Empty => (1 : ℝ))) i) :=
   fun h => empty_bad_bound.2 (h.mpr empty_bad_bound.1)
 
 /-- T9 needs no `Nonempty`: on the empty index both sides are `0`. -/
@@ -272,7 +272,7 @@ theorem empty_opNorm_eq_iSup :
 /-- CTL-C1 positive side: T7 with `<` for `≤` is false at `T = 0`, `C = 0`. -/
 theorem ctl_C1_witness :
     ¬ (‖(0 : X →L[ℝ] X)‖ < 0 ↔ ∀ i, ‖(0 : X →L[ℝ] X) (single i (1 : ℝ))‖ ≤
-      0 * ‖lpAlgRingData.ofReal (E := geomFiberZ ℝ nuOne) i (1 : ℝ)‖) := by
+      0 * FiberTrivialization.weight (E := geomFiberZ ℝ nuOne) i) := by
   rw [norm_zero]
   exact fun h => lt_irrefl _ (h.mpr fun i => by rw [zero_apply, norm_zero, zero_mul])
 
@@ -302,7 +302,7 @@ def mixedQ : Target3 →L[ℝ] Target3 := tailProj H1
 def mixedVector : Target3 := single 0 1 + single 2 1
 
 theorem mixedBound (j : ℤ) : ‖(if j = 1 then mixedVector else 0 : Target3)‖ ≤
-    10 * ‖lpAlgRingData.ofReal (E := geomFiberZ ℝ muTwo) j (1 : ℝ)‖ := by
+    10 * FiberTrivialization.weight (E := geomFiberZ ℝ muTwo) j := by
   rw [geomFiberZ_weight]
   by_cases hj : j = 1
   · subst j; rw [ite_eq_left rfl]

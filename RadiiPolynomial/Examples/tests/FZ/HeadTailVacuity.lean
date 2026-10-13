@@ -124,7 +124,7 @@ def vacNuOne : PosReal := ⟨1, by norm_num⟩
 abbrev VacX := lpOneAlg ℤ (geomFiberZ ℝ vacNuOne)
 
 theorem vacOneWeight (j : ℤ) :
-    ‖lpAlgRingData.ofReal (E := geomFiberZ ℝ vacNuOne) j (1 : ℝ)‖ = 1 := by
+    FiberTrivialization.weight (E := geomFiberZ ℝ vacNuOne) j = 1 := by
   rw [geomFiberZ_weight]; change (1 : ℝ) ^ j.natAbs = 1; exact one_pow _
 
 theorem vacAtomNorm (j : ℤ) : ‖(single j (1 : ℝ) : VacX)‖ = 1 := by
@@ -132,7 +132,7 @@ theorem vacAtomNorm (j : ℤ) : ‖(single j (1 : ℝ) : VacX)‖ = 1 := by
 
 theorem vacRankBound (k l j : ℤ) :
     ‖(if j = k then single l (1 : ℝ) else 0 : VacX)‖ ≤
-      1 * ‖lpAlgRingData.ofReal (E := geomFiberZ ℝ vacNuOne) j (1 : ℝ)‖ := by
+      1 * FiberTrivialization.weight (E := geomFiberZ ℝ vacNuOne) j := by
   rw [vacOneWeight, one_mul]; split_ifs
   · rw [vacAtomNorm]
   · rw [norm_zero]; norm_num

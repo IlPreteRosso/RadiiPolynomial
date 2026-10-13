@@ -204,7 +204,7 @@ def colsG4 (k : ℤ) : 𝓔 ℂ ν := if k.natAbs ≤ 1 then lpOneAlg.single 0 1
 
 theorem colsG4_bound (k : ℤ) :
     ‖(colsG4 k : 𝓔 ℂ ν)‖ ≤ 1 *
-      ‖lpAlgRingData.ofReal (E := geomFiberZ ℂ ν) k (1 : ℂ)‖ := by
+      FiberTrivialization.weight (E := geomFiberZ ℂ ν) k := by
   rw [geomFiberZ_weight, one_mul]
   unfold colsG4
   split_ifs

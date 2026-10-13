@@ -45,7 +45,7 @@ example (f g : ℕ → ℤ) : f ⋆ᵣ₊ g = finiteAddConvolution f g :=
   addRingConvolution_eq_finiteAddConvolution f g
 
 /-- The tsum convolution at `ℕ` is the Cauchy product. -/
-example (f g : ℕ → ℤ) : f ⋆ᵣ₊ g = CauchyProduct f g :=
+example (f g : ℕ → ℤ) : f ⋆ᵣ₊ g = cauchyProduct f g :=
   addRingConvolution_eq_finiteAddConvolution f g
 
 /-- A value computed through the finite sum. -/

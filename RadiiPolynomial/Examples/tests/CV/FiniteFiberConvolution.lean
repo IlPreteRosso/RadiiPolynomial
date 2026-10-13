@@ -27,7 +27,7 @@ any library module.
    only with coefficient scalars, and centrality of `algebraMap` against an element of infinite
    support.
 6. Mixed imports: wrapper and raw `Pi` instances side by side.
-7. The live `CauchyProduct` delta and map statements follow from the general-coefficient laws.
+7. The live `cauchyProduct` delta and map statements follow from the general-coefficient laws.
 8. Instance coherence: every path to the data, casts and scalar actions closes by
    `with_reducible_and_instances rfl`, for both twins.
 -/
@@ -362,29 +362,29 @@ example : toFun (1 : FiniteFiberAddConvolution ℕ ℤ) ≠ (1 : ℕ → ℤ) :=
 
 end MixedImports
 
-/-! ## 7. The `CauchyProduct` delta and map laws from the general-coefficient laws -/
+/-! ## 7. The `cauchyProduct` delta and map laws from the general-coefficient laws -/
 
 section CauchyProductCompat
 
 variable {R : Type*}
 
-/-- `CauchyProduct.delta_left`, statement copied verbatim. -/
+/-- `cauchyProduct.delta_left`, statement copied verbatim. -/
 example [Semiring R] (r : R) (f : ℕ → R) (n : ℕ) :
-    CauchyProduct (fun k => if k = 0 then r else 0) f n = r * f n := by
+    cauchyProduct (fun k => if k = 0 then r else 0) f n = r * f n := by
   rw [show (fun k : ℕ => if k = 0 then r else 0) = Pi.single 0 r from
-    funext fun k => (Pi.single_apply 0 r k).symm, CauchyProduct_eq_finiteAddConvolution,
+    funext fun k => (Pi.single_apply 0 r k).symm, cauchyProduct_eq_finiteAddConvolution,
     finiteAddConvolution.single_zero_left_apply zero_mul]
 
-/-- `CauchyProduct.delta_right`, statement copied verbatim. -/
+/-- `cauchyProduct.delta_right`, statement copied verbatim. -/
 example [Semiring R] (f : ℕ → R) (r : R) (n : ℕ) :
-    CauchyProduct f (fun k => if k = 0 then r else 0) n = f n * r := by
+    cauchyProduct f (fun k => if k = 0 then r else 0) n = f n * r := by
   rw [show (fun k : ℕ => if k = 0 then r else 0) = Pi.single 0 r from
-    funext fun k => (Pi.single_apply 0 r k).symm, CauchyProduct_eq_finiteAddConvolution,
+    funext fun k => (Pi.single_apply 0 r k).symm, cauchyProduct_eq_finiteAddConvolution,
     finiteAddConvolution.single_zero_right_apply mul_zero]
 
-/-- `CauchyProduct.map_CauchyProduct`, statement copied verbatim. -/
+/-- `cauchyProduct.map_cauchyProduct`, statement copied verbatim. -/
 example {S : Type*} [Semiring R] [Semiring S] (f : R →+* S) (a b : ℕ → R) (n : ℕ) :
-    CauchyProduct (f ∘ a) (f ∘ b) n = f (CauchyProduct a b n) :=
+    cauchyProduct (f ∘ a) (f ∘ b) n = f (cauchyProduct a b n) :=
   congrFun (map_finiteAddConvolution f.toAddMonoidHom (map_mul f) a b) n
 
 end CauchyProductCompat

@@ -29,15 +29,15 @@ open RadiiPolynomial
 
 section NatIndex
 
-example (a b : ℕ → ℤ) : CauchyProduct a b = finiteAddConvolution a b :=
-  CauchyProduct_eq_finiteAddConvolution a b
+example (a b : ℕ → ℤ) : cauchyProduct a b = finiteAddConvolution a b :=
+  cauchyProduct_eq_finiteAddConvolution a b
 
 example (a b c : ℕ → ℤ) :
-    CauchyProduct (CauchyProduct a b) c = CauchyProduct a (CauchyProduct b c) := by
-  simpa only [CauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.assoc a b c
+    cauchyProduct (cauchyProduct a b) c = cauchyProduct a (cauchyProduct b c) := by
+  simpa only [cauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.assoc a b c
 
-example (a b : ℕ → ℤ) : CauchyProduct a b = CauchyProduct b a := by
-  simpa only [CauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.comm a b
+example (a b : ℕ → ℤ) : cauchyProduct a b = cauchyProduct b a := by
+  simpa only [cauchyProduct_eq_finiteAddConvolution] using finiteAddConvolution.comm a b
 
 example (f : ℕ → ℚ) : finiteAddConvolution (Pi.single 0 1) f = f :=
   finiteAddConvolution.single_zero_left zero_mul f
@@ -52,7 +52,7 @@ example : finiteAddConvolution (Pi.single 2 (3 : ℤ)) (Pi.single 5 7) = Pi.sing
 
 /-- A concrete coefficient: `(n ↦ n) ⋆ (n ↦ 1)` at `3` is `0 + 1 + 2 + 3 = 6`. -/
 example : finiteAddConvolution (fun n : ℕ => (n : ℤ)) (fun _ => 1) 3 = 6 := by
-  rw [← CauchyProduct_eq_finiteAddConvolution, CauchyProduct.apply_range]
+  rw [← cauchyProduct_eq_finiteAddConvolution, cauchyProduct.apply_range]
   simp [Finset.sum_range_succ]
 
 /-- External scalars with `S ≠ R`: an `ℕ`-action on `ℤ`-valued sequences. -/
