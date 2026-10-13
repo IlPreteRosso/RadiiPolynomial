@@ -70,7 +70,7 @@ theorem norm_chebyshevColumn_le (n : ℕ) :
 with uniform control on the entire closed ellipse. -/
 def synthesis : l1Chebyshev ν →L[ℝ] (Ellipse ν →ᵇ ℂ) :=
   liftCLM (fun k : ℤ => chebyshevColumn ν k.natAbs) 1 (fun k => by
-    rw [ScaledRealZ.norm_lpAlgRingData_ofReal]
+    rw [WeightedScalar.fiberTrivialization_weight]
     simpa using norm_chebyshevColumn_le ν k.natAbs)
 
 @[simp] theorem synthesis_single (k : ℤ) (r : ℝ) (w : Ellipse ν) :
@@ -134,7 +134,7 @@ theorem character_apply_eq_tsum (w : Ellipse ν) (a : Physical ν) :
   rw [synthesis, liftCLM_apply, (BoundedContinuousFunction.evalCLM ℝ w).map_tsum]
   · rfl
   · exact liftCLM_summable _ (C := 1) (fun k => by
-      rw [ScaledRealZ.norm_lpAlgRingData_ofReal]
+      rw [WeightedScalar.fiberTrivialization_weight]
       simpa using norm_chebyshevColumn_le ν k.natAbs) a.val
 
 end RadiiPolynomial.PhysicalSpectrum

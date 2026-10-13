@@ -148,7 +148,7 @@ theorem symExt_single (i : ℕ) (hi : 0 < i) :
 private theorem fiber_bordered_le (a : l1Bordered ν) (n : ℕ) :
     |lpOneAlg.toRealSeq a n| * (ν : ℝ) ^ n ≤ ‖a n‖ := by
   rw [lpOneAlg.norm_eq_abs_toReal_mul_weight a n]
-  simp only [BorderedScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul, Real.norm_eq_abs]
+  simp only [WeightedScalar.fiberTrivialization_weight, Real.norm_eq_abs]
   exact mul_le_mul_of_nonneg_left (pow_le_borderedWeight ν n) (abs_nonneg _)
 
 /-- The coefficients of a bordered element have finite one-sided norm. -/
@@ -575,16 +575,16 @@ theorem norm_cosMul_single_single_le (i j : ℕ) :
 /-- `‖a ⋆ b‖ ≤ C₂ ‖a‖ ‖b‖`, from the atom bound by `lpOneAlg.norm_le_of_cols₂`. -/
 theorem norm_cosMul_le (a b : l1Weighted ν) : ‖cosMul a b‖ ≤ C₂ ν * ‖a‖ * ‖b‖ :=
   lpOneAlg.norm_le_of_cols₂ cosMul (fun i j => by
-    rw [ScaledReal.norm_lpAlgRingData_ofReal, ScaledReal.norm_lpAlgRingData_ofReal, abs_one,
-      one_mul, one_mul, mul_assoc]
+    rw [WeightedScalar.fiberTrivialization_weight,
+      WeightedScalar.fiberTrivialization_weight, mul_assoc]
     exact norm_cosMul_single_single_le i j) a b
 
 /-- `‖⋆‖ ≤ C₂`. -/
 theorem opNorm_cosMul_le : ‖(cosMul : l1Weighted ν →L[ℝ] l1Weighted ν →L[ℝ] l1Weighted ν)‖
     ≤ C₂ ν :=
   lpOneAlg.opNorm_le_of_cols₂ cosMul (C₂_nonneg ν) (fun i j => by
-    rw [ScaledReal.norm_lpAlgRingData_ofReal, ScaledReal.norm_lpAlgRingData_ofReal, abs_one,
-      one_mul, one_mul, mul_assoc]
+    rw [WeightedScalar.fiberTrivialization_weight,
+      WeightedScalar.fiberTrivialization_weight, mul_assoc]
     exact norm_cosMul_single_single_le i j)
 
 /-- `eᵢ ⋆ eᵢ = e_{2i} + 2 e₀` for `i ≥ 1`. -/
@@ -628,7 +628,7 @@ theorem opNorm_cosMul_eq :
   refine le_antisymm opNorm_cosMul_le ?_
   have h := lpOneAlg.cols_le_opNorm₂
     (cosMul : l1Weighted ν →L[ℝ] l1Weighted ν →L[ℝ] l1Weighted ν) 1 1
-  rw [ScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul, pow_one, norm_cosMul_e1_e1] at h
+  rw [WeightedScalar.fiberTrivialization_weight, pow_one, norm_cosMul_e1_e1] at h
   have hν2 : 0 < (ν : ℝ) ^ 2 := pow_pos ν.2 2
   have hC : C₂ ν = ((ν : ℝ) ^ 2 + 2) / (ν : ℝ) ^ 2 := by
     unfold C₂ t
@@ -701,8 +701,9 @@ theorem norm_cosMul₃_single_le (i j k : ℕ) :
 theorem norm_cosMul₃_le (a b c : l1Weighted ν) :
     ‖cosMul₃ a b c‖ ≤ C₃ ν * ‖a‖ * ‖b‖ * ‖c‖ :=
   lpOneAlg.norm_le_of_cols₃ cosMul₃ (fun i j k => by
-    rw [ScaledReal.norm_lpAlgRingData_ofReal, ScaledReal.norm_lpAlgRingData_ofReal,
-      ScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul, one_mul, one_mul]
+    rw [WeightedScalar.fiberTrivialization_weight,
+      WeightedScalar.fiberTrivialization_weight,
+      WeightedScalar.fiberTrivialization_weight]
     exact (norm_cosMul₃_single_le i j k).trans_eq (by ring)) a b c
 
 /-- Sharpness witness for the branch `1 + 3t` of `C₃`: `‖(e₁ ⋆ e₁) ⋆ e₁‖ = ν³ + 3ν` (modes
@@ -751,8 +752,9 @@ option. -/
 theorem opNorm_cosMul₃_le : ‖(cosMul₃ : l1Weighted ν →L[ℝ] l1Weighted ν →L[ℝ]
     l1Weighted ν →L[ℝ] l1Weighted ν)‖ ≤ C₃ ν :=
   lpOneAlg.opNorm_le_of_cols₃ cosMul₃ (C₃_nonneg ν) (fun i j k => by
-    rw [ScaledReal.norm_lpAlgRingData_ofReal, ScaledReal.norm_lpAlgRingData_ofReal,
-      ScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul, one_mul, one_mul]
+    rw [WeightedScalar.fiberTrivialization_weight,
+      WeightedScalar.fiberTrivialization_weight,
+      WeightedScalar.fiberTrivialization_weight]
     exact (norm_cosMul₃_single_le i j k).trans_eq (by ring))
 
 set_option maxSynthPendingDepth 2 in
@@ -764,7 +766,7 @@ theorem opNorm_cosMul₃_eq : ‖(cosMul₃ : l1Weighted ν →L[ℝ] l1Weighted
   refine le_antisymm opNorm_cosMul₃_le ?_
   have h111 := lpOneAlg.cols_le_opNorm₃ (cosMul₃ (ν := ν)) 1 1 1
   have h112 := lpOneAlg.cols_le_opNorm₃ (cosMul₃ (ν := ν)) 1 1 2
-  simp only [ScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul, pow_one] at h111 h112
+  simp only [WeightedScalar.fiberTrivialization_weight, pow_one] at h111 h112
   rw [norm_cosMul₃_e1_e1_e1] at h111
   rw [norm_cosMul₃_e1_e1_e2] at h112
   have hp3 : 0 < (ν : ℝ) ^ 3 := pow_pos ν.2 3

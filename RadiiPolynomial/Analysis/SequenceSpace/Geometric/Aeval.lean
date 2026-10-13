@@ -65,10 +65,8 @@ variable {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal)
 
 /-- The weight of the geometric fiber at `n` is `νⁿ`. -/
 theorem geomFiber_weight (n : ℕ) :
-    ‖lpAlgRingData.ofReal (E := geomFiber 𝕜 ν) n (1 : 𝕜)‖ = (ν : ℝ) ^ n := by
-  rw [show lpAlgRingData.ofReal (E := geomFiber 𝕜 ν) n (1 : 𝕜)
-      = WeightedScalar.ofReal 1 from rfl, WeightedScalar.norm_ofReal,
-    norm_one, one_mul]
+    FiberTrivialization.weight (E := geomFiber 𝕜 ν) n = (ν : ℝ) ^ n :=
+  WeightedScalar.fiberTrivialization_weight n
 
 example : ScaledReal ν = geomFiber ℝ ν := rfl
 
@@ -89,7 +87,7 @@ omit [NormedAlgebra 𝕜 B] [CompleteSpace B] in
 /-- Power growth `‖xⁿ‖ ≤ C νⁿ` is domination by the geometric weight. -/
 theorem pow_le_geomFiber_weight (x : B) (C : ℝ)
     (hx : ∀ n, ‖x ^ n‖ ≤ C * (ν : ℝ) ^ n) (n : ℕ) :
-    ‖x ^ n‖ ≤ C * ‖lpAlgRingData.ofReal (E := geomFiber 𝕜 ν) n (1 : 𝕜)‖ := by
+    ‖x ^ n‖ ≤ C * FiberTrivialization.weight (E := geomFiber 𝕜 ν) n := by
   rw [geomFiber_weight]
   exact hx n
 

@@ -125,8 +125,8 @@ abbrev BorderedScaledReal (ν : PosReal) := WeightedScalar ℝ (borderedWeight �
 /-- Physical one-sided T-coefficient space: `‖a‖ = |a₀| + 2Σ_{n≥1}|a_n|ν^n`. -/
 abbrev l1Bordered (ν : PosReal) := lpOneAlg ℕ (BorderedScaledReal ν)
 
-@[simp] theorem BorderedScaledReal.norm_lpAlgRingData_ofReal (ν : PosReal) (n : ℕ) (r : ℝ) :
-    ‖lpAlgRingData.ofReal (E := BorderedScaledReal ν) n r‖ = |r| * borderedWeight ν n :=
+@[simp] theorem BorderedScaledReal.norm_equiv_apply (ν : PosReal) (n : ℕ) (r : ℝ) :
+    ‖FiberTrivialization.equiv (E := BorderedScaledReal ν) n r‖ = |r| * borderedWeight ν n :=
   WeightedScalar.norm_ofReal r
 
 variable {ν : PosReal}
@@ -135,8 +135,7 @@ variable {ν : PosReal}
 private lemma l1Bordered_norm_fiber (a : l1Bordered ν) (n : ℕ) :
     ‖a n‖ = |lpOneAlg.toRealSeq a n| * borderedWeight ν n := by
   rw [lpOneAlg.norm_eq_abs_toReal_mul_weight a n]
-  simp only [BorderedScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul,
-    Real.norm_eq_abs]
+  simp only [WeightedScalar.fiberTrivialization_weight, Real.norm_eq_abs]
 
 end BorderedWeight
 
@@ -156,26 +155,26 @@ private lemma nonnegRestrict_fiber_le (a : l1Chebyshev ν) (n : ℕ) :
   ring
 
 private lemma nonnegRestrict_mem (a : l1Chebyshev ν) :
-    Memℓp (fun n : ℕ => lpAlgRingData.ofReal (E := BorderedScaledReal ν) n
+    Memℓp (fun n : ℕ => FiberTrivialization.equiv (E := BorderedScaledReal ν) n
       (lpOneAlg.toRealSeq a (↑n : ℤ))) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
   refine Summable.of_nonneg_of_le (fun n => norm_nonneg _) (fun n => ?_)
     ((summable_norm_natCast a).mul_left 2)
-  rw [BorderedScaledReal.norm_lpAlgRingData_ofReal]
+  rw [BorderedScaledReal.norm_equiv_apply]
   exact nonnegRestrict_fiber_le a n
 
 /-- Restriction of a bilateral sequence to its nonnegative modes, viewed in the
 bordered carrier. On symmetric sequences this is an isometry
 (`nonnegRestrict_norm_of_isSymmetric`). -/
 def nonnegRestrict (a : l1Chebyshev ν) : l1Bordered ν :=
-  ⟨⟨fun n => lpAlgRingData.ofReal (E := BorderedScaledReal ν) n
+  ⟨⟨fun n => FiberTrivialization.equiv (E := BorderedScaledReal ν) n
       (lpOneAlg.toRealSeq a (↑n : ℤ)),
     nonnegRestrict_mem a⟩⟩
 
 @[simp] lemma nonnegRestrict_toSeq (a : l1Chebyshev ν) (n : ℕ) :
-    lpOneAlg.toRealSeq (nonnegRestrict a) n = lpOneAlg.toRealSeq a (↑n : ℤ) := by
-  simp [nonnegRestrict, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
+    lpOneAlg.toRealSeq (nonnegRestrict a) n = lpOneAlg.toRealSeq a (↑n : ℤ) :=
+  FiberTrivialization.equiv_symm_apply_equiv n _
 
 /-- On symmetric sequences the bordered restriction is an isometry:
 `‖nonnegRestrict a‖ = ‖a‖` — the bordered weight is exactly the pushforward of the
@@ -196,7 +195,7 @@ theorem nonnegRestrict_norm_of_isSymmetric (a : l1Chebyshev ν)
       rwa [show -(↑(n + 1) : ℤ) = Int.negSucc n from by omega] at h
     rw [lpOneAlg.norm_eq_abs_toReal_mul_weight a (Int.negSucc n),
       lpOneAlg.norm_eq_abs_toReal_mul_weight a (↑(n + 1) : ℤ), hval]
-    simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+    simp only [WeightedScalar.fiberTrivialization_weight]
     have hna : (Int.negSucc n).natAbs = ((↑(n + 1) : ℤ)).natAbs := by omega
     rw [hna]
   have hnegeq : (∑' n : ℕ, ‖a (Int.negSucc n)‖) = ∑' n : ℕ, ‖a (↑(n + 1) : ℤ)‖ :=
@@ -420,10 +419,10 @@ theorem borderedToU_nonnegRestrict (a : l1Chebyshev ν) :
 variable [Fact (1 < (ν : ℝ))]
 
 private lemma borderedFromU_fiber_le (b : l1Weighted ν) (m : ℕ) :
-    ‖lpAlgRingData.ofReal (E := BorderedScaledReal ν) m
+    ‖FiberTrivialization.equiv (E := BorderedScaledReal ν) m
         (∑' j : ℕ, l1Weighted.toSeq b (m + 2 * j))‖ ≤
       2 * ∑' j : ℕ, |l1Weighted.toSeq b (m + 2 * j)| * (ν : ℝ) ^ m := by
-  rw [BorderedScaledReal.norm_lpAlgRingData_ofReal]
+  rw [BorderedScaledReal.norm_equiv_apply]
   have hs : Summable (fun j : ℕ => ‖l1Weighted.toSeq b (m + 2 * j)‖) := by
     simpa only [Real.norm_eq_abs] using summable_abs_toSeq_shift b m
   have hAbs : |∑' j : ℕ, l1Weighted.toSeq b (m + 2 * j)| ≤
@@ -440,7 +439,7 @@ private lemma borderedFromU_fiber_le (b : l1Weighted ν) (m : ℕ) :
   linarith
 
 private lemma borderedFromU_mem (b : l1Weighted ν) :
-    Memℓp (fun m : ℕ => lpAlgRingData.ofReal (E := BorderedScaledReal ν) m
+    Memℓp (fun m : ℕ => FiberTrivialization.equiv (E := BorderedScaledReal ν) m
       (∑' j : ℕ, l1Weighted.toSeq b (m + 2 * j))) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
@@ -452,14 +451,14 @@ private lemma borderedFromU_mem (b : l1Weighted ν) :
 
 /-- The bordered U→T conversion `(borderedFromU b)_m = Σ_{j≥0} b_{m+2j}` (no `2`). -/
 def borderedFromU (b : l1Weighted ν) : l1Bordered ν :=
-  ⟨⟨fun m => lpAlgRingData.ofReal (E := BorderedScaledReal ν) m
+  ⟨⟨fun m => FiberTrivialization.equiv (E := BorderedScaledReal ν) m
       (∑' j : ℕ, l1Weighted.toSeq b (m + 2 * j)),
     borderedFromU_mem b⟩⟩
 
 @[simp] lemma borderedFromU_toSeq (b : l1Weighted ν) (m : ℕ) :
     lpOneAlg.toRealSeq (borderedFromU b) m =
-      ∑' j : ℕ, l1Weighted.toSeq b (m + 2 * j) := by
-  simp [borderedFromU, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
+      ∑' j : ℕ, l1Weighted.toSeq b (m + 2 * j) :=
+  FiberTrivialization.equiv_symm_apply_equiv m _
 
 lemma borderedFromU_add (b d : l1Weighted ν) :
     borderedFromU (b + d) = borderedFromU b + borderedFromU d := by

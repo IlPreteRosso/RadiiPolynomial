@@ -157,17 +157,15 @@ def abar : XCheb ν L := fun l =>
 /-- Bridge: toSeq(abar l)(↑k) = (abar_Q l).getD k 0. -/
 lemma abar_toSeq_eq (l : Fin L) (k : ℕ) :
     l1Chebyshev.toSeq (abar d l) (↑k : ℤ) = ((d.abar_Q l).getD k 0 : ℝ) := by
-  show lpAlgRingData.toReal (↑k : ℤ)
-    (ChebyshevIVP.embedNatToInt (d.abar_seq l) (↑k : ℤ)) = _
-  simp [ChebyshevIVP.embedNatToInt, lpAlgRingData.toReal_ofReal, d.abar_seq_eq_getD]
+  simp [abar, l1Chebyshev.toSeq, lpOneAlg.toRealSeq, d.abar_seq_eq_getD]
 
 /-- The stored candidate vanishes at negative indices (`embedNatToInt` is one-sided). -/
 lemma abar_toSeq_negSucc (l : Fin L) (n : ℕ) :
     l1Chebyshev.toSeq (abar d l) (-((n : ℤ) + 1)) = 0 := by
-  show lpAlgRingData.toReal (-((n : ℤ) + 1))
+  show (FiberTrivialization.equiv (E := ScaledRealZ ν) (-((n : ℤ) + 1))).symm
     (ChebyshevIVP.embedNatToInt (d.abar_seq l) (-((n : ℤ) + 1))) = _
   rw [(Int.negSucc_eq n).symm]
-  simp [ChebyshevIVP.embedNatToInt, lpAlgRingData.toReal_zero]
+  rw [ChebyshevIVP.embedNatToInt_negSucc, FiberTrivialization.equiv_symm_zero]
 
 /-- `‖ā l‖ ≤ ‖S(ā l)‖`: the stored candidate lives on the indices `0..N`, so its norm is
 dominated by the norm of its symmetrization — the bridge from a certificate's exact-ℚ

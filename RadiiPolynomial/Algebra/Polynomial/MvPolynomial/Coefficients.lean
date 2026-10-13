@@ -21,10 +21,10 @@ variable {L : ℕ}
 
 /-- The `n`th coefficient after substituting rational sequences for the variables: the coefficient
 of the `aeval` image in `PowerSeries ℚ`, each sequence read as a power series through the bridge
-`CauchyProduct.toPowerSeries`. -/
+`cauchyProduct.toPowerSeries`. -/
 def mvPolyCoeff (p : MvPolynomial (Fin L) ℚ)
     (seqs : Fin L → ℕ → ℚ) (n : ℕ) : ℚ :=
-  PowerSeries.coeff n (MvPolynomial.aeval (fun i => CauchyProduct.toPowerSeries (seqs i)) p)
+  PowerSeries.coeff n (MvPolynomial.aeval (fun i => cauchyProduct.toPowerSeries (seqs i)) p)
 
 @[simp] lemma mvPolyCoeff_C (r : ℚ) (seqs : Fin L → ℕ → ℚ) (n : ℕ) :
     mvPolyCoeff (MvPolynomial.C r) seqs n = if n = 0 then r else 0 := by
@@ -56,8 +56,8 @@ def mvPolyCoeff (p : MvPolynomial (Fin L) ℚ)
 @[simp] lemma mvPolyCoeff_mul (p q : MvPolynomial (Fin L) ℚ)
     (seqs : Fin L → ℕ → ℚ) (n : ℕ) :
     mvPolyCoeff (p * q) seqs n =
-      CauchyProduct (mvPolyCoeff p seqs) (mvPolyCoeff q seqs) n := by
-  simp only [mvPolyCoeff, map_mul, CauchyProduct.apply, PowerSeries.coeff_mul]
+      cauchyProduct (mvPolyCoeff p seqs) (mvPolyCoeff q seqs) n := by
+  simp only [mvPolyCoeff, map_mul, cauchyProduct.apply, PowerSeries.coeff_mul]
 
 @[simp] lemma mvPolyCoeff_one (seqs : Fin L → ℕ → ℚ) (n : ℕ) :
     mvPolyCoeff 1 seqs n = if n = 0 then 1 else 0 := by

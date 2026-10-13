@@ -182,7 +182,7 @@ with zeros on negative indices. -/
 Maps `n : ℕ ↦ ofReal (↑n) (seq n)` for non-negative ℤ, and `0` for negative. -/
 def embedNatToInt (seq : ℕ → ℝ) : ∀ k : ℤ, ScaledRealZ ν k :=
   fun k => match k with
-  | (n : ℕ) => lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
+  | (n : ℕ) => FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n) (seq n)
   | (Int.negSucc _) => 0
 
 /-! ## Composed Map G = A ∘ F -/
@@ -197,7 +197,7 @@ The IVP equations do not constrain the negative modes: the IVP operator only act
 def embedWithPassThrough (seq : ℕ → ℝ) (base : l1Chebyshev ν) :
     ∀ k : ℤ, ScaledRealZ ν k :=
   fun k => match k with
-  | (n : ℕ) => lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)
+  | (n : ℕ) => FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n) (seq n)
   | Int.negSucc m => base (Int.negSucc m)
 
 /-! ### Fiber values, membership, and norms of the embeddings -/
@@ -205,7 +205,7 @@ def embedWithPassThrough (seq : ℕ → ℝ) (base : l1Chebyshev ν) :
 omit [Fact (1 ≤ (ν : ℝ))] in
 @[simp] lemma embedNatToInt_natCast (seq : ℕ → ℝ) (n : ℕ) :
     embedNatToInt (ν := ν) seq (↑n : ℤ)
-      = lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n) := rfl
+      = FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n) (seq n) := rfl
 
 omit [Fact (1 ≤ (ν : ℝ))] in
 @[simp] lemma embedNatToInt_negSucc (seq : ℕ → ℝ) (m : ℕ) :
@@ -214,7 +214,7 @@ omit [Fact (1 ≤ (ν : ℝ))] in
 omit [Fact (1 ≤ (ν : ℝ))] in
 @[simp] lemma embedWithPassThrough_natCast (seq : ℕ → ℝ) (base : l1Chebyshev ν)
     (n : ℕ) : embedWithPassThrough seq base (↑n : ℤ)
-      = lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n) := rfl
+      = FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n) (seq n) := rfl
 
 omit [Fact (1 ≤ (ν : ℝ))] in
 @[simp] lemma embedWithPassThrough_negSucc (seq : ℕ → ℝ) (base : l1Chebyshev ν)
@@ -232,7 +232,7 @@ lemma embedNatToInt_memℓp_of_finSupp (seq : ℕ → ℝ) (N : ℕ)
   · refine summable_of_ne_finset_zero (s := Finset.range (N + 1)) fun n hn => ?_
     have hlt : N < n := by simp [Finset.mem_range] at hn; omega
     show ‖embedNatToInt (ν := ν) seq (↑n : ℤ)‖ = 0
-    simp [htail n hlt, lpAlgRingData.ofReal_zero]
+    simp [htail n hlt]
   · have h0 : (fun n : ℕ => ‖embedNatToInt (ν := ν) seq (-(↑n + 1 : ℤ))‖)
         = fun _ => (0 : ℝ) := by
       ext n
@@ -250,8 +250,8 @@ lemma embedNatToInt_norm_le (seq : ℕ → ℝ) (N : ℕ)
     ‖(⟨⟨embedNatToInt seq, hmem⟩⟩ : l1Chebyshev ν)‖ ≤ B := by
   rw [lpOneAlg.norm_eq_bilatFinSum (⟨⟨embedNatToInt seq, hmem⟩⟩ : l1Chebyshev ν) N
     (fun n hn => by
-      show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)‖ = 0
-      rw [htail n hn, lpAlgRingData.ofReal_zero, norm_zero])
+      show ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n) (seq n)‖ = 0
+      rw [htail n hn, FiberTrivialization.equiv_zero, norm_zero])
     (fun n _ => by
       show ‖(0 : ScaledRealZ ν (Int.negSucc n))‖ = 0
       exact norm_zero)]
@@ -264,8 +264,8 @@ lemma embedNatToInt_norm_le (seq : ℕ → ℝ) (N : ℕ)
   rw [hzero, add_zero]
   refine le_trans (le_of_eq ?_) hfin
   refine Finset.sum_congr rfl fun n _ => ?_
-  show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑(n : ℕ)) (seq (n : ℕ))‖ = _
-  rw [ScaledRealZ.norm_lpAlgRingData_ofReal]
+  show ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑(n : ℕ)) (seq (n : ℕ))‖ = _
+  rw [ScaledRealZ.norm_equiv_apply]
   simp
 
 /-- Norm bound for an `embedWithPassThrough` element whose tail is the base:
@@ -286,7 +286,7 @@ lemma embedWithPassThrough_norm_le (seq : ℕ → ℝ) (base : l1Chebyshev ν) (
   have h_nat : Summable (fun n : ℕ => g ↑n) :=
     hg_summ.comp_injective fun n m h => by simpa using h
   have hg_natval : ∀ n : ℕ, g ↑n
-      = ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n : ℤ) (seq n)‖ := fun n => rfl
+      = ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n : ℤ) (seq n)‖ := fun n => rfl
   have hg_negval : ∀ n : ℕ, g (-(↑n + 1)) = ‖base (Int.negSucc n)‖ := by
     intro n
     show g (-(↑n + 1 : ℤ)) = _
@@ -306,11 +306,11 @@ lemma embedWithPassThrough_norm_le (seq : ℕ → ℝ) (base : l1Chebyshev ν) (
     refine le_trans (le_of_eq ?_) hfin
     rw [← Fin.sum_univ_eq_sum_range (f := fun i => g ↑i)]
     refine Finset.sum_congr rfl fun n _ => ?_
-    rw [hg_natval, ScaledRealZ.norm_lpAlgRingData_ofReal]
+    rw [hg_natval, ScaledRealZ.norm_equiv_apply]
     simp
   have htail_le : (∑' n : ℕ, g ↑(n + (N + 1))) ≤ ‖base‖ := by
     rw [tsum_congr (fun n : ℕ => show g ↑(n + (N + 1)) = ‖base (↑(n + (N + 1)) : ℤ)‖ by
-      rw [hg_natval, htail _ (by omega), ScaledRealZ.norm_lpAlgRingData_ofReal,
+      rw [hg_natval, htail _ (by omega), ScaledRealZ.norm_equiv_apply,
         ← l1Chebyshev.norm_fiber])]
     rw [lpOneAlg.norm_eq_tsum]
     exact tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm base)
@@ -387,9 +387,9 @@ lemma chebyshevIvpMap_mem_of_tailDiag_half {N : ℕ}
       (embedWithPassThrough (ν := ν) seq (a l)) (↑n : ℤ) =
         (a l) (↑n : ℤ) + (chebyshevShiftDiv c) (↑n : ℤ) := by
     intro n hn
-    show lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n) = _
+    show FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n) (seq n) = _
     rw [show seq n = _ from action_chebyshev_tail_eq A φ p htail a l n hn,
-      lpAlgRingData.ofReal_add]
+      FiberTrivialization.equiv_add]
     congr 1
   -- Decompose ℤ = ℕ+ ⊔ ℕ- via Summable.of_nat_of_neg_add_one
   apply Summable.of_nat_of_neg_add_one

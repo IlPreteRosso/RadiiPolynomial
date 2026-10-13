@@ -43,27 +43,27 @@ lemma xTilde_G_zero : data.G f x₀ xTilde = 0 := xTilde_spec.2
 /-- Canonical analytic solution `t ↦ (eval(xTilde l, t))_l`. -/
 def x_analytic : ℝ → Fin L → ℝ := IVP.x_analytic xTilde
 
-/-- **Existence**: `x_analytic` is an analytic solution. -/
-theorem x_analytic_isAnalyticSolution :
-    IVP.IsAnalyticSolution (ν := ν_val) f_cpoly x₀ R_traj x_analytic :=
-  data.x_analytic_isAnalyticSolution_of_compPoly_of_radii f_cpoly x₀ (by unfold r_minus; positivity)
+/-- **Existence**: `x_analytic` is a ball solution (`IsBallSolution`). -/
+theorem x_analytic_isBallSolution :
+    IVP.IsBallSolution (ν := ν_val) f_cpoly x₀ R_traj x_analytic :=
+  data.x_analytic_isBallSolution_of_compPoly_of_radii f_cpoly x₀ (by unfold r_minus; positivity)
     Y₀_le Z₀_finBlockNorm_le Z₁_le_exact Z₂_le_cert radii_neg_exact
     xTilde xTilde_ball xTilde_G_zero
 
-/-- **Pinning**: any analytic candidate equals `x_analytic` on `(-ν, ν)`. -/
+/-- **Pinning**: any ball solution equals `x_analytic` on `(-ν, ν)`. -/
 theorem analytic_eq_canonical
     (g : ℝ → Fin L → ℝ)
-    (hg : IVP.IsAnalyticSolution (ν := ν_val) f_cpoly x₀ R_traj g) :
+    (hg : IVP.IsBallSolution (ν := ν_val) f_cpoly x₀ R_traj g) :
     Set.EqOn g x_analytic (Set.Ioo (-(ν_val : ℝ)) ν_val) :=
   data.analytic_eq_canonical_of_compPoly_of_radii f_cpoly x₀ (by unfold r_minus; positivity)
     Y₀_le Z₀_finBlockNorm_le Z₁_le_exact Z₂_le_cert radii_neg_exact
     xTilde xTilde_ball xTilde_G_zero g hg
 
-/-- **Function-space uniqueness**: any two analytic candidates agree. -/
+/-- **Function-space uniqueness**: any two ball solutions agree. -/
 theorem analytic_unique
     (g₁ g₂ : ℝ → Fin L → ℝ)
-    (h₁ : IVP.IsAnalyticSolution (ν := ν_val) f_cpoly x₀ R_traj g₁)
-    (h₂ : IVP.IsAnalyticSolution (ν := ν_val) f_cpoly x₀ R_traj g₂) :
+    (h₁ : IVP.IsBallSolution (ν := ν_val) f_cpoly x₀ R_traj g₁)
+    (h₂ : IVP.IsBallSolution (ν := ν_val) f_cpoly x₀ R_traj g₂) :
     Set.EqOn g₁ g₂ (Set.Ioo (-(ν_val : ℝ)) ν_val) :=
   data.analytic_unique_of_compPoly_of_radii f_cpoly x₀ (by unfold r_minus; positivity)
     Y₀_le Z₀_finBlockNorm_le Z₁_le_exact Z₂_le_cert radii_neg_exact
@@ -72,9 +72,9 @@ theorem analytic_unique
 /-- **Existence + uniqueness for Example 8.1** on `(-ν, ν)`. -/
 theorem analytic_existsUnique :
     ∃ u : ℝ → Fin L → ℝ,
-      IVP.IsAnalyticSolution (ν := ν_val) f_cpoly x₀ R_traj u ∧
+      IVP.IsBallSolution (ν := ν_val) f_cpoly x₀ R_traj u ∧
       ∀ v : ℝ → Fin L → ℝ,
-        IVP.IsAnalyticSolution (ν := ν_val) f_cpoly x₀ R_traj v →
+        IVP.IsBallSolution (ν := ν_val) f_cpoly x₀ R_traj v →
         Set.EqOn v u (Set.Ioo (-(ν_val : ℝ)) ν_val) :=
   data.analytic_existsUnique_of_compPoly_of_radii f_cpoly x₀ (by unfold r_minus; positivity)
     Y₀_le Z₀_finBlockNorm_le Z₁_le_exact Z₂_le_cert radii_neg_exact

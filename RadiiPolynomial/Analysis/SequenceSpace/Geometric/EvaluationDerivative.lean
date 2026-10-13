@@ -12,9 +12,10 @@ layer is separate from the continuous algebra-hom evaluation API (`evalContinuou
 -/
 
 open scoped BigOperators NNReal ENNReal Topology
-open RadiiPolynomial
 
 noncomputable section
+
+namespace RadiiPolynomial
 
 variable {ν : PosReal}
 
@@ -83,3 +84,5 @@ theorem hasDerivAt_eval (a : l1Weighted ν) {t : ℝ} (ht : |t| < ν) :
   exact h_main
 
 end l1Weighted
+
+end RadiiPolynomial

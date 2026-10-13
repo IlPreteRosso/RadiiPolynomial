@@ -147,10 +147,10 @@ theorem chebyshevStorageFactor_nonneg (k : ℕ) : 0 ≤ chebyshevStorageFactor k
 private lemma chebColumn_le_borderedWeight {σ ν : PosReal}
     (hgate : (σ : ℝ) ≤ semiMinor ν) (k : ℕ) :
     ‖chebyshevStorageFactor k • chebPolyTaylor σ k‖
-      ≤ ‖lpAlgRingData.ofReal (E := BorderedScaledReal ν) k (1 : ℝ)‖ := by
+      ≤ FiberTrivialization.weight (E := BorderedScaledReal ν) k := by
   have hparam : bernsteinParameter (σ : ℝ) ≤ (ν : ℝ) :=
     bernsteinParameter_le_iff_le_semiMinor.mpr hgate
-  rw [BorderedScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul,
+  rw [WeightedScalar.fiberTrivialization_weight,
     norm_smul, Real.norm_eq_abs, abs_of_nonneg (chebyshevStorageFactor_nonneg k)]
   cases k with
   | zero =>
@@ -223,8 +223,8 @@ theorem norm_chebyshevToTaylorCLM_le {σ ν : PosReal}
 private lemma borderedEvalColumn_le (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
     (t : ℝ) (ht : |t| ≤ 1) (k : ℕ) :
     ‖chebyshevStorageFactor k * (Chebyshev.T ℝ (k : ℤ)).eval t‖
-      ≤ ‖lpAlgRingData.ofReal (E := BorderedScaledReal ν) k (1 : ℝ)‖ := by
-  rw [BorderedScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul,
+      ≤ FiberTrivialization.weight (E := BorderedScaledReal ν) k := by
+  rw [WeightedScalar.fiberTrivialization_weight,
     Real.norm_eq_abs, abs_mul, abs_of_nonneg (chebyshevStorageFactor_nonneg k)]
   cases k with
   | zero => simp [chebyshevStorageFactor]

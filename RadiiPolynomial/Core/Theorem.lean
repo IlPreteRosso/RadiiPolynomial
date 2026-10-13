@@ -25,7 +25,7 @@ completeness is used only by the fixed-point argument (Neumann series, contracti
 is declared section-locally where it is used. The codomain `F` is a real normed space
 (`NormedAddCommGroup`, `NormedSpace ℝ`); no statement of this file assumes completeness of `F`.
 
-## Local layers and faces (namespace `RadiiPolynomial`)
+## Local layers and faces
 
 Beside the global theorems, the file carries their local forms, with derivative data on the
 closed ball of the certified radius only (section `LocalTheorems`); the global theorems are
@@ -35,6 +35,8 @@ convexity of the radii polynomial with a polynomial `Z₂` (sections
 `RadiiPolynomialDefinitions` and `RadiiPolynomialImplications`), and the finite-dimensional
 face with its output record `Enclosure` (section `FiniteDimensionalFace`).
 -/
+
+namespace RadiiPolynomial
 
 -- Domain E (complete where a section needs the fixed-point argument) and codomain F (normed only)
 variable {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
@@ -83,8 +85,6 @@ lemma invertible_comp_form {B : E →L[ℝ] E}
   ∃ (B_inv : E →L[ℝ] E), B.comp B_inv = I_E ∧ B_inv.comp B = I_E :=
   invertible_of_norm_sub_id_lt_one h
 
-namespace RadiiPolynomial
-
 /-- In finite dimension, `E →L[ℝ] E` is Dedekind-finite (`A B = 1 → B A = 1`): transported from
 `Module.End ℝ E` along the algebra equivalence `Module.End.toContinuousLinearMap E`. -/
 private theorem isDedekindFiniteMonoid_clm {E : Type*} [NormedAddCommGroup E]
@@ -115,8 +115,6 @@ theorem isUnit_left_of_norm_id_sub_comp_lt_one {E : Type*} [NormedAddCommGroup E
     (h : ‖I_E - A.comp B‖ < 1) : IsUnit A := by
   have := isDedekindFiniteMonoid_clm (E := E)
   exact isUnit_of_mul_isUnit_left (isUnit_of_norm_sub_id_lt_one h)
-
-end RadiiPolynomial
 
 end NeumannSeries
 
@@ -264,8 +262,6 @@ lemma radiiPolynomial_alt_form (Y₀ Z₀ : ℝ) (Z₂ : ℝ → ℝ) (r : ℝ) 
 def simpleRadiiPolynomial (Y₀ : ℝ) (Z : ℝ → ℝ) (r : ℝ) : ℝ :=
   (Z r - 1) * r + Y₀
 
-namespace RadiiPolynomial
-
 /-- Horner evaluation of a coefficient list over any semiring:
 `hornerEval [c₀, c₁, …, c_d] x = c₀ + x (c₁ + x (⋯ + x c_d)) = Σ_k x^k c_k` (the multiplication by
 `x` acts on the left at every rung; when `x` commutes with the coefficients this is the usual
@@ -292,8 +288,6 @@ theorem map_hornerEval {R S : Type*} [Semiring R] [Semiring S] (φ : R →+* S) 
   induction cs with
   | nil => simp
   | cons c cs ih => simp [ih]
-
-end RadiiPolynomial
 
 end RadiiPolynomialDefinitions
 
@@ -333,8 +327,6 @@ lemma simple_radii_poly_neg_implies_Z_lt_one
   (h_poly : simpleRadiiPolynomial Y₀ Z r₀ < 0) :
   Z r₀ < 1 := by
   unfold simpleRadiiPolynomial at h_poly; nlinarith
-
-namespace RadiiPolynomial
 
 /-- A function convex on `[a, b]` and negative at both ends is negative on `[a, b]`. -/
 theorem radiiPoly_neg_on_Icc_of_convexOn {p : ℝ → ℝ} {a b : ℝ}
@@ -376,8 +368,6 @@ theorem Icc_subset_ordConnectedComponent_of_neg {p : ℝ → ℝ} {a b r₀ : �
     Set.Icc a b ⊆ Set.ordConnectedComponent {r | p r < 0} r₀ :=
   Set.subset_ordConnectedComponent hr₀ hneg
 
-end RadiiPolynomial
-
 end RadiiPolynomialImplications
 
 
@@ -395,8 +385,6 @@ In the general E to F setting, the derivative is DT(x) = I_E - A ∘ Df(x).
 
 variable [NormedAddCommGroup F] [NormedSpace ℝ F]
 
-namespace RadiiPolynomial
-
 /-- Derivative-free three-term split:
 `I - A Q = (I - A A†) + A (A† - P) - A (Q - P)`, whence `‖I - A Q‖ ≤ Z₀ + Z₁ + W`. -/
 theorem norm_id_sub_comp_le_Z_bound
@@ -409,8 +397,6 @@ theorem norm_id_sub_comp_le_Z_bound
     simp only [ContinuousLinearMap.comp_sub]; abel
   rw [hsplit]
   exact (norm_sub_le _ _).trans (add_le_add ((norm_add_le _ _).trans (add_le_add h_Z₀ h_Z₁)) h_W)
-
-end RadiiPolynomial
 
 /-- Y₀ bound for Newton operator: ‖T(x̄) - x̄‖ ≤ Y₀
 
@@ -577,8 +563,6 @@ return the invertibility of `Df x̃`.
 
 variable [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
 
-namespace RadiiPolynomial
-
 /-- Invertibility of `D : E →L[ℝ] F` from an injective `A : F →L[ℝ] E` with `‖I - A D‖ < 1`:
 `A D` is invertible (Neumann series), so `(A D)⁻¹ A` is a two-sided inverse of `D`. -/
 theorem isInvertible_of_injective_of_norm_id_sub_comp_lt_one
@@ -723,8 +707,6 @@ theorem radii_polynomial_theorem_EtoF_local
         (Z₁ := 0) h_Z₀ (by simp) (h_Z₂ c hc))
     hf ((radiiPolynomial_alt_form ..).symm.trans_lt h_radii) hA_inj
   exact ⟨x, ⟨ball_subset_closedBall hx, hfx⟩, fun z ⟨hz, hz0⟩ => hu z hz hz0⟩
-
-end RadiiPolynomial
 
 end LocalTheorems
 
@@ -977,8 +959,6 @@ Faces of the local theorems for `f : E → E` on a finite-dimensional real norme
 * `general_rp_findim_local`, the local general theorem without an injectivity hypothesis on `A`.
 -/
 
-namespace RadiiPolynomial
-
 section Adapters
 
 variable [NormedAddCommGroup F] [NormedSpace ℝ F]
@@ -1188,6 +1168,6 @@ theorem general_rp_findim_local {f : E → E} {Df : E → E →L[ℝ] E} {xBar :
     (injective_left_of_norm_id_sub_comp_lt_one
       ((hZ xBar (mem_closedBall_self hr₀.le)).trans_lt hZ1))
 
-end RadiiPolynomial
-
 end FiniteDimensionalFace
+
+end RadiiPolynomial

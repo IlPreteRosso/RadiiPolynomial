@@ -22,7 +22,7 @@ either input, associativity, the unit atom `Pi.single 1 1` on either side, commu
 the product of two atoms, and compatibility with an external scalar action in either input.
 Each law carries only the index and coefficient structure its proof uses; a law that needs
 `0 * r = 0` or `r * 0 = 0` for the zero of the additive structure takes it as an explicit
-hypothesis. The Cauchy product of natural-index sequences (`RadiiPolynomial.CauchyProduct`)
+hypothesis. The Cauchy product of natural-index sequences (`RadiiPolynomial.cauchyProduct`)
 is the specialization of `finiteAddConvolution` to the index `ℕ`.
 The general-coefficient atom laws `finiteMulConvolution.single_one_left_apply` and
 `finiteMulConvolution.single_one_right_apply` apply to arbitrary functions and give the scalar

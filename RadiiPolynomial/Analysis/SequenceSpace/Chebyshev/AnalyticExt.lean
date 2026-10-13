@@ -33,7 +33,8 @@ variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
 private theorem summable_coeff (f : l1Chebyshev ν) :
     Summable fun k : ℤ => ‖((lpOneAlg.toRealSeq f k : ℝ) : ℂ)‖ := by
-  simpa [Complex.norm_real, Real.norm_eq_abs] using lpOneAlg.summable_abs_toRealSeq f
+  simpa [Complex.norm_real, Real.norm_eq_abs] using
+    lpOneAlg.summable_abs_toRealSeq lpOneAlgWeightSubMul.one_le_weight f
 
 /-- The boundary function on `ℝ/ℤ`, in the normalization used by Mathlib's
 Fourier basis. -/

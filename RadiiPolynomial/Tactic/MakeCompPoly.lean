@@ -15,7 +15,8 @@ the `evalBanach`-side lambda. The production `f_cpoly` definitions stay literal 
 design decision 2): Example 8.1 and Example 14.2.1 check their literal `f_cpoly` against
 `compPolyOf%` by `rfl` (`f_cpoly_reified`), and `Examples/Polynomial/Chebyshev.lean` reifies
 directly over the Chebyshev carrier. Example 8.3 (`Example83/Algebra.lean`) has no parity
-witness; it restates each component as a Banach-algebra lambda in `fderiv_f_0/1/2` and `Df`.
+witness; its derivative direction map `Df` is the Fréchet derivative of each component at the
+approximate solution, fed directly to `Z₁_le_of_compPoly`.
 
 ## Recognition rules
 

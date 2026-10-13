@@ -86,23 +86,14 @@ section AtomInclusion
 
 variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
 
 /-- The atom inclusion at index `m`: the weighted line into the sequence
-space, `x ↦ single m x`, as a continuous linear map of norm `ω_m`. -/
+space, `x ↦ single m x`, as a continuous linear map of norm `ω_m`. It is the frame
+`θ_m = FiberTrivialization.equivL m` followed by the isometric insertion `fiberSingleₗᵢ m`. -/
 def singleCLM (m : M) : 𝕜 →L[𝕜] lpOneAlg M E :=
-  LinearMap.mkContinuous
-    { toFun := fun x => single m x
-      map_add' := fun x y => by
-        rw [single_smul m (x + y), single_smul m x, single_smul m y, add_smul]
-      map_smul' := fun r x => by
-        rw [RingHom.id_apply, smul_eq_mul, single_smul m (r * x),
-          single_smul m x, mul_smul] }
-    ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖
-    (fun x => by
-      show ‖(single m x : lpOneAlg M E)‖ ≤ _
-      rw [norm_single]; exact (mul_comm ‖x‖ _).le)
+  (fiberSingleₗᵢ m).toContinuousLinearMap.comp
+    (FiberTrivialization.equivL (E := E) m : 𝕜 →L[𝕜] E m)
 
 @[simp] theorem singleCLM_apply (m : M) (x : 𝕜) :
     (singleCLM (E := E) m : 𝕜 →L[𝕜] lpOneAlg M E) x = single m x := rfl
@@ -113,13 +104,12 @@ section AtomNorm
 
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
 variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
 
 /-- The atom inclusion is a weighted isometry: its norm is the weight. -/
 theorem norm_singleCLM (m : M) :
     ‖(singleCLM (E := E) m : 𝕜 →L[𝕜] lpOneAlg M E)‖
-      = ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖ := by
+      = FiberTrivialization.weight (E := E) m := by
   refine le_antisymm (ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _)
     (fun x => by rw [singleCLM_apply, norm_single]; exact (mul_comm ‖x‖ _).le)) ?_
   have h := (singleCLM (E := E) m : 𝕜 →L[𝕜] lpOneAlg M E).le_opNorm 1
@@ -131,8 +121,7 @@ section Ext
 
 variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
 variable {B : Type*} [NormedAddCommGroup B] [NormedSpace 𝕜 B]
 
 /-- **Determination on the atoms.** Two continuous linear maps out of a
@@ -162,14 +151,12 @@ section Lift
 
 variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
 variable {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F] [CompleteSpace F]
 
-omit [DecidableEq M] [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
-  [CompleteSpace F] in
+omit [DecidableEq M] [CompleteSpace F] in
 private theorem norm_smul_col_le (v : M → F) {C : ℝ}
-    (hv : ∀ m, ‖v m‖ ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
+    (hv : ∀ m, ‖v m‖ ≤ C * FiberTrivialization.weight (E := E) m)
     (h : lpOneAlg M E) (m : M) :
     ‖toRealSeq h m • v m‖ ≤ C * ‖h m‖ := by
   rw [norm_smul]
@@ -177,19 +164,18 @@ private theorem norm_smul_col_le (v : M → F) {C : ℝ}
   rw [norm_eq_abs_toReal_mul_weight h m]
   ring
 
-omit [DecidableEq M] [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E] in
+omit [DecidableEq M] in
 /-- The lift-induced series converges absolutely. -/
 theorem liftCLM_summable (v : M → F) {C : ℝ}
-    (hv : ∀ m, ‖v m‖ ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
+    (hv : ∀ m, ‖v m‖ ≤ C * FiberTrivialization.weight (E := E) m)
     (h : lpOneAlg M E) :
     Summable (fun m => toRealSeq h m • v m) :=
   Summable.of_norm (((summable_norm h).mul_left C).of_nonneg_of_le
     (fun _ => norm_nonneg _) (norm_smul_col_le v hv h))
 
-omit [DecidableEq M] [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
-  [CompleteSpace F] in
+omit [DecidableEq M] [CompleteSpace F] in
 private theorem norm_tsum_liftFun_le (v : M → F) {C : ℝ}
-    (hv : ∀ m, ‖v m‖ ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
+    (hv : ∀ m, ‖v m‖ ≤ C * FiberTrivialization.weight (E := E) m)
     (h : lpOneAlg M E) :
     ‖∑' m, toRealSeq h m • v m‖ ≤ C * ‖h‖ := by
   have hmaj : Summable (fun m => ‖toRealSeq h m • v m‖) :=
@@ -209,7 +195,7 @@ most `C` (`norm_liftCLM_le`), sending each single to its column
 data — not to be confused with `Operators/BlockDiagonal/Lift`, which lifts
 ℕ-indexed data INTO a system space. -/
 def liftCLM (v : M → F) (C : ℝ)
-    (hv : ∀ m, ‖v m‖ ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖) :
+    (hv : ∀ m, ‖v m‖ ≤ C * FiberTrivialization.weight (E := E) m) :
     lpOneAlg M E →L[𝕜] F :=
   LinearMap.mkContinuous
     { toFun := fun h => ∑' m, toRealSeq h m • v m
@@ -234,12 +220,12 @@ def liftCLM (v : M → F) (C : ℝ)
 
 omit [DecidableEq M] in
 theorem liftCLM_apply (v : M → F) (C : ℝ)
-    (hv : ∀ m, ‖v m‖ ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
+    (hv : ∀ m, ‖v m‖ ≤ C * FiberTrivialization.weight (E := E) m)
     (h : lpOneAlg M E) :
     liftCLM v C hv h = ∑' m, toRealSeq h m • v m := rfl
 
 @[simp] theorem liftCLM_single (v : M → F) (C : ℝ)
-    (hv : ∀ m, ‖v m‖ ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
+    (hv : ∀ m, ‖v m‖ ≤ C * FiberTrivialization.weight (E := E) m)
     (m : M) (x : 𝕜) :
     liftCLM v C hv (single m x) = x • v m := by
   show (∑' k, toRealSeq (single (E := E) m x) k • v k) = x • v m
@@ -252,7 +238,7 @@ omit [DecidableEq M] in
 /-- Pointwise norm bound for the lift, valid for every `C` (no sign
 hypothesis). -/
 theorem norm_liftCLM_apply_le (v : M → F) (C : ℝ)
-    (hv : ∀ m, ‖v m‖ ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
+    (hv : ∀ m, ‖v m‖ ≤ C * FiberTrivialization.weight (E := E) m)
     (h : lpOneAlg M E) :
     ‖liftCLM v C hv h‖ ≤ C * ‖h‖ :=
   norm_tsum_liftFun_le v hv h
@@ -262,7 +248,7 @@ of the API): a map whose columns satisfy the weighted bound is the lift of
 its column family. Converse pairing of `norm_le_of_cols`. -/
 theorem eq_liftCLM_of_cols (W : lpOneAlg M E →L[𝕜] F) {C : ℝ}
     (hv : ∀ m, ‖W (single m 1)‖
-      ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖) :
+      ≤ C * FiberTrivialization.weight (E := E) m) :
     liftCLM (fun m => W (single m 1)) C hv = W :=
   continuousLinearMap_ext fun m => by rw [liftCLM_single, one_smul]
 
@@ -272,13 +258,12 @@ section LiftOpNorm
 
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
 variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
 variable {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F] [CompleteSpace F]
 
 omit [DecidableEq M] in
 theorem norm_liftCLM_le (v : M → F) {C : ℝ}
-    (hv : ∀ m, ‖v m‖ ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
+    (hv : ∀ m, ‖v m‖ ≤ C * FiberTrivialization.weight (E := E) m)
     (hC : 0 ≤ C) :
     ‖liftCLM v C hv‖ ≤ C :=
   ContinuousLinearMap.opNorm_le_bound _ hC (norm_liftCLM_apply_le v C hv)
@@ -287,10 +272,10 @@ theorem norm_liftCLM_le (v : M → F) {C : ℝ}
 family at the operator norm. -/
 theorem exists_eq_liftCLM (W : lpOneAlg M E →L[𝕜] F) :
     ∃ hv : ∀ m, ‖W (single m 1)‖
-      ≤ ‖W‖ * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖,
+      ≤ ‖W‖ * FiberTrivialization.weight (E := E) m,
       liftCLM (fun m => W (single m 1)) ‖W‖ hv = W := by
   have hv : ∀ m, ‖W (single m 1)‖
-      ≤ ‖W‖ * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖ := fun m => by
+      ≤ ‖W‖ * FiberTrivialization.weight (E := E) m := fun m => by
     have h := W.le_opNorm (single m 1)
     rwa [norm_single, norm_one, one_mul] at h
   exact ⟨hv, eq_liftCLM_of_cols W hv⟩
@@ -307,7 +292,8 @@ section SingleMul
 
 variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} [AddMonoid M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
+variable [lpOneAlgConvCompat 𝕜 M E]
 
 /-- Singles multiply by convolution of point masses:
 `single i x * single j y = single (i+j) (x*y)`. -/
@@ -341,8 +327,8 @@ section MulCLM
 
 variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} [AddMonoid M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
+variable [lpOneAlgConvCompat 𝕜 M E]
 
 /-- Right multiplication `f ↦ f * g` as a continuous linear map (pointwise
 bound `‖f * g‖ ≤ ‖g‖ * ‖f‖`). Built by `mkContinuous` rather than
@@ -375,8 +361,8 @@ section MulCLMNorm
 
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
 variable {M : Type*} [AddMonoid M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
+variable [lpOneAlgConvCompat 𝕜 M E]
 
 /-- Left multiplication by `f` has operator norm at most `‖f‖`. -/
 theorem norm_mulLeftCLM_le (f : lpOneAlg M E) :
@@ -403,8 +389,8 @@ section LiftMul
 
 variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} [AddMonoid M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
+variable [lpOneAlgConvCompat 𝕜 M E]
 variable {B : Type*} [NormedRing B] [NormedAlgebra 𝕜 B] [CompleteSpace B]
 
 /-- Right multiplication by a fixed element of the target algebra as a
@@ -435,7 +421,7 @@ private theorem mulLeftTarget_apply (c y : B) :
     mulLeftTarget (𝕜 := 𝕜) c y = c * y := rfl
 
 variable (b : M → B) (C : ℝ)
-    (hb : ∀ m, ‖b m‖ ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖)
+    (hb : ∀ m, ‖b m‖ ≤ C * FiberTrivialization.weight (E := E) m)
 
 omit [lpOneAlgConvCompat 𝕜 M E] in
 /-- The lift of a family with `b 0 = 1` is unital. -/
@@ -505,8 +491,8 @@ section AlgHomExt
 
 variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} [AddMonoid M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
+variable [lpOneAlgConvCompat 𝕜 M E]
 variable {B : Type*} [NormedRing B] [NormedAlgebra 𝕜 B]
 
 /-- **Determination on the atoms** (uniqueness face): two continuous algebra
@@ -536,7 +522,7 @@ lift** (completeness face): a homomorphism whose atoms satisfy the weighted
 bound is the lift of its atom family. -/
 theorem eq_liftAlgHom_of_atoms (φ : lpOneAlg M E →A[𝕜] B) {C : ℝ}
     (hb : ∀ m, ‖φ (single m 1)‖
-      ≤ C * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖) :
+      ≤ C * FiberTrivialization.weight (E := E) m) :
     liftAlgHom (fun m => φ (single m 1)) C hb
       (continuousAlgHom_single_zero φ) (continuousAlgHom_single_add φ) = φ :=
   continuousAlgHom_ext fun m => by rw [liftAlgHom_single]
@@ -547,8 +533,8 @@ section AlgHomOpNorm
 
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
 variable {M : Type*} [AddMonoid M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [lpAlgRingData 𝕜 M E] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E]
-variable [∀ m, NormedSpace 𝕜 (E m)] [lpAlgSmulCompat 𝕜 M E]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
+variable [lpOneAlgConvCompat 𝕜 M E]
 variable {B : Type*} [NormedRing B] [NormedAlgebra 𝕜 B] [CompleteSpace B]
 
 /-- Every continuous algebra homomorphism out of the algebra is the algebra
@@ -556,7 +542,7 @@ lift of its atom family at the operator norm of its underlying continuous
 linear map (`ContinuousAlgHom` carries no norm of its own). -/
 theorem exists_eq_liftAlgHom (φ : lpOneAlg M E →A[𝕜] B) :
     ∃ hb : ∀ m, ‖φ (single m 1)‖
-      ≤ ‖φ.toContinuousLinearMap‖ * ‖lpAlgRingData.ofReal (E := E) m (1 : 𝕜)‖,
+      ≤ ‖φ.toContinuousLinearMap‖ * FiberTrivialization.weight (E := E) m,
       liftAlgHom (fun m => φ (single m 1)) ‖φ.toContinuousLinearMap‖ hb
         (continuousAlgHom_single_zero φ) (continuousAlgHom_single_add φ) = φ := by
   obtain ⟨hb, -⟩ := exists_eq_liftCLM φ.toContinuousLinearMap

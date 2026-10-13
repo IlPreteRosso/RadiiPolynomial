@@ -8,7 +8,7 @@ import RadiiPolynomial.Applications.IVP.Taylor.Analyticity
 `Analytic.lean` is not merely a power series centred at zero, it is `AnalyticOnNhd ℝ`
 on the whole interval `(-ν, ν)`; `lorenz_analytic_existsUnique` attaches that
 analyticity to the existence/uniqueness statement of `Analytic.lean`, whose competitor
-class is `IVP.IsAnalyticSolution`.
+class is `IVP.IsBallSolution`.
 
 As in `Example81/Analyticity.lean`, the analyticity theorem is a one-line consumer of
 the generic `IVP.analyticOnNhd_x_analytic`. The complex-time statements are in
@@ -35,13 +35,13 @@ still compares it against every differentiable in-ball solution. -/
 theorem lorenz_analytic_existsUnique :
     ∃ u : ℝ → Fin Example83.L → ℝ,
       AnalyticOnNhd ℝ u (Set.Ioo (-(Example83.ν_val : ℝ)) Example83.ν_val) ∧
-      IsAnalyticSolution (ν := Example83.ν_val) Example83.f_cpoly Example83.x₀
+      IsBallSolution (ν := Example83.ν_val) Example83.f_cpoly Example83.x₀
         Example83.Cert.R_traj u ∧
       ∀ v : ℝ → Fin Example83.L → ℝ,
-        IsAnalyticSolution (ν := Example83.ν_val) Example83.f_cpoly Example83.x₀
+        IsBallSolution (ν := Example83.ν_val) Example83.f_cpoly Example83.x₀
           Example83.Cert.R_traj v →
         Set.EqOn v u (Set.Ioo (-(Example83.ν_val : ℝ)) Example83.ν_val) :=
   ⟨Example83.Cert.x_analytic, lorenz_analyticOnNhd,
-    Example83.Cert.x_analytic_isAnalyticSolution, Example83.Cert.analytic_eq_canonical⟩
+    Example83.Cert.x_analytic_isBallSolution, Example83.Cert.analytic_eq_canonical⟩
 
 end Example83.Cert

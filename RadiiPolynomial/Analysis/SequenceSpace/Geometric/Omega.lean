@@ -460,9 +460,9 @@ lemma shiftDivN_leftMul_tail_le_of_cols (b : l1Weighted ν) (N : ℕ) {C : ℝ}
   have hv : ∀ m : ℕ,
       ‖((l1Weighted.tailProj_CLM N).comp
         (shiftDivN_CLM.comp (l1Weighted.leftMul b))) (lpOneAlg.single m 1)‖ ≤
-        C * ‖lpAlgRingData.ofReal (E := ScaledReal ν) m (1 : ℝ)‖ := by
+        C * FiberTrivialization.weight (E := ScaledReal ν) m := by
     intro m
-    rw [ScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul,
+    rw [WeightedScalar.fiberTrivialization_weight,
       ← l1Weighted.single_eq_lpOneAlg_single, hnormW]
     exact hcol m
   have hlift := lpOneAlg.eq_liftCLM_of_cols

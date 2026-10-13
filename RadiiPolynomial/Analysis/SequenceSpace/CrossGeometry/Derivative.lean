@@ -120,12 +120,12 @@ private def chebyshevDerivativeToUColumn (ν : PosReal) (k : ℕ) : l1Omega ν :
 
 private lemma chebyshevDerivativeToUColumn_le (ν : PosReal) (k : ℕ) :
     ‖chebyshevDerivativeToUColumn ν k‖ ≤
-      ‖lpAlgRingData.ofReal (E := BorderedScaledReal ν) k (1 : ℝ)‖ := by
+      FiberTrivialization.weight (E := BorderedScaledReal ν) k := by
   cases k with
   | zero =>
       simp [chebyshevDerivativeToUColumn]
   | succ k =>
-      rw [BorderedScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul,
+      rw [WeightedScalar.fiberTrivialization_weight,
         borderedWeight_succ, chebyshevDerivativeToUColumn]
       simp only [Nat.succ_ne_zero, chebyshevStorageFactor, ite_false,
         norm_smul, Real.norm_eq_abs]
@@ -246,7 +246,7 @@ private lemma norm_uPolyOmega_natCast_le {σ ν : PosReal}
 private lemma uPolyOmegaSynthesisColumn_le {σ ν : PosReal}
     (hgate : bernsteinParameter (σ : ℝ) ≤ (ν : ℝ)) (n : ℕ) :
     ‖uPolyOmega σ (n : ℤ)‖ ≤
-      ‖lpAlgRingData.ofReal (E := OmegaScaledReal ν) n (1 : ℝ)‖ := by
+      FiberTrivialization.weight (E := OmegaScaledReal ν) n := by
   have h := norm_uPolyOmega_natCast_le hgate n
   change ‖uPolyOmega σ (n : ℤ)‖ ≤
     |(1 : ℝ)| * OmegaScaledReal.omegaWeight ν n
@@ -307,7 +307,7 @@ private def chebyshevDerivativeToTaylorColumn (σ : PosReal) (k : ℕ) : l1Omega
 private lemma chebyshevDerivativeToTaylorColumn_le {σ ν : PosReal}
     (hgate : (σ : ℝ) ≤ semiMinor ν) (k : ℕ) :
     ‖chebyshevDerivativeToTaylorColumn σ k‖ ≤
-      ‖lpAlgRingData.ofReal (E := BorderedScaledReal ν) k (1 : ℝ)‖ := by
+      FiberTrivialization.weight (E := BorderedScaledReal ν) k := by
   have hsource := chebyshevToTaylorBorderedCLM_norm_le hgate
     (lpOneAlg.single k 1 : l1Bordered ν)
   rw [chebyshevToTaylorBorderedCLM_single hgate k 1, one_smul,

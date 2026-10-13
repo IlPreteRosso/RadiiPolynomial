@@ -75,7 +75,7 @@ noncomputable def A_dag : ScalarBlockDiagData 2 :=
 /-! ## ℚ data for evaluators -/
 
 private def F_ā_vec (n : ℕ) : ℚ :=
-  CauchyProduct (fun k => (#[ā₀, ā₁, ā₂] : Array ℚ).getD k 0)
+  cauchyProduct (fun k => (#[ā₀, ā₁, ā₂] : Array ℚ).getD k 0)
                 (fun k => (#[ā₀, ā₁, ā₂] : Array ℚ).getD k 0) n -
   (#[lam0, 1] : Array ℚ).getD n 0
 
@@ -117,7 +117,7 @@ private lemma F_ā_support : ∀ n, 4 < n →
     fun k hk => by rw [ApproxSolution.toL1_toSeq]; exact sol.toSeq_zero_of_gt k hk
   have h_sq : l1Weighted.toSeq (sq (sol.toL1 : l1Weighted ν_val)) n = 0 := by
     rw [sq, l1Weighted.toSeq_mul]
-    exact CauchyProduct.zero_of_support hā hā n (by omega)
+    exact cauchyProduct.zero_of_support hā hā n (by omega)
   have h_c : l1Weighted.toSeq (c lam0 : l1Weighted ν_val) n = 0 := by
     simp only [c, l1Weighted.mk_apply, paramSeq]; match n, hn with | n + 5, _ => rfl
   rw [h_sq, h_c, sub_self]
@@ -140,7 +140,7 @@ private lemma F_ā_toSeq_eq (n : ℕ) :
     l1Weighted.toSeq (F lam0 (sol.toL1 : l1Weighted ν_val)) n = F_ā_R n := by
   unfold F_ā_R
   rw [F_toSeq, ApproxSolution.toL1_toSeq]
-  simp only [F_ā_vec, CauchyProduct.apply, lam0]
+  simp only [F_ā_vec, cauchyProduct.apply, lam0]
   simp_rw [sol_toSeq_eq]; push_cast
   match n with
   | 0 => simp [paramSeq, Array.getD]

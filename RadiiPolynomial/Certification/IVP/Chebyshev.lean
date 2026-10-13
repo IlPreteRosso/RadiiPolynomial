@@ -159,22 +159,22 @@ theorem Y₀_le_of_Q (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L)
     (d.G (banachField f) (fun j => (p_q j : ℝ)) d.abar l) M
     (fun m => rfl)
     (fun n hn => by
-      show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n)
+      show ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n)
         (d.approxInverse.action
           (chebyshevIvpCoeffs (banachField f) (fun j => (p_q j : ℝ)) d.abar) l n)‖ = 0
       rw [SystemBlockDiagData.action_tail _ _ _ _ (show N < n by
           simp only [M, MY] at hn; omega),
         hF, ivpCoeffsQ_support d f p_q l n hn]
-      simp [lpAlgRingData.ofReal_zero])]
+      simp)]
   refine le_of_eq_of_le ?_ (by exact_mod_cast hle l :
     ((Y₀Q N d.A_col d.abar_Q d.ν_q f p_q l : ℚ) : ℝ) ≤ Y₀)
   unfold Y₀Q
   push_cast
   refine Finset.sum_congr rfl fun n _ => ?_
-  show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑(n : ℕ))
+  show ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑(n : ℕ))
     (d.approxInverse.action
       (chebyshevIvpCoeffs (banachField f) (fun j => (p_q j : ℝ)) d.abar) l n)‖ = _
-  rw [ScaledRealZ.norm_lpAlgRingData_ofReal, action_eq_actionQ d _ _ hF l n, d.hν]
+  rw [ScaledRealZ.norm_equiv_apply, action_eq_actionQ d _ _ hF l n, d.hν]
   simp
 
 end Bridges
@@ -378,9 +378,9 @@ theorem TCblock_single_norm_le (d : StdChebIVPData ν L N) (l j : Fin L) (m : �
     (d.TCblockFun (Pi.single j (l1Chebyshev.single m 1)) l) N
     (fun m => rfl)
     (fun n hn => by
-      show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n)
+      show ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n)
         (d.TCblockSeq (Pi.single j (l1Chebyshev.single m 1)) l n)‖ = 0
-      rw [d.TCblockSeq_tail _ _ n hn, lpAlgRingData.ofReal_zero, norm_zero])]
+      rw [d.TCblockSeq_tail _ _ n hn, FiberTrivialization.equiv_zero, norm_zero])]
   cases m with
   | ofNat mn =>
     have hterm : ∀ n : Fin (N + 1),
@@ -693,16 +693,6 @@ theorem chebColNormQ_le_eps (N : ℕ) (A_col DF_col : Fin L → Fin L → ℕ �
 
 end QLayerZ1
 
-section BridgesZ1Fiber
-
-variable {ν : PosReal}
-
-theorem fiber_eq_zero {k : ℤ} (x : ScaledRealZ ν k) (hx : lpAlgRingData.toReal k x = 0) :
-    x = 0 := by
-  rw [← lpAlgRingData.ofReal_toReal k x, hx, lpAlgRingData.ofReal_zero]
-
-end BridgesZ1Fiber
-
 namespace StdChebIVPData
 
 section BridgesZ1
@@ -738,7 +728,8 @@ theorem Z₁_hneg (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L) (p : Fi
     (h : XCheb ν L) (l : Fin L) (m : ℕ) :
     (((d.composedApproxCLM - fderiv ℝ (d.G (banachField f) p) d.abar) h) l) (Int.negSucc m)
       = 0 := by
-  refine fiber_eq_zero _ ?_
+  refine (LinearEquiv.map_eq_zero_iff
+    (FiberTrivialization.equiv (E := ScaledRealZ ν) (Int.negSucc m)).symm).mp ?_
   show l1Chebyshev.toSeq
     (d.composedApproxCLM h l - (fderiv ℝ (d.G (banachField f) p) d.abar h) l)
       (Int.negSucc m) = 0

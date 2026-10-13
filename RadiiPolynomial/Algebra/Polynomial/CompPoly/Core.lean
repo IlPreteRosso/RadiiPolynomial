@@ -58,7 +58,7 @@ def evalCoeffSeq : CompPoly L → (Fin L → ℕ → ℚ) → ℕ → ℚ
   | .X i, seqs, n => seqs i n
   | .add p q, seqs, n => evalCoeffSeq p seqs n + evalCoeffSeq q seqs n
   | .sub p q, seqs, n => evalCoeffSeq p seqs n - evalCoeffSeq q seqs n
-  | .mul p q, seqs, n => CauchyProduct (evalCoeffSeq p seqs) (evalCoeffSeq q seqs) n
+  | .mul p q, seqs, n => cauchyProduct (evalCoeffSeq p seqs) (evalCoeffSeq q seqs) n
   | .neg p, seqs, n => -(evalCoeffSeq p seqs n)
   | .smul r p, seqs, n => r * evalCoeffSeq p seqs n
 
@@ -128,7 +128,7 @@ theorem evalCoeffSeq_eq_mvPolyCoeff (p : CompPoly L) (seqs : Fin L → ℕ → �
       simp only [evalCoeffSeq, toMvPoly, mvPolyCoeff_neg]
       rw [ih]
   | mul p q ihp ihq =>
-      simp only [evalCoeffSeq, toMvPoly, mvPolyCoeff_mul, CauchyProduct.apply]
+      simp only [evalCoeffSeq, toMvPoly, mvPolyCoeff_mul, cauchyProduct.apply]
       exact Finset.sum_congr rfl fun kl _ => by rw [ihp, ihq]
   | smul r p ih =>
       simp only [evalCoeffSeq, toMvPoly, mvPolyCoeff_C_mul]
@@ -324,7 +324,7 @@ theorem evalCoeffSeq_eq_zero_of_support (N : ℕ) (p : CompPoly L) (seqs : Fin L
   | mul p q ihp ihq =>
       intro n hn
       simp only [supportBound] at hn
-      simp only [CompPoly.evalCoeffSeq, CauchyProduct.apply]
+      simp only [CompPoly.evalCoeffSeq, cauchyProduct.apply]
       refine Finset.sum_eq_zero fun kl hkl => ?_
       rw [Finset.mem_antidiagonal] at hkl
       by_cases hk : supportBound N p < kl.1

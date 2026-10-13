@@ -74,7 +74,7 @@ theorem norm_powerColumn_le (k : ℤ) : ‖powerColumn ν k‖ ≤ (ν : ℝ)^k.
 /-- All annulus evaluations at once: the weighted-ℓ¹ lift of the columns `powerColumn`. -/
 def synthesis : l1Chebyshev ν →L[ℝ] (Annulus ν →ᵇ ℂ) :=
   liftCLM (powerColumn ν) 1 (fun k => by
-    rw [ScaledRealZ.norm_lpAlgRingData_ofReal]
+    rw [WeightedScalar.fiberTrivialization_weight]
     simpa using norm_powerColumn_le ν k)
 
 theorem synthesis_eq_character (z : Annulus ν) (a : l1Chebyshev ν) :

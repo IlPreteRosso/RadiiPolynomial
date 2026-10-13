@@ -1893,3 +1893,459 @@ Triage rows CONS-E-1, -2, -3, -11, -12 (:257), -13, -14 (Codex Q1 ownership).
 | — | `RadiiPolynomial/Examples/tests/TY/AllGenerated.lean`, `RadiiPolynomial/Examples/tests/TC/FinMatrixBound.lean` | new test modules (S10-1-7, S10-2-19) | `p3/evidence_C15/TESTS_REPORT_C15.md` |
 | `tests/CV/PowerSeriesBridge` §5 `#print axioms` records | the same records under `#guard_msgs` (T-3) | test strengthening | `p3/evidence_C15/TESTS_REPORT_C15.md` |
 
+## API campaign 2026-10-12 — DEFER round (user decisions 1–8; 2026-10-13/14)
+
+The eight rows that the campaign deferred to the user (`DEFER_USER.md`) were decided on 2026-10-13 ("baaaaaba",
+`DECISIONS.md` ~19:50Z) and executed as units D1, D2, E1, E2 and E1b, each accepted by its independent critic with
+the critic's fixes applied (`DECISIONS.md`, entries ~22:25Z on 10-13 to ~04:55Z on 10-14). Coordinator rulings in
+`DECISIONS.md` override fragment text where they differ.
+
+| # | decision | executed by |
+|---|---|---|
+| 1 | (b) rename `CauchyProduct` → `cauchyProduct` with its derived names; no alias; paper erratum at the next paper pass | D1 item 1 |
+| 2 | (a) re-index the weighted ℓ¹ API by the chosen frame `FiberTrivialization 𝕜 M E`; the legacy fiber classes are deleted | E1 (station), E2 (consumers), E1b (station API quality); design `ft_reindex/CONSENSUS_ft_reindex.md` v2 FINAL |
+| 3 | (a) move the root declarations of `Core/Theorem.lean` under `RadiiPolynomial.` | D2 |
+| 4 | (a) wrap `Geometric/Evaluation.lean` and `Geometric/EvaluationDerivative.lean` in `namespace RadiiPolynomial` | D1 item 4 |
+| 5 | (a) rename `IVP.IsAnalyticSolution` → `IVP.IsBallSolution`; no alias | D1 item 5 |
+| 6 | (a) keep the Ex81 production `Y₀` route | no change |
+| 7 | (b) `Tactic/FinMatrixBound.lean` gets the project header | D1 item 7 (header comment only) |
+| 8 | (a) Ex83 feeds `Z₁_le_of_compPoly` with the `fderiv` `Df`; the component-derivative lemmas are deleted | D1 item 8 |
+
+Standing rules of the round (user, 2026-10-13): rapid development, no backward support ("Don't worry about
+backwards support we are at rapid dev", ~20:58Z), and no mercy ("if the refactor deprecate some other older modules
+have no mercy deleting em", ~21:40Z). No alias, no `deprecated` attribute and no compatibility shim was added; every
+retired name has its replacement in the ledgers below.
+
+Ledger columns: old FQN | new FQN or replacement | kind | evidence. Kinds as in the cohorts B (round 2) and C section,
+plus `moved (namespace)` (same module; the FQN gains `RadiiPolynomial.`), `migrated (frame re-index)` (one row per
+family; its printed statement changes follow as `↳` sub-rows), `restored` and `aux regenerated`. Regenerated
+auxiliaries are named only in notes. Names in the E1, E1b and E2 ledgers are relative to `RadiiPolynomial.` unless they
+start with `ChebyshevIVP.` or `RadiiPolynomial.`.
+
+Evidence paths starting with `p3/`, `ft_reindex/` or `rb_round/` are relative to `exterior/tmp/api_campaign_20261012/`
+in the outer repository, outside the Lake root; `DECISIONS.md` and `DEFER_USER.md` are that directory's logs.
+
+ReferenceBook and paper: no ReferenceBook source or paper file is edited by the campaign. Unlike the earlier sections,
+the ReferenceBook does use many of the names below; the cumulative migration recipe with its scratch replay is
+`rb_round/RB_MIGRATION_ROUND.md` (the Paper session's round). Paper errata (decisions 1, 2, 5 and 8) are in
+`p3/evidence_D1/PAPER_NOTES_D1.md` and `p3/evidence_E1/PAPER_NOTES_E1.md`; decision 3 needs none (printed short names).
+
+### D1 — decisions 7, 4, 5, 8, 1 (`Tactic/FinMatrixBound.lean`, `Geometric/Evaluation*`, `Applications/IVP/Taylor/Analytic.lean`, Ex81/Ex83, `Algebra/Convolution/*`)
+
+Unit D1 (`p3/evidence_D1/REPORT_D1_handback.md`, `p3/evidence_D1/CRITIC_D1.md`: own whole-library compare, 39 moves,
+14 + 51 renames exact, Ex83 deletions with 0 consumers, endpoint axioms identical).
+
+#### Ledger (D1)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `Tactic/FinMatrixBound.lean` header ("Copyright (c) 2026 LeanCert Contributors …") | the project header of `Tactic/MakeCompPoly.lean` (RadiiPolynomial contributors, Apache 2.0); no constant changes (decision 7) | header comment | `p3/evidence_D1/item7/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.evalAlgHom'` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalAlgHom'` (private def) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.evalAlgHom'._proof_1` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalAlgHom'._proof_1` (private theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.evalAlgHom'._proof_2` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalAlgHom'._proof_2` (private theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.evalAlgHom'._proof_3` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalAlgHom'._proof_3` (private theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.evalAlgHom'._proof_4` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalAlgHom'._proof_4` (private theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.evalCLM` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalCLM` (private def) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.evalCLM._proof_1` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalCLM._proof_1` (private theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.evalCLM._proof_2` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalCLM._proof_2` (private theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.evalCLM_apply` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalCLM_apply` (private theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.norm_term_le` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.norm_term_le` (private theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.seq` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.seq` (private def) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.l1Weighted.summable_norm_eval` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.summable_norm_eval` (private theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.EvaluationDerivative.0.l1Weighted.seq` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.EvaluationDerivative.0.RadiiPolynomial.l1Weighted.seq` (private def) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.abs_eval_le` | `RadiiPolynomial.l1Weighted.abs_eval_le` (theorem; paper: printed spelling unchanged) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.continuous_eval` | `RadiiPolynomial.l1Weighted.continuous_eval` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval` | `RadiiPolynomial.l1Weighted.eval` (def; paper: printed `l1Weighted.eval` (resolves unchanged)) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.evalAlgHom` | `RadiiPolynomial.l1Weighted.evalAlgHom` (def) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.evalAlgHom_apply` | `RadiiPolynomial.l1Weighted.evalAlgHom_apply` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.evalContinuousAlgHom` | `RadiiPolynomial.l1Weighted.evalContinuousAlgHom` (def; paper: printed spelling unchanged) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.evalContinuousAlgHom.congr_simp` | `RadiiPolynomial.l1Weighted.evalContinuousAlgHom.congr_simp` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.evalContinuousAlgHom_apply` | `RadiiPolynomial.l1Weighted.evalContinuousAlgHom_apply` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_CLM` | `RadiiPolynomial.l1Weighted.eval_CLM` (def) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_CLM_apply` | `RadiiPolynomial.l1Weighted.eval_CLM_apply` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_add` | `RadiiPolynomial.l1Weighted.eval_add` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_at_zero` | `RadiiPolynomial.l1Weighted.eval_at_zero` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_double_finset_sum` | `RadiiPolynomial.l1Weighted.eval_double_finset_sum` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_finset_sum` | `RadiiPolynomial.l1Weighted.eval_finset_sum` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_mul` | `RadiiPolynomial.l1Weighted.eval_mul` (theorem; paper: printed spelling unchanged) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_mul_trunc` | `RadiiPolynomial.l1Weighted.eval_mul_trunc` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_neg` | `RadiiPolynomial.l1Weighted.eval_neg` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_one` | `RadiiPolynomial.l1Weighted.eval_one` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_one._proof_1_1` | `RadiiPolynomial.l1Weighted.eval_one._proof_1_1` (internal theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_single` | `RadiiPolynomial.l1Weighted.eval_single` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_smul` | `RadiiPolynomial.l1Weighted.eval_smul` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_sub` | `RadiiPolynomial.l1Weighted.eval_sub` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.eval_zero` | `RadiiPolynomial.l1Weighted.eval_zero` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.hasDerivAt_eval` | `RadiiPolynomial.l1Weighted.hasDerivAt_eval` (theorem; paper: printed spelling unchanged) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.hasDerivAt_eval_single` | `RadiiPolynomial.l1Weighted.hasDerivAt_eval_single` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `l1Weighted.summable_eval` | `RadiiPolynomial.l1Weighted.summable_eval` (theorem) | moved (namespace) | `p3/evidence_D1/item4/cmp/STRICT_COMPARE.md` |
+| `Example81.Cert.x_analytic_isAnalyticSolution` | `Example81.Cert.x_analytic_isBallSolution` (theorem) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `Example83.Cert.x_analytic_isAnalyticSolution` | `Example83.Cert.x_analytic_isBallSolution` (theorem) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.IsAnalyticSolution` | `IVP.IsBallSolution` (inductive; paper main.tex:1354) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.IsAnalyticSolution.casesOn` | `IVP.IsBallSolution.casesOn` (def) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.IsAnalyticSolution.in_R` | `IVP.IsBallSolution.in_R` (theorem) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.IsAnalyticSolution.init` | `IVP.IsBallSolution.init` (theorem) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.IsAnalyticSolution.mk` | `IVP.IsBallSolution.mk` (ctor) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.IsAnalyticSolution.mk._flat_ctor` | `IVP.IsBallSolution.mk._flat_ctor` (internal def) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.IsAnalyticSolution.rec` | `IVP.IsBallSolution.rec` (rec) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.IsAnalyticSolution.recOn` | `IVP.IsBallSolution.recOn` (def) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.IsAnalyticSolution.solves` | `IVP.IsBallSolution.solves` (theorem) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.StdIVPData.x_analytic_isAnalyticSolution` | `IVP.StdIVPData.x_analytic_isBallSolution` (theorem) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.StdIVPData.x_analytic_isAnalyticSolution_of_compPoly` | `IVP.StdIVPData.x_analytic_isBallSolution_of_compPoly` (theorem) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `IVP.StdIVPData.x_analytic_isAnalyticSolution_of_compPoly_of_radii` | `IVP.StdIVPData.x_analytic_isBallSolution_of_compPoly_of_radii` (theorem) | renamed (no alias) | `p3/evidence_D1/item5/cmp/STRICT_COMPARE.md` |
+| `Example83.Df.eq_1` | the name is reused by the single equation lemma of the new `Df`, realized on first use | retired (aux) | `p3/evidence_D1/item8/cmp/STRICT_COMPARE.md` |
+| `Example83.Df.eq_2` | `Example83.Df.eq_1` (the new `Df` has one equation) | retired (aux) | `p3/evidence_D1/item8/cmp/STRICT_COMPARE.md` |
+| `Example83.Df.eq_3` | `Example83.Df.eq_1` (the new `Df` has one equation) | retired (aux) | `p3/evidence_D1/item8/cmp/STRICT_COMPARE.md` |
+| `Example83.Df_eq_fderiv` | `rfl`: `Df h l` is by definition `fderiv ℝ (fun a => f a l) data.abar h` | retired | `p3/evidence_D1/item8/cmp/STRICT_COMPARE.md` |
+| `Example83.fderiv_f_0` | none: `Df` is definitionally the `fderiv`, so the `Z₁` face hypothesis holds by `rfl` | retired | `p3/evidence_D1/item8/cmp/STRICT_COMPARE.md` |
+| `Example83.fderiv_f_1` | none: `Df` is definitionally the `fderiv`, so the `Z₁` face hypothesis holds by `rfl` | retired | `p3/evidence_D1/item8/cmp/STRICT_COMPARE.md` |
+| `Example83.fderiv_f_2` | none: `Df` is definitionally the `fderiv`, so the `Z₁` face hypothesis holds by `rfl` | retired | `p3/evidence_D1/item8/cmp/STRICT_COMPARE.md` |
+| `_private.RadiiPolynomial.Examples.IVP.Taylor.Example83.Algebra.0.Example83.proj_L` | none (private abbrev used only by the deleted lemmas) | retired (private) | `p3/evidence_D1/item8/cmp/STRICT_COMPARE.md` |
+| `Example83.Df` | type exact; value `fun h l => fderiv ℝ (fun a => f a l) data.abar h` (was the closed Lorenz-Jacobian formula); private `Example83.Cert.Df_norm_le` (paper-cited) keeps its statement, `main_theorem` and `ivp_main_theorem` are unchanged | redefined | `p3/evidence_D1/item8/cmp/STRICT_COMPARE.md`; `p3/evidence_D1/item8/ex83_axioms_after.out` |
+| `Example83.σ_val` | none (definition with 0 uses; no-mercy rule) | retired | `p3/evidence_D1/CRITIC_D1.md` (F2); `DECISIONS.md` ~22:25Z ruling (c) |
+| `Example83.ρ_val` | none (definition with 0 uses; no-mercy rule) | retired | `p3/evidence_D1/CRITIC_D1.md` (F2); `DECISIONS.md` ~22:25Z ruling (c) |
+| `Example83.β_val` | none (definition with 0 uses; no-mercy rule) | retired | `p3/evidence_D1/CRITIC_D1.md` (F2); `DECISIONS.md` ~22:25Z ruling (c) |
+| `import RadiiPolynomial.Tactic.AutoPolyFDeriv` in `Examples/IVP/Taylor/Example83/Algebra.lean` | dropped (unused after decision 8) | import change | `p3/evidence_D1/CRITIC_D1.md` (F2); `DECISIONS.md` ~22:25Z ruling (c) |
+| `RadiiPolynomial.CauchyProduct` | `RadiiPolynomial.cauchyProduct` (def; paper main.tex:453, :469) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.apply` | `RadiiPolynomial.cauchyProduct.apply` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.apply_of_support_le_split` | `RadiiPolynomial.cauchyProduct.apply_of_support_le_split` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.apply_of_support_le_split._proof_1_1` | `RadiiPolynomial.cauchyProduct.apply_of_support_le_split._proof_1_1` (internal theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.apply_of_support_le_split._proof_1_4` | `RadiiPolynomial.cauchyProduct.apply_of_support_le_split._proof_1_4` (internal theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.apply_of_support_le_split._simp_1_2` | `RadiiPolynomial.cauchyProduct.apply_of_support_le_split._simp_1_2` (internal theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.apply_of_support_le_split._simp_1_3` | `RadiiPolynomial.cauchyProduct.apply_of_support_le_split._simp_1_3` (internal theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.apply_range` | `RadiiPolynomial.cauchyProduct.apply_range` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.assoc` | `RadiiPolynomial.cauchyProduct.assoc` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.coeff_toPowerSeries` | `RadiiPolynomial.cauchyProduct.coeff_toPowerSeries` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.coeff_toPowerSeriesLinearEquiv` | `RadiiPolynomial.cauchyProduct.coeff_toPowerSeriesLinearEquiv` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.comm` | `RadiiPolynomial.cauchyProduct.comm` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.delta_left` | `RadiiPolynomial.cauchyProduct.delta_left` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.delta_right` | `RadiiPolynomial.cauchyProduct.delta_right` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.eq_1` | `RadiiPolynomial.cauchyProduct.eq_1` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.eq_addRingConvolution` | `RadiiPolynomial.cauchyProduct.eq_addRingConvolution` (theorem; paper main.tex:469) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.eq_coeff_mul` | `RadiiPolynomial.cauchyProduct.eq_coeff_mul` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.eq_sum_fin` | `RadiiPolynomial.cauchyProduct.eq_sum_fin` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.eq_sum_fin._proof_1_3` | `RadiiPolynomial.cauchyProduct.eq_sum_fin._proof_1_3` (internal theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.eq_sum_fin._simp_1_1` | `RadiiPolynomial.cauchyProduct.eq_sum_fin._simp_1_1` (internal theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.eq_sum_fin._simp_1_2` | `RadiiPolynomial.cauchyProduct.eq_sum_fin._simp_1_2` (internal theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.left_distrib` | `RadiiPolynomial.cauchyProduct.left_distrib` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.map_CauchyProduct` | `RadiiPolynomial.cauchyProduct.map_cauchyProduct` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.mul_one` | `RadiiPolynomial.cauchyProduct.mul_one` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.mul_smul` | `RadiiPolynomial.cauchyProduct.mul_smul` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.mul_zero` | `RadiiPolynomial.cauchyProduct.mul_zero` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.one` | `RadiiPolynomial.cauchyProduct.one` (def; paper main.tex:657 (printed short name)) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.one_eq_single` | `RadiiPolynomial.cauchyProduct.one_eq_single` (theorem; paper main.tex:657 (printed short name, unchanged)) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.one_mul` | `RadiiPolynomial.cauchyProduct.one_mul` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.one_succ` | `RadiiPolynomial.cauchyProduct.one_succ` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.one_zero` | `RadiiPolynomial.cauchyProduct.one_zero` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.ratCast` | `RadiiPolynomial.cauchyProduct.ratCast` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.right_distrib` | `RadiiPolynomial.cauchyProduct.right_distrib` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.single_mul_single` | `RadiiPolynomial.cauchyProduct.single_mul_single` (theorem; paper main.tex:657 (printed short name, unchanged)) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.smul_mul` | `RadiiPolynomial.cauchyProduct.smul_mul` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeries` | `RadiiPolynomial.cauchyProduct.toPowerSeries` (def; paper main.tex:469, :834 (printed short name, unchanged)) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeries.eq_1` | `RadiiPolynomial.cauchyProduct.toPowerSeries.eq_1` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv` | `RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv` (def) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv_apply` | `RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv_apply` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv_symm_apply` | `RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv_symm_apply` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv_symm_apply_coeff` | `RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv_symm_apply_coeff` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeries_injective` | `RadiiPolynomial.cauchyProduct.toPowerSeries_injective` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeries_mul` | `RadiiPolynomial.cauchyProduct.toPowerSeries_mul` (theorem; paper main.tex:469, :834 (printed `toPowerSeries_mul`, unchanged)) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeries_one` | `RadiiPolynomial.cauchyProduct.toPowerSeries_one` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.toPowerSeries_single` | `RadiiPolynomial.cauchyProduct.toPowerSeries_single` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.zero_mul` | `RadiiPolynomial.cauchyProduct.zero_mul` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.zero_of_support` | `RadiiPolynomial.cauchyProduct.zero_of_support` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.zero_of_support._proof_1_3` | `RadiiPolynomial.cauchyProduct.zero_of_support._proof_1_3` (internal theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.zero_of_support.match_1_1` | `RadiiPolynomial.cauchyProduct.zero_of_support.match_1_1` (def) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct.«term_⋆_»` | `RadiiPolynomial.cauchyProduct.«term_⋆_»` (def) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+| `RadiiPolynomial.CauchyProduct_eq_finiteAddConvolution` | `RadiiPolynomial.cauchyProduct_eq_finiteAddConvolution` (theorem) | renamed (no alias) | `p3/evidence_D1/item1/cmp/STRICT_COMPARE.md` |
+
+- Decision 1: the module names `Algebra/Convolution/CauchyProduct` and `CauchyProductReal` are unchanged; the scoped
+  notation `⋆` now lives in namespace `RadiiPolynomial.cauchyProduct`. The two notation auxiliaries (unexpander and
+  macro rules, whose names embed the definition name) are regenerated under `RadiiPolynomial.cauchyProduct.` with
+  values that differ only by the name literal (`p3/evidence_D1/CRITIC_D1.md` item 6). Mathlib and LeanCert declare no
+  `cauchyProduct`.
+- Decision 4: the printed spelling `l1Weighted.eval` and the paper text resolve unchanged inside `RadiiPolynomial`; the
+  39th row (`evalContinuousAlgHom.congr_simp`) is generated in `Geometric/RadiusRestriction`.
+- Decision 5: the derived conclusion names `x_analytic_isBallSolution*` were renamed with the predicate (ruling (a),
+  `DECISIONS.md` ~22:25Z); eight docstrings say "ball solution" instead of "analytic solution" (critic F4).
+- Decision 8: the reserved equation lemma `Example83.Df.eq_1` of the new one-equation `Df` is realized on first use.
+
+### D2 — decision 3 (`Core/Theorem.lean`)
+
+`Core/Theorem.lean` lies in one `namespace RadiiPolynomial`; statements, proofs, attributes and docstrings are
+byte-identical, and all 228 Lake-root consumer hits already resolved through the namespace or an `open` (0 consumer
+edits). Whole-library fingerprint (8756 constants) identical after mapping the moved names (`p3/evidence_D2/CRITIC_D2.md`).
+
+#### Ledger (D2)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `I_E` | `RadiiPolynomial.I_E` (`abbrev`, section (file top, before NeumannSeries)) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `NewtonLikeMap` | `RadiiPolynomial.NewtonLikeMap` (`def`, section NewtonLikeOperator) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `NewtonLikeMap.differentiable` | `RadiiPolynomial.NewtonLikeMap.differentiable` (`lemma`, section NewtonLikeOperator) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `Z_bound` | `RadiiPolynomial.Z_bound` (`def`, section RadiiPolynomialDefinitions) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `Z_bound_general` | `RadiiPolynomial.Z_bound_general` (`def`, section RadiiPolynomialDefinitions) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `fixedPoint_injective_iff_zero` | `RadiiPolynomial.fixedPoint_injective_iff_zero` (`lemma`, section Proposition_2_3_1; paper main.tex:317 (printed short name, no erratum)) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `generalRadiiPolynomial` | `RadiiPolynomial.generalRadiiPolynomial` (`def`, section RadiiPolynomialDefinitions) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `generalRadiiPolynomial_alt_form` | `RadiiPolynomial.generalRadiiPolynomial_alt_form` (`lemma`, section RadiiPolynomialDefinitions) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `generalRadiiPolynomial_anti_bounds` | `RadiiPolynomial.generalRadiiPolynomial_anti_bounds` (`lemma`, section SplitMonotonicity) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `general_fixed_point_theorem` | `RadiiPolynomial.general_fixed_point_theorem` (`theorem`, section FixedPointTheorem) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `general_radii_poly_neg_implies_Z_lt_one` | `RadiiPolynomial.general_radii_poly_neg_implies_Z_lt_one` (`lemma`, section RadiiPolynomialImplications) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `general_radii_polynomial_theorem` | `RadiiPolynomial.general_radii_polynomial_theorem` (`theorem`, section GeneralRadiiPolynomialTheorem; paper main.tex:252 (printed short name, no erratum)) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `general_radii_polynomial_theorem_of_le` | `RadiiPolynomial.general_radii_polynomial_theorem_of_le` (`theorem`, section SplitMonotonicity) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `invertible_comp_form` | `RadiiPolynomial.invertible_comp_form` (`lemma`, section NeumannSeries) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `invertible_of_norm_sub_id_lt_one` | `RadiiPolynomial.invertible_of_norm_sub_id_lt_one` (`theorem`, section NeumannSeries) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `isUnit_of_norm_sub_id_lt_one` | `RadiiPolynomial.isUnit_of_norm_sub_id_lt_one` (`theorem`, section NeumannSeries) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `newton_operator_Y_bound` | `RadiiPolynomial.newton_operator_Y_bound` (`lemma`, section OperatorBounds) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `newton_operator_derivative_bound_general` | `RadiiPolynomial.newton_operator_derivative_bound_general` (`lemma`, section OperatorBounds) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `newton_operator_derivative_bound_simple` | `RadiiPolynomial.newton_operator_derivative_bound_simple` (`lemma`, section OperatorBounds) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `newton_operator_fderiv` | `RadiiPolynomial.newton_operator_fderiv` (`lemma`, section OperatorBounds) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `radiiPolynomial` | `RadiiPolynomial.radiiPolynomial` (`def`, section RadiiPolynomialDefinitions) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `radiiPolynomial_alt_form` | `RadiiPolynomial.radiiPolynomial_alt_form` (`lemma`, section RadiiPolynomialDefinitions) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `radiiPolynomial_is_special_case` | `RadiiPolynomial.radiiPolynomial_is_special_case` (`lemma`, section RadiiPolynomialDefinitions) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `radii_poly_neg_implies_Z_bound_lt_one` | `RadiiPolynomial.radii_poly_neg_implies_Z_bound_lt_one` (`lemma`, section RadiiPolynomialImplications) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `simpleRadiiPolynomial` | `RadiiPolynomial.simpleRadiiPolynomial` (`def`, section RadiiPolynomialDefinitions) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `simple_maps_closedBall_to_itself` | `RadiiPolynomial.simple_maps_closedBall_to_itself` (`lemma`, section HelperLemmas) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `simple_radii_poly_neg_implies_Z_lt_one` | `RadiiPolynomial.simple_radii_poly_neg_implies_Z_lt_one` (`lemma`, section RadiiPolynomialImplications) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `simple_radii_polynomial_theorem_EtoF` | `RadiiPolynomial.simple_radii_polynomial_theorem_EtoF` (`theorem`, section SimpleRadiiPolynomialTheorem) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md`; `p3/evidence_D2/final/fingerprint.diff` |
+| `NewtonLikeMap.eq_1` | `RadiiPolynomial.NewtonLikeMap.eq_1` (generated) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md` |
+| `Z_bound.eq_1` | `RadiiPolynomial.Z_bound.eq_1` (generated) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md` |
+| `radiiPolynomial.eq_1` | `RadiiPolynomial.radiiPolynomial.eq_1` (generated) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md` |
+| `fixedPoint_injective_iff_zero._simp_1_1` | `RadiiPolynomial.fixedPoint_injective_iff_zero._simp_1_1` (generated) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md` |
+| `general_fixed_point_theorem.match_1_1` | `RadiiPolynomial.general_fixed_point_theorem.match_1_1` (generated) | moved (namespace) | `p3/evidence_D2/final/cmp/STRICT_COMPARE.md` |
+
+- The realized equation lemma `generalRadiiPolynomial.eq_1` becomes `RadiiPolynomial.generalRadiiPolynomial.eq_1`; it is
+  realized in `Core/Transport` and in `Certification/RadiiPolynomialQ`, both exact (critic D2 nit).
+- `Core/Bounds`, `Core/AlgebraZ2` and `Core/Transport` declare nothing outside `RadiiPolynomial`; the private
+  `isDedekindFiniteMonoid_clm` keeps its FQN.
+
+### E1 — decision 2, the WeightedL1 station (`Analysis/SequenceSpace/WeightedL1/*`, `tests/FT`, `tests/FZ`)
+
+The station is indexed by the chosen frame alone (`ft_reindex/CONSENSUS_ft_reindex.md` R1–R3): `lpAlgRingData`,
+`lpAlgSmulCompat`, the one-way compatibility layer and their wrappers are deleted; scalar coordinates, scalar singles,
+the weight classes and the convolution are indexed by `FiberTrivialization 𝕜 M E`; the carrier, its module structure
+and the fiber insertion `fiberSingle` are frame-free. Classes (strict v3.5 compare): retired 60 (34 public), new 24 (20
+public), migrated 268 (152 public), exact 258 (127 public). All 172 public migrated/new rows have the axioms
+`[propext, Classical.choice, Quot.sound]` (`p3/evidence_E1/final/signatures_E1.out`).
+
+#### Ledger (E1)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `FiberTrivialization.ofLpAlgRingData` | (none: legacy datum deleted; build the frame directly) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `FiberTrivialization.ofLpAlgRingData_equiv_apply` | (none: legacy datum deleted) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `FiberTrivialization.ofLpAlgRingData_equiv_symm_apply` | (none: legacy datum deleted) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `FiberTrivialization.toLpAlgRingData` | (none: the frame is the only datum) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `FiberTrivialization.toLpAlgRingData_ofReal` | (none: FiberTrivialization.equiv is primary) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `FiberTrivialization.toLpAlgRingData_toReal` | (none: (FiberTrivialization.equiv m).symm is primary) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `FiberTrivialization.toLpAlgRingData_weight` | (none: FiberTrivialization.weight is primary) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `FiberTrivialization.toLpAlgSmulCompat` | (none: map_smul of θ⁻¹) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `WeightedScalar.lpAlgRingData_weight` | WeightedScalar.fiberTrivialization_weight | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `WeightedScalar.norm_ofReal_eq_mul_norm_one` | FiberTrivialization.norm_equiv_apply | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `WeightedScalar.norm_ofReal_mul_le` | SubMulWeightBase.submul with WeightedScalar.norm_ofReal | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `WeightedScalar.norm_ofReal_one_ge` | SuperUnitWeight.one_le / lpOneAlgWeightSubMul.one_le_weight | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData` | FiberTrivialization (class fields → LinearEquiv API of θ_m) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.norm_ofReal_eq` | FiberTrivialization.norm_equiv_apply | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.ofReal` | FiberTrivialization.equiv (the frame θ_m) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.ofReal_add` | FiberTrivialization.equiv_add (map_add of θ_m) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.ofReal_toReal` | FiberTrivialization.equiv_apply_equiv_symm; on lpOneAlg: lpOneAlg.equiv_toRealSeq | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.ofReal_zero` | FiberTrivialization.equiv_zero | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.toReal` | (FiberTrivialization.equiv m).symm; coordinates lpOneAlg.toRealSeq (toRealSeq_apply) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.toReal_add` | FiberTrivialization.equiv_symm_add | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.toReal_neg` | FiberTrivialization.equiv_symm_neg | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.toReal_ofReal` | FiberTrivialization.equiv_symm_apply_equiv | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.toReal_zero` | FiberTrivialization.equiv_symm_zero | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.weight` | FiberTrivialization.weight | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgRingData.weight_def` | FiberTrivialization.weight_def | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgSmulCompat` | (none: linearity of θ_m) | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpAlgSmulCompat.toReal_smul` | map_smul (FiberTrivialization.equiv m).symm / lpOneAlg.toRealSeq_smul | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpOneAlg.norm_ofReal_one_pos` | FiberTrivialization.weight_pos | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpOneAlgWeightMul.norm_ofReal_mul_le` | lpOneAlgWeightMul.weight_add_le with FiberTrivialization.norm_equiv_apply | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpOneAlgWeightMul.norm_ofReal_one_zero` | lpOneAlgWeightMul.weight_zero | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpOneAlgWeightSubMul.norm_ofReal_one_ge` | lpOneAlgWeightSubMul.one_le_weight | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpOneMulAlgWeightMul.norm_ofReal_mul_le` | lpOneMulAlgWeightMul.weight_mul_le with FiberTrivialization.norm_equiv_apply | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpOneMulAlgWeightMul.norm_ofReal_one_one` | lpOneMulAlgWeightMul.weight_one | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| `lpOneMulAlgWeightSubMul.norm_ofReal_one_ge` | lpOneMulAlgWeightSubMul.one_le_weight | retired | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| — | `lpOneAlg.equiv_mulToRealSeq` : `(FiberTrivialization.equiv m) (lpOneAlg.mulToRealSeq f m) = ↑(lpOneAlg.toLp f) m` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.equiv_toRealSeq` : `(FiberTrivialization.equiv m) (lpOneAlg.toRealSeq f m) = ↑(lpOneAlg.toLp f) m` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.fiberSingle` : `lpOneAlg M E` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.fiberSingle_add` : `lpOneAlg.fiberSingle m (x + y) = lpOneAlg.fiberSingle m x + lpOneAlg.fiberSingle m y` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.fiberSingle_apply` : `↑(lpOneAlg.toLp (lpOneAlg.fiberSingle m x)) k = Pi.single m x k` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.fiberSingle_apply_of_ne` : `k ≠ m → ↑(lpOneAlg.toLp (lpOneAlg.fiberSingle m x)) k = 0` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.fiberSingle_apply_self` : `↑(lpOneAlg.toLp (lpOneAlg.fiberSingle m x)) m = x` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.fiberSingle_smul` : `lpOneAlg.fiberSingle m (c • x) = c • lpOneAlg.fiberSingle m x`; retired again in E1b (below) | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.fiberSingle_zero` : `lpOneAlg.fiberSingle m 0 = 0` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.hasSum_fiberSingle` : `HasSum (fun m => lpOneAlg.fiberSingle m (↑(lpOneAlg.toLp h) m)) h` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.hasSum_fiberSingle_mapCLM` : `HasSum (fun m => W (lpOneAlg.fiberSingle m (↑(lpOneAlg.toLp h) m))) (W h)` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.mulMul_apply` : `↑(lpOneAlg.toLp (f * g)) k = (FiberTrivialization.equiv k) (DiscreteConvolution.ringConvolution (lpOneAlg.mulToRealSeq f) (lpOneAlg.mulToRealSeq g) k)` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.mulOne_apply` : `↑(lpOneAlg.toLp 1) m = (FiberTrivialization.equiv m) (DiscreteConvolution.delta 1 m)` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.mulToRealSeq_apply` : `lpOneAlg.mulToRealSeq f m = (LinearEquiv.symm (FiberTrivialization.equiv m)) (↑(lpOneAlg.toLp f) m)` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.mulToRealSeq_smul` : `lpOneAlg.mulToRealSeq (r • f) = r • lpOneAlg.mulToRealSeq f` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.mul_apply` : `↑(lpOneAlg.toLp (f * g)) k = (FiberTrivialization.equiv k) (DiscreteConvolution.addRingConvolution (lpOneAlg.toRealSeq f) (lpOneAlg.toRealSeq g) k)` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.norm_fiberSingle` : `‖lpOneAlg.fiberSingle m x‖ = ‖x‖` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.one_apply` : `↑(lpOneAlg.toLp 1) m = (FiberTrivialization.equiv m) (DiscreteConvolution.addDelta 1 m)` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.single_eq_fiberSingle` : `lpOneAlg.single j x = lpOneAlg.fiberSingle j ((FiberTrivialization.equiv j) x)` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| — | `lpOneAlg.toRealSeq_apply` : `lpOneAlg.toRealSeq f m = (LinearEquiv.symm (FiberTrivialization.equiv m)) (↑(lpOneAlg.toLp f) m)` | added | `p3/evidence_E1/final/signatures_E1.out` |
+| the 152 public migrated rows of the station (268 rows with auxiliaries): instances, weight and convolution classes, coordinates, singles, universal property, column principles | binders `[lpAlgRingData 𝕜 M E] [lpAlgSmulCompat 𝕜 M E]` → `[∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]` where a frame is needed (the `NormedSpace` binder now precedes the frame, so positional `@` uses shift); `Ring`/`NormedRing` from the index monoid + `DecidableEq` + `lpOneAlgConvCompat`, `Algebra` from the linearity of θ⁻¹; no row gained a hypothesis (critic E1 item 4); seven rows change again in E1b | migrated (frame re-index) | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/final/signatures_E1.out`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.cols_le_opNorm` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.cols_le_opNorm₂` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.cols_le_opNorm₃` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.eq_liftAlgHom_of_atoms` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.eq_liftCLM_of_cols` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.exists_eq_liftAlgHom` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.exists_eq_liftCLM` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.finsum_norm_le_of_cols` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.liftAlgHom` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.liftAlgHom_apply` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.liftAlgHom_single` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.liftAlgHom_toContinuousLinearMap` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.liftCLM` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.liftCLM_apply` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.liftCLM_mul` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.liftCLM_one` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.liftCLM_single` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.liftCLM_summable` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_eq_abs_mulToReal_mul_weight` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_eq_abs_toReal_mul_weight` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_le_of_cols` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_le_of_cols₂` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_le_of_cols₃` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_liftAlgHom_apply_le` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_liftCLM_apply_le` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_liftCLM_le` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_one_eq` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_single` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.norm_singleCLM` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.opNorm_eq_iSup_cols₂` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.opNorm_eq_iSup_cols₃` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.opNorm_le_iff_cols` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.opNorm_le_iff_cols₂` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.opNorm_le_iff_cols₃` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.opNorm_le_of_cols` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.opNorm_le_of_cols₂` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.opNorm_le_of_cols₃` | `‖lpAlgRingData.ofReal m 1‖` → `FiberTrivialization.weight m` in the statement (`rfl`-equal to `‖θ_m 1‖`) | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlgWeightMul.weight_add_le` | class field: `lpAlgRingData.weight` → `FiberTrivialization.weight` | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlgWeightMul.weight_zero` | class field: `lpAlgRingData.weight` → `FiberTrivialization.weight` | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlgWeightSubMul.one_le_weight` | class field: `lpAlgRingData.weight` → `FiberTrivialization.weight` | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneMulAlgWeightMul.weight_mul_le` | class field: `lpAlgRingData.weight` → `FiberTrivialization.weight` | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneMulAlgWeightMul.weight_one` | class field: `lpAlgRingData.weight` → `FiberTrivialization.weight` | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneMulAlgWeightSubMul.one_le_weight` | class field: `lpAlgRingData.weight` → `FiberTrivialization.weight` | statement changed | `p3/evidence_E1/final/CLASSIFICATION_E1.json`; `p3/evidence_E1/CRITIC_E1.md` |
+| ↳ `lpOneAlg.colRatio`, `lpOneAlg.instAlgebra`, `lpOneAlg.instCommRing`, `lpOneAlg.instMul`, `lpOneAlg.instMulMul`, `lpOneAlg.instMulNormedRing`, `lpOneAlg.instMulOne`, `lpOneAlg.instMulRing`, `lpOneAlg.instNormedAlgebra`, `lpOneAlg.instNormedCommRing`, `lpOneAlg.instNormedRing`, `lpOneAlg.instOne`, `lpOneAlg.instRing`, `lpOneAlg.liftAlgHom`, `lpOneAlg.liftCLM`, `lpOneAlg.mulLeftCLM`, `lpOneAlg.mulRightCLM`, `lpOneAlg.mulToRealSeq`, `lpOneAlg.single`, `lpOneAlg.singleCLM`, `lpOneAlg.toRealSeq`, `lpOneAlg.toRealSeqAddHom` | type as in the family row; the body is written through θ_m / θ_m⁻¹ (coordinates `θ_m⁻¹ (f m)`, singles `fiberSingle m (θ_m x)`, product `θ_k ((θ⁻¹f ⋆ θ⁻¹g)_k)`, unit `θ_m (δ_m)`) | redefined | `p3/evidence_E1/final/CLASSIFICATION_E1.json` |
+
+- The 26 generated children of the retired declarations (structures, recursors, `noConfusion`, `_proof_n`, `eq_1`, the
+  private `lpOneAlg.ofReal_neg`) and the 4 auxiliary new rows are listed in `p3/evidence_E1/final/CLASSIFICATION_E1.json`.
+- The `−1` frame (`θ(r) = −r`) has the same weights and the negated product with unit `−δ₀`; it is never selected by
+  instance search (`tests/FT/FrameReindexProbes.lean`; `p3/evidence_E1/final/negframe_E1.out`). The environment has
+  one `FiberTrivialization` instance, `WeightedScalar.instFiberTrivialization`.
+- Tests: `tests/FT/FrameReindexProbes.lean`, `tests/FT/ImportOrderA.lean` and `tests/FT/ImportOrderB.lean` are new;
+  `tests/FT/FiberTrivializationProbes.lean` and five `tests/FZ` modules follow the new contract.
+
+### E2 — decision 2, the consumers (22 modules of Chebyshev, CrossGeometry, Geometric, Applications/IVP/Chebyshev, Certification)
+
+Every touched statement selects the standard frame `WeightedScalar.instFiberTrivialization` through its concrete fiber
+(`ScaledReal`, `ScaledRealZ`, `geomFiber`, `geomFiberZ`, `BorderedScaledReal`, `OmegaScaledReal` are `WeightedScalar`
+abbreviations). Classes (strict v3.5 compare over the 22 modules): retired 27 (4 public), new 7 (2 public), migrated
+670 (442 public), exact 913 (361 public); all 444 public migrated/new rows have the standard axioms and the endpoint
+axioms are identical to the pre-E1 generation (`p3/evidence_E2/CRITIC_E2.md`).
+
+#### Ledger (E2)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.ScaledRealZ.norm_lpAlgRingData_ofReal` | `RadiiPolynomial.ScaledRealZ.norm_equiv_apply : ‖FiberTrivialization.equiv (E := ScaledRealZ ν) k r‖ = \|r\| * ν ^ k.natAbs` (`@[simp]` kept); at a weight site (after `norm_single`/`norm_eq_abs_toReal_mul_weight`/column lemmas) `WeightedScalar.fiberTrivialization_weight` (drop `abs_one, one_mul`) | retired | `p3/evidence_E2/final/CLASSIFICATION_E2.json`; `p3/evidence_E2/CRITIC_E2.md` |
+| `RadiiPolynomial.BorderedScaledReal.norm_lpAlgRingData_ofReal` | `RadiiPolynomial.BorderedScaledReal.norm_equiv_apply : ‖FiberTrivialization.equiv (E := BorderedScaledReal ν) n r‖ = \|r\| * borderedWeight ν n` (`@[simp]` kept); weight sites as above | retired | `p3/evidence_E2/final/CLASSIFICATION_E2.json`; `p3/evidence_E2/CRITIC_E2.md` |
+| `RadiiPolynomial.ScaledReal.norm_lpAlgRingData_ofReal` | deleted (no use left): weight sites `WeightedScalar.fiberTrivialization_weight`; general `r`: `FiberTrivialization.norm_equiv_apply` + `WeightedScalar.fiberTrivialization_weight` + `Real.norm_eq_abs` | retired | `p3/evidence_E2/final/CLASSIFICATION_E2.json`; `p3/evidence_E2/CRITIC_E2.md` |
+| `ChebyshevIVP.fiber_eq_zero` | deleted (a specialization of Mathlib once the frame is a `LinearEquiv`): `(LinearEquiv.map_eq_zero_iff (FiberTrivialization.equiv (E := ScaledRealZ ν) k).symm).mp` | retired | `p3/evidence_E2/final/CLASSIFICATION_E2.json`; `p3/evidence_E2/CRITIC_E2.md` |
+| — | `RadiiPolynomial.ScaledRealZ.norm_equiv_apply` `(ν : PosReal) (k : ℤ) (r : ℝ) : ‖FiberTrivialization.equiv (E := ScaledRealZ ν) k r‖ = \|r\| * ↑ν ^ k.natAbs` (`@[simp]`) | added | `p3/evidence_E2/final/signatures_E2.out` |
+| — | `RadiiPolynomial.BorderedScaledReal.norm_equiv_apply` `(ν : PosReal) (n : ℕ) (r : ℝ) : ‖FiberTrivialization.equiv (E := BorderedScaledReal ν) n r‖ = \|r\| * borderedWeight ν n` (`@[simp]`) | added | `p3/evidence_E2/final/signatures_E2.out` |
+| the 442 public migrated consumer rows (670 with auxiliaries), per module: `Chebyshev.Algebra` 7; `Chebyshev.Bordered` 27; `Chebyshev.LaurentSpectrum` 10; `Chebyshev.OneSided` 50; `Chebyshev.Scalar` 2; `Chebyshev.Spectrum.Series` 9; `Chebyshev.SymmetricSubalgebra` 19; `Chebyshev.Symmetrize` 9; `Chebyshev.UConversion` 27; `Chebyshev.UnitLift` 41; `CrossGeometry.ChebyshevTaylor` 18; `CrossGeometry.Derivative` 10; `Geometric.Aeval` 37; `Geometric.Basic` 58; `Geometric.Omega` 24; `Applications.IVP.Chebyshev.Analytic` 11; `Applications.IVP.Chebyshev.Lambda` 21; `Applications.IVP.Chebyshev.Operator` 24; `Applications.IVP.Chebyshev.Standard` 5; `Certification.IVP.Chebyshev` 31; `Certification.Residual.FiniteSupport` 2 | printed statement unchanged except the `↳` rows; the elaborated types carry the station telescope `[∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]` and the frame-indexed weight/convolution witnesses; no consumer gained a hypothesis | migrated (frame re-index) | `p3/evidence_E2/final/CLASSIFICATION_E2.json`; `p3/evidence_E2/final/signatures_E2.out`; `p3/evidence_E2/CRITIC_E2.md` |
+| ↳ `RadiiPolynomial.geomFiberZ_weight` | `‖lpAlgRingData.ofReal (E := geomFiberZ 𝕜 ν) k (1 : 𝕜)‖ = ν ^ k.natAbs` → `FiberTrivialization.weight (E := geomFiberZ 𝕜 ν) k = ν ^ k.natAbs` (proof `WeightedScalar.fiberTrivialization_weight k`; the shape E1's FZ test edits assumed) | statement changed | `p3/evidence_E2/final/printed_changes_E2.json` |
+| ↳ `RadiiPolynomial.geomFiber_weight` | `‖lpAlgRingData.ofReal (E := geomFiber 𝕜 ν) n (1 : 𝕜)‖ = ν ^ n` → `FiberTrivialization.weight (E := geomFiber 𝕜 ν) n = ν ^ n` | statement changed | `p3/evidence_E2/final/printed_changes_E2.json` |
+| ↳ `RadiiPolynomial.lpOneAlg.pow_le_geomFiber_weight` | `… → ‖x ^ n‖ ≤ C * ‖lpAlgRingData.ofReal n 1‖` → `… → ‖x ^ n‖ ≤ C * FiberTrivialization.weight (E := geomFiber 𝕜 ν) n` | statement changed | `p3/evidence_E2/final/printed_changes_E2.json` |
+| ↳ `RadiiPolynomial.lpOneAlg.unit_zpow_le_weight` | `… → ‖↑(u ^ k)‖ ≤ C * ‖lpAlgRingData.ofReal k 1‖` → `… → ‖↑(u ^ k)‖ ≤ C * FiberTrivialization.weight (E := geomFiberZ 𝕜 ν) k` | statement changed | `p3/evidence_E2/final/printed_changes_E2.json` |
+| ↳ `ChebyshevIVP.embedNatToInt_natCast` | `embedNatToInt seq ↑n = lpAlgRingData.ofReal (↑n) (seq n)` → `embedNatToInt seq ↑n = FiberTrivialization.equiv (E := ScaledRealZ ν) ↑n (seq n)` | statement changed | `p3/evidence_E2/final/printed_changes_E2.json` |
+| ↳ `ChebyshevIVP.embedWithPassThrough_natCast` | `… = lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n) (seq n)` → `… = FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n) (seq n)` | statement changed | `p3/evidence_E2/final/printed_changes_E2.json` |
+| ↳ `RadiiPolynomial.Residual.exists_finiteSupport_candidate_of_bezout` | binders `[lpAlgRingData 𝕜 M E] [lpOneAlgConvCompat 𝕜 M E]` → `[∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [lpOneAlgConvCompat 𝕜 M E]` (weakest for the ring: index monoid + `DecidableEq` + frame-indexed ConvCompat; `dense_lpOneAlg_finiteSupport` stays frame-free, exact) | statement changed | `p3/evidence_E2/final/printed_changes_E2.json` |
+| ↳ `RadiiPolynomial.Residual.exists_bezout_iff_finiteSupport_certificate` | binders `[lpAlgRingData 𝕜 M E] [lpOneAlgConvCompat 𝕜 M E]` → the binders of the row above | statement changed | `p3/evidence_E2/final/printed_changes_E2.json` |
+| ↳ `RadiiPolynomial.nonnegRestrict` | type exact; fibers built as `FiberTrivialization.equiv (E := X) k r`, `rfl`-equal to the old `WeightedScalar.ofReal r` on the standard frame | redefined | `p3/evidence_E2/CRITIC_E2.md` (item 3, F2) |
+| ↳ `RadiiPolynomial.borderedFromU` | type exact; fibers built as `FiberTrivialization.equiv (E := X) k r`, `rfl`-equal to the old `WeightedScalar.ofReal r` on the standard frame | redefined | `p3/evidence_E2/CRITIC_E2.md` (item 3, F2) |
+| ↳ `RadiiPolynomial.l1Chebyshev.symmetrize` | type exact; fibers built as `FiberTrivialization.equiv (E := X) k r`, `rfl`-equal to the old `WeightedScalar.ofReal r` on the standard frame | redefined | `p3/evidence_E2/CRITIC_E2.md` (item 3, F2) |
+| ↳ `RadiiPolynomial.uIntegrate` | type exact; fibers built as `FiberTrivialization.equiv (E := X) k r`, `rfl`-equal to the old `WeightedScalar.ofReal r` on the standard frame | redefined | `p3/evidence_E2/CRITIC_E2.md` (item 3, F2) |
+| ↳ `RadiiPolynomial.chebyshevFromU` | type exact; fibers built as `FiberTrivialization.equiv (E := X) k r`, `rfl`-equal to the old `WeightedScalar.ofReal r` on the standard frame | redefined | `p3/evidence_E2/CRITIC_E2.md` (item 3, F2) |
+| ↳ `ChebyshevIVP.embedNatToInt` | type exact; fibers built as `FiberTrivialization.equiv (E := X) k r`, `rfl`-equal to the old `WeightedScalar.ofReal r` on the standard frame | redefined | `p3/evidence_E2/CRITIC_E2.md` (item 3, F2) |
+| ↳ `ChebyshevIVP.embedWithPassThrough` | type exact; fibers built as `FiberTrivialization.equiv (E := X) k r`, `rfl`-equal to the old `WeightedScalar.ofReal r` on the standard frame | redefined | `p3/evidence_E2/CRITIC_E2.md` (item 3, F2) |
+
+- The 23 auxiliary retired rows (renumbered `_proof_n`, equation lemmas no longer requested: `embedNatToInt.eq_1/2`,
+  `borderedFromU.eq_1`, `chebyshevFromU.eq_1`, `nonnegRestrict.eq_1`, `uIntegrate.eq_1`, the private
+  `embedNatToInt.match_1` equations) and the 5 new `_proof_n` rows are listed in `p3/evidence_E2/final/RULES_E2.json`.
+- Private statements re-spelled the same way (no public face): Bordered `nonnegRestrict_mem`, `borderedFromU_fiber_le`,
+  `borderedFromU_mem`; Symmetrize `natEmbedFun`, `natEmbed_memℓp`, `symmetrizeSeq_norm`, `symmetrize_memℓp`;
+  SymmetricSubalgebra `borderedEmbed`, `borderedEmbed_memℓp`; UConversion `uIntegrate_*`, `chebyshevFromU_*`;
+  CrossGeometry column bounds (conclusion `≤ FiberTrivialization.weight (E := X) k`).
+
+### E1b — decision 2, station API quality (`WeightedL1/{FiberTrivialization,Carrier,UniversalProperty,Scalar}`, consumers)
+
+Bundled maps replace scattered lemmas (`FiberTrivialization.equivL`, `lpOneAlg.fiberSingleₗᵢ`, `lpOneAlg.toRealSeqₗ`),
+over-strong hypotheses are weakened, and the standard-model simp lemma `WeightedScalar.toReal_ofReal` closes the
+stalled `θ⁻¹ (θ r) = r` goals. Classes after the critic's F1/F2: retired 4 (3 public), new 10 (8 public), migrated 7,
+aux regenerated with changed types 2 (`singleCLM._proof_1/2`); all public new/migrated rows have the standard axioms
+(`p3/evidence_E1b/final/signatures_E1b.out`).
+
+#### Ledger (E1b)
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `lpOneAlg.toRealSeqAddHom` | `lpOneAlg.toRealSeqₗ : lpOneAlg M E →ₗ[𝕜] (M → 𝕜)` (S2; `.toAddMonoidHom` recovers the →+) | retired | `p3/evidence_E1b/final/CLASSIFICATION_E1b.json`; `p3/evidence_E1b/CRITIC_E1b.md` |
+| `lpOneAlg.toRealSeqAddHom_apply` | `lpOneAlg.toRealSeqₗ_apply` | retired | `p3/evidence_E1b/final/CLASSIFICATION_E1b.json`; `p3/evidence_E1b/CRITIC_E1b.md` |
+| `lpOneAlg.fiberSingle_smul` | `map_smul (lpOneAlg.fiberSingleₗᵢ m) c x` (no consumer) | retired | `p3/evidence_E1b/final/CLASSIFICATION_E1b.json`; `p3/evidence_E1b/CRITIC_E1b.md` |
+| `lpOneAlg.fiberSingle_zero` | kept: deleted by E1b, then restored by the coordinator as a scalar-free `@[simp]` primitive (`simp` cannot reach `map_zero` through `coe_fiberSingleₗᵢ`) | restored | `p3/evidence_E1b/CRITIC_E1b.md` (F1); `DECISIONS.md` ~04:45Z |
+| — | `FiberTrivialization.equivL` : `(m : M) → 𝕜 ≃L[𝕜] E m` (θ_m bundled as a continuous linear equivalence from `continuous_equiv`, `continuous_equiv_symm`) | added | `p3/evidence_E1b/final/signatures_E1b.out` |
+| — | `FiberTrivialization.coe_equivL` (simp) : `⇑(equivL m) = ⇑(equiv m)` (rfl) | added | `p3/evidence_E1b/final/signatures_E1b.out` |
+| — | `FiberTrivialization.coe_equivL_symm` (simp) : `⇑(equivL m).symm = ⇑(equiv m).symm` (rfl) | added | `p3/evidence_E1b/final/signatures_E1b.out` |
+| — | `lpOneAlg.fiberSingleₗᵢ` : `[∀ m, NormedSpace 𝕜 (E m)] [DecidableEq M] (m : M) → E m →ₗᵢ[𝕜] lpOneAlg M E` (frame-free) | added | `p3/evidence_E1b/final/signatures_E1b.out` |
+| — | `lpOneAlg.coe_fiberSingleₗᵢ` (simp) : `⇑(fiberSingleₗᵢ m) = fiberSingle m` (rfl) | added | `p3/evidence_E1b/final/signatures_E1b.out` |
+| — | `lpOneAlg.toRealSeqₗ` : `lpOneAlg M E →ₗ[𝕜] (M → 𝕜)` (frame-indexed) | added | `p3/evidence_E1b/final/signatures_E1b.out` |
+| — | `lpOneAlg.toRealSeqₗ_apply` (simp) : `toRealSeqₗ f = toRealSeq f` (rfl) | added | `p3/evidence_E1b/final/signatures_E1b.out` |
+| — | `WeightedScalar.toReal_ofReal` (simp) : `toReal (ofReal r : WeightedScalar 𝕜 w m) = r` (rfl) | added | `p3/evidence_E1b/final/signatures_E1b.out` |
+| `lpOneAlg.abs_toRealSeq_le` | `[AddMonoid M] [lpOneAlgWeightSubMul 𝕜 M E] (f) (m)` → `(hw : ∀ m, 1 ≤ FiberTrivialization.weight (E := E) m) (f) (m)`; monoid dropped (S3) | weakening | `p3/evidence_E1b/final/CLASSIFICATION_E1b.json`; `p3/evidence_E1b/CRITIC_E1b.md` |
+| `lpOneAlg.abs_mulToRealSeq_le` | `[Monoid M] [lpOneMulAlgWeightSubMul 𝕜 M E]` → the same `hw` (S3) | weakening | `p3/evidence_E1b/final/CLASSIFICATION_E1b.json`; `p3/evidence_E1b/CRITIC_E1b.md` |
+| `lpOneAlg.summable_abs_toRealSeq` | as `abs_toRealSeq_le`: `hw` explicit first argument (S3) | weakening | `p3/evidence_E1b/final/CLASSIFICATION_E1b.json`; `p3/evidence_E1b/CRITIC_E1b.md` |
+| `lpOneAlg.summable_abs_mulToRealSeq` | as `abs_mulToRealSeq_le` (S3) | weakening | `p3/evidence_E1b/final/CLASSIFICATION_E1b.json`; `p3/evidence_E1b/CRITIC_E1b.md` |
+| `lpOneAlg.norm_one_eq` | `[lpOneAlgConvCompat 𝕜 M E]` dropped (the unit needs none); statement `‖1‖ = weight 0` unchanged (S3) | weakening | `p3/evidence_E1b/final/CLASSIFICATION_E1b.json`; `p3/evidence_E1b/CRITIC_E1b.md` |
+| `lpOneAlg.instNormOneClass` | `[lpOneAlgConvCompat 𝕜 M E]` dropped; keeps `[lpOneAlgWeightMul 𝕜 M E]`, the smallest existing class carrying `weight_zero` (no class invented) (S3) | weakening | `p3/evidence_E1b/final/CLASSIFICATION_E1b.json`; `p3/evidence_E1b/CRITIC_E1b.md` |
+| `lpOneAlg.singleCLM` | type unchanged; value re-bodied: `(fiberSingleₗᵢ m).toContinuousLinearMap.comp (equivL m)` (S1); `singleCLM_apply` (rfl) and `norm_singleCLM` unchanged in print and type | redefined | `p3/evidence_E1b/final/CLASSIFICATION_E1b.json`; `p3/evidence_E1b/CRITIC_E1b.md` |
+
+- Proof only (exact rows): `single_smul` (`map_smul` of `fiberSingleₗᵢ`), `toRealSeq_finset_sum` (`map_sum` of
+  `toRealSeqₗ`), `ChebyshevIVP.StdChebIVPData.abar_toSeq_eq`, the private `l1Chebyshev.summable_coeff`.
+- Auxiliaries: `singleCLM._proof_3` retired; `fiberSingleₗᵢ._proof_1` and `ChebyshevIVP.StdChebIVPData.abar.eq_1` new;
+  `singleCLM._proof_1/2` regenerated with changed types (critic E1b F2).
+- Consumer recipe: `abs_toRealSeq_le f m` and `summable_abs_toRealSeq f` take a proof of `∀ m, 1 ≤ weight m` (for
+  example `lpOneAlgWeightSubMul.one_le_weight`) as their first explicit argument.
+
+### Trust record — native auxiliaries (DEFER round)
+
+No native auxiliary was renamed and no API name of a native auxiliary changed. The endpoint axiom sets (`main_theorem`
+of Ex77/81/83/1421/245, both `ivp_main_theorem`) are identical across D1, D2, E1/E2 and E1b: Ex81 carries 1 native
+auxiliary and Ex83 7, under the names of the C14b trust record (`p3/evidence_D1/item8/ex83_axioms_after.out`,
+`p3/evidence_D2/final/axioms_after.out`, `p3/evidence_E2/final/endpoint_axioms_after.out`,
+`p3/evidence_E1b/final/endpoint_axioms_after.out`).
+
+### Supersessions of earlier rows (history kept)
+
+- `RadiiPolynomial.CauchyProduct.*`, `CauchyProduct_eq_finiteAddConvolution` and `map_CauchyProduct` in the
+  DiscreteConvolution-adoption, bundled power-series bridge, C1, C3-A, C3-B, R10b, R10d and C9-A rows now read
+  `RadiiPolynomial.cauchyProduct.*`, `cauchyProduct_eq_finiteAddConvolution`, `map_cauchyProduct` (D1 above); module
+  names are unchanged.
+- C4 rows naming `lpAlgRingData`, `lpAlgSmulCompat`, `FiberTrivialization.ofLpAlgRingData`/`toLpAlgRingData`,
+  `lpOneAlg.norm_ofReal_one_pos` (E1) and `lpOneAlg.toRealSeqAddHom(_apply)` (E1b) describe retired declarations; the
+  replacements are in the E1 and E1b ledgers.
+- C7-A and C10-A rows naming `ScaledReal.norm_lpAlgRingData_ofReal` and `ScaledRealZ.norm_lpAlgRingData_ofReal`: retired
+  by E2 (replacements in the E2 ledger).
+- C9-A rows naming `l1Weighted.*` declarations of `Geometric/Evaluation` (for example the replacement
+  `l1Weighted.evalAlgHom`): these are now `RadiiPolynomial.l1Weighted.*` (D1 decision 4).
+- C12 and the 2026-09 sections naming `IsAnalyticSolution` or `x_analytic_isAnalyticSolution*`: now `IsBallSolution`,
+  `x_analytic_isBallSolution*` (D1 decision 5).
+- Rows naming the root `Core/Theorem` family (`general_radii_polynomial_theorem`, `generalRadiiPolynomial`, …): the
+  FQNs are now `RadiiPolynomial.<name>` (D2).
+- The C15 T-4 row (`tests/FT/FiberTrivializationProbes.lean`) stands; E1 rewrote the file's contents for the new
+  contract.
+

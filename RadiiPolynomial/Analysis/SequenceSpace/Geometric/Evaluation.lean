@@ -18,9 +18,10 @@ Bridges the coefficient space ℓ¹_ν to analytic functions via power series ev
 -/
 
 open scoped BigOperators NNReal ENNReal Topology
-open RadiiPolynomial
 
 noncomputable section
+
+namespace RadiiPolynomial
 
 variable {ν : PosReal}
 
@@ -322,5 +323,7 @@ def evalAlgHom (z : ℝ) (hz : |z| ≤ ν) : l1Weighted ν →ₐ[ℝ] ℝ :=
     evalAlgHom z hz a = eval a z := rfl
 
 end l1Weighted
+
+end RadiiPolynomial
 
 end

@@ -14,7 +14,7 @@ multivariate formal power series. This file records both identifications as ring
 
 * `RadiiPolynomial.FiniteFiberAddConvolution.toPowerSeriesRingEquiv R`: the ring equivalence
   `FiniteFiberAddConvolution ℕ R ≃+* PowerSeries R`. Its forward map is the coefficient map
-  `RadiiPolynomial.CauchyProduct.toPowerSeries` of the underlying function, and its inverse
+  `RadiiPolynomial.cauchyProduct.toPowerSeries` of the underlying function, and its inverse
   reads off coefficients.
 * `RadiiPolynomial.FiniteFiberAddConvolution.toMvPowerSeriesRingEquiv σ R`: the ring equivalence
   `FiniteFiberAddConvolution (σ →₀ ℕ) R ≃+* MvPowerSeries σ R`, which keeps every coefficient.
@@ -40,9 +40,9 @@ statements `toPowerSeriesRingEquiv_smul` and `toMvPowerSeriesRingEquiv_smul` alr
 weaker hypothesis `[Module S R]`.
 
 `toPowerSeriesRingEquiv` reuses the linear equivalence
-`RadiiPolynomial.CauchyProduct.toPowerSeriesLinearEquiv` at `S = R`, acting on `R` by left
+`RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv` at `S = R`, acting on `R` by left
 multiplication, as its underlying bijection. It is `noncomputable` because that equivalence is:
-it reindexes along `Finsupp.uniqueEquiv`. The raw map `RadiiPolynomial.CauchyProduct.toPowerSeries`
+it reindexes along `Finsupp.uniqueEquiv`. The raw map `RadiiPolynomial.cauchyProduct.toPowerSeries`
 and the multiplication of `FiniteFiberAddConvolution ℕ R` remain computable.
 
 `MvPowerSeries σ R` is the type synonym of `(σ →₀ ℕ) → R`, so the forward map of
@@ -76,36 +76,36 @@ variable (R : Type*) [Semiring R]
 /-- The finite-fiber convolution algebra over the additive index `ℕ` is the ring of formal power
 series: `f` is sent to the power series whose coefficients are those of `f`.
 
-The forward map is `RadiiPolynomial.CauchyProduct.toPowerSeries` of the underlying function
+The forward map is `RadiiPolynomial.cauchyProduct.toPowerSeries` of the underlying function
 (`toPowerSeriesRingEquiv_apply`), and the inverse reads off the coefficients
 (`coeff_toPowerSeriesRingEquiv_symm`). Only `Semiring R` is assumed. -/
 noncomputable def toPowerSeriesRingEquiv : FiniteFiberAddConvolution ℕ R ≃+* PowerSeries R where
-  toEquiv := toFun.trans (CauchyProduct.toPowerSeriesLinearEquiv R).toEquiv
+  toEquiv := toFun.trans (cauchyProduct.toPowerSeriesLinearEquiv R).toEquiv
   map_mul' f g := by
-    change CauchyProduct.toPowerSeries (toFun (f * g)) =
-      CauchyProduct.toPowerSeries (toFun f) * CauchyProduct.toPowerSeries (toFun g)
-    rw [toFun_mul, ← CauchyProduct_eq_finiteAddConvolution, CauchyProduct.toPowerSeries_mul]
-  map_add' f g := map_add (CauchyProduct.toPowerSeriesLinearEquiv R) (toFun f) (toFun g)
+    change cauchyProduct.toPowerSeries (toFun (f * g)) =
+      cauchyProduct.toPowerSeries (toFun f) * cauchyProduct.toPowerSeries (toFun g)
+    rw [toFun_mul, ← cauchyProduct_eq_finiteAddConvolution, cauchyProduct.toPowerSeries_mul]
+  map_add' f g := map_add (cauchyProduct.toPowerSeriesLinearEquiv R) (toFun f) (toFun g)
 
 variable {R}
 
 /-- The forward map of `toPowerSeriesRingEquiv` is the coefficient map
-`RadiiPolynomial.CauchyProduct.toPowerSeries` of the underlying function. -/
+`RadiiPolynomial.cauchyProduct.toPowerSeries` of the underlying function. -/
 theorem toPowerSeriesRingEquiv_apply (f : FiniteFiberAddConvolution ℕ R) :
-    toPowerSeriesRingEquiv R f = CauchyProduct.toPowerSeries (toFun f) :=
+    toPowerSeriesRingEquiv R f = cauchyProduct.toPowerSeries (toFun f) :=
   rfl
 
 /-- The coefficients of `toPowerSeriesRingEquiv R f` are those of `f`. -/
 @[simp]
 theorem coeff_toPowerSeriesRingEquiv (f : FiniteFiberAddConvolution ℕ R) (n : ℕ) :
     PowerSeries.coeff n (toPowerSeriesRingEquiv R f) = coeff n f :=
-  CauchyProduct.coeff_toPowerSeries (toFun f) n
+  cauchyProduct.coeff_toPowerSeries (toFun f) n
 
 /-- The inverse of `toPowerSeriesRingEquiv` reads off the coefficients of a power series. -/
 @[simp]
 theorem coeff_toPowerSeriesRingEquiv_symm (φ : PowerSeries R) (n : ℕ) :
     coeff n ((toPowerSeriesRingEquiv R).symm φ) = PowerSeries.coeff n φ :=
-  CauchyProduct.toPowerSeriesLinearEquiv_symm_apply_coeff (S := R) φ n
+  cauchyProduct.toPowerSeriesLinearEquiv_symm_apply_coeff (S := R) φ n
 
 /-- `toPowerSeriesRingEquiv` commutes with every external scalar semiring `S` acting on the
 coefficients. -/
@@ -113,7 +113,7 @@ coefficients. -/
 theorem toPowerSeriesRingEquiv_smul {S : Type*} [Semiring S] [Module S R] (s : S)
     (f : FiniteFiberAddConvolution ℕ R) :
     toPowerSeriesRingEquiv R (s • f) = s • toPowerSeriesRingEquiv R f :=
-  map_smul (CauchyProduct.toPowerSeriesLinearEquiv S) s (toFun f)
+  map_smul (cauchyProduct.toPowerSeriesLinearEquiv S) s (toFun f)
 
 end PowerSeries
 

@@ -10,7 +10,7 @@ synthesize a holomorphic `complexTrajectory` on the open complex disc `|z| < ν`
 which solves the complexified polynomial vector field `complexVectorField` and
 restricts to the real trajectory on `[-ν, ν]`.
 
-The coefficient carrier, the certificate, and `IVP.IsAnalyticSolution` are all
+The coefficient carrier, the certificate, and `IVP.IsBallSolution` are all
 unchanged: only the target algebra of the evaluation character moves from `ℝ` to `ℂ`.
 Complex-time *uniqueness* is not stated.
 -/

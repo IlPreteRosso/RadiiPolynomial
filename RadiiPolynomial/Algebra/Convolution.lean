@@ -23,8 +23,8 @@ over `σ →₀ ℕ` with `MvPowerSeries σ R`, as ring equivalences. `FiniteFib
 `MonoidAlgebra R M` into `FiniteFiberConvolution M R` as an injective ring homomorphism whose range
 is the finitely supported elements. `CauchyProduct` also carries the coefficient bridge to
 `PowerSeries R` (`toPowerSeries`, bundled as the `S`-linear equivalence `toPowerSeriesLinearEquiv`),
-and `Ring` records `CauchyProduct.eq_addRingConvolution`. `CauchyProductReal` records the cast
-`ℚ → ℝ` through the Cauchy product (`CauchyProduct.ratCast`), the only real-number fact of this
+and `Ring` records `cauchyProduct.eq_addRingConvolution`. `CauchyProductReal` records the cast
+`ℚ → ℝ` through the Cauchy product (`cauchyProduct.ratCast`), the only real-number fact of this
 layer, so `CauchyProduct` itself does not import the reals. The library-owned declarations live in
 the namespace `RadiiPolynomial`.
 -/

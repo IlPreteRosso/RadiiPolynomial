@@ -43,7 +43,7 @@ Chebyshev (`ℤ`) sequence algebras; in them the coefficients are still multipli
   `Finset.HasMulAntidiagonal`, `f ⋆ᵣ g = RadiiPolynomial.finiteMulConvolution f g` for all
   functions `f g : M → R`. This is an equality of operations on `M → R`, not an identification of
   carriers.
-* `RadiiPolynomial.CauchyProduct.eq_addRingConvolution`: on the index `ℕ` the Cauchy product
+* `RadiiPolynomial.cauchyProduct.eq_addRingConvolution`: on the index `ℕ` the Cauchy product
   is the additive-index ring convolution.
 
 ## Implementation notes
@@ -408,14 +408,14 @@ end RadiiPolynomial.DiscreteConvolution
 
 /-! ### The Cauchy product as an additive-index ring convolution -/
 
-namespace RadiiPolynomial.CauchyProduct
+namespace RadiiPolynomial.cauchyProduct
 
 variable {R : Type*} [Semiring R] [TopologicalSpace R]
 
 /-- On the index `ℕ`, the Cauchy product is the additive-index ring convolution: the
 unconditional sum over each addition fiber is the finite sum over the antidiagonal. -/
 theorem eq_addRingConvolution (a b : ℕ → R) :
-    CauchyProduct a b = _root_.DiscreteConvolution.addRingConvolution (M := ℕ) a b :=
+    cauchyProduct a b = _root_.DiscreteConvolution.addRingConvolution (M := ℕ) a b :=
   funext fun n => (_root_.DiscreteConvolution.addRingConvolution_eq_sum_antidiagonal a b n).symm
 
-end RadiiPolynomial.CauchyProduct
+end RadiiPolynomial.cauchyProduct

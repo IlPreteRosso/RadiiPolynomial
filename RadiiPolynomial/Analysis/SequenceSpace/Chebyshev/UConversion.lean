@@ -42,7 +42,7 @@ private lemma norm_fiber_natCast_add_two (c : l1Chebyshev ν) (m : ℕ) :
     ‖c ((↑m : ℤ) + 2)‖ = |l1Chebyshev.toSeq c (↑m + 2)| * (ν : ℝ) ^ (m + 2) := by
   rw [lpOneAlg.norm_eq_abs_toReal_mul_weight c ((↑m : ℤ) + 2)]
   have h2 : ((↑m : ℤ) + 2).natAbs = m + 2 := by omega
-  simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul, Real.norm_eq_abs, h2]
+  simp only [WeightedScalar.fiberTrivialization_weight, Real.norm_eq_abs, h2]
   rfl
 
 /-! ### The T→U conversion -/
@@ -199,16 +199,16 @@ private def uIntegrate_seq (b : l1Weighted ν) : ℤ → ℝ
 
 -- Fiber norm at mode `n+1`: `|b_n/(n+1)|·ν^{n+1}`.
 private lemma uIntegrate_fiber_eq (b : l1Weighted ν) (n : ℕ) :
-    ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑(n + 1) : ℤ)
+    ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑(n + 1) : ℤ)
         (uIntegrate_seq b (↑(n + 1) : ℤ))‖ =
       |l1Weighted.toSeq b n| / (↑n + 1) * (ν : ℝ) ^ (n + 1) := by
-  rw [ScaledRealZ.norm_lpAlgRingData_ofReal, uIntegrate_seq_succ]
+  rw [ScaledRealZ.norm_equiv_apply, uIntegrate_seq_succ]
   have h1 : ((↑(n + 1) : ℤ)).natAbs = n + 1 := by omega
   rw [h1, abs_div, abs_of_pos (show (0 : ℝ) < ↑n + 1 by positivity)]
 
 -- Fiber bound: `|b_n/(n+1)|·ν^{n+1} ≤ ν·(|b_n|·ν^n)` — the `1/k ≤ 1` estimate.
 private lemma uIntegrate_fiber_le (b : l1Weighted ν) (n : ℕ) :
-    ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑(n + 1) : ℤ)
+    ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑(n + 1) : ℤ)
         (uIntegrate_seq b (↑(n + 1) : ℤ))‖ ≤
       (ν : ℝ) * (|l1Weighted.toSeq b n| * (ν : ℝ) ^ n) := by
   rw [uIntegrate_fiber_eq]
@@ -221,24 +221,24 @@ private lemma uIntegrate_fiber_le (b : l1Weighted ν) (n : ℕ) :
   rw [pow_succ]; ring
 
 private lemma uIntegrate_memℓp (b : l1Weighted ν) :
-    Memℓp (fun k : ℤ => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
+    Memℓp (fun k : ℤ => FiberTrivialization.equiv (E := ScaledRealZ ν) k
       (uIntegrate_seq b k)) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
   have hinj : Function.Injective (fun n : ℕ => (↑(n + 1) : ℤ)) := by
     intro n m h; simp only at h; omega
   have hvanish : ∀ k : ℤ, k ∉ Set.range (fun n : ℕ => (↑(n + 1) : ℤ)) →
-      ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) k (uIntegrate_seq b k)‖ = 0 := by
+      ‖FiberTrivialization.equiv (E := ScaledRealZ ν) k (uIntegrate_seq b k)‖ = 0 := by
     intro k hk
     cases k with
     | ofNat n =>
       cases n with
       | zero =>
         have h0 : uIntegrate_seq b (Int.ofNat 0) = 0 := uIntegrate_seq_zero b
-        rw [h0, lpAlgRingData.ofReal_zero, norm_zero]
+        rw [h0, FiberTrivialization.equiv_zero, norm_zero]
       | succ n => exact absurd ⟨n, by simp⟩ hk
     | negSucc n =>
-      rw [uIntegrate_seq_negSucc, lpAlgRingData.ofReal_zero, norm_zero]
+      rw [uIntegrate_seq_negSucc, FiberTrivialization.equiv_zero, norm_zero]
   rw [← Function.Injective.summable_iff hinj hvanish]
   refine Summable.of_nonneg_of_le (fun n => norm_nonneg _) (fun n => ?_)
     ((l1Weighted.summable_weighted b).mul_left (ν : ℝ))
@@ -249,14 +249,14 @@ private lemma uIntegrate_memℓp (b : l1Weighted ν) :
 the coefficient-level form of `∫ U_{k-1} = T_k/k`, mapping U-coefficients back
 into the Chebyshev-T space. -/
 def uIntegrate (b : l1Weighted ν) : l1Chebyshev ν :=
-  ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k (uIntegrate_seq b k),
+  ⟨⟨fun k => FiberTrivialization.equiv (E := ScaledRealZ ν) k (uIntegrate_seq b k),
     uIntegrate_memℓp b⟩⟩
 
 -- Internal bridge (private, like its right-hand side); external files use the per-mode simp
 -- lemmas below.
 private lemma uIntegrate_toSeq (b : l1Weighted ν) (k : ℤ) :
-    lpOneAlg.toRealSeq (uIntegrate b) k = uIntegrate_seq b k := by
-  simp [uIntegrate, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
+    lpOneAlg.toRealSeq (uIntegrate b) k = uIntegrate_seq b k :=
+  FiberTrivialization.equiv_symm_apply_equiv k _
 
 @[simp] lemma uIntegrate_toSeq_zero (b : l1Weighted ν) :
     lpOneAlg.toRealSeq (uIntegrate b) 0 = 0 := by
@@ -298,18 +298,18 @@ lemma uIntegrate_smul (r : ℝ) (b : l1Weighted ν) :
 -- definitionally `ofReal` of the raw sequence).
 private lemma uIntegrate_elem_zero (b : l1Weighted ν) :
     (uIntegrate b) (Int.ofNat 0) = 0 := by
-  show lpAlgRingData.ofReal (E := ScaledRealZ ν) _ (uIntegrate_seq b _) = 0
-  rw [show uIntegrate_seq b (Int.ofNat 0) = 0 from rfl, lpAlgRingData.ofReal_zero]
+  show FiberTrivialization.equiv (E := ScaledRealZ ν) _ (uIntegrate_seq b _) = 0
+  rw [show uIntegrate_seq b (Int.ofNat 0) = 0 from rfl, FiberTrivialization.equiv_zero]
 
 private lemma uIntegrate_elem_negSucc (b : l1Weighted ν) (n : ℕ) :
     (uIntegrate b) (Int.negSucc n) = 0 := by
-  show lpAlgRingData.ofReal (E := ScaledRealZ ν) _ (uIntegrate_seq b _) = 0
-  rw [uIntegrate_seq_negSucc, lpAlgRingData.ofReal_zero]
+  show FiberTrivialization.equiv (E := ScaledRealZ ν) _ (uIntegrate_seq b _) = 0
+  rw [uIntegrate_seq_negSucc, FiberTrivialization.equiv_zero]
 
 private lemma uIntegrate_elem_succ_le (b : l1Weighted ν) (n : ℕ) :
     ‖(uIntegrate b) (↑(n + 1) : ℤ)‖ ≤
       (ν : ℝ) * (|l1Weighted.toSeq b n| * (ν : ℝ) ^ n) := by
-  show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑(n + 1) : ℤ)
+  show ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑(n + 1) : ℤ)
       (uIntegrate_seq b (↑(n + 1) : ℤ))‖ ≤ _
   exact uIntegrate_fiber_le b n
 
@@ -466,9 +466,9 @@ lemma fromU_marginal_summable (b : l1Weighted ν) :
 
 -- Fiber bound at mode `n`: `|2·Σ_j b_{n+2j}|·ν^n ≤ 2·Σ_j |b_{n+2j}|·ν^n`.
 private lemma chebyshevFromU_fiber_le (b : l1Weighted ν) (n : ℕ) :
-    ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n : ℤ) (chebyshevFromU_seq b (↑n : ℤ))‖ ≤
+    ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n : ℤ) (chebyshevFromU_seq b (↑n : ℤ))‖ ≤
       2 * ∑' j : ℕ, |l1Weighted.toSeq b (n + 2 * j)| * (ν : ℝ) ^ n := by
-  rw [ScaledRealZ.norm_lpAlgRingData_ofReal, chebyshevFromU_seq_ofNat]
+  rw [ScaledRealZ.norm_equiv_apply, chebyshevFromU_seq_ofNat]
   have hna : ((↑n : ℤ)).natAbs = n := by omega
   rw [hna]
   have hs : Summable (fun j : ℕ => ‖l1Weighted.toSeq b (n + 2 * j)‖) := by
@@ -485,18 +485,18 @@ private lemma chebyshevFromU_fiber_le (b : l1Weighted ν) (n : ℕ) :
   linarith
 
 private lemma chebyshevFromU_memℓp (b : l1Weighted ν) :
-    Memℓp (fun k : ℤ => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
+    Memℓp (fun k : ℤ => FiberTrivialization.equiv (E := ScaledRealZ ν) k
       (chebyshevFromU_seq b k)) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
   have hinj : Function.Injective (fun n : ℕ => (↑n : ℤ)) := by
     intro n m h; simp only at h; omega
   have hvanish : ∀ k : ℤ, k ∉ Set.range (fun n : ℕ => (↑n : ℤ)) →
-      ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) k (chebyshevFromU_seq b k)‖ = 0 := by
+      ‖FiberTrivialization.equiv (E := ScaledRealZ ν) k (chebyshevFromU_seq b k)‖ = 0 := by
     intro k hk
     cases k with
     | ofNat n => exact absurd ⟨n, by simp⟩ hk
-    | negSucc n => rw [chebyshevFromU_seq_negSucc, lpAlgRingData.ofReal_zero, norm_zero]
+    | negSucc n => rw [chebyshevFromU_seq_negSucc, FiberTrivialization.equiv_zero, norm_zero]
   rw [← Function.Injective.summable_iff hinj hvanish]
   have hmarg : Summable (fun k : ℕ =>
       2 * ∑' j : ℕ, |l1Weighted.toSeq b (k + 2 * j)| * (ν : ℝ) ^ k) :=
@@ -509,14 +509,14 @@ private lemma chebyshevFromU_memℓp (b : l1Weighted ν) :
 `0` for `k < 0` — the telescoping inverse of `chebyshevToU`. Bounded for `ν > 1`
 (`chebyshevFromU_norm_le`). -/
 def chebyshevFromU (b : l1Weighted ν) : l1Chebyshev ν :=
-  ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k (chebyshevFromU_seq b k),
+  ⟨⟨fun k => FiberTrivialization.equiv (E := ScaledRealZ ν) k (chebyshevFromU_seq b k),
     chebyshevFromU_memℓp b⟩⟩
 
 -- Internal bridge (private, like its right-hand side); external files use the per-mode lemmas
 -- below.
 private lemma chebyshevFromU_toSeq (b : l1Weighted ν) (k : ℤ) :
-    lpOneAlg.toRealSeq (chebyshevFromU b) k = chebyshevFromU_seq b k := by
-  simp [chebyshevFromU, lpOneAlg.toRealSeq, lpAlgRingData.toReal_ofReal]
+    lpOneAlg.toRealSeq (chebyshevFromU b) k = chebyshevFromU_seq b k :=
+  FiberTrivialization.equiv_symm_apply_equiv k _
 
 @[simp] lemma chebyshevFromU_toSeq_natCast (b : l1Weighted ν) (n : ℕ) :
     lpOneAlg.toRealSeq (chebyshevFromU b) (↑n : ℤ) =
@@ -635,13 +635,13 @@ theorem chebyshevFromU_chebyshevToU_toSeq (c : l1Chebyshev ν) (n : ℕ) :
 
 private lemma chebyshevFromU_elem_negSucc (b : l1Weighted ν) (n : ℕ) :
     (chebyshevFromU b) (Int.negSucc n) = 0 := by
-  show lpAlgRingData.ofReal (E := ScaledRealZ ν) _ (chebyshevFromU_seq b _) = 0
-  rw [chebyshevFromU_seq_negSucc, lpAlgRingData.ofReal_zero]
+  show FiberTrivialization.equiv (E := ScaledRealZ ν) _ (chebyshevFromU_seq b _) = 0
+  rw [chebyshevFromU_seq_negSucc, FiberTrivialization.equiv_zero]
 
 private lemma chebyshevFromU_elem_natCast_le (b : l1Weighted ν) (n : ℕ) :
     ‖(chebyshevFromU b) (↑n : ℤ)‖ ≤
       2 * ∑' j : ℕ, |l1Weighted.toSeq b (n + 2 * j)| * (ν : ℝ) ^ n := by
-  show ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n : ℤ)
+  show ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n : ℤ)
       (chebyshevFromU_seq b (↑n : ℤ))‖ ≤ _
   exact chebyshevFromU_fiber_le b n
 

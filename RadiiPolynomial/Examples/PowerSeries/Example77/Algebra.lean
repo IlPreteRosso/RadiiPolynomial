@@ -95,11 +95,11 @@ def c (lam0 : ℝ) : l1Weighted ν := l1Weighted.mk (paramSeq lam0) (paramSeq_me
 /-- The zero-finding map F(a) = a*a - c(lam0). -/
 def F (lam0 : ℝ) (a : l1Weighted ν) : l1Weighted ν := F_sub_const (c lam0) a
 
-/-- Sequence-level formula for F(a): CauchyProduct(a,a) - paramSeq(λ₀).
+/-- Sequence-level formula for F(a): cauchyProduct(a,a) - paramSeq(λ₀).
 Bridges the abstract `F` to computable form for certificates. -/
 lemma F_toSeq (lam0 : ℝ) (a : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (F lam0 a) n =
-    CauchyProduct (l1Weighted.toSeq a) (l1Weighted.toSeq a) n - paramSeq lam0 n := by
+    cauchyProduct (l1Weighted.toSeq a) (l1Weighted.toSeq a) n - paramSeq lam0 n := by
   simp only [F, F_sub_const, sq, l1Weighted.sub_toSeq, l1Weighted.toSeq_mul, c,
     l1Weighted.mk_apply]
 
@@ -214,7 +214,7 @@ lemma approxDeriv_sub_fderiv_fin_kill {N : ℕ}
     smul_apply, leftMul_apply, l1Weighted.smul_toSeq,
     l1Weighted.toSeq_mul, ApproxSolution.toL1_toSeq]
   have heq : (fun k => 2 * sol.toSeq k) = ((2 : ℝ) • sol.toSeq : ℕ → ℝ) := rfl
-  rw [heq, CauchyProduct.smul_mul]
+  rw [heq, cauchyProduct.smul_mul]
   simp [smul_eq_mul]
 
 /-! ### Shifted coefficient sequence for Z₁ norm bound -/
@@ -245,7 +245,7 @@ lemma shiftedL1_norm {N : ℕ} (sol : ApproxSolution N) :
   · intro n hn; simp [hn]
 
 /-- On tail modes n > N, the difference A†-DF acts as -2·leftMul(shiftedL1).
-The tail diagonal of A† gives 2ā₀·h_n, while DF gives 2·CauchyProduct(ā,h)_n.
+The tail diagonal of A† gives 2ā₀·h_n, while DF gives 2·cauchyProduct(ā,h)_n.
 Since ā has support [0,N] and n > N, the Cauchy product splits as
 ā₀·h_n + ∑_{k∈[1,N]} ā_k·h_{n-k}, so the difference is -2·∑_{k∈[1,N]} ā_k·h_{n-k}. -/
 lemma approxDeriv_sub_fderiv_tail_eq {N : ℕ}
@@ -270,12 +270,12 @@ lemma approxDeriv_sub_fderiv_tail_eq {N : ℕ}
     (approxDeriv sol).toScalarCLM_toSeq_tail h n hn, htail,
     smul_apply, leftMul_apply, l1Weighted.smul_toSeq,
     l1Weighted.toSeq_mul, ApproxSolution.toL1_toSeq,
-    CauchyProduct.apply_of_support_le_split hsup hn, ← hToSeq0_eq]
+    cauchyProduct.apply_of_support_le_split hsup hn, ← hToSeq0_eq]
   -- RHS expansion
   show _ = -(2 : ℝ) * l1Weighted.toSeq ((shiftedL1 sol : l1Weighted ν) * h) n
   rw [l1Weighted.toSeq_mul]
-  show _ = -(2 : ℝ) * CauchyProduct (shiftedSeq sol) (l1Weighted.toSeq h) n
-  rw [CauchyProduct.apply_of_support_le_split hShifted_sup hn, hShifted0]
+  show _ = -(2 : ℝ) * cauchyProduct (shiftedSeq sol) (l1Weighted.toSeq h) n
+  rw [cauchyProduct.apply_of_support_le_split hShifted_sup hn, hShifted0]
   have hSumEq : ∑ k ∈ Finset.Icc 1 N, shiftedSeq sol k * l1Weighted.toSeq h (n - k)
       = ∑ k ∈ Finset.Icc 1 N, sol.toSeq k * l1Weighted.toSeq h (n - k) :=
     Finset.sum_congr rfl (fun k hk => by rw [hShifted_in k hk])

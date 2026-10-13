@@ -1,7 +1,6 @@
 import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Certification.LeanCertAdapter
 import RadiiPolynomial.Certification.IVP.Taylor
-import RadiiPolynomial.Tactic.AutoPolyFDeriv
 import RadiiPolynomial.Algebra.Polynomial
 import RadiiPolynomial.Examples.IVP.Taylor.Example83.Numbers
 
@@ -58,10 +57,6 @@ abbrev σ_q : ℚ := 10
 abbrev ρ_q_val : ℚ := 28
 abbrev β_q : ℚ := 8 / 3
 
-def σ_val : ℝ := (σ_q : ℚ)
-def ρ_val : ℝ := (ρ_q_val : ℚ)
-def β_val : ℝ := (β_q : ℚ)
-
 def x₀ : Fin L → ℝ
   | 0 => 1
   | 1 => 0
@@ -93,51 +88,14 @@ def F (a : XL1 ν_val L) : SystemCoeff L :=
 
 /-! ## 4. Fréchet derivative Df -/
 
-def Df (h : Fin L → l1Weighted ν_val) : Fin L → l1Weighted ν_val
-  | 0 => σ_val • (h 1 - h 0)
-  | 1 => ρ_val • h 0 - h 1 - (data.abar 0 * h 2 + h 0 * data.abar 2)
-  | 2 => -(β_val • h 2) + (data.abar 0 * h 1 + h 0 * data.abar 1)
+/-- The derivative map fed to the `Z₁` face: componentwise, the Fréchet derivative of `f` at
+`ā`, so the identification hypothesis of `Z₁_le_of_compPoly` holds by `rfl`. -/
+def Df (h : Fin L → l1Weighted ν_val) : Fin L → l1Weighted ν_val :=
+  fun l => fderiv ℝ (fun a => f a l) data.abar h
 
 lemma differentiable_f_component (l : Fin L) :
     Differentiable ℝ (fun a : XL1 ν_val L => f a l) := by
   exact MvPolyBridge.differentiable_evalBanach_l1Weighted (f_cpoly l)
-
-private abbrev proj_L (l : Fin L) :=
-  ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin L => l1Weighted ν_val) l
-
-lemma fderiv_f_0 (a : XL1 ν_val L) :
-    fderiv ℝ (fun a => f a 0) a =
-    σ_val • (proj_L 1 - proj_L 0) := by
-  show fderiv ℝ (fun a : XL1 ν_val L => σ_val • (a 1 - a 0)) a = _
-  auto_poly_fderiv
-
-lemma fderiv_f_1 (a : XL1 ν_val L) :
-    fderiv ℝ (fun a => f a 1) a =
-    ρ_val • proj_L 0 - proj_L 1 -
-      ((l1Weighted.leftMul (a 0)).comp (proj_L 2) +
-       (l1Weighted.leftMul (a 2)).comp (proj_L 0)) := by
-  show fderiv ℝ (fun a : XL1 ν_val L => ρ_val • a 0 - a 1 - a 0 * a 2) a = _
-  auto_poly_fderiv
-
-lemma fderiv_f_2 (a : XL1 ν_val L) :
-    fderiv ℝ (fun a => f a 2) a =
-    -(β_val • proj_L 2) +
-      ((l1Weighted.leftMul (a 0)).comp (proj_L 1) +
-       (l1Weighted.leftMul (a 1)).comp (proj_L 0)) := by
-  show fderiv ℝ (fun a : XL1 ν_val L => -(β_val • a 2) + a 0 * a 1) a = _
-  auto_poly_fderiv
-
-lemma Df_eq_fderiv (h : XL1 ν_val L) (l : Fin L) :
-    Df h l = (fderiv ℝ (fun a => f a l) data.abar) h := by
-  fin_cases l <;>
-    simp only [Df, show (⟨0, by decide⟩ : Fin L) = 0 from rfl,
-      show (⟨1, by decide⟩ : Fin L) = 1 from rfl,
-      show (⟨2, by decide⟩ : Fin L) = 2 from rfl,
-      fderiv_f_0, fderiv_f_1, fderiv_f_2, proj_L,
-      sub_apply, add_apply,
-      neg_apply, smul_apply,
-      ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply,
-      l1Weighted.leftMul_apply, mul_comm (data.abar _) (h _)]
 
 /-! ## 5. DF Correctness (Jacobian via `ivp_hDF_block_nat`) -/
 

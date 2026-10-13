@@ -91,19 +91,19 @@ theorem norm_diagCLM_le {𝕜 : Type*} [NontriviallyNormedField 𝕜] {J : Type*
     ‖(diagCLM r C hr : lpOneAlg J G →L[𝕜] lpOneAlg J G)‖ ≤ C :=
   ContinuousLinearMap.opNorm_le_bound _ hC (norm_diagCLM_apply_le r C hr)
 
-/-- Coefficient face of the diagonal: `(D_r x)_j = r_j x_j` in the scalar
-trivialization. -/
+/-- Coefficient face of the diagonal: `(D_r x)_j = r_j x_j` in the chosen frame
+(`map_smul` of `θ_j⁻¹`). -/
 theorem toRealSeq_diagCLM {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
     [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
-    [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G]
+    [FiberTrivialization 𝕜 J G]
     (r : J → 𝕜) (C : ℝ) (hr : ∀ j, ‖r j‖ ≤ C) (x : lpOneAlg J G) (j : J) :
     toRealSeq (diagCLM r C hr x) j = r j * toRealSeq x j :=
-  lpAlgSmulCompat.toReal_smul j (r j) (x j)
+  map_smul (FiberTrivialization.equiv (E := G) j).symm (r j) (x j)
 
 /-- Atom face of the diagonal: `D_r (x e_j) = (r_j x) e_j`. -/
 theorem diagCLM_single {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
     [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
-    [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (r : J → 𝕜) (C : ℝ) (hr : ∀ j, ‖r j‖ ≤ C) (j : J) (x : 𝕜) :
     diagCLM r C hr (single j x : lpOneAlg J G) = single j (r j * x) := by
   refine ext_toRealSeq (funext fun k => ?_)
@@ -153,7 +153,7 @@ def tailProj {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
 /-- Coefficient face of the head projection. -/
 theorem toRealSeq_headProj {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
     [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
-    [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) (x : lpOneAlg J G) (j : J) :
     toRealSeq (headProj (𝕜 := 𝕜) H x) j = if j ∈ H then toRealSeq x j else 0 := by
   rw [headProj, toRealSeq_diagCLM, headSymbol]
@@ -162,7 +162,7 @@ theorem toRealSeq_headProj {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J 
 /-- Coefficient face of the tail projection. -/
 theorem toRealSeq_tailProj {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
     [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
-    [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) (x : lpOneAlg J G) (j : J) :
     toRealSeq (tailProj (𝕜 := 𝕜) H x) j = if j ∈ H then 0 else toRealSeq x j := by
   rw [tailProj_eq_one_sub, sub_apply, one_apply_eq_self, toRealSeq_sub, Pi.sub_apply,
@@ -172,7 +172,7 @@ theorem toRealSeq_tailProj {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J 
 /-- Atom face of the head projection. -/
 theorem headProj_single {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
     [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
-    [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) (j : J) (x : 𝕜) :
     headProj (𝕜 := 𝕜) H (single j x : lpOneAlg J G) = if j ∈ H then single j x else 0 := by
   refine ext_toRealSeq (funext fun k => ?_)
@@ -185,7 +185,7 @@ theorem headProj_single {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J →
 /-- Atom face of the tail projection. -/
 theorem tailProj_single {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
     [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
-    [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) (j : J) (x : 𝕜) :
     tailProj (𝕜 := 𝕜) H (single j x : lpOneAlg J G) = if j ∈ H then 0 else single j x := by
   rw [tailProj_eq_one_sub, sub_apply, one_apply_eq_self, headProj_single]
@@ -273,7 +273,7 @@ theorem tailProj_apply_eq_self_iff_fiber {𝕜 : Type*} [NormedField 𝕜] {J : 
 /-- Range of the head projection, coefficient form. -/
 theorem headProj_apply_eq_self_iff {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
     [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
-    [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) (x : lpOneAlg J G) :
     headProj (𝕜 := 𝕜) H x = x ↔ ∀ j ∉ H, toRealSeq x j = 0 := by
   constructor
@@ -289,7 +289,7 @@ theorem headProj_apply_eq_self_iff {𝕜 : Type*} [NormedField 𝕜] {J : Type*}
 /-- Range of the tail projection, coefficient form. -/
 theorem tailProj_apply_eq_self_iff {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
     [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
-    [lpAlgRingData 𝕜 J G] [lpAlgSmulCompat 𝕜 J G] [DecidableEq J]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J]
     (H : Finset J) (x : lpOneAlg J G) :
     tailProj (𝕜 := 𝕜) H x = x ↔ ∀ j ∈ H, toRealSeq x j = 0 := by
   constructor
@@ -373,8 +373,8 @@ theorem norm_tailProj_apply_le {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G 
 
 /-- A head-valued `S` and a tail-valued `T` add column-wise. -/
 theorem colRatio_add_of_head_tail {𝕜 : Type*} [NormedField 𝕜] {I : Type*} {E : I → Type*}
-    [∀ i, NormedAddCommGroup (E i)] [lpAlgRingData 𝕜 I E] [DecidableEq I]
-    [∀ i, NormedSpace 𝕜 (E i)]
+    [∀ i, NormedAddCommGroup (E i)] [DecidableEq I]
+    [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 I E]
     {J : Type*} {G : J → Type*} [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
     [DecidableEq J]
     (H : Finset J) (S T : lpOneAlg I E →L[𝕜] lpOneAlg J G)
@@ -387,8 +387,8 @@ theorem colRatio_add_of_head_tail {𝕜 : Type*} [NormedField 𝕜] {I : Type*} 
 /-- Exact aggregate operator norm of a head-valued plus a tail-valued map:
 `‖S + T‖ = ⨆ i, (colRatio S i + colRatio T i)`. -/
 theorem opNorm_add_eq_iSup {𝕜 : Type*} [NontriviallyNormedField 𝕜] {I : Type*}
-    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [lpAlgRingData 𝕜 I E] [DecidableEq I]
-    [∀ i, NormedSpace 𝕜 (E i)] [lpAlgSmulCompat 𝕜 I E]
+    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [DecidableEq I]
+    [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 I E]
     {J : Type*} {G : J → Type*} [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
     [DecidableEq J]
     (H : Finset J) (S T : lpOneAlg I E →L[𝕜] lpOneAlg J G)
@@ -407,8 +407,8 @@ theorem head_comp_eq_zero_iff_tail_comp_eq_self {𝕜 : Type*} [NormedField 𝕜
 
 /-- Column additivity when the second map has zero head part. -/
 theorem colRatio_add_of_head_zero {𝕜 : Type*} [NormedField 𝕜] {I : Type*} {E : I → Type*}
-    [∀ i, NormedAddCommGroup (E i)] [lpAlgRingData 𝕜 I E] [DecidableEq I]
-    [∀ i, NormedSpace 𝕜 (E i)]
+    [∀ i, NormedAddCommGroup (E i)] [DecidableEq I]
+    [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 I E]
     {J : Type*} {G : J → Type*} [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
     [DecidableEq J]
     (H : Finset J) (S T : lpOneAlg I E →L[𝕜] lpOneAlg J G)
@@ -418,8 +418,8 @@ theorem colRatio_add_of_head_zero {𝕜 : Type*} [NormedField 𝕜] {I : Type*} 
 
 /-- Exact aggregate operator norm when the second map has zero head part. -/
 theorem opNorm_add_eq_iSup_of_head_zero {𝕜 : Type*} [NontriviallyNormedField 𝕜] {I : Type*}
-    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [lpAlgRingData 𝕜 I E] [DecidableEq I]
-    [∀ i, NormedSpace 𝕜 (E i)] [lpAlgSmulCompat 𝕜 I E]
+    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [DecidableEq I]
+    [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 I E]
     {J : Type*} {G : J → Type*} [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
     [DecidableEq J]
     (H : Finset J) (S T : lpOneAlg I E →L[𝕜] lpOneAlg J G)
@@ -429,18 +429,20 @@ theorem opNorm_add_eq_iSup_of_head_zero {𝕜 : Type*} [NontriviallyNormedField 
 
 /-- A vanishing column ratio means a vanishing column (the weight is positive). -/
 private theorem apply_single_eq_zero_of_colRatio_eq_zero {𝕜 : Type*} [NormedField 𝕜]
-    {I : Type*} {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [lpAlgRingData 𝕜 I E]
-    [DecidableEq I] [∀ i, NormedSpace 𝕜 (E i)] {F : Type*} [NormedAddCommGroup F]
+    {I : Type*} {E : I → Type*} [∀ i, NormedAddCommGroup (E i)]
+    [DecidableEq I] [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 I E]
+    {F : Type*} [NormedAddCommGroup F]
     [NormedSpace 𝕜 F] {T : lpOneAlg I E →L[𝕜] F} {i : I} (h : colRatio T i = 0) :
     T (single i (1 : 𝕜)) = 0 := by
   rw [colRatio, div_eq_zero_iff] at h
-  exact norm_eq_zero.mp (h.resolve_right (norm_ofReal_one_pos i).ne')
+  exact norm_eq_zero.mp (h.resolve_right (FiberTrivialization.weight_pos i).ne')
 
 /-- A map killing the source tail has zero tail columns. -/
 theorem colRatio_eq_zero_of_comp_tailProj {𝕜 : Type*} [NormedField 𝕜] {I : Type*}
-    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [lpAlgRingData 𝕜 I E] [DecidableEq I]
-    [∀ i, NormedSpace 𝕜 (E i)] {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
-    [lpAlgSmulCompat 𝕜 I E] (Hs : Finset I) (Z : lpOneAlg I E →L[𝕜] F)
+    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [DecidableEq I]
+    [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 I E]
+    {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
+    (Hs : Finset I) (Z : lpOneAlg I E →L[𝕜] F)
     (hZ : Z ∘L tailProj Hs = 0) (i : I) (hi : i ∉ Hs) : colRatio Z i = 0 := by
   have h := DFunLike.congr_fun hZ (single i (1 : 𝕜))
   rw [ContinuousLinearMap.comp_apply, tailProj_single, ite_eq_right hi, zero_apply] at h
@@ -448,9 +450,10 @@ theorem colRatio_eq_zero_of_comp_tailProj {𝕜 : Type*} [NormedField 𝕜] {I :
 
 /-- A map killing the source head has zero head columns. -/
 theorem colRatio_eq_zero_of_comp_headProj {𝕜 : Type*} [NormedField 𝕜] {I : Type*}
-    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [lpAlgRingData 𝕜 I E] [DecidableEq I]
-    [∀ i, NormedSpace 𝕜 (E i)] {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
-    [lpAlgSmulCompat 𝕜 I E] (Hs : Finset I) (S : lpOneAlg I E →L[𝕜] F)
+    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [DecidableEq I]
+    [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 I E]
+    {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
+    (Hs : Finset I) (S : lpOneAlg I E →L[𝕜] F)
     (hS : S ∘L headProj Hs = 0) (i : I) (hi : i ∈ Hs) : colRatio S i = 0 := by
   have h := DFunLike.congr_fun hS (single i (1 : 𝕜))
   rw [ContinuousLinearMap.comp_apply, headProj_single, ite_eq_left hi, zero_apply] at h
@@ -459,9 +462,10 @@ theorem colRatio_eq_zero_of_comp_headProj {𝕜 : Type*} [NormedField 𝕜] {I :
 /-- Column additivity of a source-split pair: each column carries only one
 of `Z` (killing the source tail) and `S` (killing the source head). -/
 theorem colRatio_add_of_comp_split {𝕜 : Type*} [NormedField 𝕜] {I : Type*}
-    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [lpAlgRingData 𝕜 I E] [DecidableEq I]
-    [∀ i, NormedSpace 𝕜 (E i)] {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
-    [lpAlgSmulCompat 𝕜 I E] (Hs : Finset I) (Z S : lpOneAlg I E →L[𝕜] F)
+    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [DecidableEq I]
+    [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 I E]
+    {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
+    (Hs : Finset I) (Z S : lpOneAlg I E →L[𝕜] F)
     (hZ : Z ∘L tailProj Hs = 0) (hS : S ∘L headProj Hs = 0) (i : I) :
     colRatio (Z + S) i = colRatio Z i + colRatio S i := by
   by_cases hi : i ∈ Hs
@@ -476,8 +480,8 @@ theorem colRatio_add_of_comp_split {𝕜 : Type*} [NormedField 𝕜] {I : Type*}
 source tail), a head-valued `S` killing the source head and a tail-valued `T`,
 `‖Z + S + T‖ = ⨆ i, (colRatio Z i + colRatio S i + colRatio T i)`. -/
 theorem opNorm_joint_eq_iSup {𝕜 : Type*} [NontriviallyNormedField 𝕜] {I : Type*}
-    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [lpAlgRingData 𝕜 I E] [DecidableEq I]
-    [∀ i, NormedSpace 𝕜 (E i)] [lpAlgSmulCompat 𝕜 I E]
+    {E : I → Type*} [∀ i, NormedAddCommGroup (E i)] [DecidableEq I]
+    [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 I E]
     {J : Type*} {G : J → Type*} [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
     [DecidableEq J]
     (Hs : Finset I) (H : Finset J) (Z S T : lpOneAlg I E →L[𝕜] lpOneAlg J G)

@@ -529,11 +529,11 @@ end TailProjection
 
 section BanachAlgebra
 
-/-- `toSeq` of l1Weighted multiplication = CauchyProduct of `toSeq`.
-Bridge via `CauchyProduct.eq_addRingConvolution`. -/
+/-- `toSeq` of l1Weighted multiplication = cauchyProduct of `toSeq`.
+Bridge via `cauchyProduct.eq_addRingConvolution`. -/
 @[simp] lemma toSeq_mul (a b : l1Weighted ν) (n : ℕ) :
-    toSeq (a * b) n = CauchyProduct (toSeq a) (toSeq b) n := by
-  have h := congr_fun (CauchyProduct.eq_addRingConvolution (toSeq a) (toSeq b)) n
+    toSeq (a * b) n = cauchyProduct (toSeq a) (toSeq b) n := by
+  have h := congr_fun (cauchyProduct.eq_addRingConvolution (toSeq a) (toSeq b)) n
   rw [h]; rfl
 
 /-- Product of two `single`-monomials: the additive-monoid-algebra convolution identity
@@ -552,7 +552,7 @@ lemma single_mul (m n : ℕ) (r s : ℝ) :
 the `M`-fold right shift, `(b · δ_M)_k = b_{k-M}` for `M ≤ k`, else `0`. -/
 lemma toSeq_mul_single (b : l1Weighted ν) (M k : ℕ) :
     toSeq (b * single M 1) k = if M ≤ k then toSeq b (k - M) else 0 := by
-  rw [toSeq_mul, CauchyProduct.apply_range]
+  rw [toSeq_mul, cauchyProduct.apply_range]
   simp only [single_toSeq]
   by_cases hM : M ≤ k
   · rw [ite_eq_left hM, Finset.sum_eq_single M
@@ -697,7 +697,7 @@ theorem opNorm_eq_iSup_cols₂ (B : l1Weighted ν →L[ℝ] l1Weighted ν →L[�
     ‖B‖ = ⨆ p : ℕ × ℕ, ‖B (lpOneAlg.single p.1 1) (lpOneAlg.single p.2 1)‖
       / ((ν : ℝ) ^ p.1 * (ν : ℝ) ^ p.2) := by
   rw [lpOneAlg.opNorm_eq_iSup_cols₂ B]
-  simp only [ScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+  simp only [WeightedScalar.fiberTrivialization_weight]
 
 set_option maxSynthPendingDepth 2 in
 /-- **The trilinear operator norm on `l1Weighted ν` as an atom supremum.** For
@@ -713,7 +713,7 @@ theorem opNorm_eq_iSup_cols₃
         (lpOneAlg.single p.2.2 1)‖
       / ((ν : ℝ) ^ p.1 * (ν : ℝ) ^ p.2.1 * (ν : ℝ) ^ p.2.2) := by
   rw [lpOneAlg.opNorm_eq_iSup_cols₃ T]
-  simp only [ScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+  simp only [WeightedScalar.fiberTrivialization_weight]
 
 end OpNorm
 

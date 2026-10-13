@@ -10,7 +10,7 @@ This file owns the bilateral weight `k ↦ ν^|k|` and its instances, so it also
 weight-level faces: the fiber over any normed field `geomFiberZ 𝕜 ν` (with
 `ScaledRealZ ν = geomFiberZ ℝ ν` definitionally) and its fiber weight `geomFiberZ_weight`,
 used by the Fourier carrier `lpOneAlg ℤ (geomFiberZ 𝕜 ν)`, and the real fiber-norm bridge
-`ScaledRealZ.norm_lpAlgRingData_ofReal`, twin of `ScaledReal.norm_lpAlgRingData_ofReal`.
+`ScaledRealZ.norm_equiv_apply` of the standard frame.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -64,10 +64,8 @@ example (ν : PosReal) : ScaledRealZ ν = geomFiberZ ℝ ν := rfl
 
 /-- The fiber weight of `geomFiberZ 𝕜 ν` at `k` is `ν^|k|`. -/
 theorem geomFiberZ_weight {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal) (k : ℤ) :
-    ‖lpAlgRingData.ofReal (E := geomFiberZ 𝕜 ν) k (1 : 𝕜)‖ = (ν : ℝ) ^ k.natAbs := by
-  rw [show lpAlgRingData.ofReal (E := geomFiberZ 𝕜 ν) k (1 : 𝕜)
-      = WeightedScalar.ofReal 1 from rfl, WeightedScalar.norm_ofReal,
-    norm_one, one_mul]
+    FiberTrivialization.weight (E := geomFiberZ 𝕜 ν) k = (ν : ℝ) ^ k.natAbs :=
+  WeightedScalar.fiberTrivialization_weight k
 
 /-- The norm of an atom of the bilateral geometric carrier: `‖single j x‖ = ‖x‖ ν^|j|`. -/
 theorem lpOneAlg.norm_single_geomFiberZ {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal) (j : ℤ)
@@ -78,9 +76,9 @@ theorem lpOneAlg.norm_single_geomFiberZ {𝕜 : Type*} [NormedField 𝕜] (ν : 
 
 /-! ### Fiber-norm bridge -/
 
-/-- The fiber norm of `lpAlgRingData.ofReal k r` for `ScaledRealZ` equals `|r| * ν^|k|`. -/
-@[simp] theorem ScaledRealZ.norm_lpAlgRingData_ofReal (ν : PosReal) (k : ℤ) (r : ℝ) :
-    ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) k r‖ = |r| * (ν : ℝ) ^ k.natAbs :=
+/-- The fiber norm of the standard frame `θ_k r` of `ScaledRealZ` equals `|r| * ν^|k|`. -/
+@[simp] theorem ScaledRealZ.norm_equiv_apply (ν : PosReal) (k : ℤ) (r : ℝ) :
+    ‖FiberTrivialization.equiv (E := ScaledRealZ ν) k r‖ = |r| * (ν : ℝ) ^ k.natAbs :=
   WeightedScalar.norm_ofReal r
 
 end RadiiPolynomial

@@ -10,7 +10,7 @@ import RadiiPolynomial.Analysis.Calculus.Pi
 # MvPolynomial Evaluation in Weighted l1
 
 Bridges between `MvPolynomial (Fin L) ℚ` (symbolic polynomial specification)
-and `l1Weighted ν` (Banach algebra with CauchyProduct multiplication).
+and `l1Weighted ν` (Banach algebra with `cauchyProduct` multiplication).
 
 ## Architecture
 
@@ -20,7 +20,7 @@ the `Dφ_Q` table of `ivp_hDF_block_nat`, or `CompPoly.evalCoeff`); no computabl
 declared here. The MvPolynomial bridge automates:
 
 1. **ℚ↔ℝ bridge**: `toSeq(aeval a p) n = (mvPolyCoeff p coeffs n : ℝ)`
-   — reduces to `CauchyProduct.ratCast` + ring hom properties
+   — reduces to `cauchyProduct.ratCast` + ring hom properties
 2. **Differentiability**: `aeval · p` is differentiable (polynomial on Banach algebra)
 3. **Fderiv via pderiv**: `fderiv(aeval · p)(a) = Σᵢ leftMul(aeval a (pderiv i p)) ∘ proj i`
 4. **DF verification**: Jacobian entries = coefficients of `pderiv m (φ_spec j)` evaluated at `a`
@@ -56,7 +56,7 @@ variable {ν : PosReal}
 -- Algebra ℚ instance and ratSmul_eq are in Analysis/SequenceSpace/Geometric/Basic.lean
 
 /-- Evaluate MvPolynomial in the Banach algebra `l1Weighted ν` via `aeval`.
-Multiplication = CauchyProduct (from `instNormedCommRing`). -/
+Multiplication = `cauchyProduct` (from `instNormedCommRing`). -/
 def evalInBanach (p : MvPolynomial (Fin L) ℚ)
     (a : Fin L → l1Weighted ν) : l1Weighted ν :=
   aeval a p
@@ -110,7 +110,7 @@ theorem toSeq_evalInBanach_of_coeffs (p : MvPolynomial (Fin L) ℚ)
     rw [show l1Weighted.toSeq (aeval a p) = fun k =>
         (mvPolyCoeff p coeffs k : ℝ) from funext ih,
       show l1Weighted.toSeq (a i) = fun k => (coeffs i k : ℝ) from funext (ha i)]
-    rw [CauchyProduct.ratCast, mvPolyCoeff_mul, mvPolyCoeff_X_fun]
+    rw [cauchyProduct.ratCast, mvPolyCoeff_mul, mvPolyCoeff_X_fun]
 
 /-! ## 3. evalInBanach simp API
 
@@ -218,7 +218,7 @@ theorem fderiv_diff_evalInBanach (p : MvPolynomial (Fin L) ℚ)
 
 /-- Coefficient extraction of `fderiv(evalInBanach p)` as Toeplitz sum over pderiv evaluations.
 Combines `fderiv_evalInBanach` → CLM extraction → `toSeq` distribution →
-`CauchyProduct.eq_sum_fin` into one reusable step (book eq. 8.27, coefficient form). -/
+`cauchyProduct.eq_sum_fin` into one reusable step (book eq. 8.27, coefficient form). -/
 theorem toSeq_fderiv_evalInBanach
     (p : MvPolynomial (Fin L) ℚ) (a h : Fin L → l1Weighted ν)
     {N : ℕ} {n : ℕ} (hn : n ≤ N) :
@@ -231,7 +231,7 @@ theorem toSeq_fderiv_evalInBanach
   simp only [sum_apply, ContinuousLinearMap.comp_apply,
     ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply,
     l1Weighted.toSeq_finset_sum, l1Weighted.toSeq_mul]
-  simp_rw [CauchyProduct.eq_sum_fin _ _ hn]
+  simp_rw [cauchyProduct.eq_sum_fin _ _ hn]
 
 /-! ## 5. System Z₂ Norm Bound for Degree ≤ 2 Polynomials
 

@@ -11,17 +11,17 @@ to give the full existence + uniqueness statement on `(-ν, ν)`.
 
 ## Surface
 
-- `IVP.IsAnalyticSolution φ_cpoly x₀ R g` (`structure`): "g solves the IVP
+- `IVP.IsBallSolution φ_cpoly x₀ R g` (`structure`): "g solves the IVP
   `ẋ = vectorField φ_cpoly x, x(0) = x₀` on `(-ν, ν)` with trajectory in
-  `closedBall 0 R`." Three fields: `init`, `in_R`, `solves`; despite the name, none
-  of them asks `g` to be analytic (the analytic object is `x_analytic`).
+  `closedBall 0 R`." Three fields: `init`, `in_R`, `solves`; none of them asks `g`
+  to be analytic (the analytic object is `x_analytic`).
 - `IVP.x_analytic xTilde`: canonical analytic solution
   `t ↦ (eval(xTilde l, t))_l`.
-- `StdIVPData.x_analytic_isAnalyticSolution`: existence half — `x_analytic`
-  satisfies `IsAnalyticSolution`.
-- `StdIVPData.analytic_eq_canonical`: pinning — any analytic solution equals
+- `StdIVPData.x_analytic_isBallSolution`: existence half — `x_analytic`
+  satisfies `IsBallSolution`.
+- `StdIVPData.analytic_eq_canonical`: pinning — any ball solution equals
   `x_analytic` on the interval.
-- `StdIVPData.analytic_unique`: any two analytic solutions agree.
+- `StdIVPData.analytic_unique`: any two ball solutions agree.
 - `StdIVPData.analytic_existsUnique`: existence + uniqueness packaged
   ("∃ unique modulo `Set.EqOn (Ioo)`" — strict `∃!` over `ℝ → Fin L → ℝ`
   doesn't hold because candidates can differ outside the interval).
@@ -46,16 +46,15 @@ namespace IVP
 
 variable {ν : PosReal} {L : ℕ}
 
-/-- `g : ℝ → Fin L → ℝ` solves the polynomial IVP `ẋ = vectorField φ_cpoly x, x(0) = x₀`
-on the open interval `(-ν, ν)` (a derivative at every point there) with trajectory in
-`closedBall 0 R`. Despite the name, the fields do not ask `g` to be analytic: the
-predicate is a differentiable solution with bounded trajectory, and the analytic object
-is the canonical solution `x_analytic`.
+/-- `g : ℝ → Fin L → ℝ` is a solution in the closed ball: it solves the polynomial IVP
+`ẋ = vectorField φ_cpoly x, x(0) = x₀` on the open interval `(-ν, ν)` (a derivative at
+every point there) with trajectory in `closedBall 0 R`. No analyticity is required; the
+analytic object is the canonical solution `x_analytic`.
 
 Packaged as a `structure` so callers can write `hg.init`, `hg.in_R`,
 `hg.solves` instead of the awkward `hg.1`, `hg.2.1`, `hg.2.2` of a flat
 `And` definition. -/
-structure IsAnalyticSolution
+structure IsBallSolution
     (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) (R : ℝ)
     (g : ℝ → Fin L → ℝ) : Prop where
   /-- `g` satisfies the initial condition at `t = 0`. -/
@@ -76,9 +75,9 @@ namespace IVP.StdIVPData
 
 variable {ν : PosReal} {L N : ℕ} [NeZero L] (d : StdIVPData ν L N)
 
-/-! ## Lower-level wrapper (takes the `IsAnalyticSolution` fields separately) -/
+/-! ## Lower-level wrapper (takes the `IsBallSolution` fields separately) -/
 
-/-- Pinning at the field level: a solution `g` with the three `IsAnalyticSolution` fields given
+/-- Pinning at the field level: a solution `g` with the three `IsBallSolution` fields given
 separately agrees with `x_analytic xTilde` on `(-ν, ν)`. The bridge `h_phi_eq` forces
 `φ = banachField φ_cpoly`, so the coefficient zero of `G` is a zero of the `banachField`
 residual and `analytic_solution_unique` applies with `R = ‖d.abar‖ + r₀`. Used by the
@@ -108,9 +107,9 @@ theorem analytic_uniqueness_wrapper
 
 /-! ## Predicate-based theorems -/
 
-/-- **Existence**: `x_analytic xTilde` satisfies `IsAnalyticSolution` on `(-ν, ν)` with
+/-- **Existence**: `x_analytic xTilde` satisfies `IsBallSolution` on `(-ν, ν)` with
 trajectory bound `R = ‖d.abar‖ + r₀` (the ball bound is `norm_le_of_mem_closedBall`). -/
-theorem x_analytic_isAnalyticSolution
+theorem x_analytic_isBallSolution
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (φ_cpoly : Fin L → CompPoly L)
     (h_phi_eq : ∀ a l, banachField φ_cpoly a l = φ a l)
@@ -119,7 +118,7 @@ theorem x_analytic_isAnalyticSolution
     (xTilde : XL1 ν L)
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G φ x₀ xTilde = 0) :
-    IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) (IVP.x_analytic xTilde) := by
   obtain rfl : banachField φ_cpoly = φ := funext fun a => funext (h_phi_eq a)
   have hF := d.ivpCoeffs_zero_of_G_zero _ x₀ h_defect_lt_one hG
@@ -132,7 +131,7 @@ theorem x_analytic_isAnalyticSolution
       (IVP.eval_traj_in_closedBall xTilde (abs_le.mpr ⟨ht.1.le, ht.2.le⟩))
   · exact hasDerivAt_pi.mpr (IVP.solves_ODE_of_F_zero φ_cpoly x₀ xTilde hF (abs_lt.mpr ht)).1
 
-/-- **Pinning**: any analytic solution agrees with `x_analytic xTilde` on
+/-- **Pinning**: any ball solution (`IsBallSolution`) agrees with `x_analytic xTilde` on
 `(-ν, ν)`. -/
 theorem analytic_eq_canonical
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
@@ -144,13 +143,13 @@ theorem analytic_eq_canonical
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G φ x₀ xTilde = 0)
     (g : ℝ → Fin L → ℝ)
-    (hg : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    (hg : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) g) :
     Set.EqOn g (IVP.x_analytic xTilde) (Set.Ioo (-(ν : ℝ)) ν) :=
   d.analytic_uniqueness_wrapper φ x₀ φ_cpoly h_phi_eq h_defect_lt_one
     xTilde hxTilde_ball hG g hg.init hg.in_R hg.solves
 
-/-- **Uniqueness**: any two analytic solutions agree on `(-ν, ν)`. -/
+/-- **Uniqueness**: any two ball solutions agree on `(-ν, ν)`. -/
 theorem analytic_unique
     (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
     (φ_cpoly : Fin L → CompPoly L)
@@ -161,9 +160,9 @@ theorem analytic_unique
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G φ x₀ xTilde = 0)
     (g₁ g₂ : ℝ → Fin L → ℝ)
-    (h₁ : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    (h₁ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) g₁)
-    (h₂ : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    (h₂ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) g₂) :
     Set.EqOn g₁ g₂ (Set.Ioo (-(ν : ℝ)) ν) :=
   (d.analytic_eq_canonical φ x₀ φ_cpoly h_phi_eq h_defect_lt_one
@@ -185,14 +184,14 @@ theorem analytic_existsUnique
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G φ x₀ xTilde = 0) :
     ∃ u : ℝ → Fin L → ℝ,
-      IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      IVP.IsBallSolution (ν := ν) φ_cpoly x₀
         (‖(d.abar : XL1 ν L)‖ + r₀) u ∧
       ∀ v : ℝ → Fin L → ℝ,
-        IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+        IVP.IsBallSolution (ν := ν) φ_cpoly x₀
           (‖(d.abar : XL1 ν L)‖ + r₀) v →
         Set.EqOn v u (Set.Ioo (-(ν : ℝ)) ν) :=
   ⟨IVP.x_analytic xTilde,
-    d.x_analytic_isAnalyticSolution φ x₀ φ_cpoly h_phi_eq h_defect_lt_one
+    d.x_analytic_isBallSolution φ x₀ φ_cpoly h_phi_eq h_defect_lt_one
       xTilde hxTilde_ball hG,
     fun v hv => d.analytic_eq_canonical φ x₀ φ_cpoly h_phi_eq h_defect_lt_one
       xTilde hxTilde_ball hG v hv⟩
@@ -205,18 +204,18 @@ agrees with `banachField φ_cpoly`. When the certificate is written from the syn
 drop both from the call, which is what makes the per-example `Analytic.lean` files
 carry no structural obligation at all. -/
 
-/-- `x_analytic_isAnalyticSolution` with the coefficient nonlinearity taken from the
+/-- `x_analytic_isBallSolution` with the coefficient nonlinearity taken from the
 syntax. -/
-theorem x_analytic_isAnalyticSolution_of_compPoly
+theorem x_analytic_isBallSolution_of_compPoly
     (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
     (h_defect_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
     {r₀ : ℝ}
     (xTilde : XL1 ν L)
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0) :
-    IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) (IVP.x_analytic xTilde) :=
-  d.x_analytic_isAnalyticSolution (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
+  d.x_analytic_isBallSolution (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
     h_defect_lt_one xTilde hxTilde_ball hG
 
 /-- `analytic_eq_canonical` with the coefficient nonlinearity taken from the syntax. -/
@@ -228,7 +227,7 @@ theorem analytic_eq_canonical_of_compPoly
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0)
     (g : ℝ → Fin L → ℝ)
-    (hg : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    (hg : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) g) :
     Set.EqOn g (IVP.x_analytic xTilde) (Set.Ioo (-(ν : ℝ)) ν) :=
   d.analytic_eq_canonical (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
@@ -243,9 +242,9 @@ theorem analytic_unique_of_compPoly
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0)
     (g₁ g₂ : ℝ → Fin L → ℝ)
-    (h₁ : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    (h₁ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) g₁)
-    (h₂ : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    (h₂ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) g₂) :
     Set.EqOn g₁ g₂ (Set.Ioo (-(ν : ℝ)) ν) :=
   d.analytic_unique (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
@@ -262,10 +261,10 @@ theorem analytic_existsUnique_of_compPoly
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0) :
     ∃ u : ℝ → Fin L → ℝ,
-      IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      IVP.IsBallSolution (ν := ν) φ_cpoly x₀
         (‖(d.abar : XL1 ν L)‖ + r₀) u ∧
       ∀ v : ℝ → Fin L → ℝ,
-        IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+        IVP.IsBallSolution (ν := ν) φ_cpoly x₀
           (‖(d.abar : XL1 ν L)‖ + r₀) v →
         Set.EqOn v u (Set.Ioo (-(ν : ℝ)) ν) :=
   d.analytic_existsUnique (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
@@ -277,8 +276,8 @@ Same hypothesis list as `StdIVPData.existsUnique_of_compPoly`; the contraction `
 is `defect_finBlockNorm_lt_one_of_radii`. The first two faces keep a named zero (a
 certificate that exhibits `x_analytic` as an object needs one); the last two choose it. -/
 
-/-- `x_analytic_isAnalyticSolution_of_compPoly` with `Z₀ < 1` read off the bounds. -/
-theorem x_analytic_isAnalyticSolution_of_compPoly_of_radii
+/-- `x_analytic_isBallSolution_of_compPoly` with `Z₀ < 1` read off the bounds. -/
+theorem x_analytic_isBallSolution_of_compPoly_of_radii
     (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
     {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
     (hr₀ : 0 < r₀)
@@ -295,9 +294,9 @@ theorem x_analytic_isAnalyticSolution_of_compPoly_of_radii
     (xTilde : XL1 ν L)
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0) :
-    IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) (IVP.x_analytic xTilde) :=
-  d.x_analytic_isAnalyticSolution_of_compPoly φ_cpoly x₀
+  d.x_analytic_isBallSolution_of_compPoly φ_cpoly x₀
     (d.defect_finBlockNorm_lt_one_of_radii (banachField φ_cpoly) x₀
       hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)
     xTilde hxTilde_ball hG
@@ -321,7 +320,7 @@ theorem analytic_eq_canonical_of_compPoly_of_radii
     (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
     (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0)
     (g : ℝ → Fin L → ℝ)
-    (hg : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    (hg : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) g) :
     Set.EqOn g (IVP.x_analytic xTilde) (Set.Ioo (-(ν : ℝ)) ν) :=
   d.analytic_eq_canonical_of_compPoly φ_cpoly x₀
@@ -346,9 +345,9 @@ theorem analytic_unique_of_compPoly_of_radii
         (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤ Z₂ r₀ * r₀)
     (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0)
     (g₁ g₂ : ℝ → Fin L → ℝ)
-    (h₁ : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    (h₁ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) g₁)
-    (h₂ : IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+    (h₂ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
       (‖(d.abar : XL1 ν L)‖ + r₀) g₂) :
     Set.EqOn g₁ g₂ (Set.Ioo (-(ν : ℝ)) ν) := by
   obtain ⟨xTilde, hball, hG⟩ :=
@@ -378,10 +377,10 @@ theorem analytic_existsUnique_of_compPoly_of_radii
         (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤ Z₂ r₀ * r₀)
     (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0) :
     ∃ u : ℝ → Fin L → ℝ,
-      IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+      IVP.IsBallSolution (ν := ν) φ_cpoly x₀
         (‖(d.abar : XL1 ν L)‖ + r₀) u ∧
       ∀ v : ℝ → Fin L → ℝ,
-        IVP.IsAnalyticSolution (ν := ν) φ_cpoly x₀
+        IVP.IsBallSolution (ν := ν) φ_cpoly x₀
           (‖(d.abar : XL1 ν L)‖ + r₀) v →
         Set.EqOn v u (Set.Ioo (-(ν : ℝ)) ν) := by
   obtain ⟨xTilde, hball, hG⟩ :=

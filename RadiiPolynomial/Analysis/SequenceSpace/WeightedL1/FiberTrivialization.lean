@@ -1,6 +1,7 @@
 import Mathlib.Analysis.Normed.Module.Basic
 import Mathlib.Algebra.Module.Equiv.Basic
 import Mathlib.Analysis.Normed.Group.Uniform
+import Mathlib.Topology.Algebra.Module.Equiv
 
 /-!
 # Fiber Trivializations
@@ -17,9 +18,10 @@ The frame `θ` is chosen structure, never canonical: replacing `θ_m r` by `θ_m
 product. "Metric on a trivial line family" is the permitted reading; no topological-bundle
 or base-continuity claim is made.
 
-This file is independent of `lpOneAlg`. The legacy ten-field data `lpAlgRingData` and its
-scalar-compatibility witness `lpAlgSmulCompat` are derived from a `FiberTrivialization` in
-`WeightedL1/Carrier.lean` (one-way compatibility layer).
+This file is independent of `lpOneAlg`. The frame is the primary datum of the weighted ℓ¹ API:
+the scalar coordinates `toRealSeq f m = θ_m⁻¹ (f m)`, the scalar singles, the weight classes and
+the convolution product of `lpOneAlg M E` are all indexed by the chosen `FiberTrivialization`
+(`WeightedL1/Carrier.lean`, `WeightedL1/Algebra.lean`).
 -/
 
 noncomputable section
@@ -99,6 +101,17 @@ lemma continuous_equiv (m : M) : Continuous (equiv (E := E) m) :=
 lemma continuous_equiv_symm (m : M) : Continuous (equiv (E := E) m).symm :=
   AddMonoidHomClass.continuous_of_bound (equiv (E := E) m).symm (weight (E := E) m)⁻¹
     fun x => (norm_equiv_symm_apply m x).trans_le (le_of_eq (by rw [div_eq_inv_mul]))
+
+/-- The frame `θ_m` as a continuous linear equivalence `𝕜 ≃L[𝕜] E m` (continuous both ways, with
+the constants `ω_m` and `1 / ω_m`). -/
+def equivL (m : M) : 𝕜 ≃L[𝕜] E m where
+  toLinearEquiv := equiv m
+  continuous_toFun := continuous_equiv m
+  continuous_invFun := continuous_equiv_symm m
+
+@[simp] lemma coe_equivL (m : M) : ⇑(equivL (E := E) m) = equiv m := rfl
+
+@[simp] lemma coe_equivL_symm (m : M) : ⇑(equivL (E := E) m).symm = (equiv m).symm := rfl
 
 end FiberTrivialization
 

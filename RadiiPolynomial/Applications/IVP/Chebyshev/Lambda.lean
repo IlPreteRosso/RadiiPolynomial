@@ -217,17 +217,18 @@ sharp sibling of `TCtailElem_norm_le`. `TCtailElem N v` vanishes on the modes `�
 theorem TCtailElem_norm_le_tail (N : ℕ) (v : l1Chebyshev ν) :
     ‖TCtailElem N v‖ ≤ (ν : ℝ) / ((N : ℝ) + 1) * ‖v‖ := by
   refine chebyshev_Z₁_component_le _ v N (fun k hk => ?_) (fun m hm => ?_)
-  · rw [← lpAlgRingData.ofReal_toReal k ((TCtailElem N v) k)]
-    change lpAlgRingData.ofReal k (l1Chebyshev.toSeq (TCtailElem N v) k) = 0
+  · rw [← FiberTrivialization.equiv_apply_equiv_symm k ((TCtailElem N v) k)]
+    change FiberTrivialization.equiv (E := ScaledRealZ ν) k
+      (l1Chebyshev.toSeq (TCtailElem N v) k) = 0
     cases k with
     | ofNat n =>
       simp only [Int.ofNat_eq_natCast] at hk ⊢
-      rw [TCtailElem_toSeq_nat, ite_eq_right (by omega), lpAlgRingData.ofReal_zero]
-    | negSucc m => rw [TCtailElem_toSeq_neg, lpAlgRingData.ofReal_zero]
-  · rw [← lpAlgRingData.ofReal_toReal (m : ℤ) ((TCtailElem N v) m),
-      ← lpAlgRingData.ofReal_toReal (m : ℤ) ((chebyshevShiftDiv v) m)]
-    change lpAlgRingData.ofReal _ (l1Chebyshev.toSeq (TCtailElem N v) m) =
-      lpAlgRingData.ofReal _ (l1Chebyshev.toSeq (chebyshevShiftDiv v) m)
+      rw [TCtailElem_toSeq_nat, ite_eq_right (by omega), FiberTrivialization.equiv_zero]
+    | negSucc m => rw [TCtailElem_toSeq_neg, FiberTrivialization.equiv_zero]
+  · rw [← FiberTrivialization.equiv_apply_equiv_symm (m : ℤ) ((TCtailElem N v) m),
+      ← FiberTrivialization.equiv_apply_equiv_symm (m : ℤ) ((chebyshevShiftDiv v) m)]
+    change FiberTrivialization.equiv (E := ScaledRealZ ν) _ (l1Chebyshev.toSeq (TCtailElem N v) m) =
+      FiberTrivialization.equiv (E := ScaledRealZ ν) _ (l1Chebyshev.toSeq (chebyshevShiftDiv v) m)
     rw [TCtailElem_toSeq_nat, ite_eq_left hm]
 
 end TCtailSharp
@@ -336,16 +337,16 @@ def constG (p : Fin L → ℝ) : XCheb ν L := fun l =>
 
 lemma constG_toSeq_nat (p : Fin L → ℝ) (l : Fin L) (n : ℕ) :
     l1Chebyshev.toSeq (d.constG p l) (↑n : ℤ) = d.constGseq p l n := by
-  show lpAlgRingData.toReal (↑n : ℤ)
+  show (FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n : ℤ)).symm
     (embedNatToInt (d.constGseq p l) (↑n : ℤ)) = _
-  rw [embedNatToInt_natCast, lpAlgRingData.toReal_ofReal]
+  rw [embedNatToInt_natCast, FiberTrivialization.equiv_symm_apply_equiv]
 
 lemma constG_toSeq_neg (p : Fin L → ℝ) (l : Fin L) (m : ℕ) :
     l1Chebyshev.toSeq (d.constG p l) (Int.negSucc m) = 0 := by
-  show lpAlgRingData.toReal _
+  show (FiberTrivialization.equiv (E := ScaledRealZ ν) _).symm
     (embedNatToInt (d.constGseq p l) (Int.negSucc m)) = _
   rw [embedNatToInt_negSucc]
-  exact lpAlgRingData.toReal_zero _
+  exact FiberTrivialization.equiv_symm_zero _
 
 /-! ### TA — the linear-in-`a` part -/
 
@@ -368,10 +369,10 @@ lemma TA_action_tail_eq (a : XCheb ν L) (l : Fin L) (n : ℕ) (hn : N < n) :
 
 lemma TAseq_tail_eq (a : XCheb ν L) (l : Fin L) (n : ℕ) (hn : N < n) :
     d.TAseq a l (↑n : ℤ) = (a l) (↑n : ℤ) := by
-  show lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n)
+  show FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n)
     (d.approxInverse.action (fun j => FAseq (a j)) l n) = _
   rw [d.TA_action_tail_eq a l n hn]
-  exact lpAlgRingData.ofReal_toReal _ _
+  exact FiberTrivialization.equiv_apply_equiv_symm _ _
 
 lemma TAseq_neg (a : XCheb ν L) (l : Fin L) (m : ℕ) :
     d.TAseq a l (Int.negSucc m) = (a l) (Int.negSucc m) := rfl
@@ -398,10 +399,11 @@ def TAfun (a : XCheb ν L) : XCheb ν L := fun l => ⟨⟨d.TAseq a l, d.TAseq_m
 lemma TAfun_toSeq_nat (a : XCheb ν L) (l : Fin L) (n : ℕ) :
     l1Chebyshev.toSeq (d.TAfun a l) (↑n : ℤ)
       = d.approxInverse.action (fun j => FAseq (a j)) l n := by
-  show lpAlgRingData.toReal (↑n : ℤ) (d.TAseq a l (↑n : ℤ)) = _
-  show lpAlgRingData.toReal (↑n : ℤ) (lpAlgRingData.ofReal (E := ScaledRealZ ν) (↑n)
+  show (FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n : ℤ)).symm (d.TAseq a l (↑n : ℤ)) = _
+  show (FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n : ℤ)).symm
+    (FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n)
     (d.approxInverse.action (fun j => FAseq (a j)) l n)) = _
-  rw [lpAlgRingData.toReal_ofReal]
+  rw [FiberTrivialization.equiv_symm_apply_equiv]
 
 lemma TAfun_toSeq_neg (a : XCheb ν L) (l : Fin L) (m : ℕ) :
     l1Chebyshev.toSeq (d.TAfun a l) (Int.negSucc m)
@@ -486,16 +488,16 @@ def TCblockFun (c : XCheb ν L) : XCheb ν L := fun l =>
 
 lemma TCblockFun_toSeq_nat (c : XCheb ν L) (l : Fin L) (n : ℕ) :
     l1Chebyshev.toSeq (d.TCblockFun c l) (↑n : ℤ) = d.TCblockSeq c l n := by
-  show lpAlgRingData.toReal (↑n : ℤ)
+  show (FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n : ℤ)).symm
     (embedNatToInt (d.TCblockSeq c l) (↑n : ℤ)) = _
-  rw [embedNatToInt_natCast, lpAlgRingData.toReal_ofReal]
+  rw [embedNatToInt_natCast, FiberTrivialization.equiv_symm_apply_equiv]
 
 lemma TCblockFun_toSeq_neg (c : XCheb ν L) (l : Fin L) (m : ℕ) :
     l1Chebyshev.toSeq (d.TCblockFun c l) (Int.negSucc m) = 0 := by
-  show lpAlgRingData.toReal _
+  show (FiberTrivialization.equiv (E := ScaledRealZ ν) _).symm
     (embedNatToInt (d.TCblockSeq c l) (Int.negSucc m)) = _
   rw [embedNatToInt_negSucc]
-  exact lpAlgRingData.toReal_zero _
+  exact FiberTrivialization.equiv_symm_zero _
 
 private lemma TCblockFun_add (a b : XCheb ν L) :
     d.TCblockFun (a + b) = d.TCblockFun a + d.TCblockFun b :=
@@ -586,9 +588,10 @@ lemma G_decomp (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ
     show l1Chebyshev.toSeq (d.G φ p a l) (↑n : ℤ) = _
     have hG : l1Chebyshev.toSeq (d.G φ p a l) (↑n : ℤ)
         = d.approxInverse.action (chebyshevIvpCoeffs φ p a) l n := by
-      show lpAlgRingData.toReal (↑n : ℤ) (lpAlgRingData.ofReal (E := ScaledRealZ ν)
+      show (FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n : ℤ)).symm
+        (FiberTrivialization.equiv (E := ScaledRealZ ν)
         (↑n) (d.approxInverse.action (chebyshevIvpCoeffs φ p a) l n)) = _
-      rw [lpAlgRingData.toReal_ofReal]
+      rw [FiberTrivialization.equiv_symm_apply_equiv]
     rw [hG]
     show _ = l1Chebyshev.toSeq (d.constG p l) (↑n : ℤ)
       + l1Chebyshev.toSeq (d.TAfun a l) (↑n : ℤ)

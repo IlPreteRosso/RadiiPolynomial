@@ -40,12 +40,12 @@ The semantic bridge from the sequence-space zero F(a) = 0 back to the original e
   Picard–Lindelöf uniqueness lift `analytic_solution_unique` (the RP trajectory bound
   supplies the Lipschitz radius)
 - `Applications/IVP/Taylor/Analytic.lean` — packages both for any `StdIVPData`:
-  `IsAnalyticSolution`, canonical solution `x_analytic`, and `analytic_existsUnique`
+  `IsBallSolution`, canonical solution `x_analytic`, and `analytic_existsUnique`
   on (-ν, ν)
 - Example81/83 `Analytic.lean` instantiate `analytic_existsUnique`; Example77 `Analytic.lean` proves the pinning theorem `x_analytic_sq_eq` (eval(x̃,t)² = λ₀ + t via `eval_mul`/Mertens)
 
 **Algebra architecture:**
-- `lpOneAlg M E` (`Analysis/SequenceSpace/WeightedL1/Algebra.lean`) — generic ℓ¹
+- `lpOneAlg M E` (`Analysis/SequenceSpace/WeightedL1/Carrier.lean`; the convolution ring in `Algebra.lean`) — generic ℓ¹
   Banach algebra with non-uniform fibers
 - `WeightedScalar w m` — parameterized fiber ℝ with norm `|x|·w(m)`
 - `l1Weighted ν := lpOneAlg ℕ (ScaledReal ν)` — Taylor power series

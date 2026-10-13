@@ -90,7 +90,6 @@ polynomial at the certified radii `(20, 26, 11)` of `ā`: per component `2σ`, `
 `β + 20 + 26`, all `≤ Z₁_bound·(N+1)/ν = 62`. -/
 private lemma Df_norm_le (h : XL1 ν_val L) (l : Fin L) :
     ‖Df h l‖ ≤ (Z₁_bound * ((N : ℚ) + 1) / ν_q) * ‖h‖ := by
-  rw [Df_eq_fderiv]
   refine IVP.ivp_Dφ_norm_le_of_compPoly f f_cpoly data.abar (fun _ _ => rfl)
     (fun i => ((![20, 26, 11] : Fin L → ℚ) i : ℝ)) ?_ ?_ h l
   · intro i
@@ -112,7 +111,7 @@ private lemma Df_norm_le (h : XL1 ν_val L) (l : Fin L) :
 lemma Z₁_le_cert :
     Z₁_norm (data.G f x₀) data.abar (ContinuousLinearMap.id ℝ (XL1 ν_val L))
       (data.composedApprox.toCLM (ν := ν_val)) ≤ (Z₁_bound : ℝ) :=
-  data.Z₁_le_of_compPoly f_cpoly x₀ composedApprox_eq_fderiv_G_fin Df Df_eq_fderiv
+  data.Z₁_le_of_compPoly f_cpoly x₀ composedApprox_eq_fderiv_G_fin Df (fun _ _ => rfl)
     (by unfold Z₁_bound ν_q N; norm_num) Df_norm_le
     (by simp only [ν_val_eq_q]; unfold Z₁_bound ν_q N; push_cast; ring_nf; rfl)
 

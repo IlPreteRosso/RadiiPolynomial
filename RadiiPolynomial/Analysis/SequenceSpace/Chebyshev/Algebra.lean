@@ -8,8 +8,9 @@ import Mathlib.Analysis.Normed.Operator.Mul
 `l1Chebyshev ν = lpOneAlg ℤ (ScaledRealZ ν)` — ℤ-indexed sequences with
 bilateral weighted norm `∑|a_k|·ν^{|k|}` and convolution product.
 
-Ring and algebra instances flow from `lpOneAlg` + `SubMulWeight` via the
-generic `WeightedScalar` instances in `WeightedL1/ScalarInstances.lean`.
+Ring and algebra instances flow from `lpOneAlg` + the standard frame of `WeightedScalar`
+(`SubMulWeightBase` → `WeightedScalar.instLpOneAlgWeightMul` → `instConvCompatOfWeightMul`)
+via the generic instances in `WeightedL1/ScalarInstances.lean`.
 -/
 
 open scoped BigOperators Topology
@@ -21,7 +22,8 @@ namespace RadiiPolynomial
 /-! ### l1Chebyshev: the Chebyshev Banach algebra -/
 
 /-- Chebyshev ℓ¹ Banach algebra: ℤ-indexed sequences with norm `∑|a_k|·ν^{|k|}`
-and bilateral Cauchy product. All instances from generalized `lpOneAlg` + `SubMulWeight`. -/
+and bilateral Cauchy product. All instances from `lpOneAlg` with the standard frame and its
+submultiplicative weight (`SubMulWeightBase`). -/
 abbrev l1Chebyshev (ν : PosReal) := lpOneAlg ℤ (ScaledRealZ ν)
 
 namespace l1Chebyshev
@@ -38,7 +40,7 @@ lemma toSeq_eq_toRealSeq (a : l1Chebyshev ν) : toSeq a = lpOneAlg.toRealSeq a :
     toSeq (f + g) m = toSeq f m + toSeq g m :=
   congr_fun (lpOneAlg.toRealSeq_add f g) m
 
--- Instances automatically available from lpOneAlg + SubMulWeight:
+-- Instances automatically available from lpOneAlg + the standard frame (SubMulWeightBase):
 -- NormedAddCommGroup, Ring, NormedRing (always)
 -- CommRing, NormedCommRing (ℤ is AddCommGroup ✓)
 -- NormedSpace ℝ, Algebra ℝ, NormedAlgebra ℝ (ScaledRealZ has NormedSpace ℝ ✓)
@@ -111,8 +113,7 @@ lemma toSeq_single (j : ℤ) (x : ℝ) (k : ℤ) :
 
 lemma norm_single (j : ℤ) (x : ℝ) :
     ‖(single (ν := ν) j x)‖ = |x| * (ν : ℝ) ^ j.natAbs := by
-  rw [lpOneAlg.norm_single, ScaledRealZ.norm_lpAlgRingData_ofReal]
-  simp [Real.norm_eq_abs]
+  rw [lpOneAlg.norm_single, WeightedScalar.fiberTrivialization_weight, Real.norm_eq_abs]
 
 lemma single_smul (j : ℤ) (x : ℝ) :
     single (ν := ν) j x = x • single j 1 :=
@@ -140,7 +141,7 @@ lemma norm_le_of_cols {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     (h : l1Chebyshev ν) : ‖W h‖ ≤ C * ‖h‖ :=
   lpOneAlg.norm_le_of_cols W
     (fun m => by
-      rw [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+      rw [WeightedScalar.fiberTrivialization_weight]
       exact hcol m) h
 
 /-- **Finite-part column-norm bound** over the nonnegative output modes
@@ -152,7 +153,7 @@ lemma finsum_norm_le_of_cols (W : l1Chebyshev ν →L[ℝ] l1Chebyshev ν) (N : 
     ∑ n : Fin (N + 1), ‖(W h) ((n : ℕ) : ℤ)‖ ≤ ε * ‖h‖ :=
   lpOneAlg.finsum_norm_le_of_cols W Finset.univ (fun n : Fin (N + 1) => ((n : ℕ) : ℤ))
     (fun m => by
-      rw [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+      rw [WeightedScalar.fiberTrivialization_weight]
       exact hcol m) h
 
 /-! ### Finite sums -/
@@ -219,7 +220,7 @@ theorem opNorm_eq_iSup_cols₂ (B : l1Chebyshev ν →L[ℝ] l1Chebyshev ν →L
     ‖B‖ = ⨆ p : ℤ × ℤ, ‖B (lpOneAlg.single p.1 1) (lpOneAlg.single p.2 1)‖
       / ((ν : ℝ) ^ p.1.natAbs * (ν : ℝ) ^ p.2.natAbs) := by
   rw [lpOneAlg.opNorm_eq_iSup_cols₂ B]
-  simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+  simp only [WeightedScalar.fiberTrivialization_weight]
 
 set_option maxSynthPendingDepth 2 in
 /-- **The trilinear operator norm on `l1Chebyshev ν` as an atom supremum.** For
@@ -235,7 +236,7 @@ theorem opNorm_eq_iSup_cols₃
         (lpOneAlg.single p.2.2 1)‖
       / ((ν : ℝ) ^ p.1.natAbs * (ν : ℝ) ^ p.2.1.natAbs * (ν : ℝ) ^ p.2.2.natAbs) := by
   rw [lpOneAlg.opNorm_eq_iSup_cols₃ T]
-  simp only [ScaledRealZ.norm_lpAlgRingData_ofReal, abs_one, one_mul]
+  simp only [WeightedScalar.fiberTrivialization_weight]
 
 end OpNorm
 

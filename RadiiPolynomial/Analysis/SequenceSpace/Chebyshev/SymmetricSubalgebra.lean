@@ -169,28 +169,28 @@ theorem nonnegRestrictCLM_norm_of_isSymmetric (a : l1Chebyshev ν)
 /-! ### The physical algebra is isometrically the bordered carrier -/
 
 private theorem borderedEmbed_memℓp (b : l1Bordered ν) :
-    Memℓp (fun k : ℤ => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
+    Memℓp (fun k : ℤ => FiberTrivialization.equiv (E := ScaledRealZ ν) k
       (if 0 ≤ k then lpOneAlg.toRealSeq b k.toNat else 0)) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ENNReal).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
   apply Summable.of_nat_of_neg_add_one
   · refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun n => ?_)
       (lpOneAlg.summable_norm b)
-    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, ite_eq_left (by omega), Int.toNat_natCast,
+    rw [ScaledRealZ.norm_equiv_apply, ite_eq_left (by omega), Int.toNat_natCast,
       Int.natAbs_natCast, lpOneAlg.norm_eq_abs_toReal_mul_weight b n,
-      BorderedScaledReal.norm_lpAlgRingData_ofReal, abs_one, one_mul, Real.norm_eq_abs]
+      WeightedScalar.fiberTrivialization_weight, Real.norm_eq_abs]
     exact mul_le_mul_of_nonneg_left (pow_le_borderedWeight ν n) (abs_nonneg _)
   · refine summable_zero.congr fun n => ?_
-    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, ite_eq_right (by omega), abs_zero, zero_mul]
+    rw [ScaledRealZ.norm_equiv_apply, ite_eq_right (by omega), abs_zero, zero_mul]
 
 /-- The bordered coefficients placed on the nonnegative bilateral modes. -/
 private def borderedEmbed (b : l1Bordered ν) : l1Chebyshev ν :=
-  ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
+  ⟨⟨fun k => FiberTrivialization.equiv (E := ScaledRealZ ν) k
       (if 0 ≤ k then lpOneAlg.toRealSeq b k.toNat else 0), borderedEmbed_memℓp b⟩⟩
 
 private theorem borderedEmbed_toSeq (b : l1Bordered ν) (k : ℤ) :
     toSeq (borderedEmbed b) k = if 0 ≤ k then lpOneAlg.toRealSeq b k.toNat else 0 :=
-  lpAlgRingData.toReal_ofReal k _
+  FiberTrivialization.equiv_symm_apply_equiv k _
 
 private theorem nonnegRestrict_borderedEmbed (b : l1Bordered ν) :
     nonnegRestrict (borderedEmbed b) = b := by

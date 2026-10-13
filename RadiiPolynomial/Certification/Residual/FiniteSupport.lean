@@ -38,7 +38,7 @@ theorem dense_lpOneAlg_finiteSupport :
     exact hks (he ▸ hm))
 
 variable {𝕜 ι : Type*} [NormedField 𝕜] [Fintype ι]
-variable [AddMonoid M] [DecidableEq M] [lpAlgRingData 𝕜 M E]
+variable [AddMonoid M] [DecidableEq M] [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]
 variable [lpOneAlgConvCompat 𝕜 M E]
 
 /-- An exact weighted `ℓ¹` Bézout identity has finite-support candidates with any

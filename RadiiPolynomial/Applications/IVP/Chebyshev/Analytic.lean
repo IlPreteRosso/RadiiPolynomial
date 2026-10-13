@@ -34,8 +34,8 @@ into the function-level statement: the IVP `u̇ = f(u)`, `u(-1) = p` has a solut
 **No analyticity is claimed in this file.** The conclusions are continuity on `[-1, 1]`,
 the one-sided derivative on `[-1, 1)` (`IsSolution.solves`) and the two-sided derivative on
 `(-1, 1)` (`x_sol_hasDerivAt`), plus uniqueness in the trajectory ball; continuity of the
-derivative is not stated. Taylor's `IsAnalyticSolution` / `analytic_existsUnique` names are
-deliberately *not* mirrored, and the `IsSolution` naming records the weaker claim.
+derivative is not stated. Taylor's `analytic_existsUnique` name is deliberately *not*
+mirrored, and the `IsSolution` naming records that no analyticity is claimed.
 Analyticity of the canonical solution for `1 < ν` is proved separately, in
 `Chebyshev/Analyticity.lean` (`analyticOnNhd_x_sol`), which imports this file.
 -/
@@ -83,8 +83,7 @@ lemma G_toSeq_natCast (a : XCheb ν L) (l : Fin L) (n : ℕ) :
     l1Chebyshev.toSeq (d.G φ p a l) (↑n : ℤ)
       = d.approxInverse.action (chebyshevIvpCoeffs φ p a) l n := by
   show lpOneAlg.toRealSeq (d.G φ p a l) (↑n : ℤ) = _
-  simp [lpOneAlg.toRealSeq, G, chebyshevIvpMap, embedWithPassThrough,
-    lpAlgRingData.toReal_ofReal]
+  exact FiberTrivialization.equiv_symm_apply_equiv (E := ScaledRealZ ν) _ _
 
 /-- Negative modes of `G(a)` are those of `a` (`embedWithPassThrough`): the IVP equations
 do not constrain them. -/

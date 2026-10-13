@@ -42,12 +42,12 @@ private lemma summable_shift_fibers (a : l1Chebyshev ν) :
   (summable_nonneg_fibers a).comp_injective (fun n m h => by simpa using h)
 
 private lemma symmetrizeSeq_norm (a : l1Chebyshev ν) (k : ℤ) :
-    ‖lpAlgRingData.ofReal (E := ScaledRealZ ν) k (toSeq a (k.natAbs : ℤ))‖
+    ‖FiberTrivialization.equiv (E := ScaledRealZ ν) k (toSeq a (k.natAbs : ℤ))‖
       = |toSeq a (k.natAbs : ℤ)| * (ν : ℝ) ^ k.natAbs := by
   simp
 
 private lemma symmetrize_memℓp (a : l1Chebyshev ν) :
-    Memℓp (fun k : ℤ => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
+    Memℓp (fun k : ℤ => FiberTrivialization.equiv (E := ScaledRealZ ν) k
       (toSeq a (k.natAbs : ℤ))) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
@@ -63,12 +63,12 @@ private lemma symmetrize_memℓp (a : l1Chebyshev ν) :
 /-- Symmetrization `(symmetrize a)_k = a_{|k|}`: symmetric output, reads only
 non-negative input modes. `‖symmetrize a‖ ≤ 2‖a‖` (`symmetrize_norm_le`). -/
 def symmetrize (a : l1Chebyshev ν) : l1Chebyshev ν :=
-  ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k (toSeq a (k.natAbs : ℤ)),
+  ⟨⟨fun k => FiberTrivialization.equiv (E := ScaledRealZ ν) k (toSeq a (k.natAbs : ℤ)),
     symmetrize_memℓp a⟩⟩
 
 @[simp] lemma symmetrize_toSeq (a : l1Chebyshev ν) (k : ℤ) :
     toSeq (symmetrize a) k = toSeq a (k.natAbs : ℤ) :=
-  lpAlgRingData.toReal_ofReal k _
+  FiberTrivialization.equiv_symm_apply_equiv k _
 
 lemma symmetrize_add (a b : l1Chebyshev ν) :
     symmetrize (a + b) = symmetrize a + symmetrize b := by
@@ -215,26 +215,26 @@ section NatEmbed
 
 /-- The ℕ-supported coefficient family has finite bilateral weighted norm. -/
 private theorem natEmbed_memℓp (a : l1Weighted ν) :
-    Memℓp (fun k : ℤ => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
+    Memℓp (fun k : ℤ => FiberTrivialization.equiv (E := ScaledRealZ ν) k
       (if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0)) 1 := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ENNReal).toReal)]
   simp only [ENNReal.toReal_one, Real.rpow_one]
   apply Summable.of_nat_of_neg_add_one
   · refine (l1Weighted.summable_weighted a).congr fun n => ?_
-    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, ite_eq_left (by omega), Int.toNat_natCast,
+    rw [ScaledRealZ.norm_equiv_apply, ite_eq_left (by omega), Int.toNat_natCast,
       Int.natAbs_natCast]
   · refine summable_zero.congr fun n => ?_
-    rw [ScaledRealZ.norm_lpAlgRingData_ofReal, ite_eq_right (by omega), abs_zero, zero_mul]
+    rw [ScaledRealZ.norm_equiv_apply, ite_eq_right (by omega), abs_zero, zero_mul]
 
 /-- The ℕ-supported embedding as an element (`natEmbed` is its linear map). -/
 private def natEmbedFun (a : l1Weighted ν) : l1Chebyshev ν :=
-  ⟨⟨fun k => lpAlgRingData.ofReal (E := ScaledRealZ ν) k
+  ⟨⟨fun k => FiberTrivialization.equiv (E := ScaledRealZ ν) k
       (if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0), natEmbed_memℓp a⟩⟩
 
 /-- Coefficients of `natEmbedFun`. -/
 private theorem natEmbedFun_toSeq (a : l1Weighted ν) (k : ℤ) :
     toSeq (natEmbedFun a) k = if 0 ≤ k then l1Weighted.toSeq a k.toNat else 0 :=
-  lpAlgRingData.toReal_ofReal k _
+  FiberTrivialization.equiv_symm_apply_equiv k _
 
 /-- `natEmbedFun` preserves the norm. -/
 private theorem norm_natEmbedFun (a : l1Weighted ν) : ‖natEmbedFun a‖ = ‖a‖ := by

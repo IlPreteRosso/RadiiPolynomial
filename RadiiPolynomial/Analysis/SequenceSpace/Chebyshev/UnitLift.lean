@@ -72,7 +72,7 @@ rewritten against the fiber weights of `geomFiberZ 𝕜 ν` — the form the
 algebra lift consumes. -/
 theorem unit_zpow_le_weight (u : Bˣ) (C : ℝ)
     (hu : ∀ k : ℤ, ‖((u ^ k : Bˣ) : B)‖ ≤ C * (ν : ℝ) ^ k.natAbs) (k : ℤ) :
-    ‖((u ^ k : Bˣ) : B)‖ ≤ C * ‖lpAlgRingData.ofReal (E := geomFiberZ 𝕜 ν) k (1 : 𝕜)‖ := by
+    ‖((u ^ k : Bˣ) : B)‖ ≤ C * FiberTrivialization.weight (E := geomFiberZ 𝕜 ν) k := by
   rw [geomFiberZ_weight]
   exact hu k
 

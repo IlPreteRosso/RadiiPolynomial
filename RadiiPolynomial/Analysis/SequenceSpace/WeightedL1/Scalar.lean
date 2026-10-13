@@ -60,8 +60,8 @@ class SubMulWeightBase {M : Type*} [AddCommMonoid M] (w : M → ℝ) extends Pos
 /-- Submultiplicative weight with weight ≥ 1 (extends SubMulWeightBase + SuperUnitWeight).
 The bound `w ≥ 1` is not needed for the ring structure, even on a general `M` with infinite
 fibers (submultiplicativity and a complete scalar field suffice,
-`lpOneAlg.instConvCompatOfWeightMul`); it gives the embedding into unweighted ℓ¹
-(`lpOneAlg.abs_toRealSeq_le`, through `WeightedScalar.instLpOneAlgWeightSubMul`). -/
+`lpOneAlg.instConvCompatOfWeightMul`); it gives the embedding into unweighted ℓ¹ (the
+hypothesis of `lpOneAlg.abs_toRealSeq_le`, through `WeightedScalar.instLpOneAlgWeightSubMul`). -/
 class SubMulWeight {M : Type*} [AddCommMonoid M] (w : M → ℝ)
     extends SubMulWeightBase w, SuperUnitWeight w
 
@@ -112,8 +112,12 @@ lemma equiv_toAddEquiv : (equiv : 𝕜 ≃ₗ[𝕜] WeightedScalar 𝕜 w m).toA
 @[simp] lemma equiv_symm_apply (x : WeightedScalar 𝕜 w m) :
     (equiv : 𝕜 ≃ₗ[𝕜] WeightedScalar 𝕜 w m).symm x = toReal x := rfl
 
+/-- The round trip `θ_m⁻¹ (θ_m r) = r` in the simp normal form of `equiv_apply` and
+`equiv_symm_apply`. -/
+@[simp] lemma toReal_ofReal (r : 𝕜) : toReal (ofReal r : WeightedScalar 𝕜 w m) = r := rfl
+
 -- No coe_*/toReal_apply simp lemmas (retired at 35f292a);
--- use equiv_apply, equiv_symm_apply, norm_def.
+-- use equiv_apply, equiv_symm_apply, toReal_ofReal, norm_def.
 
 /-! ### Weighted Norm -/
 
@@ -123,28 +127,6 @@ instance instNorm : Norm (WeightedScalar 𝕜 w m) where
 lemma norm_def (x : WeightedScalar 𝕜 w m) : ‖x‖ = ‖toReal x‖ * w m := rfl
 
 @[simp] lemma norm_ofReal (r : 𝕜) : ‖(ofReal r : WeightedScalar 𝕜 w m)‖ = ‖r‖ * w m := rfl
-
-/-- Standard-model form of the scaling identity `‖ofReal r‖ = ‖r‖ * ‖ofReal 1‖`: the
-`WeightedScalar.ofReal` spelling of the generic face `lpAlgRingData.norm_ofReal_eq`. -/
-lemma norm_ofReal_eq_mul_norm_one (r : 𝕜) :
-    ‖(ofReal r : WeightedScalar 𝕜 w m)‖ = ‖r‖ * ‖(ofReal 1 : WeightedScalar 𝕜 w m)‖ := by
-  show ‖r‖ * w m = ‖r‖ * (‖(1 : 𝕜)‖ * w m); rw [norm_one, one_mul]
-
-/-- Standard-model form of the (derived) two-scalar Beurling inequality
-`‖a*b‖ * w(j+l) ≤ (‖a‖*w j) * (‖b‖*w l)`: the `WeightedScalar.ofReal` spelling of the generic
-face `lpOneAlgWeightMul.norm_ofReal_mul_le`. -/
-lemma norm_ofReal_mul_le [AddCommMonoid M] [SubMulWeightBase w] (j l : M) (a b : 𝕜) :
-    ‖(ofReal (a * b) : WeightedScalar 𝕜 w (j + l))‖ ≤
-    ‖(ofReal a : WeightedScalar 𝕜 w j)‖ * ‖(ofReal b : WeightedScalar 𝕜 w l)‖ := by
-  simp only [norm_ofReal, norm_mul]
-  exact (mul_le_mul_of_nonneg_left (SubMulWeightBase.submul j l)
-    (mul_nonneg (norm_nonneg _) (norm_nonneg _))).trans_eq (by ring)
-
-/-- Standard-model form of the (derived) bound `1 ≤ ‖ofReal 1‖`, i.e. `1 ≤ w m`: the
-`WeightedScalar.ofReal` spelling of the generic face `lpOneAlgWeightSubMul.norm_ofReal_one_ge`. -/
-lemma norm_ofReal_one_ge [AddCommMonoid M] [SubMulWeight w] (m : M) :
-    1 ≤ ‖(ofReal 1 : WeightedScalar 𝕜 w m)‖ := by
-  simp only [norm_ofReal, norm_one, one_mul]; exact SuperUnitWeight.one_le m
 
 @[simp] lemma norm_zero' : ‖(0 : WeightedScalar 𝕜 w m)‖ = 0 := by
   show ‖(0 : 𝕜)‖ * w m = 0; rw [norm_zero, zero_mul]

@@ -275,9 +275,9 @@ lemma ScalarBlockDiagData.toScalarCLM_toSeq_fin_eq_cauchy
       if (j : ℕ) ≤ i then a_seq ((i : ℕ) - (j : ℕ)) else 0)
     (x : l1Weighted ν) (n : ℕ) (hn : n ≤ N) :
     l1Weighted.toSeq (A.toScalarCLM (ν := ν) x) n =
-    CauchyProduct a_seq (l1Weighted.toSeq x) n := by
+    cauchyProduct a_seq (l1Weighted.toSeq x) n := by
   rw [A.toScalarCLM_toSeq_fin (ν := ν) x ⟨n, Nat.lt_succ_of_le hn⟩]
-  rw [CauchyProduct.apply_range]
+  rw [cauchyProduct.apply_range]
   -- LHS: ∑ k : Fin(N+1), (if k≤n then a(n-k) else 0) * x(k)
   -- RHS: ∑ j ∈ range(n+1), a(n-j) * x(j)
   simp_rw [hfin]
