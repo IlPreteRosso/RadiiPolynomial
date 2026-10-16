@@ -2374,3 +2374,8 @@ new lemmas; `action_comp_finite` and `action_fin_eq_sum_mulVec` stay (callers in
 - The C15 T-4 row (`tests/FT/FiberTrivializationProbes.lean`) stands; E1 rewrote the file's contents for the new
   contract.
 
+
+## PLANNED (deferred; logged 2026-10-15 on the user's instruction — executes with the ℓ^p/ℓ² revamp, not before)
+| old | new | file | step | reason |
+|---|---|---|---|---|
+| `l1Weighted.evalContinuousAlgHom` (+ `_apply`, `_gen`, `_comp_radiusRestrict` faces) | the lift face `l1Weighted.aeval_of_norm_le ν z hz` / `evalC` (C = 1 evaluation through `liftAlgHom → geomAeval → geomAeval_of_norm_le`) | `Analysis/SequenceSpace/Geometric/Evaluation.lean:301` (def; multiplicativity by Mertens) | revamp (WeightedLp/ℓ² adoption) | OLDER ARROW that does not factor through the lift. `Aeval.lean:367–371` (`aeval_eq_evalContinuousAlgHom`) proves it EQUAL to the lift face by uniqueness on the generator, so retiring it is a re-route, not a statement change. Consumers to re-route: `Applications/IVP/Taylor/Boundary.lean:22` (`taylorBoundaryCharacter`), `Applications/IVP/Chebyshev/Boundary.lean`, `CrossGeometry/Joukowski.lean` (:373, :393, :542, :561), `CrossGeometry/ChebyshevTaylor.lean` (:121–133), `Geometric/RadiusRestriction.lean`, `Geometric/EvalC.lean:68` (the bridge itself). Keep the bridge theorem as the migration witness until the last consumer moves; then RETIRE with the replacement named here. Model of the target shape: `Applications/IVP/Taylor/ComplexTime.lean:29–33` `complexEval_evalBanach = CompPoly.map_evalBanach (evalC ν z hz).toAlgHom p a` → `Examples/IVP/Taylor/Example83/ComplexTime.lean:38` `lorenz_complex_ivp`. User's words (2026-10-15): "this should be logged as deprecate when we revamp the codebase to include lp Mul and l2 stuff". |
