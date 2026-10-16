@@ -173,19 +173,53 @@ theorem analytic_solution_unique
     (fun t ht => ⟨h_eval_solves t ht, hf_in_R t ht⟩)
     (by rw [hg_init, h_eval_init])
 
+/-- **Per-component trajectory bound.** On the closed interval `|t| ≤ ν` the `l`-th
+component of the trajectory `t ↦ (eval(a_l, t))_l` is bounded by the weighted norm `‖a_l‖`
+of its own coefficient sequence (`l1Weighted.abs_eval_le`). The box face
+`eval_traj_in_box` and the sup-norm ball face `eval_traj_in_closedBall` are its two
+packagings. -/
+lemma abs_eval_traj_le (a : XL1 ν L) {t : ℝ} (ht : |t| ≤ (ν : ℝ)) (l : Fin L) :
+    |l1Weighted.eval (a l) t| ≤ ‖a l‖ :=
+  l1Weighted.abs_eval_le (a l) ht
+
+/-- **Box face of the trajectory bound.** On `|t| ≤ ν` the trajectory
+`t ↦ (eval(a_l, t))_l` stays in the coordinate box `∏_l [-‖a_l‖, ‖a_l‖]`, one radius per
+component. It keeps the per-component information that the sup-norm ball
+`eval_traj_in_closedBall` (radius `‖a‖ = max_l ‖a_l‖`) discards; the box lies inside that
+ball, so it refines the enclosure without touching the uniqueness side of
+`analytic_solution_unique`. -/
+lemma eval_traj_in_box (a : XL1 ν L) {t : ℝ} (ht : |t| ≤ (ν : ℝ)) :
+    (fun l => l1Weighted.eval (a l) t) ∈
+      Set.pi Set.univ fun l => Metric.closedBall (0 : ℝ) ‖a l‖ :=
+  Set.mem_univ_pi.mpr fun l => by
+    rw [Metric.mem_closedBall, dist_zero_right, Real.norm_eq_abs]
+    exact abs_eval_traj_le a ht l
+
+/-- **Box face around a certified centre.** If `a` lies in the closed ball of radius `r`
+around `ā` (the radii-polynomial output `xTilde ∈ closedBall ā r₀`), then on `|t| ≤ ν` the
+trajectory of `a` stays in the box `∏_l [-(‖ā_l‖ + r), ‖ā_l‖ + r]`: each component keeps
+its own centre norm `‖ā_l‖`, where the ball face charges every component `‖ā‖ + r`. -/
+lemma eval_traj_in_box_of_mem_closedBall {a abar : XL1 ν L} {r : ℝ}
+    (ha : a ∈ Metric.closedBall abar r) {t : ℝ} (ht : |t| ≤ (ν : ℝ)) :
+    (fun l => l1Weighted.eval (a l) t) ∈
+      Set.pi Set.univ fun l => Metric.closedBall (0 : ℝ) (‖abar l‖ + r) := by
+  refine Set.pi_mono (fun l _ => ?_) (eval_traj_in_box a ht)
+  exact Metric.closedBall_subset_closedBall ((norm_le_insert' (a l) (abar l)).trans
+    (add_le_add le_rfl ((norm_le_pi_norm (a - abar) l).trans (mem_closedBall_iff_norm.mp ha))))
+
 /-- The pointwise trajectory `t ↦ (eval(a_l, t))_l` of an `XL1` element stays
 within the closed ball of radius `‖a‖` (the XL1 sup-of-ℓ¹ norm) on the closed interval
 `|t| ≤ ν`. Used to discharge the trajectory hypothesis `hf_in_R` in
 `analytic_solution_unique`: take `R = ‖a‖`, or any larger value.
 
 For any `xTilde ∈ closedBall ā r₀` from the radii polynomial, this gives the
-explicit trajectory radius `R = ‖ā‖ + r₀` via the triangle inequality. -/
+explicit trajectory radius `R = ‖ā‖ + r₀` via the triangle inequality. Corollary of the
+per-component bound `abs_eval_traj_le`; the box faces `eval_traj_in_box` and
+`eval_traj_in_box_of_mem_closedBall` keep one radius per component. -/
 lemma eval_traj_in_closedBall (a : XL1 ν L) {t : ℝ} (ht : |t| ≤ (ν : ℝ)) :
     (fun l => l1Weighted.eval (a l) t) ∈ Metric.closedBall (0 : Fin L → ℝ) ‖a‖ := by
   rw [Metric.mem_closedBall, dist_zero_right, pi_norm_le_iff_of_nonneg (norm_nonneg _)]
-  intro l
-  show |l1Weighted.eval (a l) t| ≤ ‖a‖
-  exact (l1Weighted.abs_eval_le (a l) ht).trans (norm_le_pi_norm a l)
+  exact fun l => (abs_eval_traj_le a ht l).trans (norm_le_pi_norm a l)
 
 /-- The derivative of a `CompPoly` component of `banachField` at any point `a`, as a sum of
 left multiplications by the partial derivatives evaluated at `a`. -/
