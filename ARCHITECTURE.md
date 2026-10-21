@@ -235,9 +235,9 @@ its NormedField construction/coordinate laws. It does not consume the exact-atta
 support are proved in the frozen records and parked from the shipped API. Their exact source,
 elaborated types and axiom references remain recoverable; parking is not loss of proof history.
 
-The generic `invWeightSeq`, `norm_apply_invWeightSeq` and necessary `norm_equiv_inv_weight`
-support move, with unchanged FQNs and RCLike hypotheses, to LiftBound before its infinite-index
-boundary. They serve that independently checked boundary, not a new p=∞ production consumer.
+The reciprocal-weight witnesses are the generic `invWeightSeq`, `norm_apply_invWeightSeq` and necessary
+`norm_equiv_inv_weight` (unchanged FQNs, RCLike hypotheses). At M1-PARK the reciprocal-weight witnesses moved to LiftBound.
+B5 subsequently staged them in `B5RecordFiniteSynthesisP2` (staged record: `exterior/api_v2/probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean`); they are not part of the current shipped interface.
 The unused `invWeightSeq_apply` and `coeff_invWeightSeq` coordinate views are parked. The
 production upper-bound Fourier route and U37a's kernel-column migration are unchanged. The exact source, type and execution records are under the local campaign’s
 `codex/W2_INTEGRATION_v1/M1_PARK_v1/` evidence directory.
@@ -263,7 +263,7 @@ acceptance, source-generation and declaration-disposition facts.
 
 Chebyshev boundary-character separation, local physical determination and the specific reverse-map
 injectivity exit are also in that recovery record. The bounded coefficient map
-`CrossGeometry.chebyshevToTaylorCLM` remains shipped. Additional character and inverse-map laws
+`CrossGeometry.chebyshevToTaylorCLM` is staged in the Joukowski cross-geometry record, at `exterior/api_v2/probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean`. Additional character and inverse-map laws
 are recovered by `B5RecordJoukowski` and `B5RecordPhysicalSpectrum`; their presence in recovery
 does not add them to the shipped interface.
 

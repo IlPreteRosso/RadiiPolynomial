@@ -15,10 +15,11 @@ RadiiPolynomial/
     Analysis/                    -- weighted sequence spaces, evaluation, and calculus
     Core/                        -- abstract theorem and canonical bounds
     Operators/                   -- finite matrices and finite-plus-tail block operators
-    Certification/               -- witness reductions, the LeanCert adapter, residual correction
-                                    (Residual/), and the IVP/, PowerSeries/, Rational/ certificate faces
-    Tactic/                      -- auto_poly_fderiv, pderiv_simp, compPolyOf%, finmatrix_bound
-    Applications/IVP/            -- shared vector field (VectorField.lean) and split boundary (Boundary.lean);
+    Certification/               -- witness reductions, the LeanCert adapter, and the IVP/, PowerSeries/,
+                                    Rational/ certificate faces (residual correction, formerly Residual/, is staged in
+                                    exterior/api_v2/probes/records/B5_universal_api_retirement/staged/B5RecordResidualP{1,2}.lean)
+    Tactic/                      -- finmatrix_bound (pderiv_simp: B4/U34, RENAMES B4; auto_poly_fderiv and compPolyOf%: B5; all three retired)
+    Applications/IVP/            -- shared vector field (VectorField.lean); the split boundary `IVP.SplitBoundary` (formerly Boundary.lean) is staged (staged record: `exterior/api_v2/probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean`);
       Taylor/                    --   Taylor IVP operator, theorem, Jacobian, and analytic bridge
       Chebyshev/                 --   Chebyshev IVP operator and block-diagonal realization
     Applications/PowerSeries/    -- polynomial zeros on l1_nu (operators, bounds, affine Z2 transition)
@@ -30,7 +31,7 @@ RadiiPolynomial/
 
 **Theorem hierarchy:**
 - `general_radii_polynomial_theorem` (Thm 7.6.2) — abstract, any Banach space zero-finding
-- `ivp_system_theorem` (Thm 8.2.2) — book-faithful global IVP theorem, a corollary of the ball-local `ivp_system_theorem_local` (neither is used by the examples; kept for reference)
+- `ivp_system_theorem` (Thm 8.2.2, book-faithful global IVP theorem) and its ball-local form `ivp_system_theorem_local` — retired at the API-v2 merge (B5 DELETE, no staged record; neither was used by the examples)
 - `chebyshev_system_theorem` — system IVP specialization (Chebyshev), calls 7.6.2
 - Example77 uses 7.6.2 directly (parameterized zero-finding, NOT an IVP)
 - Example81/83 use `StdIVPData.existsUnique` which calls 7.6.2 directly (not 8.2.2)
@@ -80,7 +81,7 @@ Also: `ext` on `l1Weighted` CLMs goes too deep into `ScaledReal` — always use 
 
 For example certificate constants, use the `CompPoly` bounds rather than proving an ad hoc degree bound by structural decomposition. Norm, Lipschitz and derivative constants are read off the `CompPoly` syntax (`normBound`, `lipschitzBound`, `derivativeBound`; UBIQUITOUS_LANGUAGE "Bounds from syntax"). Where a consequence must still be checked directly:
 - `simp` with `pderiv_X`, `pderiv_mul`, `pderiv_C_mul` reduces iterated pderivs to constants
-- `auto_poly_fderiv` handles the Banach-space fderiv layer
+- the Banach-space fderiv macro `auto_poly_fderiv` is retired at the API-v2 merge (RENAMES B5: polynomial derivative macros)
 
 ### tsum subtype performance
 
@@ -88,7 +89,7 @@ Lean's elaborator blows up (800k+ heartbeats) checking definitional equality thr
 
 - Use `tsum_of_norm_bounded hg.hasSum (fun ab => ...)` instead of `norm_tsum_le_tsum_norm`
 - Use `refine (...).trans ?_` instead of `calc` blocks
-- Prove `summable_norm_shift` at the generic lpOneAlg level where `||f m||` is opaque
+- Prove shift-summability facts at the generic lpOneAlg level where `||f m||` is opaque (the former `lpOneAlg.summable_norm_shift` is retired, B5 DELETE)
 - Provide `Summable` witnesses as separate `have` statements — avoid chaining `.add`, `.const_smul` in one expression
 
 ### Equiv.tsum_eq needs type annotation
@@ -105,7 +106,7 @@ have ht1 : sum' k : Z, ||c (k + 1)|| = sum' k : Z, ||c k|| :=
 
 When there's friction in proofs (rw can't match, type mismatch between abbrevs), resolve by creating a better API lemma rather than inlining `show`, `change`, `conv`. A clean API lemma is reusable and makes downstream proofs simpler.
 
-Do not put ad hoc example-specific facts into the library API. If the fact only exists because one certificate has a particular finite case or numeral, keep the cleanup local/private at the proof site. For example, `MvPolynomial.C_ofNat_eq` is a general bridge, but a global `C_two_eq` lemma is too narrow; use `rw [MvPolynomial.C_ofNat_eq]` locally when a proof reduces to a concrete `C 2` normalization.
+Do not put ad hoc example-specific facts into the library API. If the fact only exists because one certificate has a particular finite case or numeral, keep the cleanup local/private at the proof site. For example, a global `C_two_eq` lemma is too narrow; normalize a concrete `C 2` locally at the proof site. (The general bridge `MvPolynomial.C_ofNat_eq` formerly cited here is retired at the API-v2 merge: A29 R-ELAB, executed DELETE with `Algebra/Polynomial/MvPolynomial/Core.lean`, superseding K14; RENAMES records no replacement.)
 
 For `Fin 1`, use `Subsingleton.elim l 0; subst` instead of `fin_cases l` to avoid `(fun i => i) {0, ...}` pattern mismatch.
 
@@ -146,9 +147,7 @@ finmatrix_bound
 finmatrix_bound
   (norm_toScalarCLM_le_of_Q A cols ν_q |tailCoeff| hcols hν htail)
 
--- System CLM norm: ‖A.toCLM‖ ≤ C
-finmatrix_bound
-  (norm_toCLM_le_of_Q A blockCols ν_q tailBound_q hcols hν htail)
+-- System CLM norm: the former bridge `norm_toCLM_le_of_Q` is retired (API-v2 merge, B5 DELETE; RENAMES records no replacement)
 ```
 
 The certificate provides: ℚ column arrays, `hcols` (ℝ entries = ℚ cast), `hν` (ℝ weight = ℚ cast).
@@ -158,7 +157,7 @@ When the goal bound involves ℝ division (e.g., `≤ (C : ℝ) / 2`), rewrite f
 ### Example-facing IVP interface
 
 An IVP example supplies only what it owns: the polynomial system `f_cpoly : Fin L → CompPoly L`, the initial condition, the numbers (candidate, finite blocks, rational bounds) and the radii inequality. It uses the `_of_compPoly` faces directly or through the family certificate checkers (`StdIVPData.existsUnique_of_compPoly`, `StdIVPData.composedApprox_eq_fderiv_G_fin_of_compPoly`, `StdChebIVPData.existsUnique_of_compPoly`; UBIQUITOUS_LANGUAGE "End-consumer interface"); the library derives differentiability, the Fréchet derivative and the symbolic Jacobian. `ivp_hDF_block_nat` is an internal step (`Applications/IVP/Taylor/Standard.lean`), not an example-facing API.
-For the Taylor finite-Jacobian bridge, the remaining example-specific obligation is the finite-block equality `hDF_nat` against `IVP.ivp_DF_of_Dφ_nat`; Examples 8.1 and 8.3 prove it with `native_decide`. The numerical bounds and radii inequality remain certificate obligations.
+The finite Jacobian remains a checked certificate obligation. Example 8.3 supplies `hDF_nat` by `native_decide` and uses `composedApprox_eq_fderiv_G_fin_of_compPoly`. Example 8.1 packages `ChecksDF` with `ChecksZ₁ker` in `z1_checks`, proved by `decide +kernel`, and consumes `Z₁ker_sound`. The numerical bounds and radii inequality remain certificate obligations.
 
 ## Reference book
 

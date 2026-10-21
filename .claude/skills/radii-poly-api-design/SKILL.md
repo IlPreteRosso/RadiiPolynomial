@@ -100,29 +100,29 @@ representations have no backwards-compatibility veto. Record authorized renames 
   infrastructure.
 - Reuse the Chebyshev `G = constG + TA(a) + TC(φ(a))` decomposition and derivative bridge.
   Use the shared split-boundary mechanism for return to the IVP.
-- Residual correction belongs to `Certification/Residual`: a residual norm bound below one
+- Residual correction is staged (formerly `Certification/Residual`; staged records: `exterior/api_v2/probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean`, `exterior/api_v2/probes/records/B5_universal_api_retirement/staged/B5RecordResidualP2.lean`): a residual norm bound below one
   gives the matching one-sided inverse, including in noncommutative rings. Finite-support completeness
   does not by itself provide rational candidates or an effective search. Spectral
   classification is separate from these certificate consumers.
-- Spectrum modules specialize `Gelfand.pointwiseTopology` through local instances;
+- The shared character topology `Gelfand.pointwiseTopology` and the spectrum modules that specialized it through local instances are staged (staged record: `exterior/api_v2/probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CharacterTopology.lean`);
   do not install a global topology on the character types.
 - Keep the external LeanCert package as a dependency. Put only project-specific bridges in
   `Certification/LeanCertAdapter.lean`; never copy LeanCert into this repository.
 
 ## Typeclasses And Mathlib Alignment
 
-Separate assumptions by mathematical strength (`SubMulWeightBase` versus `SubMulWeight`).
+Separate positivity, submultiplicativity and unit normalization (`PosWeight`, `SubMulWeightBase`, `NormalizedWeight`); keep any extraction lower bound explicit.
 Use `lpOneAlgConvCompat` for alternative convolution-summability witnesses behind one ring
 instance. Follow pinned Mathlib conventions; use `@[to_additive]` for faithful translations,
 protecting fiber/scalar parameters with `dont_translate` where needed.
 
 ## Polynomial And Certificate Automation
 
-Use the existing `compPolyOf%`, `pderiv_simp`, and `auto_poly_fderiv` where supported;
+The `compPolyOf%` reification and the polynomial derivative macros (`pderiv_simp`, `auto_poly_fderiv`) are retired (`pderiv_simp`: B4/U34, RENAMES B4; `auto_poly_fderiv` and the reifier: B5);
 use `decide +kernel` for exact finite identities where it is cheap and `native_decide` otherwise (accepted in certificates; see the Trust policy below), and `finmatrix_bound` for weighted matrix bounds.
 The current polynomial IVPs keep literal `f_cpoly` definitions. Examples 8.1 and 14.2.1
-use `f_cpoly_reified` as a `rfl` witness for the elaborator, outside the certificate's
-dependency path.
+no longer carry the `f_cpoly_reified` `rfl` witnesses (retired at the API-v2 merge: A29 R-ELAB,
+executed DELETE; they sat outside the certificate's dependency path).
 
 If automation cannot cross a representation boundary, add a reusable correctness bridge at
 the owning layer. Do not expose internal representations merely to make a certificate reduce.
@@ -137,7 +137,7 @@ algebraic cancellation to a quadratic polynomial does not make its syntactic bou
 Reuse the Taylor `StdIVPData.Z₁_le_of_compPoly` / `Z₂_le_of_compPoly` and Chebyshev
 `StdChebIVPData.Z₂_le_of_compPoly_max` faces. Per-example derivative or operator norm bounds
 remain inputs where needed. Chebyshev still needs its full Z₁ column/leakage calculation and
-a bound on `TC`; `norm_compPolyDerivative_le` bounds the nonlinearity's derivative, not Z₁.
+a bound on `TC`; a bound on the nonlinearity's derivative is not Z₁ (the former `norm_compPolyDerivative_le` is retired, B5 DELETE).
 
 ## Example Layers
 
@@ -183,15 +183,18 @@ compass, proportional re-entry check, scoped readback, PROPOSAL labels): `lean-a
 
 ## Project-Specific Lean Practice (2026-09-24, from the FILTER rounds; moved here from the universal set on Codex's review)
 
-- **ν-free ℚ records**: `StdIVPDataQ L N` (A_col, DF_col, abar_Q, ν_q, stored `habar_size`) with
-  `toStdIVPData q ν (hν : (ν:ℝ) = (q.ν_q:ℝ))`, default `toStd` from `0 < ν_q`, and the round trip
-  `toStdIVPData_ofStd … = d := rfl` as the replay hook; `Checks` on the ℚ record, per-slot soundness at every realization,
-  `certified_of_checks` derived from the override face `certified_of_bounds`.
+- **ν-free ℚ records:** `StdIVPDataQ L N` stores `A_col`, `DF_col`, `abar_Q`, `ν_q` and `habar_size`.
+  Realize it by `q.toStdIVPData ν hν` with the explicit positive weight and rational bridge. `ofStd`
+  forgets the real weight, and realization recovers the original data definitionally; its former named
+  round-trip lemma is retired (A29 R-ELAB, executed DELETE). Production retains the per-bound predicates
+  and soundness. The generated-only `TaylorCertQ`/`ChecksBy` contract and
+  `certified_of_bounds`/`certified_of_checksBy` are staged in
+  `exterior/api_v2/probes/records/B4_weight_and_generated_services/staged/U42bGeneratedContract.lean`.
 - **Radii-polynomial faces**: `_of_le` override slot per bound; `anchoredBound c ρ p` (product rule
   Aₚ|q(c)| + |p(c)|A_q + AₚA_qρ) for Z₂ — it matches the book's constants on 2.4.5/2.4.7/2.4.9, and on 2.4.8 with the exact inverse;
   three-layer local theorem (local fixed point → single-Z zero theorem → four-bound corollary; the
   four-bound layer cannot serve a single-Z statement: f(x) = x − (0.4/π) sin(πx)); Z = Z₀ + Z₂(r₀)r₀
-  for the direct-Jacobian form vs Z₀ + Z₁ + Z₂(r₀)r₀ for four bounds; `Enclosure`/`PairEnclosure`
+  for the direct-Jacobian form vs Z₀ + Z₁ + Z₂(r₀)r₀ for four bounds; `Enclosure`/`PairEnclosure` (the latter staged, staged record: `exterior/api_v2/probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean`)
   Prop records (IsUnit A derived by the finite-dim Neumann rung); EI face with `existenceInterval`
   = the anchored order-connected component of {r | radiiPolynomial … r < 0} and `def_2_4_4` as a
   forwarding definition.
