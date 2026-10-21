@@ -30,9 +30,6 @@ def mvPolyCoeff (p : MvPolynomial (Fin L) ℚ)
     mvPolyCoeff (MvPolynomial.C r) seqs n = if n = 0 then r else 0 := by
   simp [mvPolyCoeff, PowerSeries.coeff_C]
 
-@[simp] lemma mvPolyCoeff_zero (seqs : Fin L → ℕ → ℚ) (n : ℕ) :
-    mvPolyCoeff 0 seqs n = 0 := by
-  simp [mvPolyCoeff]
 
 @[simp] lemma mvPolyCoeff_X (i : Fin L) (seqs : Fin L → ℕ → ℚ) (n : ℕ) :
     mvPolyCoeff (MvPolynomial.X i) seqs n = seqs i n := by
@@ -59,17 +56,11 @@ def mvPolyCoeff (p : MvPolynomial (Fin L) ℚ)
       cauchyProduct (mvPolyCoeff p seqs) (mvPolyCoeff q seqs) n := by
   simp only [mvPolyCoeff, map_mul, cauchyProduct.apply, PowerSeries.coeff_mul]
 
-@[simp] lemma mvPolyCoeff_one (seqs : Fin L → ℕ → ℚ) (n : ℕ) :
-    mvPolyCoeff 1 seqs n = if n = 0 then 1 else 0 := by
-  rw [show (1 : MvPolynomial (Fin L) ℚ) = MvPolynomial.C 1 from by simp, mvPolyCoeff_C]
 
 @[simp] lemma mvPolyCoeff_X_fun (i : Fin L) (seqs : Fin L → ℕ → ℚ) :
     mvPolyCoeff (MvPolynomial.X i) seqs = seqs i :=
   funext (mvPolyCoeff_X i seqs)
 
-@[simp] lemma mvPolyCoeff_C_fun (r : ℚ) (seqs : Fin L → ℕ → ℚ) :
-    mvPolyCoeff (MvPolynomial.C r) seqs = fun n => if n = 0 then r else 0 :=
-  funext (mvPolyCoeff_C r seqs)
 
 @[simp] lemma mvPolyCoeff_C_mul (r : ℚ) (p : MvPolynomial (Fin L) ℚ)
     (seqs : Fin L → ℕ → ℚ) (n : ℕ) :

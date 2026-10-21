@@ -69,6 +69,16 @@ theorem abs_eval_le_norm_of_two_le (hν : (2 : ℝ) ≤ (ν : ℝ))
   rw [hzero] at hsplit
   linarith
 
+/-- At weights `ν ≥ 2`, the existing storage evaluator has operator norm at most `1`.
+This bound on the linear evaluator supplies no multiplication law on raw storage. -/
+theorem norm_evalAtCLM_le_of_two_le (hν : (2 : ℝ) ≤ (ν : ℝ))
+    (t : ℝ) (ht : |t| ≤ 1) :
+    ‖(evalAtCLM t ht : l1Chebyshev ν →L[ℝ] ℝ)‖ ≤ 1 :=
+  ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun a => by
+    change |eval a t| ≤ 1 * ‖a‖
+    rw [one_mul]
+    exact abs_eval_le_norm_of_two_le hν a ht
+
 end l1Chebyshev
 
 end RadiiPolynomial

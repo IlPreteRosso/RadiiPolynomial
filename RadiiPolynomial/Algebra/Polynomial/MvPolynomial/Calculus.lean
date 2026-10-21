@@ -21,23 +21,6 @@ open scoped BigOperators
 
 namespace MvPolynomial
 
-/-- Multivariate polynomials, viewed as functions on `σ → 𝕜`, are `C^n` for any `n`.
-Multivariate analogue of `Polynomial.contDiff_aeval`. -/
-lemma contDiff_aeval {σ R 𝕜 : Type*} [Fintype σ] [CommSemiring R]
-    [NontriviallyNormedField 𝕜] [Algebra R 𝕜]
-    (p : MvPolynomial σ R) (n : WithTop ℕ∞) :
-    ContDiff 𝕜 n (fun x : σ → 𝕜 => aeval x p) := by
-  induction p using MvPolynomial.induction_on with
-  | C r =>
-      simp only [aeval_C]
-      exact contDiff_const
-  | add p q ihp ihq =>
-      simp only [map_add]
-      exact ihp.add ihq
-  | mul_X p i ih =>
-      simp only [map_mul, aeval_X]
-      exact ih.mul
-        ((ContinuousLinearMap.proj (R := 𝕜) (φ := fun _ : σ => 𝕜) i).contDiff)
 
 section Differential
 

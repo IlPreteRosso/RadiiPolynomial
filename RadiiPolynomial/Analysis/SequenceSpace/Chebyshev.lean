@@ -8,8 +8,8 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Evaluation
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.SymmetricSubalgebra
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Galerkin
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.EvaluationBounds
-import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.AnalyticExt
-import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.LaurentSpectrum
+import Mathlib.Topology.Algebra.Algebra
+import Mathlib.Topology.ContinuousMap.Bounded.Normed
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided
 

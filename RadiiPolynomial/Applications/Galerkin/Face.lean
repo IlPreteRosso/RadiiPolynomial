@@ -21,8 +21,8 @@ The derivative difference is controlled by the centred majorant
 On the Galerkin space `E ν N L = Fin L → FνN ν N`, the componentwise lift `I` (the even padding
 `ιN`) and projection `Pi'` (the truncation `πN`) are contractions (`norm_I_le`, `norm_Pi'_le`; `I` is
 isometric, `norm_I_apply`) into and out of
-`(symmetricSubalgebra ν)^L`; `norm_fderiv_galerkinFace_sub_le` is the resulting `Z₂`-shaped
-bound `‖DF c − DF x̄‖ ≤ ‖Λ‖ M` on the ball `B̄_r(x̄)`.
+`(symmetricSubalgebra ν)^L`. Consumers instantiate the retained generic bound
+`norm_DpolyFace_sub_le` with these maps rather than a specialized Galerkin fderiv wrapper.
 -/
 
 noncomputable section
@@ -60,22 +60,6 @@ open l1Chebyshev
 
 variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] {N L : ℕ}
 
-/-- Subtype bridge to the bilateral face: on flip-fixed inputs the coercion of `gradCLM` is the
-stored-coefficient derivative `CompPoly.Chebyshev.derivative` of the bilateral algebra (whose
-symmetrization is then the identity). -/
-theorem coe_gradCLM (p : CompPoly L) (a h : Fin L → symmetricSubalgebra ν) :
-    ((CompPoly.gradCLM p a h : symmetricSubalgebra ν) : l1Chebyshev ν) =
-      CompPoly.Chebyshev.derivative p (fun i => (a i : l1Chebyshev ν))
-        (fun i => (h i : l1Chebyshev ν)) := by
-  rw [CompPoly.Chebyshev.derivative_apply, CompPoly.gradCLM_apply]
-  push_cast
-  refine Finset.sum_congr rfl fun i _ => ?_
-  rw [symmetrize_eq_self_of_isSymmetric _ (h i).2, CompPoly.Chebyshev.eval]
-  congr 1
-  refine (CompPoly.map_evalBanach (symmetricSubalgebra ν).val (p.pderiv i) a).trans ?_
-  congr 1
-  funext j
-  exact (symmetrize_eq_self_of_isSymmetric _ (a j).2).symm
 
 /-- The Galerkin space `E := (FνN)^L`. -/
 abbrev E (ν : PosReal) (N L : ℕ) := Fin L → FνN ν N
@@ -94,17 +78,7 @@ def Pi' : (Fin L → symmetricSubalgebra ν) →L[ℝ] E ν N L :=
 @[simp] theorem Pi'_apply (a : Fin L → symmetricSubalgebra ν) (l : Fin L) :
     (Pi' a : E ν N L) l = πN (a l) := rfl
 
-/-- The Galerkin map `Π ∘ (u ↦ (l ↦ (f l).evalBanach u)) ∘ I` on `E = (FνN)^L` has derivative
-`Π ∘ jacCLM f (I x) ∘ I`, with `jacCLM` the syntactic Jacobian on the flip-fixed algebra. -/
-theorem hasFDerivAt_galerkin (f : Fin L → CompPoly L) (x : E ν N L) :
-    HasFDerivAt (Pi' (N := N) ∘ (fun u l => (f l).evalBanach u) ∘ I)
-      ((Pi' (ν := ν) (N := N) (L := L)).comp ((CompPoly.jacCLM f (I x)).comp I)) x :=
-  hasFDerivAt_sandwich (R := symmetricSubalgebra ν) I Pi' f x
 
-theorem fderiv_galerkin (f : Fin L → CompPoly L) (x : E ν N L) :
-    fderiv ℝ (Pi' (N := N) ∘ (fun u l => (f l).evalBanach u) ∘ I) x =
-      (Pi' (ν := ν) (N := N) (L := L)).comp ((CompPoly.jacCLM f (I x)).comp I) :=
-  (hasFDerivAt_galerkin f x).fderiv
 
 end Derivative
 
@@ -124,7 +98,7 @@ theorem norm_gradCLM_sub_le_centred (p : CompPoly L) (a b : Fin L → R) (β δ 
   rw [sub_apply, CompPoly.gradCLM_apply, CompPoly.gradCLM_apply,
     ← Finset.sum_sub_distrib]
   simp_rw [← sub_mul]
-  refine (CompPoly.norm_sum_mul_pi_le _ h).trans (mul_le_mul_of_nonneg_right ?_ (norm_nonneg _))
+  refine (RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le _ h).trans (mul_le_mul_of_nonneg_right ?_ (norm_nonneg _))
   rw [CompPoly.derivativeCentredBound]
   exact Finset.sum_le_sum fun i _ => CompPoly.norm_evalBanach_sub_le_centred _ a b β δ hb hab
 
@@ -225,38 +199,7 @@ theorem norm_Pi'_le : ‖(Pi' : (Fin L → l1Chebyshev.symmetricSubalgebra ν) �
       exact (ContinuousLinearMap.le_of_opNorm_le _ norm_πN_le (a l)).trans
         ((one_mul _).le.trans (norm_le_pi_norm a l))
 
-/-- The Galerkin instance of the composite face:
-`F = L₀ + Λ ∘ Π ∘ (u ↦ (l ↦ (f l).evalBanach u)) ∘ I` on `E = (FνN)^L`, any `f`. -/
-theorem hasFDerivAt_galerkinFace {Z : Type*} [NormedAddCommGroup Z] [NormedSpace ℝ Z]
-    (L₀ Λ : E ν N L →L[ℝ] Z) (f : Fin L → CompPoly L) (x : E ν N L) :
-    HasFDerivAt (polyFace L₀ Λ Pi' I f)
-      (L₀ + Λ.comp (Pi'.comp ((CompPoly.jacCLM f (I x)).comp I))) x :=
-  hasFDerivAt_polyFace L₀ Λ Pi' I f x
 
-/-- The Galerkin instance on `E = (FνN)^L`: for `F = L₀ + Λ ∘ Π ∘ (u ↦ (l ↦ (f l).evalBanach u)) ∘ I`,
-any polynomial system `f` and radii `β ≥ ‖x̄ i‖`, `‖DF c − DF x̄‖ ≤ ‖Λ‖ M` on `B̄_r(x̄)`, where `M`
-dominates the centred majorants `derivativeCentredBound (f l) β r`.  No global Lipschitz
-hypothesis. -/
-theorem norm_fderiv_galerkinFace_sub_le [NeZero L] {Z : Type*} [NormedAddCommGroup Z]
-    [NormedSpace ℝ Z] (L₀ Λ : E ν N L →L[ℝ] Z) (f : Fin L → CompPoly L) {xBar : E ν N L} {r : ℝ}
-    {β : Fin L → ℝ} (hβ : ∀ i, ‖xBar i‖ ≤ β i) {M : ℝ}
-    (hM : ∀ l, CompPoly.derivativeCentredBound (f l) β (fun _ => r) ≤ M) :
-    ∀ c ∈ Metric.closedBall xBar r,
-      ‖fderiv ℝ (polyFace L₀ Λ Pi' I f) c - fderiv ℝ (polyFace L₀ Λ Pi' I f) xBar‖ ≤ ‖Λ‖ * M := by
-  intro c hc
-  rw [Metric.mem_closedBall, dist_eq_norm] at hc
-  have hb : ∀ i, ‖(I xBar : Fin L → l1Chebyshev.symmetricSubalgebra ν) i‖ ≤ β i := fun i => by
-    rw [I_apply, norm_ιN]; exact hβ i
-  have hcb : ∀ i, ‖(I c : Fin L → l1Chebyshev.symmetricSubalgebra ν) i - I xBar i‖ ≤
-      (fun _ => r) i := fun i => by
-    rw [I_apply, I_apply, ← map_sub, norm_ιN]; exact (norm_le_pi_norm (c - xBar) i).trans hc
-  have hM0 : 0 ≤ M := (norm_nonneg _).trans (norm_jacCLM_sub_le_centred f _ _ β _ hM hb hcb)
-  rw [(hasFDerivAt_polyFace L₀ Λ Pi' I f c).fderiv, (hasFDerivAt_polyFace L₀ Λ Pi' I f xBar).fderiv]
-  have h1 : ‖Λ‖ * ‖(Pi' : (Fin L → l1Chebyshev.symmetricSubalgebra ν) →L[ℝ] E ν N L)‖ ≤ ‖Λ‖ := by
-    simpa using mul_le_mul_of_nonneg_left (norm_Pi'_le (ν := ν) (N := N) (L := L)) (norm_nonneg Λ)
-  exact (norm_DpolyFace_sub_le L₀ Λ Pi' I f hM hb hcb).trans ((mul_le_mul
-    (mul_le_mul_of_nonneg_right h1 hM0) norm_I_le (norm_nonneg _)
-    (mul_nonneg (norm_nonneg _) hM0)).trans_eq (mul_one _))
 
 end Galerkin
 

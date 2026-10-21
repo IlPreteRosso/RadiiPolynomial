@@ -78,7 +78,7 @@ lemma StdIVPData.composedApprox_eq_fderiv_G_fin_of_compPoly
   d.composedApprox_eq_fderiv_G_fin
     (fun a l => (f_cpoly l).evalBanach a)
     (fun l => (f_cpoly l).toMvPoly) x₀
-    (fun a l => compPoly_evalBanach_eq_evalInBanach (f_cpoly l) a)
+    (fun a l => compPoly_evalBanach_eq_aeval (f_cpoly l) a)
     (fun l => differentiable_evalBanach_l1Weighted (f_cpoly l))
     (fun j m k => ((f_cpoly j).pderiv m).evalCoeff d.abar_Q k)
     (fun j m k => compPoly_Dφ_bridge f_cpoly

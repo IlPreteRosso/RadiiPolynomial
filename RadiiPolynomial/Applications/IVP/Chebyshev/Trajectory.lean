@@ -34,10 +34,9 @@ series termwise, so its zeros are read back the same way — the **integral-equa
   Lipschitz agrees on `[-1, 1]` with the trajectory, when the trajectory stays in the same
   ball (Mathlib's one-sided
   `ODE_solution_unique_of_mem_Icc_right`, the initial time being the endpoint `-1`);
-* `eval_traj_in_closedBall` — the trajectory radius `2‖a‖` (the factor 2 is the storage
-  convention `u_a = a₀ + 2∑ a_k T_k`, through `abs_eval_le_two_mul_norm`).
-* `eval_traj_in_closedBall_of_two_le` — at weights `ν ≥ 2`, evaluation is contractive
-  already on the production storage carrier, so the trajectory radius improves to `‖a‖`.
+* `eval_traj_in_closedBall_of_evalBound` — a proved uniform bound `C` for the existing
+  evaluation CLM gives trajectory radius `C‖a‖`. The polynomial sockets select `2` or,
+  at weights `ν ≥ 2`, `1`.
 
 The nonlinearity enters only through the hypothesis `hφ : u_{φ(a)_l}(t) = f(u(t))_l` on
 `[-1, 1]`. For coefficient and function interpretations of the same `CompPoly` system,
@@ -390,28 +389,25 @@ theorem solution_unique
     (fun t ht => hin t (Ico_subset_Icc_self ht))
     (by rw [hg_init]; exact (funext hinit).symm)
 
-/-- The trajectory of `a` stays in the closed ball of radius `2‖a‖` on `[-1, 1]`. The factor
-`2` is the storage convention `u_a = a₀ + 2∑ a_k T_k` (`abs_eval_le_two_mul_norm`); on
-symmetric elements it drops (`abs_eval_le_norm_of_isSymmetric`). -/
-lemma eval_traj_in_closedBall (a : XCheb ν L) {t : ℝ} (ht : t ∈ Icc (-1 : ℝ) 1) :
-    (fun l => l1Chebyshev.eval (a l) t) ∈ Metric.closedBall (0 : Fin L → ℝ) (2 * ‖a‖) := by
-  rw [Metric.mem_closedBall, dist_zero_right, pi_norm_le_iff_of_nonneg (by positivity)]
-  intro l
-  show |l1Chebyshev.eval (a l) t| ≤ 2 * ‖a‖
-  exact (l1Chebyshev.abs_eval_le_two_mul_norm (a l) (abs_le.mpr ht)).trans
-    (by linarith [norm_le_pi_norm a l])
-
-/-- At weights `ν ≥ 2`, the trajectory of `a` stays in the closed ball of radius
-`‖a‖` on `[-1, 1]`.  The production storage evaluation is contractive at these
-weights, so no factor `2` is needed. -/
-lemma eval_traj_in_closedBall_of_two_le (hν : (2 : ℝ) ≤ (ν : ℝ))
+/-- A proved uniform operator bound gives the trajectory radius `C‖a‖`.
+Only nonnegativity of `C` is needed; evaluation uses the existing raw-storage CLM. -/
+lemma eval_traj_in_closedBall_of_evalBound (C : NNReal)
+    (h_eval : ∀ (t : ℝ) (ht : |t| ≤ 1),
+      ‖(l1Chebyshev.evalAtCLM t ht : l1Chebyshev ν →L[ℝ] ℝ)‖ ≤ (C : ℝ))
     (a : XCheb ν L) {t : ℝ} (ht : t ∈ Icc (-1 : ℝ) 1) :
-    (fun l => l1Chebyshev.eval (a l) t) ∈ Metric.closedBall (0 : Fin L → ℝ) ‖a‖ := by
-  rw [Metric.mem_closedBall, dist_zero_right, pi_norm_le_iff_of_nonneg (norm_nonneg a)]
+    (fun l => l1Chebyshev.eval (a l) t) ∈
+      Metric.closedBall (0 : Fin L → ℝ) ((C : ℝ) * ‖a‖) := by
+  rw [Metric.mem_closedBall, dist_zero_right,
+    pi_norm_le_iff_of_nonneg (mul_nonneg C.coe_nonneg (norm_nonneg a))]
   intro l
-  show |l1Chebyshev.eval (a l) t| ≤ ‖a‖
-  exact (l1Chebyshev.abs_eval_le_norm_of_two_le hν (a l) (abs_le.mpr ht)).trans
-    (norm_le_pi_norm a l)
+  calc
+    ‖l1Chebyshev.eval (a l) t‖ =
+        ‖l1Chebyshev.evalAtCLM t (abs_le.mpr ht) (a l)‖ := rfl
+    _ ≤ ‖(l1Chebyshev.evalAtCLM t (abs_le.mpr ht) : l1Chebyshev ν →L[ℝ] ℝ)‖ * ‖a l‖ :=
+      (l1Chebyshev.evalAtCLM t (abs_le.mpr ht)).le_opNorm (a l)
+    _ ≤ (C : ℝ) * ‖a l‖ :=
+      mul_le_mul_of_nonneg_right (h_eval t (abs_le.mpr ht)) (norm_nonneg _)
+    _ ≤ (C : ℝ) * ‖a‖ := mul_le_mul_of_nonneg_left (norm_le_pi_norm a l) C.coe_nonneg
 
 end Bridge
 

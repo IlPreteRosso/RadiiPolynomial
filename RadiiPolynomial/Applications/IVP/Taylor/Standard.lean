@@ -295,11 +295,10 @@ lemma StdIVPData.composedApprox_eq_fderiv_G_fin
     (φ : XL1 ν L → Fin L → l1Weighted ν)
     (φ_spec : Fin L → MvPolynomial (Fin L) ℚ)
     (x₀ : Fin L → ℝ)
-    (hφ_eq : ∀ a l, φ a l = MvPolyBridge.evalInBanach (φ_spec l) a)
+    (hφ_eq : ∀ a l, φ a l = MvPolynomial.aeval a (φ_spec l))
     (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
     (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
-    (hDφ_Q : ∀ j m k, l1Weighted.toSeq (MvPolyBridge.evalInBanach
-      (MvPolynomial.pderiv (↑m) (φ_spec j)) d.abar) k = ((Dφ_Q j m k : ℚ) : ℝ))
+    (hDφ_Q : ∀ j m k, l1Weighted.toSeq (MvPolynomial.aeval d.abar (MvPolynomial.pderiv (↑m) (φ_spec j))) k = ((Dφ_Q j m k : ℚ) : ℝ))
     (hDF_nat : ∀ (j m : Fin L) (row col : Fin (N + 1)),
       (d.DF_col j m (col : ℕ)).getD (row : ℕ) 0 = ivp_DF_of_Dφ_nat Dφ_Q j m (row : ℕ) (col : ℕ))
     (h : XL1 ν L) (l : Fin L) (n : ℕ) (hn : n ≤ N) :

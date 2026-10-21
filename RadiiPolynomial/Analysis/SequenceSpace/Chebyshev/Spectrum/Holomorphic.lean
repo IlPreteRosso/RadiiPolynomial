@@ -54,39 +54,6 @@ theorem complexEval_ofReal (a : l1Chebyshev ν) (t : ℝ) :
   simp only [complexEval, l1Chebyshev.eval, Complex.ofReal_add, Complex.ofReal_mul,
     Complex.ofReal_ofNat, Complex.ofReal_tsum, chebyshev_eval_ofReal, Nat.cast_add, Nat.cast_one]
 
-/-- On the physical carrier the holomorphic realization is exactly the
-previously classified character; the bilateral series pairs into production's
-`a₀ + 2 Σ aₙ Tₙ` normalization. -/
-theorem complexEval_eq_ellipseCharacter (a : Physical ν) (w : Ellipse ν) :
-    complexEval ν a.val w.val = ellipseCharacter ν w a := by
-  let f : ℤ → ℂ := fun k => (toRealSeq a.val k : ℂ) *
-    (Chebyshev.T ℂ k.natAbs).eval w.val
-  have hs : Summable f := (summable_character_series ν w a).of_norm
-  have hp : Summable (fun n : ℕ => f (n : ℤ)) :=
-    hs.comp_injective (fun n m h => by omega)
-  have hn : Summable (fun n : ℕ => f (-((n : ℤ) + 1))) :=
-    hs.comp_injective (fun n m h => by omega)
-  have hpair : ∀ n : ℕ, f (-((n : ℤ) + 1)) = f ((n + 1 : ℕ) : ℤ) := by
-    intro n
-    dsimp only [f]
-    rw [a.property, Int.natAbs_neg]
-    congr 2
-  have hzero : f ((0 : ℕ) : ℤ) = (l1Chebyshev.toSeq a.val 0 : ℂ) := by
-    simp [f, Chebyshev.T_zero, l1Chebyshev.toSeq]
-  have hpos : ∀ n : ℕ, f ((n + 1 : ℕ) : ℤ) =
-      (l1Chebyshev.toSeq a.val ((n + 1 : ℕ) : ℤ) : ℂ) *
-        (Chebyshev.T ℂ (n + 1)).eval w.val := by
-    intro n
-    dsimp only [f]
-    rw [Int.natAbs_natCast]
-    simp only [l1Chebyshev.toSeq, Nat.cast_add, Nat.cast_one]
-  symm
-  rw [character_apply_eq_tsum]
-  change (∑' k : ℤ, f k) = complexEval ν a.val w.val
-  rw [tsum_of_nat_of_neg_add_one hp hn, hp.tsum_eq_zero_add,
-    hzero, tsum_congr hpair, tsum_congr hpos]
-  unfold complexEval
-  ring
 
 /-- The weighted coefficient norm uniformly dominates every polynomial
 term throughout the closed ellipse. -/
@@ -152,9 +119,5 @@ theorem analyticOnNhd_eval_Icc (hν : 1 < (ν : ℝ)) (a : l1Chebyshev ν) :
   exact analyticAt_eval_of_mem_openEllipse ν a t
     (real_mem_openEllipse ν hν t (abs_le.mpr ht))
 
-/-- The two endpoint analyticity statements are included explicitly. -/
-theorem analyticAt_eval_endpoints (hν : 1 < (ν : ℝ)) (a : l1Chebyshev ν) :
-    AnalyticAt ℝ (l1Chebyshev.eval a) (-1) ∧ AnalyticAt ℝ (l1Chebyshev.eval a) 1 := by
-  constructor <;> apply analyticOnNhd_eval_Icc ν hν a <;> constructor <;> norm_num
 
 end RadiiPolynomial.PhysicalSpectrum

@@ -5,51 +5,21 @@ import Mathlib.Analysis.Complex.Trigonometric
 /-!
 # The bilateral weighted algebra is free on a weight-dominated unit
 
-`lpOneAlg ℤ (geomFiberZ 𝕜 ν)` — the bilateral geometric carrier over any normed
-field `𝕜` (fiber `geomFiberZ` and its weight face `geomFiberZ_weight` in
-`Chebyshev/Scalar.lean`), whose `𝕜 = ℝ` instance is `l1Chebyshev ν` — receives exactly one
-continuous algebra homomorphism into a Banach algebra `B` for every unit
-`u : Bˣ` whose integer powers are dominated by the weight, `‖uᵏ‖ ≤ C ν^|k|`.
-The three faces of this universal property, with the doctrine erased at proof
-time (no exists-unique statements, no category theory):
+For a unit `u : Bˣ` whose integer powers satisfy `‖uᵏ‖ ≤ C ν^|k|`,
+`lpOneAlg.geomUnitLift` is the continuous algebra homomorphism from the bilateral geometric
+carrier. `geomUnitLift_apply`, `geomUnitLift_single`, `geomUnitLift_gen` and
+`norm_geomUnitLift_apply_le` specify its series, atom computation and bound.
+`bilateralAlgHom_ext` gives uniqueness from the generator, and `eq_geomUnitLift_gen`
+identifies every such homomorphism with the lift of its unit `genUnit`, using
+`norm_genUnit_zpow_le`.
 
-* introduction `lpOneAlg.geomUnitLift ν u C hu : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →A[𝕜] B`,
-  the algebra lift of the family `k ↦ uᵏ`, with `geomUnitLift_gen : e₁ ↦ u`,
-  `geomUnitLift_gen_inv : e₋₁ ↦ u⁻¹` and `norm_geomUnitLift_apply_le`;
-* uniqueness `lpOneAlg.bilateralAlgHom_ext` on the single generator `e₁`: the
-  value at `e₋₁` is forced, being the two-sided inverse of the value at `e₁`
-  (`e₁ * e₋₁ = 1`), and every other single is a power of one of the two;
-* completeness `lpOneAlg.eq_geomUnitLift_gen`: every continuous algebra
-  homomorphism out of the carrier is the lift of its generator value, read as
-  the unit `lpOneAlg.genUnit φ` (value `φ e₁`, inverse `φ e₋₁`), at the operator
-  norm of its underlying continuous linear map.
-
-Gate: `lpOneAlg.norm_genUnit_le` and `lpOneAlg.inv_le_norm_genUnit` pin the
-generator value of any continuous algebra homomorphism into a target with
-multiplicative norm to the closed annulus `ν⁻¹ ≤ ‖φ e₁‖ ≤ ν` — the half of
-the character classification the completeness face does not supply.
-
-Evaluation faces: `lpOneAlg.evalLaurent ν z hz` is the bilateral power
-evaluation `a ↦ ∑' k, aₖ zᵏ` at a point of the closed annulus
-`ν⁻¹ ≤ ‖z‖ ≤ ν`, and `l1Chebyshev.evalLaurentC ν z hz` is the same map out of
-the REAL carrier into `ℂ` (`𝕜 = ℝ`, `B = ℂ`; no complex carrier is built). On
-the unit circle `z = exp(iθ)`, symmetric coefficient sequences evaluate to
-real numbers (`l1Chebyshev.evalLaurentC_eq_re_of_isSymmetric`,
-`evalLaurentC_symmetrize_eq_re`) — reality is exactly what is proved here, and
-nothing more. Rewriting that real value as the cosine series
-`a₀ + 2∑ₖ aₖ cos kθ` uses the ℤ→ℕ tsum split in
-`l1Chebyshev.evalLaurentC_circle_eq_eval`, proved in `Chebyshev/Evaluation.lean`.
-The identity
-`evalLaurent z (symmetrize a) = re (evalLaurent z a)` is FALSE in general, because
-`symmetrize` is the `|k|`-fold, not `(a + reflect a) / 2`.
-
-Hygiene: `[Fact (1 ≤ (ν : ℝ))]` is exactly where the ring structure of the
-bilateral carrier demands it (the bilateral weight `ν^|k|` is submultiplicative
-for `ν ≥ 1`, `ScaledRealZ.pow_natAbs_add_le`; the converse is not proved here),
-plus the places where it is used mathematically — the unit circle lies in the
-annulus `[ν⁻¹, ν]` (`evalLaurentC_circle`), and `conj_evalLaurentC_of_isSymmetric`
-uses it to place `z⁻¹` in the annulus. The domination lemmas
-`unit_zpow_le_weight` / `norm_unit_zpow_le` carry no `Fact`.
+The shipped complex evaluation of the real carrier is `l1Chebyshev.evalLaurentC`, with
+`evalLaurentC_apply`, `evalLaurentC_single` and `norm_evalLaurentC_apply_le`.
+`evalLaurentC_circle` places the unit circle in the annulus when `1 ≤ ν`.
+The additional annulus classification inequalities, general Laurent evaluator and symmetry/
+reality laws belong to the recovery module `B5RecordLaurentSpectrum`. They are not the
+shipped universal-property surface. The retained domination lemmas `unit_zpow_le_weight`
+and `norm_unit_zpow_le` do not impose `Fact (1 ≤ ν)`.
 -/
 
 open scoped BigOperators
@@ -120,9 +90,6 @@ variable (u : Bˣ) (C : ℝ)
 theorem geomUnitLift_apply (a : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
     geomUnitLift (𝕜 := 𝕜) ν u C hu a = ∑' k : ℤ, toRealSeq a k • ((u ^ k : Bˣ) : B) := rfl
 
-theorem geomUnitLift_toContinuousLinearMap :
-    (geomUnitLift (𝕜 := 𝕜) ν u C hu).toContinuousLinearMap
-      = liftCLM (fun k : ℤ => ((u ^ k : Bˣ) : B)) C (unit_zpow_le_weight ν u C hu) := rfl
 
 /-- Computation face: the unit single at mode `k` goes to `uᵏ`. -/
 @[simp] theorem geomUnitLift_single (k : ℤ) :
@@ -133,10 +100,6 @@ theorem geomUnitLift_toContinuousLinearMap :
 theorem geomUnitLift_gen : geomUnitLift (𝕜 := 𝕜) ν u C hu (single 1 1) = (u : B) := by
   rw [geomUnitLift_single, zpow_one]
 
-/-- The co-generator `e₋₁` goes to `u⁻¹`. -/
-theorem geomUnitLift_gen_inv :
-    geomUnitLift (𝕜 := 𝕜) ν u C hu (single (-1) 1) = ((u⁻¹ : Bˣ) : B) := by
-  rw [geomUnitLift_single, zpow_neg_one]
 
 /-- Pointwise bound: `‖geomUnitLift (𝕜 := 𝕜) ν u C hu a‖ ≤ C ‖a‖`. -/
 theorem norm_geomUnitLift_apply_le (a : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
@@ -212,7 +175,7 @@ theorem norm_genUnit_zpow_le (φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →A[𝕜] 
       ≤ ‖φ.toContinuousLinearMap‖ * (ν : ℝ) ^ k.natAbs := by
   rw [← continuousAlgHom_single_zpow]
   have h := φ.toContinuousLinearMap.le_opNorm (single k 1)
-  rwa [norm_single_geomFiberZ, norm_one, one_mul] at h
+  rwa [lpOneAlg.norm_single, geomFiberZ_weight, norm_one, one_mul] at h
 
 variable [CompleteSpace B]
 
@@ -225,11 +188,6 @@ theorem eq_geomUnitLift_gen (φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →A[𝕜] B
     φ = geomUnitLift ν (genUnit ν φ) ‖φ.toContinuousLinearMap‖ (norm_genUnit_zpow_le ν φ) :=
   bilateralAlgHom_ext ν (by rw [geomUnitLift_gen, genUnit_val])
 
-/-- Existential form of `eq_geomUnitLift_gen`. -/
-theorem exists_eq_geomUnitLift (φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →A[𝕜] B) :
-    ∃ (u : Bˣ) (C : ℝ) (hu : ∀ k : ℤ, ‖((u ^ k : Bˣ) : B)‖ ≤ C * (ν : ℝ) ^ k.natAbs),
-      φ = geomUnitLift ν u C hu :=
-  ⟨_, _, _, eq_geomUnitLift_gen ν φ⟩
 
 end Completeness
 
@@ -241,36 +199,7 @@ variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] (ν 
   [Fact (1 ≤ (ν : ℝ))]
 variable {B : Type*} [NormedRing B] [NormOneClass B] [NormMulClass B] [NormedAlgebra 𝕜 B]
 
-/-- **Outer gate.** When the norm of the target is multiplicative, the image of
-the generator under any continuous algebra homomorphism out of the bilateral
-carrier satisfies `‖φ e₁‖ ≤ ν`: the nonnegative half of the weight domination
-`‖(φ e₁)ᵏ‖ ≤ ‖φ‖ ν^|k|` (`norm_genUnit_zpow_le`), read through the archimedean
-gate `le_of_forall_pow_le_mul_pow`. -/
-theorem norm_genUnit_le (φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →A[𝕜] B) :
-    ‖φ (single 1 1)‖ ≤ (ν : ℝ) :=
-  le_of_forall_pow_le_mul_pow ν.coe_pos fun n => by
-    have h := norm_genUnit_zpow_le ν φ (n : ℤ)
-    rwa [zpow_natCast, Units.val_pow_eq_pow_val, norm_pow, Int.natAbs_natCast,
-      genUnit_val] at h
 
-/-- **Inner gate.** Dually, `ν⁻¹ ≤ ‖φ e₁‖`: the negative half of the weight
-domination bounds the inverse `‖φ e₋₁‖ ≤ ν`, and `‖φ e₋₁‖ ‖φ e₁‖ = ‖1‖ = 1`
-inverts it. Together with `norm_genUnit_le` this pins the generator value to
-the closed annulus `ν⁻¹ ≤ ‖φ e₁‖ ≤ ν` — the half of the character
-classification that `eq_geomUnitLift_gen` does not give. -/
-theorem inv_le_norm_genUnit (φ : lpOneAlg ℤ (geomFiberZ 𝕜 ν) →A[𝕜] B) :
-    (ν : ℝ)⁻¹ ≤ ‖φ (single 1 1)‖ := by
-  have hlow : ‖(((genUnit ν φ)⁻¹ : Bˣ) : B)‖ ≤ (ν : ℝ) :=
-    le_of_forall_pow_le_mul_pow ν.coe_pos fun n => by
-      have h := norm_genUnit_zpow_le ν φ (-(n : ℤ))
-      rwa [zpow_neg, ← inv_zpow, zpow_natCast, Units.val_pow_eq_pow_val, norm_pow,
-        Int.natAbs_neg, Int.natAbs_natCast] at h
-  have hone : ‖(((genUnit ν φ)⁻¹ : Bˣ) : B)‖ * ‖φ (single 1 1)‖ = 1 := by
-    rw [← genUnit_val ν φ, ← norm_mul, ← Units.val_mul, inv_mul_cancel, Units.val_one,
-      norm_one]
-  refine le_of_mul_le_mul_left ?_ ν.coe_pos
-  rw [mul_inv_cancel₀ ν.coe_pos.ne', ← hone]
-  exact mul_le_mul_of_nonneg_right hlow (norm_nonneg _)
 
 end Gate
 
@@ -302,33 +231,12 @@ section EvalLaurent
 
 variable {𝕜 : Type*} [NormedField 𝕜] [CompleteSpace 𝕜] (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 
-/-- **Bilateral power evaluation** at a point `z` of the closed annulus
-`ν⁻¹ ≤ ‖z‖ ≤ ν`: the character `a ↦ ∑' k, aₖ zᵏ` of the bilateral carrier,
-`geomUnitLift` at the unit `z` with constant `1`. -/
-def evalLaurent (z : 𝕜) (hz : (ν : ℝ)⁻¹ ≤ ‖z‖ ∧ ‖z‖ ≤ (ν : ℝ)) :
-    lpOneAlg ℤ (geomFiberZ 𝕜 ν) →A[𝕜] 𝕜 :=
-  geomUnitLift ν (Units.mk0 z (ne_zero_of_annulus ν hz)) 1 (norm_annulus_zpow_le ν hz)
 
 variable (z : 𝕜) (hz : (ν : ℝ)⁻¹ ≤ ‖z‖ ∧ ‖z‖ ≤ (ν : ℝ))
 
-theorem evalLaurent_apply (a : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
-    evalLaurent ν z hz a = ∑' k : ℤ, toRealSeq a k * z ^ k := by
-  rw [evalLaurent, geomUnitLift_apply]
-  exact tsum_congr fun k => by
-    rw [Units.val_zpow_eq_zpow_val, Units.val_mk0, smul_eq_mul]
 
-@[simp] theorem evalLaurent_single (k : ℤ) : evalLaurent ν z hz (single k 1) = z ^ k := by
-  rw [evalLaurent, geomUnitLift_single, Units.val_zpow_eq_zpow_val, Units.val_mk0]
 
-/-- The generator `e₁` evaluates to `z`. -/
-theorem evalLaurent_gen : evalLaurent ν z hz (single 1 1) = z := by
-  rw [evalLaurent_single, zpow_one]
 
-/-- Contractivity of the Laurent evaluation on the annulus: `‖∑ₖ aₖ zᵏ‖ ≤ ‖a‖`. -/
-theorem norm_evalLaurent_apply_le (a : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
-    ‖evalLaurent ν z hz a‖ ≤ ‖a‖ := by
-  have h := norm_geomUnitLift_apply_le ν _ _ (norm_annulus_zpow_le ν hz) a
-  rwa [one_mul] at h
 
 end EvalLaurent
 
@@ -343,37 +251,13 @@ section RealInstance
 variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 variable {B : Type*} [NormedRing B] [NormedAlgebra ℝ B] [CompleteSpace B]
 
-/-- The Chebyshev bilateral algebra is free on a weight-dominated unit:
-`lpOneAlg.geomUnitLift` at `𝕜 = ℝ`. -/
-abbrev unitLift (u : Bˣ) (C : ℝ)
-    (hu : ∀ k : ℤ, ‖((u ^ k : Bˣ) : B)‖ ≤ C * (ν : ℝ) ^ k.natAbs) :
-    l1Chebyshev ν →A[ℝ] B :=
-  lpOneAlg.geomUnitLift (𝕜 := ℝ) ν u C hu
 
 variable (u : Bˣ) (C : ℝ)
     (hu : ∀ k : ℤ, ‖((u ^ k : Bˣ) : B)‖ ≤ C * (ν : ℝ) ^ k.natAbs)
 
-theorem unitLift_gen : unitLift ν u C hu (single 1 1) = (u : B) :=
-  lpOneAlg.geomUnitLift_gen ν u C hu
 
-theorem unitLift_gen_inv : unitLift ν u C hu (single (-1) 1) = ((u⁻¹ : Bˣ) : B) :=
-  lpOneAlg.geomUnitLift_gen_inv ν u C hu
 
-theorem norm_unitLift_apply_le (a : l1Chebyshev ν) : ‖unitLift ν u C hu a‖ ≤ C * ‖a‖ :=
-  lpOneAlg.norm_geomUnitLift_apply_le ν u C hu a
 
-omit [CompleteSpace B] in
-/-- Uniqueness on `e₁` for the Chebyshev bilateral algebra. -/
-theorem algHom_ext ⦃φ ψ : l1Chebyshev ν →A[ℝ] B⦄
-    (h : φ (single 1 1) = ψ (single 1 1)) : φ = ψ :=
-  lpOneAlg.bilateralAlgHom_ext ν h
-
-/-- Completeness for the Chebyshev bilateral algebra: every continuous
-algebra homomorphism is the unit lift of its generator value. -/
-theorem eq_unitLift_gen (φ : l1Chebyshev ν →A[ℝ] B) :
-    φ = unitLift ν (lpOneAlg.genUnit ν φ) ‖φ.toContinuousLinearMap‖
-      (lpOneAlg.norm_genUnit_zpow_le ν φ) :=
-  lpOneAlg.eq_geomUnitLift_gen ν φ
 
 end RealInstance
 
@@ -382,13 +266,7 @@ section RealGate
 variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 variable {B : Type*} [NormedRing B] [NormOneClass B] [NormMulClass B] [NormedAlgebra ℝ B]
 
-/-- Outer gate for the Chebyshev bilateral algebra: `‖φ e₁‖ ≤ ν`. -/
-theorem norm_genUnit_le (φ : l1Chebyshev ν →A[ℝ] B) : ‖φ (single 1 1)‖ ≤ (ν : ℝ) :=
-  lpOneAlg.norm_genUnit_le ν φ
 
-/-- Inner gate for the Chebyshev bilateral algebra: `ν⁻¹ ≤ ‖φ e₁‖`. -/
-theorem inv_le_norm_genUnit (φ : l1Chebyshev ν →A[ℝ] B) : (ν : ℝ)⁻¹ ≤ ‖φ (single 1 1)‖ :=
-  lpOneAlg.inv_le_norm_genUnit ν φ
 
 end RealGate
 
@@ -423,8 +301,6 @@ theorem evalLaurentC_apply (a : l1Chebyshev ν) :
     evalLaurentC ν z hz (single k 1) = z ^ k := by
   rw [evalLaurentC, lpOneAlg.geomUnitLift_single, Units.val_zpow_eq_zpow_val, Units.val_mk0]
 
-theorem evalLaurentC_gen : evalLaurentC ν z hz (single 1 1) = z := by
-  rw [evalLaurentC_single, zpow_one]
 
 /-- Contractivity: `‖∑ₖ aₖ zᵏ‖ ≤ ‖a‖` on the annulus. -/
 theorem norm_evalLaurentC_apply_le (a : l1Chebyshev ν) :
@@ -432,74 +308,17 @@ theorem norm_evalLaurentC_apply_le (a : l1Chebyshev ν) :
   have h := lpOneAlg.norm_geomUnitLift_apply_le ν _ _ (lpOneAlg.norm_annulus_zpow_le ν hz) a
   rwa [one_mul] at h
 
-/-- The unit circle lies in the closed annulus `[ν⁻¹, ν]` — one of the two places
-`1 ≤ ν` is used mathematically in this file (the other is
-`conj_evalLaurentC_of_isSymmetric`, which places `z⁻¹` in the annulus). -/
+/-- The unit circle lies in the closed annulus `[ν⁻¹, ν]`, using `1 ≤ ν`.
+The additional conjugation and symmetry laws are in `B5RecordLaurentSpectrum`. -/
 theorem evalLaurentC_circle (θ : ℝ) :
     (ν : ℝ)⁻¹ ≤ ‖exp (θ * I)‖ ∧ ‖exp (θ * I)‖ ≤ (ν : ℝ) := by
   rw [norm_exp_ofReal_mul_I]
   exact ⟨inv_le_one_of_one_le₀ Fact.out, Fact.out⟩
 
-/-- Real coefficients: conjugation passes through the evaluation to the point. -/
-theorem conj_evalLaurentC (hz' : (ν : ℝ)⁻¹ ≤ ‖conj z‖ ∧ ‖conj z‖ ≤ (ν : ℝ))
-    (a : l1Chebyshev ν) :
-    conj (evalLaurentC ν z hz a) = evalLaurentC ν (conj z) hz' a := by
-  rw [evalLaurentC_apply, evalLaurentC_apply, Complex.conj_tsum]
-  exact tsum_congr fun k => by rw [map_mul, Complex.conj_ofReal, map_zpow₀]
 
-/-- On a symmetric sequence (`a₋ₖ = aₖ`) the evaluation at `z⁻¹` equals the
-evaluation at `z`: reindex `k ↦ -k`. -/
-theorem evalLaurentC_inv_of_isSymmetric
-    (hz' : (ν : ℝ)⁻¹ ≤ ‖z⁻¹‖ ∧ ‖z⁻¹‖ ≤ (ν : ℝ)) (a : l1Chebyshev ν) (ha : a.IsSymmetric) :
-    evalLaurentC ν z⁻¹ hz' a = evalLaurentC ν z hz a := by
-  rw [evalLaurentC_apply, evalLaurentC_apply]
-  have hre : (∑' k : ℤ, ((lpOneAlg.toRealSeq a (-k) : ℝ) : ℂ) * z ^ (-k))
-      = ∑' k : ℤ, ((lpOneAlg.toRealSeq a k : ℝ) : ℂ) * z ^ k :=
-    (Equiv.neg ℤ).tsum_eq (fun k => ((lpOneAlg.toRealSeq a k : ℝ) : ℂ) * z ^ k)
-  rw [← hre]
-  exact tsum_congr fun k => by rw [ha k, zpow_neg, inv_zpow]
 
-/-- On the unit circle, a symmetric sequence evaluates to a real number:
-`conj (∑ₖ aₖ zᵏ) = ∑ₖ aₖ zᵏ` when `‖z‖ = 1` and `a₋ₖ = aₖ`. -/
-theorem conj_evalLaurentC_of_isSymmetric (hz1 : ‖z‖ = 1) (a : l1Chebyshev ν)
-    (ha : a.IsSymmetric) :
-    conj (evalLaurentC ν z hz a) = evalLaurentC ν z hz a := by
-  have hzinv : conj z = z⁻¹ := by
-    rw [Complex.inv_def, Complex.normSq_eq_norm_sq, hz1, one_pow, inv_one,
-      Complex.ofReal_one, mul_one]
-  have hz' : (ν : ℝ)⁻¹ ≤ ‖z⁻¹‖ ∧ ‖z⁻¹‖ ≤ (ν : ℝ) := by
-    rw [norm_inv, hz1, inv_one]; exact ⟨inv_le_one_of_one_le₀ Fact.out, Fact.out⟩
-  have hc : (ν : ℝ)⁻¹ ≤ ‖conj z‖ ∧ ‖conj z‖ ≤ (ν : ℝ) := by
-    rw [Complex.norm_conj]; exact hz
-  rw [conj_evalLaurentC ν z hz hc a]
-  have hcongr : ∀ (w₁ w₂ : ℂ) (h : w₁ = w₂) (h₁ : (ν : ℝ)⁻¹ ≤ ‖w₁‖ ∧ ‖w₁‖ ≤ (ν : ℝ))
-      (h₂ : (ν : ℝ)⁻¹ ≤ ‖w₂‖ ∧ ‖w₂‖ ≤ (ν : ℝ)),
-      evalLaurentC ν w₁ h₁ a = evalLaurentC ν w₂ h₂ a := by
-    intro w₁ w₂ h h₁ h₂; subst h; rfl
-  rw [hcongr (conj z) z⁻¹ hzinv hc hz']
-  exact evalLaurentC_inv_of_isSymmetric ν z hz hz' a ha
 
-/-- On the unit circle a symmetric sequence evaluates to (the complex cast of)
-its real part. -/
-theorem evalLaurentC_eq_re_of_isSymmetric (hz1 : ‖z‖ = 1) (a : l1Chebyshev ν)
-    (ha : a.IsSymmetric) :
-    evalLaurentC ν z hz a = ((evalLaurentC ν z hz a).re : ℂ) :=
-  (Complex.conj_eq_iff_re.mp (conj_evalLaurentC_of_isSymmetric ν z hz hz1 a ha)).symm
 
-/-- **The symmetrize bridge**: on the circle `z = exp(iθ)`, the evaluation of
-`symmetrize a` (coefficients `a_{|k|}`) is a real number — that, and only that,
-is what this lemma proves: the value equals the complex cast of its own real
-part.
-
-The cosine-series identity is `l1Chebyshev.evalLaurentC_circle_eq_eval` in
-`Chebyshev/Evaluation.lean`. In contrast,
-`evalLaurent z (symmetrize a) = re (evalLaurent z a)` is false in general because
-`symmetrize` is the `|k|`-fold, not `(a + reflect a) / 2`. -/
-theorem evalLaurentC_symmetrize_eq_re (θ : ℝ) (a : l1Chebyshev ν) :
-    evalLaurentC ν (exp (θ * I)) (evalLaurentC_circle ν θ) (symmetrize a)
-      = ((evalLaurentC ν (exp (θ * I)) (evalLaurentC_circle ν θ) (symmetrize a)).re : ℂ) :=
-  evalLaurentC_eq_re_of_isSymmetric ν _ _ (norm_exp_ofReal_mul_I θ) _
-    (symmetrize_isSymmetric a)
 
 end ComplexEvaluation
 

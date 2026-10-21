@@ -468,7 +468,9 @@ lemma ivp_Z₂_le [NeZero L]
     show (fderiv ℝ G c h') l - (fderiv ℝ G ā h') l = _; exact l1Weighted.ext hseq]
   have hw_zero : ∀ j, j ∉ active → w j = 0 := fun j hj => l1Weighted.ext fun k => by
     show (if k = 0 then (0 : ℝ) else _) = 0
-    simp only [hzero h' j hj, l1Weighted.zero_toSeq, neg_zero, ite_self]
+    simp only [hzero h' j hj,
+      show l1Weighted.toSeq (0 : l1Weighted ν) = 0 from rfl,
+      Pi.zero_apply, neg_zero, ite_self]
   have hw_norm : ‖w‖ ≤ C * (ν : ℝ) * ‖c - ā‖ * ‖h'‖ :=
     (pi_norm_le_iff_of_nonneg (mul_nonneg (mul_nonneg
       (mul_nonneg hC (PosReal.coe_nonneg _)) (norm_nonneg _)) (norm_nonneg _))).mpr fun j =>

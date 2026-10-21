@@ -43,14 +43,11 @@ instance ScaledRealZ.instSubMulWeightBase (ν : PosReal) [Fact (1 ≤ (ν : ℝ)
     SubMulWeightBase (fun k : ℤ => (ν : ℝ) ^ k.natAbs) where
   weight_pos k := pow_pos ν.coe_pos k.natAbs
   submul j l := pow_natAbs_add_le ν Fact.out j l
-  weight_zero := pow_zero _
 
-/-- Full SubMulWeight (adds weight ≥ 1). Requires ν ≥ 1. -/
-instance ScaledRealZ.instSubMulWeight (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] :
-    SubMulWeight (fun k : ℤ => (ν : ℝ) ^ k.natAbs) where
-  one_le k := by
-    have hν : (1 : ℝ) ≤ (ν : ℝ) := Fact.out
-    exact ((one_pow k.natAbs).symm.le).trans (pow_le_pow_left₀ zero_le_one hν k.natAbs)
+/-- The weight is normalized for every positive radius, independently of submultiplicativity. -/
+instance ScaledRealZ.instNormalizedWeight (ν : PosReal) :
+    NormalizedWeight (fun k : ℤ => (ν : ℝ) ^ k.natAbs) where
+  weight_zero := pow_zero _
 
 /-! ### The bilateral geometric fiber over any normed field -/
 
@@ -67,12 +64,6 @@ theorem geomFiberZ_weight {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal) (k : 
     FiberTrivialization.weight (E := geomFiberZ 𝕜 ν) k = (ν : ℝ) ^ k.natAbs :=
   WeightedScalar.fiberTrivialization_weight k
 
-/-- The norm of an atom of the bilateral geometric carrier: `‖single j x‖ = ‖x‖ ν^|j|`. -/
-theorem lpOneAlg.norm_single_geomFiberZ {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal) (j : ℤ)
-    (x : 𝕜) :
-    ‖(lpOneAlg.single (E := geomFiberZ 𝕜 ν) j x : lpOneAlg ℤ (geomFiberZ 𝕜 ν))‖
-      = ‖x‖ * (ν : ℝ) ^ j.natAbs := by
-  rw [lpOneAlg.norm_single, geomFiberZ_weight]
 
 /-! ### Fiber-norm bridge -/
 

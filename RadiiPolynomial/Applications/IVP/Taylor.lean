@@ -4,7 +4,11 @@ import RadiiPolynomial.Applications.IVP.Taylor.Theorem
 import RadiiPolynomial.Applications.IVP.Taylor.Jacobian
 import RadiiPolynomial.Applications.IVP.Taylor.Standard
 import RadiiPolynomial.Applications.IVP.Taylor.Polynomial
-import RadiiPolynomial.Applications.IVP.Taylor.Boundary
+import Mathlib.Topology.Algebra.Module.Equiv
+import Mathlib.Analysis.Normed.Module.Basic
+import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Omega
+import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Aeval
+import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation
 
 /-! Public algebraic and certificate-facing API for Taylor-coefficient IVPs.
 

@@ -53,9 +53,11 @@ def two : ℕ → ℝ := fun _ => 2
 instance : PosWeight two := ⟨fun _ => by norm_num [two]⟩
 
 example : ‖FiberTrivialization.equiv (E := WeightedScalar ℝ two) 0 (1 : ℝ)‖ = 2 := by
+  rw [FiberTrivialization.norm_equiv_apply, WeightedScalar.fiberTrivialization_weight, norm_one]
   simp [two]
 
 example : ‖FiberTrivialization.equiv (E := WeightedScalar ℂ two) 0 (1 : ℂ)‖ = 2 := by
+  rw [FiberTrivialization.norm_equiv_apply, WeightedScalar.fiberTrivialization_weight, norm_one]
   simp [two]
 
 example : FiberTrivialization.weight (E := WeightedScalar ℝ two) 0 = 2 := by
@@ -138,34 +140,43 @@ example [Monoid M] [lpOneMulAlgWeightMul 𝕜 M E] (j l : M) :
     FiberTrivialization.weight (E := E) (j * l) ≤
       FiberTrivialization.weight (E := E) j * FiberTrivialization.weight (E := E) l :=
   lpOneMulAlgWeightMul.weight_mul_le j l
-example [Monoid M] [lpOneMulAlgWeightMul 𝕜 M E] :
-    FiberTrivialization.weight (E := E) (1 : M) = 1 :=
-  lpOneMulAlgWeightMul.weight_one
+example [Monoid M] (h : FiberTrivialization.weight (E := E) (1 : M) = 1) :
+    FiberTrivialization.weight (E := E) (1 : M) = 1 := h
 
 -- Additive index monoid (translated names).
 example [AddMonoid M] [lpOneAlgWeightMul 𝕜 M E] (j l : M) :
     FiberTrivialization.weight (E := E) (j + l) ≤
       FiberTrivialization.weight (E := E) j * FiberTrivialization.weight (E := E) l :=
   lpOneAlgWeightMul.weight_add_le j l
-example [AddMonoid M] [lpOneAlgWeightMul 𝕜 M E] :
+example [AddMonoid M] [lpOneAlgWeightNormalized 𝕜 M E] :
     FiberTrivialization.weight (E := E) (0 : M) = 1 :=
-  lpOneAlgWeightMul.weight_zero
-example [AddMonoid M] [lpOneAlgWeightSubMul 𝕜 M E] (m : M) :
-    1 ≤ FiberTrivialization.weight (E := E) m :=
-  lpOneAlgWeightSubMul.one_le_weight m
+  lpOneAlgWeightNormalized.weight_zero
+-- Extraction uses an explicit lower bound and no operation on the index type.
+example (weight_one_le : ∀ m, 1 ≤ FiberTrivialization.weight (E := E) m)
+    (f : lpOneAlg M E) (m : M) : ‖lpOneAlg.toRealSeq f m‖ ≤ ‖f m‖ :=
+  by
+    rw [lpOneAlg.norm_eq_abs_toReal_mul_weight f m]
+    exact le_mul_of_one_le_right (norm_nonneg _) (weight_one_le m)
 
 -- Ring structure still found generically (multiplicative and additive).
 example [Monoid M] [DecidableEq M] [CompleteSpace 𝕜] [lpOneMulAlgWeightMul 𝕜 M E] :
-    NormedRing (lpOneAlg M E) := inferInstance
+    NormedRing (lpOneAlg M E) := by
+  letI : lpOneMulAlgConvCompat 𝕜 M E := lpOneAlg.instMulConvCompatOfWeightMul
+  exact lpOneAlg.instMulNormedRing
 example [AddMonoid M] [DecidableEq M] [CompleteSpace 𝕜] [lpOneAlgWeightMul 𝕜 M E] :
     NormedRing (lpOneAlg M E) := inferInstance
 
 -- Standard model with an additive weight class.
 example {w : ℕ → ℝ} [SubMulWeightBase w] : lpOneAlgWeightMul ℝ ℕ (WeightedScalar ℝ w) :=
   inferInstance
-example {w : ℕ → ℝ} [SubMulWeight w] : lpOneAlgWeightSubMul ℝ ℕ (WeightedScalar ℝ w) :=
-  inferInstance
-example {w : ℕ → ℝ} [SubMulWeightBase w] : NormOneClass (lpOneAlg ℕ (WeightedScalar ℝ w)) :=
+-- Positivity and the explicit lower bound suffice for unweighted ℓ¹ extraction.
+example {w : ℕ → ℝ} [PosWeight w] (weight_one_le : ∀ n, 1 ≤ w n)
+    (f : lpOneAlg ℕ (WeightedScalar ℝ w)) : Summable (fun n => ‖lpOneAlg.toRealSeq f n‖) :=
+  (lpOneAlg.summable_norm f).of_nonneg_of_le (fun _ => norm_nonneg _) (fun n => by
+    rw [lpOneAlg.norm_eq_abs_toReal_mul_weight f n, WeightedScalar.fiberTrivialization_weight]
+    exact le_mul_of_one_le_right (norm_nonneg _) (weight_one_le n))
+example {w : ℕ → ℝ} [PosWeight w] [NormalizedWeight w] :
+    NormOneClass (lpOneAlg ℕ (WeightedScalar ℝ w)) :=
   inferInstance
 
 end Monoids
@@ -196,7 +207,9 @@ example (f : l1Weighted ν) (k : ℕ) : lpOneAlg.toRealSeq f k = WeightedScalar.
 -- `single_mul` (the monoid-algebra identity) is unchanged.
 example (m n : ℕ) (r s : ℝ) :
     l1Weighted.single (ν := ν) m r * l1Weighted.single n s = l1Weighted.single (m + n) (r * s) :=
-  l1Weighted.single_mul m n r s
+  by
+    simpa only [l1Weighted.single_eq_lpOneAlg_single] using
+      (lpOneAlg.single_mul_single (E := ScaledReal ν) m n r s)
 
 -- Scalar action on coefficients.
 example (r : ℝ) (f : l1Weighted ν) :

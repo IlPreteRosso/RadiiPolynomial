@@ -29,29 +29,7 @@ namespace RadiiPolynomial
 
 variable {ν : PosReal}
 
-/-- Fderiv difference factors through `leftMul` for affine-fderiv maps.
-If `fderiv ℝ f x = α • leftMul x + K` for all `x`, then
-`fderiv ℝ f c - fderiv ℝ f a = α • leftMul (c - a)`. -/
-lemma fderiv_diff_of_affine_leftMul
-    {f : l1Weighted ν → l1Weighted ν} {α : ℝ}
-    {K : l1Weighted ν →L[ℝ] l1Weighted ν}
-    (hf : ∀ x, fderiv ℝ f x = α • l1Weighted.leftMul x + K)
-    (c a : l1Weighted ν) :
-    fderiv ℝ f c - fderiv ℝ f a = α • l1Weighted.leftMul (c - a) := by
-  rw [hf c, hf a]
-  simp [smul_sub, l1Weighted.leftMul_sub]
 
-/-- Norm bound on fderiv difference for affine-fderiv maps.
-`‖fderiv ℝ f c - fderiv ℝ f a‖ ≤ |α| * ‖c - a‖`. -/
-lemma norm_fderiv_diff_of_affine_leftMul
-    {f : l1Weighted ν → l1Weighted ν} {α : ℝ}
-    {K : l1Weighted ν →L[ℝ] l1Weighted ν}
-    (hf : ∀ x, fderiv ℝ f x = α • l1Weighted.leftMul x + K)
-    (c a : l1Weighted ν) :
-    ‖fderiv ℝ f c - fderiv ℝ f a‖ ≤ |α| * ‖c - a‖ := by
-  rw [fderiv_diff_of_affine_leftMul hf]
-  rw [norm_smul, Real.norm_eq_abs]
-  exact mul_le_mul_of_nonneg_left (l1Weighted.norm_leftMul_le _) (abs_nonneg _)
 
 /-- Z₂ ball bound for affine-fderiv maps: for `c ∈ closedBall(xBar, r₀)`,
 `Z₂_norm f xBar A c ≤ |α| * ‖A‖ * r₀`.
@@ -69,20 +47,5 @@ lemma Z₂_ball_bound_of_affine_leftMul
     (fun x _ => by rw [← smul_sub, norm_smul, Real.norm_eq_abs])
     (abs_nonneg α) A c hc
 
-/-- Rational-slope case through the `CompPoly` face itself (`Q = α·X`): the `CompPoly` face
-reaches exactly the slopes `α ∈ ℚ` (`CompPoly` coefficients are rational). -/
-theorem Z₂_ball_bound_of_affine_leftMul_of_poly
-    {f : l1Weighted ν → l1Weighted ν} {α : ℚ}
-    {K : l1Weighted ν →L[ℝ] l1Weighted ν}
-    (hf : ∀ x, fderiv ℝ f x = (α : ℝ) • l1Weighted.leftMul x + K)
-    (A : l1Weighted ν →L[ℝ] l1Weighted ν) (xBar : l1Weighted ν)
-    {r₀ : ℝ} (c : l1Weighted ν) (hc : c ∈ Metric.closedBall xBar r₀) :
-    Z₂_norm f xBar A c ≤ |(α : ℝ)| * ‖A‖ * r₀ := by
-  have h := Z₂_ball_bound_of_compPoly (CompPoly.smul α (CompPoly.X 0)) (K := K)
-    (R := ‖xBar‖ + r₀)
-    (fun x _ => by
-      rw [hf x, show (CompPoly.smul α (CompPoly.X 0) : CompPoly 1).evalBanach (fun _ => x) =
-        ((α : ℚ) : ℝ) • x from rfl, map_smul]) le_rfl A c hc
-  simpa using h
 
 end RadiiPolynomial

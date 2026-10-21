@@ -94,38 +94,7 @@ theorem evalLaurentCoeffSeq_eq_zero_of_radius_lt (p : CompPoly L)
   | neg p ih => simp [evalLaurentCoeffSeq, ih n hn]
   | smul r p ih => simp [evalLaurentCoeffSeq, ih n hn]
 
-private theorem sum_laurentModes_eq_of_support (f : ℤ → ℚ) (R S : ℕ)
-    (hR : ∀ k, R < k.natAbs → f k = 0)
-    (hS : ∀ k, S < k.natAbs → f k = 0) :
-    ∑ k ∈ laurentModes R, f k = ∑ k ∈ laurentModes S, f k := by
-  wlog hle : R ≤ S generalizing R S
-  · exact (this S R hS hR (by omega)).symm
-  apply Finset.sum_subset
-  · intro k hk
-    exact (mem_laurentModes_iff S k).mpr ((mem_laurentModes_iff R k).mp hk |>.trans hle)
-  · intro k _ hk
-    exact hR k (by have := (mem_laurentModes_iff R k).not.mp hk; omega)
 
-/-- Any two valid finite support bounds give the same coefficients. -/
-theorem evalLaurentCoeffSeq_eq_of_support (p : CompPoly L)
-    (radii₁ radii₂ : Fin L → ℕ) (seqs : Fin L → ℤ → ℚ)
-    (hs₁ : ∀ i n, radii₁ i < n.natAbs → seqs i n = 0)
-    (hs₂ : ∀ i n, radii₂ i < n.natAbs → seqs i n = 0) (n : ℤ) :
-    p.evalLaurentCoeffSeq radii₁ seqs n = p.evalLaurentCoeffSeq radii₂ seqs n := by
-  induction p generalizing n with
-  | C r => rfl
-  | X i => rfl
-  | add p q ihp ihq => simp [evalLaurentCoeffSeq, ihp, ihq]
-  | sub p q ihp ihq => simp [evalLaurentCoeffSeq, ihp, ihq]
-  | mul p q ihp ihq =>
-      simp only [evalLaurentCoeffSeq, ihp, ihq]
-      apply sum_laurentModes_eq_of_support
-      · intro k hk
-        rw [← ihq, q.evalLaurentCoeffSeq_eq_zero_of_radius_lt radii₁ seqs hs₁ k hk, mul_zero]
-      · intro k hk
-        rw [q.evalLaurentCoeffSeq_eq_zero_of_radius_lt radii₂ seqs hs₂ k hk, mul_zero]
-  | neg p ih => simp [evalLaurentCoeffSeq, ih]
-  | smul r p ih => simp [evalLaurentCoeffSeq, ih]
 
 /-- The array interpreter vanishes beyond the propagated array-size bound. -/
 theorem evalChebCoeff_eq_zero_of_radius_lt (p : CompPoly L)

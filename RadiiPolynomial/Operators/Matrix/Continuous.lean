@@ -1,3 +1,4 @@
+import Mathlib.Topology.Algebra.Module.FiniteDimension
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
 import RadiiPolynomial.Operators.Matrix.WeightedNorm
 import Mathlib.Analysis.Normed.Lp.PiLp
@@ -53,17 +54,9 @@ def ofVec (v : Fin (N + 1) → ℝ) : Space ν N :=
 
 @[simp] lemma toVec_ofVec (v : Fin (N + 1) → ℝ) : toVec (ofVec v : Space ν N) = v := rfl
 @[simp] lemma ofVec_toVec (x : Space ν N) : ofVec (toVec x) = x := rfl
-@[simp] lemma toVec_apply (x : Space ν N) (i : Fin (N + 1)) :
-    toVec x i = ScaledReal.toReal (x i) := rfl
 
 @[simp] lemma toVec_add (x y : Space ν N) : toVec (x + y) = toVec x + toVec y := rfl
 @[simp] lemma toVec_smul (c : ℝ) (x : Space ν N) : toVec (c • x) = c • toVec x := rfl
-@[simp] lemma ofVec_add (u v : Fin (N + 1) → ℝ) :
-    ofVec (u + v) = (ofVec u : Space ν N) + ofVec v := rfl
-@[simp] lemma ofVec_sub (u v : Fin (N + 1) → ℝ) :
-    ofVec (u - v) = (ofVec u : Space ν N) - ofVec v := rfl
-@[simp] lemma ofVec_smul (c : ℝ) (v : Fin (N + 1) → ℝ) :
-    ofVec (c • v) = c • (ofVec v : Space ν N) := rfl
 
 /-- The identity bridge `toVec`/`ofVec` as a linear equivalence. -/
 def vecEquiv : Space ν N ≃ₗ[ℝ] (Fin (N + 1) → ℝ) where
@@ -97,15 +90,6 @@ section StdBasis
 def stdBasis (j : Fin (N + 1)) : Space ν N :=
   ofVec (fun n => if n = j then 1 else 0)
 
-@[simp]
-lemma stdBasis_apply_self (j : Fin (N + 1)) :
-    stdBasis (ν := ν) j j = ScaledReal.ofReal 1 := by
-  simp [stdBasis, ofVec]
-
-@[simp]
-lemma stdBasis_apply_ne (i j : Fin (N + 1)) (h : i ≠ j) :
-    stdBasis (ν := ν) j i = 0 := by
-  simp [stdBasis, ofVec, h]
 
 lemma norm_stdBasis (j : Fin (N + 1)) :
     ‖stdBasis (ν := ν) j‖ = (ν : ℝ) ^ (j : ℕ) := by
@@ -154,11 +138,6 @@ def toWeightedCLM
   LinearMap.mkContinuous (mulVecWeightedLinear A)
     (FiniteWeightedNorm.finWeightedMatrixNorm ν A) (mulVecWeightedLinear_norm_le A)
 
-/-- The CLM acts as matrix–vector multiplication on the underlying real vectors. -/
-@[simp] lemma toVec_toWeightedCLM
-    (A : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
-    (x : FinWeighted.Space ν N) :
-    toVec (toWeightedCLM (ν := ν) A x) = A *ᵥ toVec x := rfl
 
 lemma opNorm_toWeightedCLM_le
     (A : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
@@ -186,16 +165,7 @@ lemma toWeightedCLMAlgEquiv_apply (A : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
     toWeightedCLMAlgEquiv (ν := ν) A = toWeightedCLM A := by
   ext x i; rfl
 
-lemma toWeightedCLM_one :
-    toWeightedCLM (ν := ν) (1 : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) =
-      ContinuousLinearMap.id ℝ (FinWeighted.Space ν N) := by
-  rw [← toWeightedCLMAlgEquiv_apply, map_one, ContinuousLinearMap.one_def]
 
-lemma toWeightedCLM_mul
-    (A B : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
-    toWeightedCLM (ν := ν) (A * B) =
-      (toWeightedCLM (ν := ν) A).comp (toWeightedCLM (ν := ν) B) := by
-  simp only [← toWeightedCLMAlgEquiv_apply, map_mul, ContinuousLinearMap.mul_def]
 
 /-- `toWeightedCLM` sends `1 - M` to `id - toWeightedCLM M`.
 

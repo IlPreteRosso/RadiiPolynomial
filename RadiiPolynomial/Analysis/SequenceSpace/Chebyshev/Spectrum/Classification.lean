@@ -104,14 +104,5 @@ theorem norm_character_apply_le (χ : Character ν) (a : Physical ν) : ‖χ a�
   obtain ⟨z, hz, rfl⟩ := character_eq_restriction ν χ
   exact l1Chebyshev.norm_evalLaurentC_apply_le ν z hz a.val
 
-/-- The restriction map from Laurent characters onto physical characters is
-surjective over ℂ. The corresponding real map is not:
-`CrossGeometry.physical_zero_character_has_no_real_extension`. -/
-theorem restriction_surjective :
-    Function.Surjective (fun χ : l1Chebyshev ν →A[ℝ] ℂ =>
-      χ.comp (l1Chebyshev.symmetricSubalgebra ν).valA) := by
-  intro χ
-  obtain ⟨z, hz, h⟩ := character_eq_restriction ν χ
-  exact ⟨l1Chebyshev.evalLaurentC ν z hz, h.symm⟩
 
 end RadiiPolynomial.PhysicalSpectrum

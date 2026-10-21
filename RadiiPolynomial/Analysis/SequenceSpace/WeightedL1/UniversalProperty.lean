@@ -2,53 +2,24 @@ import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Algebra
 import Mathlib.Analysis.Normed.Operator.Basic
 
 /-!
-# The universal property of the weighted ℓ¹ space, as API
+# The universal property of the weighted ℓ¹ space
 
-Out of `lpOneAlg M E`, a continuous linear map is determined by its values on
-the unit singles (`continuousLinearMap_ext`), and every family of vectors
-dominated by the weights induces one (`liftCLM`). Together with
-`norm_le_of_cols` this makes the weighted column data an exact description of
-the continuous linear maps out of the space: `eq_liftCLM_of_cols` shows every
-such map with a column bound *is* a lift, and `exists_eq_liftCLM` produces the
-bound from the operator norm.
+A continuous linear map out of `lpOneAlg M E` is determined by its values on the unit
+singles (`continuousLinearMap_ext`). A weight-dominated family `v : M → F` induces
+`liftCLM v C hv`, with its atom computation (`liftCLM_single`), application bound and
+operator-norm bound. `eq_liftCLM_of_cols` and `exists_eq_liftCLM` recover a map from its
+column family. The exact column-supremum principle has separate staged record ownership.
 
-`liftCLM` builds maps OUT of the sequence space from column data; it is
-unrelated to `Operators/BlockDiagonal/Lift`, which lifts ℕ-indexed defect data
-INTO a system sequence space.
+`liftCLM` builds a map out of the sequence space; `Operators/BlockDiagonal/Lift` instead
+lifts defect data into a system sequence space.
 
-Main declarations:
-* `lpOneAlg.singleCLM` — the atom inclusion `𝕜 →L[𝕜] lpOneAlg M E` at an
-  index, with norm equal to the weight (`norm_singleCLM`).
-* `lpOneAlg.continuousLinearMap_ext` / `continuousLinearMap_ext'` — two
-  continuous linear maps agreeing on the unit singles (resp. on the atom
-  inclusions) are equal.
-* `lpOneAlg.liftCLM` — the map induced by a weight-dominated column family
-  `v : M → F` with constant `C`, with `‖liftCLM v C hv‖ ≤ C`.
-* `lpOneAlg.eq_liftCLM_of_cols`, `lpOneAlg.exists_eq_liftCLM` — every
-  continuous linear map out of the space is the lift of its column family.
-
-Multiplicative half (over an additive index monoid `M`, target a Banach
-algebra `B`):
-* `lpOneAlg.single_mul_single`, `one_eq_single_zero`, `single_pow` — the unit
-  singles are a copy of the index monoid inside the algebra.
-* `lpOneAlg.mulLeftCLM`, `mulRightCLM` — one-sided multiplication as continuous linear
-  maps, with operator norms at most `‖f‖` (`norm_mulLeftCLM_le`, `norm_mulRightCLM_le`).
-* `lpOneAlg.liftCLM_one`, `liftCLM_mul` — the lift of a weight-dominated monoid
-  map `b : M → B` is unital and multiplicative.
-* `lpOneAlg.liftAlgHom` — the same lift bundled as `lpOneAlg M E →A[𝕜] B`,
-  with `liftAlgHom_single` and `norm_liftAlgHom_apply_le`.
-* `lpOneAlg.continuousAlgHom_ext` — two continuous algebra homomorphisms
-  agreeing on the unit singles are equal.
-* `lpOneAlg.eq_liftAlgHom_of_atoms`, `lpOneAlg.exists_eq_liftAlgHom` — every
-  continuous algebra homomorphism out of the algebra is the algebra lift of
-  its atom family.
-
-Shared real-analysis helper (no sequence space involved):
-* `RadiiPolynomial.le_of_forall_pow_le_mul_pow` — the archimedean gate
-  `(∀ n, aⁿ ≤ C νⁿ) → a ≤ ν` for `ν > 0`. It lives here because it is what
-  turns the operator-norm power growth of a generator into a bound on the
-  generator value itself, in both carriers built on this file
-  (`lpOneAlg.norm_gen_le` on `ℕ`, `lpOneAlg.norm_genUnit_le` on `ℤ`).
+For an additive index monoid, `single_mul_single`, `one_eq_single_zero` and `single_pow`
+give the monoid computation rules. `mulLeftCLM` and `mulRightCLM` bundle one-sided
+multiplication. A weight-dominated unital multiplicative family induces `liftAlgHom`,
+with `liftAlgHom_single` and `norm_liftAlgHom_apply_le`. `continuousAlgHom_ext`,
+`eq_liftAlgHom_of_atoms` and `exists_eq_liftAlgHom` give the corresponding determination
+and reconstruction contracts. Their original target-space and boundedness hypotheses
+remain explicit in the declarations.
 -/
 
 open scoped BigOperators
@@ -66,17 +37,6 @@ it to convert power growth into a bound on the base. -/
 
 section PowerGrowthGate
 
-/-- **Archimedean gate.** If `aⁿ ≤ C νⁿ` for every `n : ℕ`, with `ν > 0`, then
-`a ≤ ν`: a fixed constant `C` cannot absorb geometric growth at a ratio `> 1`.
-
-Note `C` is unconstrained — it is `n = 0` alone that forces `1 ≤ C`, and the
-argument only ever compares `C` with `(a / ν)ⁿ`. -/
-theorem le_of_forall_pow_le_mul_pow {ν : ℝ} (hν : 0 < ν) {a C : ℝ}
-    (h : ∀ n : ℕ, a ^ n ≤ C * ν ^ n) : a ≤ ν := by
-  by_contra hlt
-  obtain ⟨n, hn⟩ := pow_unbounded_of_one_lt C ((one_lt_div hν).mpr (not_le.mp hlt))
-  rw [div_pow, lt_div_iff₀ (pow_pos hν n)] at hn
-  exact absurd (h n) (not_le.mpr hn)
 
 end PowerGrowthGate
 
@@ -88,15 +48,7 @@ variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
 variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
 
-/-- The atom inclusion at index `m`: the weighted line into the sequence
-space, `x ↦ single m x`, as a continuous linear map of norm `ω_m`. It is the frame
-`θ_m = FiberTrivialization.equivL m` followed by the isometric insertion `fiberSingleₗᵢ m`. -/
-def singleCLM (m : M) : 𝕜 →L[𝕜] lpOneAlg M E :=
-  (fiberSingleₗᵢ m).toContinuousLinearMap.comp
-    (FiberTrivialization.equivL (E := E) m : 𝕜 →L[𝕜] E m)
 
-@[simp] theorem singleCLM_apply (m : M) (x : 𝕜) :
-    (singleCLM (E := E) m : 𝕜 →L[𝕜] lpOneAlg M E) x = single m x := rfl
 
 end AtomInclusion
 
@@ -106,14 +58,6 @@ variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
 variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
 variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
 
-/-- The atom inclusion is a weighted isometry: its norm is the weight. -/
-theorem norm_singleCLM (m : M) :
-    ‖(singleCLM (E := E) m : 𝕜 →L[𝕜] lpOneAlg M E)‖
-      = FiberTrivialization.weight (E := E) m := by
-  refine le_antisymm (ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _)
-    (fun x => by rw [singleCLM_apply, norm_single]; exact (mul_comm ‖x‖ _).le)) ?_
-  have h := (singleCLM (E := E) m : 𝕜 →L[𝕜] lpOneAlg M E).le_opNorm 1
-  rwa [singleCLM_apply, norm_single, norm_one, one_mul, mul_one] at h
 
 end AtomNorm
 
@@ -139,11 +83,6 @@ theorem continuousLinearMap_ext ⦃ψ₁ ψ₂ : lpOneAlg M E →L[𝕜] B⦄
   rw [hfun] at h₁
   exact h₁.unique h₂
 
-/-- Bundled-atom form of `continuousLinearMap_ext`: agreement after composing
-with every atom inclusion. -/
-theorem continuousLinearMap_ext' ⦃ψ₁ ψ₂ : lpOneAlg M E →L[𝕜] B⦄
-    (h : ∀ m, ψ₁.comp (singleCLM m) = ψ₂.comp (singleCLM m)) : ψ₁ = ψ₂ :=
-  continuousLinearMap_ext fun m => DFunLike.congr_fun (h m) 1
 
 end Ext
 
@@ -364,15 +303,7 @@ variable {M : Type*} [AddMonoid M] {E : M → Type*} [∀ m, NormedAddCommGroup 
 variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
 variable [lpOneAlgConvCompat 𝕜 M E]
 
-/-- Left multiplication by `f` has operator norm at most `‖f‖`. -/
-theorem norm_mulLeftCLM_le (f : lpOneAlg M E) :
-    ‖(mulLeftCLM (𝕜 := 𝕜) f : lpOneAlg M E →L[𝕜] lpOneAlg M E)‖ ≤ ‖f‖ :=
-  LinearMap.mkContinuous_norm_le _ (norm_nonneg f) _
 
-/-- Right multiplication by `g` has operator norm at most `‖g‖`. -/
-theorem norm_mulRightCLM_le (g : lpOneAlg M E) :
-    ‖(mulRightCLM (𝕜 := 𝕜) g : lpOneAlg M E →L[𝕜] lpOneAlg M E)‖ ≤ ‖g‖ :=
-  LinearMap.mkContinuous_norm_le _ (norm_nonneg g) _
 
 end MulCLMNorm
 
@@ -470,8 +401,6 @@ variable (hb0 : b 0 = 1) (hbmul : ∀ m n, b (m + n) = b m * b n)
 theorem liftAlgHom_apply (h : lpOneAlg M E) :
     liftAlgHom b C hb hb0 hbmul h = liftCLM b C hb h := rfl
 
-theorem liftAlgHom_toContinuousLinearMap :
-    (liftAlgHom b C hb hb0 hbmul).toContinuousLinearMap = liftCLM b C hb := rfl
 
 /-- Computation face: the algebra lift sends the unit single at `m` to `b m`. -/
 @[simp] theorem liftAlgHom_single (m : M) :

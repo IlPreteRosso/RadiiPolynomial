@@ -94,10 +94,6 @@ U-factorization `-(uIntegrate (chebyshevToU c))`. -/
 def chebyshevShiftDiv (c : l1Chebyshev ν) : l1Chebyshev ν :=
   -(uIntegrate (chebyshevToU c))
 
-/-- **U-factorization of the Chebyshev integration tail**:
-`chebyshevShiftDiv c = -(uIntegrate (chebyshevToU c))`, exactly, mode by mode. -/
-theorem chebyshevShiftDiv_eq_neg_uIntegrate_chebyshevToU (c : l1Chebyshev ν) :
-    chebyshevShiftDiv c = -(uIntegrate (chebyshevToU c)) := rfl
 
 /-- Mode `0` of the shift-divide operator vanishes. -/
 theorem chebyshevShiftDiv_toSeq_zero (c : l1Chebyshev ν) :
@@ -136,41 +132,11 @@ noncomputable def chebyshevShiftDiv_CLM : l1Chebyshev ν →L[ℝ] l1Chebyshev �
 
 /-! ### Linearity of chebyshevShiftDiv -/
 
-lemma chebyshevShiftDiv_add (c d : l1Chebyshev ν) :
-    chebyshevShiftDiv (c + d) = chebyshevShiftDiv c + chebyshevShiftDiv d :=
-  map_add chebyshevShiftDiv_CLM c d
 
-lemma chebyshevShiftDiv_smul (r : ℝ) (c : l1Chebyshev ν) :
-    chebyshevShiftDiv (r • c) = r • chebyshevShiftDiv c :=
-  map_smul chebyshevShiftDiv_CLM r c
 
 /-! ### Norm bounds -/
 
-/-- Norm bound from the U-factorization:
-`‖chebyshevShiftDiv c‖ ≤ (ν/2 + 1/(2ν))·‖c‖`, the product of `‖uIntegrate‖ ≤ ν`
-and `‖chebyshevToU‖ ≤ (1 + ν⁻²)/2`. It implies `chebyshevShiftDiv_norm_le` (`≤ ν·‖c‖`),
-since `1/(2ν) ≤ ν/2` for `ν ≥ 1`; strictly sharper for `ν > 1`, while at `ν = 1` both
-constants equal `1`. -/
-theorem chebyshevShiftDiv_norm_le' (c : l1Chebyshev ν) :
-    ‖chebyshevShiftDiv c‖ ≤ ((ν : ℝ) / 2 + 1 / (2 * ν)) * ‖c‖ := by
-  rw [chebyshevShiftDiv_eq_neg_uIntegrate_chebyshevToU, norm_neg]
-  refine (uIntegrate_norm_le (chebyshevToU c)).trans ?_
-  have h1 : (ν : ℝ) * ‖chebyshevToU c‖ ≤
-      (ν : ℝ) * ((1 + ((ν : ℝ) ^ 2)⁻¹) / 2 * ‖c‖) :=
-    mul_le_mul_of_nonneg_left (chebyshevToU_norm_le_sharp c) ν.2.le
-  refine h1.trans (le_of_eq ?_)
-  have hν : (ν : ℝ) ≠ 0 := ν.2.ne'
-  field_simp
 
-/-- Operator bound `‖chebyshevShiftDiv c‖ ≤ ν * ‖c‖`, a corollary of
-`chebyshevShiftDiv_norm_le'` under `1 ≤ ν`. -/
-lemma chebyshevShiftDiv_norm_le (c : l1Chebyshev ν) :
-    ‖chebyshevShiftDiv c‖ ≤ (ν : ℝ) * ‖c‖ := by
-  refine (chebyshevShiftDiv_norm_le' c).trans (mul_le_mul_of_nonneg_right ?_ (norm_nonneg c))
-  have hν : (1 : ℝ) ≤ ν := Fact.out
-  have hν0 : (0 : ℝ) < ν := ν.2
-  rw [div_add_div _ _ (by norm_num) (by positivity), div_le_iff₀ (by positivity)]
-  nlinarith
 
 /-! ## ℕ → ℤ Embedding for Composed Map
 
@@ -210,16 +176,6 @@ omit [Fact (1 ≤ (ν : ℝ))] in
 omit [Fact (1 ≤ (ν : ℝ))] in
 @[simp] lemma embedNatToInt_negSucc (seq : ℕ → ℝ) (m : ℕ) :
     embedNatToInt (ν := ν) seq (Int.negSucc m) = 0 := rfl
-
-omit [Fact (1 ≤ (ν : ℝ))] in
-@[simp] lemma embedWithPassThrough_natCast (seq : ℕ → ℝ) (base : l1Chebyshev ν)
-    (n : ℕ) : embedWithPassThrough seq base (↑n : ℤ)
-      = FiberTrivialization.equiv (E := ScaledRealZ ν) (↑n) (seq n) := rfl
-
-omit [Fact (1 ≤ (ν : ℝ))] in
-@[simp] lemma embedWithPassThrough_negSucc (seq : ℕ → ℝ) (base : l1Chebyshev ν)
-    (m : ℕ) : embedWithPassThrough seq base (Int.negSucc m)
-      = base (Int.negSucc m) := rfl
 
 omit [Fact (1 ≤ (ν : ℝ))] in
 /-- A finitely-supported `embedNatToInt` sequence is in ℓ¹. -/
@@ -512,35 +468,7 @@ lemma chebyshevShiftDiv_tailTsum_le_semiMajor_div (c : l1Chebyshev ν) (N : ℕ)
             (fun _ => norm_nonneg _) (fun n m h => by omega)
     _ = ((ν : ℝ)⁻¹ + (ν : ℝ)) / (2 * ((N : ℝ) + 1)) * ‖c‖ := by ring
 
-/-- Tail tsum bound, half form: `∑' n, ‖chebyshevShiftDiv(c)(n+N+1)‖ ≤ (1+ν)/(2(N+1)) · ‖c‖`.
-Corollary of `chebyshevShiftDiv_tailTsum_le_semiMajor_div` via `ν⁻¹ ≤ 1` (from `1 ≤ ν`). -/
-lemma chebyshevShiftDiv_tailTsum_le_half (c : l1Chebyshev ν) (N : ℕ) :
-    ∑' n, ‖(chebyshevShiftDiv c) (↑(n + (N + 1)) : ℤ)‖ ≤
-      (1 + (ν : ℝ)) / (2 * ((N : ℝ) + 1)) * ‖c‖ := by
-  refine (chebyshevShiftDiv_tailTsum_le_semiMajor_div c N).trans ?_
-  apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
-  have h2N : (0 : ℝ) < 2 * ((N : ℝ) + 1) := by positivity
-  rw [div_le_div_iff₀ h2N h2N]
-  have hν1 : (1 : ℝ) ≤ (ν : ℝ) := Fact.out
-  have hinv : (ν : ℝ)⁻¹ ≤ 1 := inv_le_one_of_one_le₀ hν1
-  exact mul_le_mul_of_nonneg_right (by linarith) h2N.le
 
-/-- Tight tail tsum bound: `∑' n, ‖chebyshevShiftDiv(c)(n+N+1)‖ ≤ ν/(N+1) · ‖c‖`.
-Tighter than `chebyshevShiftDiv_norm_le` (`≤ ν · ‖c‖`) because `1/(2k) ≤ 1/(2(N+1))`
-on tail modes `k ≥ N+1`.
-
-Corollary of `chebyshevShiftDiv_tailTsum_le_half` via `(1+ν)/(2(N+1)) ≤ ν/(N+1)`
-(i.e. `1 ≤ ν`); the sharpest form is `chebyshevShiftDiv_tailTsum_le_semiMajor_div`. -/
-lemma chebyshevShiftDiv_tailTsum_le_div (c : l1Chebyshev ν) (N : ℕ) :
-    ∑' n, ‖(chebyshevShiftDiv c) (↑(n + (N + 1)) : ℤ)‖ ≤
-      (ν : ℝ) / ((N : ℝ) + 1) * ‖c‖ := by
-  refine (chebyshevShiftDiv_tailTsum_le_half c N).trans ?_
-  apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
-  rw [div_le_div_iff₀ (by positivity : (0:ℝ) < 2 * ((N:ℝ) + 1))
-    (by positivity : (0:ℝ) < (N:ℝ) + 1)]
-  have hν : (1:ℝ) ≤ ν := Fact.out
-  have hN : (0:ℝ) ≤ (N:ℝ) + 1 := by positivity
-  nlinarith [mul_le_mul_of_nonneg_right hν hN]
 
 /-- The semi-major tail factor is at most the `ν/(N+1)` factor (`1 ≤ ν`, so `ν⁻¹ ≤ ν`).
 It derives the `ν/(N+1)` Z₁ faces from the semi-major ones. -/
@@ -708,32 +636,6 @@ lemma chebyshev_Z₁_le_relaxed
   chebyshev_Z₁_le_semiMajor N composedApprox G ā Dφ hneg hε hfin_le htail hK hDφ
     ((add_le_add le_rfl (mul_le_mul_of_nonneg_right (semiMajor_div_le_div N) hK)).trans hZ₁)
 
-omit [NeZero L] in
-/-- **Chebyshev Z₁ bound**: `‖composedApprox - fderiv G ā‖ ≤ Z₁`, the `ε = 0` case of
-`chebyshev_Z₁_le_relaxed`.
-
-Hypotheses:
-- `hfin`: finite modes cancel (composedApprox = fderiv G on k ≤ N)
-- `htail`: tail difference norms = chebyshevShiftDiv(Dφ) norms
-- `hDφ`: per-component `‖Dφ h l‖ ≤ K · ‖h‖`
-- `hZ₁`: `ν/(N+1) · K ≤ Z₁` -/
-lemma chebyshev_Z₁_le
-    (N : ℕ) (composedApprox : XCheb ν L →L[ℝ] XCheb ν L)
-    (G : XCheb ν L → XCheb ν L) (ā : XCheb ν L)
-    (Dφ : XCheb ν L → Fin L → l1Chebyshev ν)
-    (hfin : ∀ h : XCheb ν L, ∀ l : Fin L, ∀ k : ℤ, k ≤ ↑N →
-      ((composedApprox - fderiv ℝ G ā) h l) k = 0)
-    (htail : ∀ h : XCheb ν L, ∀ l : Fin L, ∀ m : ℕ, N < m →
-      ‖((composedApprox - fderiv ℝ G ā) h l) (↑m : ℤ)‖ =
-        ‖(chebyshevShiftDiv (Dφ h l)) (↑m : ℤ)‖)
-    {K : ℝ} (hK : 0 ≤ K)
-    (hDφ : ∀ h : XCheb ν L, ∀ l : Fin L, ‖Dφ h l‖ ≤ K * ‖h‖)
-    {Z₁ : ℝ} (hZ₁ : (ν : ℝ) / ((N : ℝ) + 1) * K ≤ Z₁) :
-    ‖composedApprox - fderiv ℝ G ā‖ ≤ Z₁ :=
-  chebyshev_Z₁_le_relaxed N composedApprox G ā Dφ (fun h l m => hfin h l _ (by omega)) le_rfl
-    (fun h l => (Finset.sum_eq_zero fun k _ => by rw [hfin h l _ (by omega), norm_zero]).trans_le
-      (zero_mul _).ge)
-    htail hK hDφ (by simpa using hZ₁)
 
 /-! ## Chebyshev System Theorem
 

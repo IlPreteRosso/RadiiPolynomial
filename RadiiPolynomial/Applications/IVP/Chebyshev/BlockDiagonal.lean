@@ -128,23 +128,9 @@ instance instBlockDiagLiftXCheb : BlockDiagLift (XCheb ν L) L ν where
   liftDefect_smul D r h := defectCheb_apply_smul D r h
   liftDefect_norm_le D h := defectCheb_norm_le D h
 
-/-- The XCheb instance's defect action is `defectCheb_apply`, so `simp` normalizes
-`composedApproxCheb D h` to `h - defectCheb_apply D h` through the generic
-`composedApproxCLM_apply`. -/
-@[simp] lemma liftDefect_eq_defectCheb_apply (D : SystemBlockDiagData L N) (h : XCheb ν L) :
-    @BlockDiagLift.liftDefect (XCheb ν L) _ _ L _ ν instBlockDiagLiftXCheb N D h =
-      defectCheb_apply D h := rfl
 
 /-! ### CLM construction -/
 
-/-- The defect as a CLM on XCheb. -/
-def defectChebCLM (D : SystemBlockDiagData L N) : XCheb ν L →L[ℝ] XCheb ν L :=
-  LinearMap.mkContinuous
-    { toFun := defectCheb_apply D
-      map_add' := defectCheb_apply_add D
-      map_smul' := defectCheb_apply_smul D }
-    (finiteBlockMatrixNorm ν D.finBlock)
-    (defectCheb_norm_le D)
 
 /-- The composed approximate derivative on XCheb, `h ↦ h - defect(h)`: the generic
 `BlockDiagLift.composedApproxCLM` at the XCheb instance. -/
@@ -154,10 +140,6 @@ abbrev composedApproxCheb (D : SystemBlockDiagData L N) : XCheb ν L →L[ℝ] X
 @[simp] lemma composedApproxCheb_apply (D : SystemBlockDiagData L N) (h : XCheb ν L) :
     composedApproxCheb D h = h - defectCheb_apply D h := rfl
 
-/-- `composedApproxCheb D = id − defectChebCLM D`. -/
-theorem composedApproxCheb_eq_id_sub (D : SystemBlockDiagData L N) :
-    composedApproxCheb (ν := ν) D = ContinuousLinearMap.id ℝ _ - defectChebCLM D := by
-  ext1 h; rfl
 
 /-! ### Key properties -/
 
@@ -184,13 +166,6 @@ theorem composedApproxCheb_toSeq_negSucc (D : SystemBlockDiagData L N) (h : XChe
   rw [composedApproxCheb_apply, Pi.sub_apply, l1Chebyshev.toSeq_sub,
     defectCheb_apply_toSeq_negSucc, sub_zero]
 
-/-- Tail identity: composedApproxCheb acts as identity on real values at modes n > N. -/
-lemma composedApproxCheb_tail_toReal (D : SystemBlockDiagData L N)
-    (h : XCheb ν L) (l : Fin L) (n : ℕ) (hn : N < n) :
-    lpOneAlg.toRealSeq (composedApproxCheb (ν := ν) D h l) (↑n : ℤ) =
-      lpOneAlg.toRealSeq (h l) (↑n : ℤ) := by
-  rw [← l1Chebyshev.toSeq, composedApproxCheb_toSeq_natCast,
-    SystemBlockDiagData.actionFinite_tail _ _ _ _ hn, sub_zero]; rfl
 
 end ChebyshevIVP
 

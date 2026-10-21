@@ -47,9 +47,7 @@ def atom (m : M) : E m := equiv m 1
 /-- The weight `ω_m = ‖θ_m 1‖` of the fiber `E m` (derived, never a field). -/
 def weight (m : M) : ℝ := ‖atom (E := E) m‖
 
-lemma atom_def (m : M) : atom (E := E) m = equiv m 1 := rfl
 
-lemma weight_def (m : M) : weight (E := E) m = ‖equiv (E := E) m 1‖ := rfl
 
 /-- `θ_m r = r • δ_m`. -/
 lemma equiv_apply_eq_smul_atom (m : M) (r : 𝕜) :
@@ -83,10 +81,6 @@ lemma norm_equiv_symm_apply (m : M) (x : E m) :
     equiv (E := E) m (a + b) = equiv m a + equiv m b := map_add _ a b
 @[simp] lemma equiv_neg (m : M) (a : 𝕜) : equiv (E := E) m (-a) = -equiv m a := map_neg _ a
 @[simp] lemma equiv_symm_zero (m : M) : (equiv (E := E) m).symm 0 = 0 := map_zero _
-@[simp] lemma equiv_symm_add (m : M) (x y : E m) :
-    (equiv (E := E) m).symm (x + y) = (equiv m).symm x + (equiv m).symm y := map_add _ x y
-@[simp] lemma equiv_symm_neg (m : M) (x : E m) :
-    (equiv (E := E) m).symm (-x) = -(equiv m).symm x := map_neg _ x
 lemma equiv_symm_apply_equiv (m : M) (r : 𝕜) :
     (equiv (E := E) m).symm (equiv m r) = r := LinearEquiv.symm_apply_apply _ r
 lemma equiv_apply_equiv_symm (m : M) (x : E m) :
@@ -109,9 +103,6 @@ def equivL (m : M) : 𝕜 ≃L[𝕜] E m where
   continuous_toFun := continuous_equiv m
   continuous_invFun := continuous_equiv_symm m
 
-@[simp] lemma coe_equivL (m : M) : ⇑(equivL (E := E) m) = equiv m := rfl
-
-@[simp] lemma coe_equivL_symm (m : M) : ⇑(equivL (E := E) m).symm = (equiv m).symm := rfl
 
 end FiberTrivialization
 

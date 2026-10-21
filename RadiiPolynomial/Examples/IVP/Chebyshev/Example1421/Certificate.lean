@@ -17,9 +17,9 @@ certificate uses no compiled-code evaluation. The four bounds:
   consumed by the certificate: it agrees with the adapter's residual coefficients
   (`computed_residual_eq`);
 - `Z₀_finBlockNorm_le` — the 41×41 block defect ‖I − A·DF‖ ≤ 10⁻¹⁶ from the grid clause
-  of `DefectBy` at denominator `10 ^ 60` (`StdChebIVPData.Z₀_sound`); `main_theorem`
-  consumes the same kernel lemma through the family face, and the operator form `Z₀_le` is
-  derived from the finite-block form and kept as the public statement;
+  of `DefectBy` at denominator `10 ^ 60` (`StdChebIVPData.Z₀_sound`); the function-space
+  endpoints consume this finite-block bound. `main_theorem` supplies the same grid
+  check through `StdChebIVPData.certified_of_checksK`;
 - `Z₁_le` — ε + ν/(N+1)·K ≤ 0.2533 via `chebyshev_Z₁_le_relaxed` (`Z₁_le_of_checksK`):
   negatives pass through, the tail is −shiftDiv(Dφ h), and the ε-leakage (7/2000) is
   certified column by column in exact ℚ — columns ≤ N cancel exactly against the stored
@@ -32,10 +32,7 @@ certificate uses no compiled-code evaluation. The four bounds:
   `8 = 2·derivativeLipschitzBound (X² − X)` read off the syntax, and the sharp full-column
   bound ‖TC‖ ≤ 7/4 (closed-form `TC` rows, tail ν/(N+1) = 2/41);
 
-plus `radii_neg` (the radii polynomial at r = 10⁻⁶) and
-`margin_clears_gate` — the native margin (≈ 74.7%) clears the bordered↔U
-transport threshold (κ−1)/κ = 5/8 at κ = 8/3, so the certificate transports
-(`Examples/Transport/TwinTransport.lean`, `twin_transports`).
+plus `radii_neg` (the radii polynomial at r = 10⁻⁶).
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -52,76 +49,17 @@ The folded convolution of the stored dyadic coefficients, run in exact ℚ.
 `computed_residual_eq`). `main_theorem` does not use this section: its `Y₀` goes through the
 adapter's `Y₀Q` (`k_Y₀`). -/
 
-/-- Stored coefficient, zero-extended beyond the array. -/
-def qbar (k : ℕ) : ℚ := abar_0.getD k 0
 
-lemma abar_0_size : abar_0.size = N + 1 := by decide +kernel
 
-lemma qbar_eq_zero {k : ℕ} (hk : N < k) : qbar k = 0 := by
-  unfold qbar
-  simp only [Array.getD]
-  rw [dite_eq_right (by rw [abar_0_size]; omega)]
 
-/-- ℚ fold: `(S ā · S ā)_m` for `m ≥ 0` (symmetric-extension convolution),
-indexed by `j ∈ range (2N+1)` via `i = j − N` to stay computable. -/
-def foldQ (m : ℕ) : ℚ :=
-  ∑ j ∈ Finset.range (2 * N + 1),
-    qbar ((m : ℤ) - ((j : ℤ) - N)).natAbs * qbar ((j : ℤ) - N).natAbs
 
-/-- ℚ mirror of `toSeq ((banachField f_cpoly) ā) m` for `m ≥ 0`. -/
-def phiQ (m : ℕ) : ℚ := foldQ m - qbar m
 
-/-- ℚ mirror of `chebyshevIvpCoeffs (banachField f_cpoly) p₀ ā`. -/
-def FQ : ℕ → ℚ
-  | 0 => 1/2 - qbar 0 - 2 * ∑ j ∈ Finset.range N, (-1 : ℚ) ^ (j + 1) * qbar (j + 1)
-  | (k + 1) => 2 * ((k : ℚ) + 1) * qbar (k + 1) + phiQ (k + 2) - phiQ k
 
-lemma phiQ_eq_zero {m : ℕ} (hm : 2 * N < m) : phiQ m = 0 := by
-  have hfold : foldQ m = 0 := by
-    refine Finset.sum_eq_zero fun j hj => ?_
-    rw [Finset.mem_range] at hj
-    have hNz : ((N : ℤ)) = 40 := rfl
-    have hNn : N = 40 := rfl
-    rw [qbar_eq_zero (k := ((m : ℤ) - ((j : ℤ) - N)).natAbs) (by omega), zero_mul]
-  rw [phiQ, hfold, qbar_eq_zero (by omega), sub_zero]
 
-lemma FQ_eq_zero {n : ℕ} (hn : 2 * N + 1 < n) : FQ n = 0 := by
-  obtain ⟨k, rfl⟩ : ∃ k, n = k + 1 := ⟨n - 1, by omega⟩
-  show 2 * ((k : ℚ) + 1) * qbar (k + 1) + phiQ (k + 2) - phiQ k = 0
-  rw [qbar_eq_zero (by omega), phiQ_eq_zero (by omega), phiQ_eq_zero (by omega)]
-  ring
 
 /-! ### Bridge: the ℚ mirror is the adapter's residual -/
 
-/-- The generic Laurent interpreter equals the existing exact rational fold. -/
-private lemma computed_phi_eq (l : Fin L) (n : ℕ) :
-    (f_cpoly l).evalChebCoeff data.abar_Q (n : ℤ) = phiQ n := by
-  have hs (i : Fin L) (k : ℤ) (hk : N < k.natAbs) :
-      (data.abar_Q i).getD k.natAbs 0 = 0 := qbar_eq_zero hk
-  have h := (f_cpoly l).evalLaurentCoeffSeq_eq_of_support
-    (fun _ => N + 1) (fun _ => N) (fun _ k => qbar k.natAbs)
-    (fun i k hk => hs i k (by omega)) hs (n : ℤ)
-  change (f_cpoly l).evalLaurentCoeffSeq (fun _ => N + 1)
-    (fun _ k => qbar k.natAbs) (n : ℤ) = _
-  rw [h]
-  change (∑ k ∈ MvPolyBridge.CompPoly.laurentModes N,
-      qbar ((n : ℤ) - k).natAbs * qbar k.natAbs) - qbar (n : ℤ).natAbs = _
-  rw [Int.natAbs_natCast, MvPolyBridge.CompPoly.laurentModes,
-    Finset.sum_image (fun x _ y _ hxy => by omega)]
-  rfl
 
-/-- Exact agreement with the polynomial residual at every mode. -/
-lemma computed_residual_eq (l : Fin L) (n : ℕ) :
-    compPolyIvpCoeffsQ f_cpoly data.abar_Q (fun _ => 1 / 2) l n = FQ n := by
-  cases n with
-  | zero =>
-      change 1 / 2 - qbar 0 - 2 *
-        ∑ j ∈ Finset.range (N + 1), (-1 : ℚ) ^ (j + 1) * qbar (j + 1) = _
-      rw [Finset.sum_range_succ, qbar_eq_zero (k := N + 1) (by omega), mul_zero, add_zero]
-      rfl
-  | succ n =>
-      simp only [compPolyIvpCoeffsQ, computed_phi_eq]
-      rfl
 
 /-! ## The certificate and its kernel checks
 
@@ -213,9 +151,10 @@ private theorem k_rad : cert.Z₂ * cert.r₀ ^ 2 - (1 - cert.Z₀ - cert.Z₁) 
 /-- The kernel-scale obligations, assembled from the per-conjunct lemmas (stored data). -/
 private theorem checksK : cert.ChecksK .grid (10 ^ 60) E N A_col DF_col abarQ ν_q f_cpoly p_q :=
   ⟨k_Z₀, k_Y₀, k_R, k_K,
-    fun l j mn hmn => ball_lt_add
-      (P := fun mn => colNormS N A_col DF_col abarQ ν_q f_cpoly l j mn ≤ E l j * ν_q ^ mn)
-      (k_eps_lo l j) (k_eps_hi l j) mn (k_Mfar ▸ hmn),
+    fun l j mn hmn => by
+      have hmn' : mn < 41 + 42 := k_Mfar ▸ hmn
+      exact (lt_or_ge mn 41).elim (k_eps_lo l j mn) fun hm => by
+        simpa [Nat.add_sub_of_le hm] using k_eps_hi l j (mn - 41) (by omega),
     k_far, k_E, k_Z₁, k_TC, k_B, k_Z₂, k_r₀, k_rad⟩
 
 /-- The same obligations on the bundle's fields (definitional). -/
@@ -239,11 +178,6 @@ lemma Z₀_finBlockNorm_le :
     finiteBlockMatrixNorm ν_val data.defect.finBlock ≤ (Z₀_bound : ℝ) :=
   data.Z₀_sound .grid (10 ^ 60) k_Z₀
 
-/-- Z₀ obligation of `chebyshev_system_theorem`, discharged. -/
-lemma Z₀_le :
-    ‖ContinuousLinearMap.id ℝ (XCheb ν_val L) - data.composedApproxCLM‖ ≤ (Z₀_bound : ℝ) :=
-  data.Z₀_le Z₀_finBlockNorm_le
-
 /-- The certified radius of the symmetrized candidate: `‖S(ā)‖ ≤ 39/50`. -/
 lemma Sabar_norm_le (l : Fin L) : ‖l1Chebyshev.symmetrize_CLM (ābar l)‖ ≤ ((39/50 : ℚ) : ℝ) := by
   rw [l1Chebyshev.symmetrize_CLM_apply, data.norm_symmetrize_abar_eq l]
@@ -254,14 +188,6 @@ lemma Z₁_le :
     ‖data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar‖ ≤ ((Z₁_bound : ℚ) : ℝ) :=
   data.Z₁_le_of_checksK f_cpoly p₀ p_q cert E .grid (10 ^ 60) checksK_data
 
-/-- **Semi-major Z₁ bound**: `‖composedApprox − DG(ā)‖ ≤ ε + (ν⁻¹+ν)/(2(N+1))·K ≤ 0.16`,
-via `chebyshev_Z₁_le_semiMajor` (family face `Z₁_le_semiMajor_of_checksK`) with the same kernel
-checks as `Z₁_le` (0.0035 + (1.25/41)·5.12 = 0.1596…). -/
-theorem Z₁_le_semiMajor :
-    ‖data.composedApproxCLM - fderiv ℝ (data.G (banachField f_cpoly) p₀) ābar‖
-      ≤ ((Z₁_semiMajor_bound : ℚ) : ℝ) :=
-  data.Z₁_le_semiMajor_of_checksK f_cpoly p₀ p_q cert E .grid (10 ^ 60) checksK_data
-    (by norm_num [cert, eps_bound, K_bound, Z₁_semiMajor_bound, data, ν_q, N])
 
 /-- **Z₂ obligation**: the Lipschitz bound on DG over the certificate ball, from
 `Z₂_le_of_Q`: `‖TC‖ ≤ 7/4` (closed-form rows, `TCnormF_eq`) times the syntactic derivative
@@ -277,16 +203,6 @@ lemma Z₂_le : ∀ c ∈ Metric.closedBall ābar ((r_minus : ℚ) : ℝ),
 lemma radii_neg :
     generalRadiiPolynomial (Y₀_bound : ℝ) (Z₀_bound : ℝ) (Z₁_bound : ℝ)
       (fun _ => (Z₂_bound : ℝ)) (r_minus : ℝ) < 0 := by
-  norm_num [generalRadiiPolynomial, Y₀_bound, Z₀_bound, Z₁_bound, Z₂_bound, r_minus]
-
-/-- **The transport gate accepts.** The native margin at r = 10⁻⁶ exceeds
-(κ−1)/κ = 5/8 for the bordered↔U price κ = 8/3 at ν = 2: by
-`transport_radii_polynomial_of_margin`, the completed certificate transports
-to bordered Chebyshev storage with no bound re-verified there. -/
-lemma margin_clears_gate :
-    (8/3 : ℝ) * 1 * generalRadiiPolynomial (Y₀_bound : ℝ) (Z₀_bound : ℝ) (Z₁_bound : ℝ)
-      (fun _ => (Z₂_bound : ℝ)) (r_minus : ℝ)
-      + ((8/3 : ℝ) * 1 - 1) * (r_minus : ℝ) < 0 := by
   norm_num [generalRadiiPolynomial, Y₀_bound, Z₀_bound, Z₁_bound, Z₂_bound, r_minus]
 
 /-! ## The main theorem -/

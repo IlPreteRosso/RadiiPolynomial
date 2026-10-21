@@ -1,18 +1,16 @@
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Classification
 
 /-!
-# The character space as the filled Bernstein ellipse
+# The filled Bernstein ellipse and its physical characters
 
-Parameterization layer. `Ellipse ν` is the closed filled Bernstein ellipse in
-focal-sum form `‖w - 1‖ + ‖w + 1‖ ≤ ν + ν⁻¹` (degenerating to `[-1,1]` at `ν = 1`; that
-degeneration is not proved here); `focal_sum_eq` (by the parallelogram law), with
-`joukowski_mem_ellipse` and `exists_annular_preimage`, identifies it as the Joukowski
-image of the closed annulus. Every point of the ellipse is the normalized coordinate `χ ↦ χ(g)`
-of exactly one continuous complex character (`existsUnique_character`,
-`exists_character_iff`), which packages the classification into the set-level
-bijection `characterEquivEllipse : Character ν ≃ Ellipse ν`.
+`Ellipse ν` is the focal-sum region `‖w - 1‖ + ‖w + 1‖ ≤ ν + ν⁻¹`.
+`focal_sum_eq` and `exists_annular_preimage` relate it to the Joukowski image of the
+closed annulus. `existsUnique_character` gives the unique physical character at each
+ellipse point, and `ellipseCharacter`/`ellipseCharacter_gen` expose that construction.
+The degenerate-interval identification at `ν = 1` is not proved here.
 
-The topological upgrade is in `Spectrum/Topology.lean`.
+The additional set-level equivalence and its topological upgrade belong to the recovery
+module `B5RecordPhysicalSpectrum`; the removed `Spectrum/Topology.lean` is not a shipped owner.
 -/
 
 noncomputable section
@@ -27,16 +25,7 @@ is not proved here). -/
 abbrev Ellipse (ν : PosReal) :=
   {w : ℂ // ‖w - 1‖ + ‖w + 1‖ ≤ (ν : ℝ) + (ν : ℝ)⁻¹}
 
-/-- The focal-sum threshold is twice the semi-major axis of `CrossGeometry.semiMajor`,
-so this ellipse is the one of `CrossGeometry/Joukowski.lean` in axis form (only this
-identity of thresholds is proved here). -/
-theorem two_mul_semiMajor (ν : PosReal) : 2 * semiMajor ν = (ν : ℝ) + (ν : ℝ)⁻¹ := by
-  unfold semiMajor
-  ring
 
-theorem focal_sum_le_iff_le_two_mul_semiMajor (ν : PosReal) (w : ℂ) :
-    ‖w - 1‖ + ‖w + 1‖ ≤ (ν : ℝ) + (ν : ℝ)⁻¹ ↔ ‖w - 1‖ + ‖w + 1‖ ≤ 2 * semiMajor ν := by
-  rw [two_mul_semiMajor]
 
 private theorem joukowski_sub_one {z : ℂ} (hz : z ≠ 0) :
     joukowski z - 1 = (z - 1) ^ 2 / (2 * z) := by
@@ -84,13 +73,6 @@ private theorem annulus_of_focal_le {t : ℝ} (ht : 0 < t) {ν : ℝ} (hν : 1 �
 
 variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 
-omit [Fact (1 ≤ (ν : ℝ))] in
-theorem joukowski_mem_ellipse {z : ℂ}
-    (hz : (ν : ℝ)⁻¹ ≤ ‖z‖ ∧ ‖z‖ ≤ (ν : ℝ)) :
-    ‖joukowski z - 1‖ + ‖joukowski z + 1‖ ≤ (ν : ℝ) + (ν : ℝ)⁻¹ := by
-  have hz0 := lpOneAlg.ne_zero_of_annulus ν hz
-  rw [focal_sum_eq hz0]
-  exact add_inv_le_add_inv_of_inv_le_of_le (norm_pos_iff.mpr hz0) ν.coe_pos hz.1 hz.2
 
 theorem exists_annular_preimage (w : Ellipse ν) :
     ∃ (z : ℂ) (_hz : (ν : ℝ)⁻¹ ≤ ‖z‖ ∧ ‖z‖ ≤ (ν : ℝ)), joukowski z = w.val := by
@@ -100,13 +82,6 @@ theorem exists_annular_preimage (w : Ellipse ν) :
   rw [← focal_sum_eq hz0, hj]
   exact w.property
 
-/-- The normalized physical coordinate of any character lies in the ellipse. -/
-theorem character_gen_mem_ellipse (χ : Character ν) :
-    ‖χ (joukowskiGenSymm ν) - 1‖ + ‖χ (joukowskiGenSymm ν) + 1‖ ≤
-      (ν : ℝ) + (ν : ℝ)⁻¹ := by
-  obtain ⟨z, hz, rfl⟩ := character_eq_restriction ν χ
-  rw [restriction_gen]
-  exact joukowski_mem_ellipse ν hz
 
 /-- Every point of the filled ellipse occurs as the normalized coordinate
 of exactly one continuous complex-valued physical character. -/
@@ -120,15 +95,6 @@ theorem existsUnique_character (w : Ellipse ν) :
     apply character_ext ν
     rw [hχ, restriction_gen, hj]
 
-/-- Exact classification criterion on the original real carrier. -/
-theorem exists_character_iff (w : ℂ) :
-    (∃ χ : Character ν, χ (joukowskiGenSymm ν) = w) ↔
-      ‖w - 1‖ + ‖w + 1‖ ≤ (ν : ℝ) + (ν : ℝ)⁻¹ := by
-  constructor
-  · rintro ⟨χ, rfl⟩
-    exact character_gen_mem_ellipse ν χ
-  · intro hw
-    exact (existsUnique_character ν ⟨w, hw⟩).exists
 
 /-- Choice only selects a quadratic preimage; uniqueness makes the resulting
 physical character independent of that choice. -/
@@ -139,21 +105,7 @@ def ellipseCharacter (w : Ellipse ν) : Character ν :=
     ellipseCharacter ν w (joukowskiGenSymm ν) = w.val :=
   (existsUnique_character ν w).exists.choose_spec
 
-/-- A set-level equivalence, with actual characters and normalized physical
-coordinates. No topology or complexified algebra is implicit in this type. -/
-def characterEquivEllipse : Character ν ≃ Ellipse ν where
-  toFun χ := ⟨χ (joukowskiGenSymm ν), character_gen_mem_ellipse ν χ⟩
-  invFun := ellipseCharacter ν
-  left_inv _χ := character_ext ν (ellipseCharacter_gen ν _)
-  right_inv w := Subtype.ext (ellipseCharacter_gen ν w)
 
-@[simp] theorem characterEquivEllipse_apply (χ : Character ν) :
-    (characterEquivEllipse ν χ).val = χ (joukowskiGenSymm ν) := rfl
 
-/-- The exact quotient parameter of annular Laurent evaluation. -/
-@[simp] theorem characterEquivEllipse_restriction (z : ℂ)
-    (hz : (ν : ℝ)⁻¹ ≤ ‖z‖ ∧ ‖z‖ ≤ (ν : ℝ)) :
-    (characterEquivEllipse ν (restriction ν z hz)).val = joukowski z :=
-  restriction_gen ν z hz
 
 end RadiiPolynomial.PhysicalSpectrum

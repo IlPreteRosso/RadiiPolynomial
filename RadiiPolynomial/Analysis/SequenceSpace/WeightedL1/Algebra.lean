@@ -4,18 +4,20 @@ import RadiiPolynomial.Algebra.Convolution.Ring
 /-!
 # The convolution ring on the weighted ℓ¹ carrier
 
-On the carrier `lpOneAlg M E` of `WeightedL1/Carrier.lean`, with a monoid structure on the index
-type, convolution of the coefficient sequences is the multiplication. This file is the ring half of
-the weighted ℓ¹ API.
+On the carrier `lpOneAlg M E` of `WeightedL1/Carrier.lean`, convolution on an additive index
+monoid supplies the globally registered multiplication and unit. This file is the ring half of
+the weighted ℓ¹ API. Arbitrary multiplicative-monoid constructors are named explicit data;
+the corresponding additive-index presentation uses the `Additive M` index/fiber family.
 
-* The convolution classes `lpOneAlgConvCompat` / `lpOneMulAlgConvCompat` supply the summability
-  and fiber-norm primitives behind one ring instance; like the weight classes they are indexed by
-  the chosen frame `θ` (`FiberTrivialization`). They have two instances: the tsum path
-  `instConvCompatOfWeightMul` (submultiplicative weight, complete scalar field) and the finite-fiber
-  path `instConvCompatOfAntidiag` (`Finset.HasAntidiagonal`, priority 1100).
-* The instances `instMul`, `instOne`, `instRing`, `instNormedRing` (from the index monoid,
-  `DecidableEq` and convolution compatibility; product `(f * g)_k = θ_k (θ⁻¹f ⋆ θ⁻¹g)_k`, unit
-  `θ_k (δ_1)_k`), with the fiber faces `mul_apply`, `one_apply` and the coefficient faces
+* The frame-indexed convolution classes `lpOneAlgConvCompat` / `lpOneMulAlgConvCompat`
+  supply summability and fiber-norm primitives. Each class retains its corresponding
+  tsum path `instConvCompatOfWeightMul` (submultiplicative weight, complete scalar field) and
+  finite-fiber path `instConvCompatOfAntidiag` (`Finset.HasAntidiagonal`, priority 1100).
+  Both compatibility families retain their instances; only the multiplicative operation
+  constructors below are excluded from global registration.
+* The additive instances `instMul`, `instOne`, `instRing`, `instNormedRing` (from the additive index
+  monoid, `DecidableEq` and convolution compatibility; product `(f * g)_k = θ_k (θ⁻¹f ⋆ θ⁻¹g)_k`,
+  unit `θ_k (δ_0)_k`), with the fiber face `one_apply` and the coefficient faces
   `toRealSeq_mul_fun`, `toRealSeq_one_fun`; `instAlgebra` and `instNormedAlgebra` over any
   additive index monoid; `instCommRing` and `instNormedCommRing` over a commutative one;
   `instNormOneClass` (from the frame's `ω_0 = 1` alone; no convolution witness).
@@ -27,11 +29,13 @@ The convolution classes come in pairs: the additive class `lpOneAlgConvCompat` i
 and the multiplicative one `lpOneMulAlgConvCompat` is linked to it by `@[to_additive existing]` (the
 class field `mulConvSummable` corresponds to `convSummable`). Helper lemmas are stated in
 multiplicative spelling and generate their additive versions via `@[to_additive]`
-(`mul_memℓp_mul` ↦ `mul_memℓp`, `norm_mul_le_mul'` ↦ `norm_mul_le'`, etc.). The ring *instances*
+(`mul_memℓp_mul` ↦ `mul_memℓp`, `norm_mul_le_mul'` ↦ `norm_mul_le'`, etc.). The operation constructors
 are generated the same way: `instMulMul`, `instMulOne`, `instMulRing`, `instMulNormedRing` (for
 `[Monoid M]`) give `instMul`, `instOne`, `instRing`, `instNormedRing` (for `[AddMonoid M]`) by
 `@[to_additive (dont_translate := E 𝕜)]`, with the fibers and the scalar field excluded from the
-translation. The `Algebra`, `NormedAlgebra`, `CommRing` and `NormOneClass` instances are stated for
+translation. Only the additive images are registered globally. The multiplicative constructors
+are explicit data, selected locally inside their construction and evaluation sections; the
+general monoid-indexed presentation is available through the `Additive M` index/fiber family. The `Algebra`, `NormedAlgebra`, `CommRing` and `NormOneClass` instances are stated for
 an additive index monoid only.
 
 ## Frames
@@ -320,7 +324,7 @@ private theorem norm_mul_le_mul' (f g : lpOneAlg M E) :
 
 end MulRingInfrastructure
 
-/-! ### Mul / One / Ring / NormedRing instances (multiplicative index monoid) -/
+/-! ### Explicit multiplicative constructors and global additive instances -/
 
 section MulRingInstances
 
@@ -329,24 +333,23 @@ variable [Monoid M] [FiberTrivialization 𝕜 M E] [lpOneMulAlgConvCompat 𝕜 M
 
 /-- The convolution product transported through the chosen frame:
 `(f * g)_k = θ_k ((θ⁻¹ f ⋆ θ⁻¹ g)_k)`. -/
-@[to_additive (dont_translate := E 𝕜) instMul]
-instance instMulMul : Mul (lpOneAlg M E) where
+@[instance_reducible, to_additive (dont_translate := E 𝕜) instMul]
+def instMulMul : Mul (lpOneAlg M E) where
   mul f g := ⟨⟨fun k => FiberTrivialization.equiv (E := E) k
     (ringConvolution (mulToRealSeq f) (mulToRealSeq g) k),
     mul_memℓp_mul f g⟩⟩
 
+attribute [instance_reducible, instance] instMul
+attribute [local instance] instMulMul
+
 /-- The unit transported through the chosen frame: `1_k = θ_k (δ_k)`. -/
-@[to_additive (dont_translate := E 𝕜) instOne]
-instance instMulOne : One (lpOneAlg M E) where
+@[instance_reducible, to_additive (dont_translate := E 𝕜) instOne]
+def instMulOne : One (lpOneAlg M E) where
   one := ⟨⟨fun m => FiberTrivialization.equiv (E := E) m
     (delta (1 : 𝕜) m), one_memℓp_mul⟩⟩
 
-omit [DecidableEq M] in
-/-- Fiber value of the product: `(f * g) k = θ_k ((θ⁻¹ f ⋆ θ⁻¹ g)_k)`. -/
-@[to_additive (dont_translate := E 𝕜) mul_apply]
-theorem mulMul_apply (f g : lpOneAlg M E) (k : M) :
-    (f * g) k = FiberTrivialization.equiv (E := E) k
-      (ringConvolution (mulToRealSeq f) (mulToRealSeq g) k) := rfl
+attribute [instance_reducible, instance] instOne
+attribute [local instance] instMulOne
 
 omit [lpOneMulAlgConvCompat 𝕜 M E] in
 /-- Fiber value of the unit: `1 m = θ_m (δ_m)`. -/
@@ -368,8 +371,8 @@ theorem mulToRealSeq_one_fun :
     mulToRealSeq (1 : lpOneAlg M E) = delta (1 : 𝕜) :=
   funext fun m => LinearEquiv.symm_apply_apply (FiberTrivialization.equiv (E := E) m) _
 
-@[to_additive (dont_translate := E 𝕜) instRing]
-instance instMulRing : Ring (lpOneAlg M E) where
+@[instance_reducible, to_additive (dont_translate := E 𝕜) instRing]
+def instMulRing : Ring (lpOneAlg M E) where
   mul_assoc f g h := by
     apply ext_mulToRealSeq; ext k
     simp only [mulToRealSeq_mul_fun]
@@ -433,11 +436,17 @@ instance instMulRing : Ring (lpOneAlg M E) where
         simp [delta, Pi.single_apply]; split_ifs <;> ring]
     exact FiberTrivialization.equiv_neg m _
 
-@[to_additive (dont_translate := E 𝕜) instNormedRing]
-instance instMulNormedRing : NormedRing (lpOneAlg M E) :=
+attribute [instance_reducible, instance] instRing
+attribute [local instance] instMulRing
+
+@[instance_reducible, to_additive (dont_translate := E 𝕜) instNormedRing]
+def instMulNormedRing : NormedRing (lpOneAlg M E) :=
   fast_instance% { lpOneAlg.instNormedAddCommGroup, lpOneAlg.instMulRing with
     dist_eq := fun _ _ => rfl
     norm_mul_le := fun f g => norm_mul_le_mul' f g }
+
+attribute [instance_reducible, instance] instNormedRing
+attribute [local instance] instMulNormedRing
 
 end MulRingInstances
 
@@ -446,6 +455,9 @@ end lpOneAlg
 namespace lpOneAlg
 
 section ConvolutionEval
+
+-- This section states the explicit multiplicative constructors’ evaluation laws.
+attribute [local instance] instMulMul instMulOne instMulRing instMulNormedRing
 
 variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
@@ -538,13 +550,13 @@ namespace lpOneAlg
 variable {𝕜 : Type*} [NormedField 𝕜]
 variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
 variable [AddMonoid M] [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]
-variable [lpOneAlgWeightMul 𝕜 M E] [DecidableEq M]
+variable [lpOneAlgWeightNormalized 𝕜 M E] [DecidableEq M]
 
 /-! ### Norm of Identity
 
 The unit `1_m = θ_m (δ_0)_m` needs no convolution witness, so neither does its norm. -/
 
-omit [lpOneAlgWeightMul 𝕜 M E] in
+omit [lpOneAlgWeightNormalized 𝕜 M E] in
 /-- The norm of the unit is the weight at the identity: `‖1‖ = ω_0`. -/
 theorem norm_one_eq :
     ‖(1 : lpOneAlg M E)‖ = FiberTrivialization.weight (E := E) (0 : M) := by
@@ -558,10 +570,10 @@ theorem norm_one_eq :
     · rw [ite_eq_right hm, one_apply, addDelta_ne (1 : 𝕜) hm, map_zero, norm_zero]
   rw [h, tsum_ite_eq]
 
-/-- `‖1‖ = 1` from `ω_0 = 1` (the `weight_zero` field of `lpOneAlgWeightMul`, the smallest
-existing class carrying it). -/
+/-- `‖1‖ = 1` from the independent unit normalization `ω_0 = 1`.
+No submultiplicativity or convolution witness is required. -/
 instance instNormOneClass : NormOneClass (lpOneAlg M E) where
-  norm_one := norm_one_eq.trans lpOneAlgWeightMul.weight_zero
+  norm_one := norm_one_eq.trans lpOneAlgWeightNormalized.weight_zero
 
 end lpOneAlg
 

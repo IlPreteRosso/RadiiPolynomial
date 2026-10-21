@@ -5,28 +5,16 @@ import RadiiPolynomial.Algebra.Polynomial.CompPoly.Derivative
 /-!
 # The real vector field of a polynomial system
 
-Geometry-free application layer: the right-hand side of the ODE `ẋ = f(x)` read off a
-`CompPoly` system, with no reference to any coefficient space. Both discretizations need
-it — the Taylor bridge in `Applications/IVP/Taylor/Trajectory.lean` states its
-function-space conclusions in terms of it, and so do the Chebyshev solution faces in
-`Applications/IVP/Chebyshev/AnalyticPolynomial.lean` — so it lives above neither of them.
+`IVP.vectorField` reads the geometry-free ODE right-hand side from a `CompPoly` system.
+The Taylor and Chebyshev trajectory/solution modules use this same real field. Their
+coefficient-space `banachField` maps remain in their respective geometry modules.
 
-The coefficient-space companions are the two `banachField` maps, one per geometry
-(`IVP.banachField` on `l1Weighted`, `ChebyshevIVP.banachField` on `l1Chebyshev`); they
-stay in their own modules because each mentions its own carrier.
-
-`vectorField_lipschitzOnWith` packages the syntactic Lipschitz constant of the system on a
-ball as the `NNReal` the solution faces consume, so no certificate states one by hand.
-
-## Calculus of the vector field
-
-- `contDiff_vectorField`, `contDiff_vectorField_pi`: the field is `C^ω` on `ℝ^L`
-  (from `MvPolyBridge.contDiff_evalBanach`, `CompPoly/Derivative`);
-- `differentiable_vectorField`, `differentiable_vectorField_pi`: hence differentiable;
-- `lipschitzOnWith_vectorField_closedBall`: Lipschitz on `closedBall 0 R` with any constant
-  dominating the components' syntactic `CompPoly.lipschitzBound`;
-- `exists_lipschitz_vectorField_closedBall`: the existence form, with the constant read off the
-  syntax for every radius.
+This shipped owner retains `vectorField_lipschitzOnWith`,
+`lipschitzOnWith_vectorField_closedBall` and `exists_lipschitz_vectorField_closedBall`:
+the Lipschitz constants are read from `CompPoly.lipschitzBound`. The explicit closed-ball
+face accepts a constant dominating those component bounds. The old standalone smoothness
+and differentiability wrappers are retired; polynomial derivative witnesses remain in
+`CompPoly/Derivative.lean`.
 -/
 
 open RadiiPolynomial MvPolyBridge
@@ -55,30 +43,9 @@ theorem vectorField_lipschitzOnWith (φ_cpoly : Fin L → CompPoly L) {R : ℝ} 
 
 /-! ## Calculus of the vector field -/
 
-/-- Each component `x ↦ vectorField φ_cpoly x l` is `ContDiff ℝ ⊤` on `ℝ^L`, i.e. of class
-`C^ω` (analytic), in particular `C^∞`. Smoothness is what the analytic-solution side needs; the
-Lipschitz constant for uniqueness is read off the syntax
-(`lipschitzOnWith_vectorField_closedBall`). -/
-theorem contDiff_vectorField (φ_cpoly : Fin L → CompPoly L) (l : Fin L) :
-    ContDiff ℝ ⊤ (fun x : Fin L → ℝ => vectorField φ_cpoly x l) :=
-  MvPolyBridge.contDiff_evalBanach (φ_cpoly l)
 
-/-- The full vector field `vectorField φ_cpoly : ℝ^L → (Fin L → ℝ)` is `ContDiff ℝ ⊤`
-(class `C^ω`). -/
-theorem contDiff_vectorField_pi (φ_cpoly : Fin L → CompPoly L) :
-    ContDiff ℝ ⊤ (fun x : Fin L → ℝ => vectorField φ_cpoly x) :=
-  contDiff_pi.mpr (contDiff_vectorField φ_cpoly)
 
-/-- Each component of the vector field is differentiable on `ℝ^L`
-(`MvPolyBridge.differentiable_evalBanach`). -/
-theorem differentiable_vectorField (φ_cpoly : Fin L → CompPoly L) (l : Fin L) :
-    Differentiable ℝ (fun x : Fin L → ℝ => vectorField φ_cpoly x l) :=
-  MvPolyBridge.differentiable_evalBanach (φ_cpoly l)
 
-/-- The full vector field is differentiable on `ℝ^L`. -/
-theorem differentiable_vectorField_pi (φ_cpoly : Fin L → CompPoly L) :
-    Differentiable ℝ (fun x : Fin L → ℝ => vectorField φ_cpoly x) :=
-  differentiable_pi.mpr (differentiable_vectorField φ_cpoly)
 
 /-- Explicit form: on `closedBall 0 R` the vector field is Lipschitz with any constant `K`
 dominating every component's syntactic constant `CompPoly.lipschitzBound`, so a certificate can

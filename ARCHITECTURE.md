@@ -22,40 +22,33 @@ layers, but the mathematical layers must not depend on them.
 
 | Directory | Mathematical role |
 | --- | --- |
-| `Algebra/Convolution` | Mathlib's discrete convolution (`Mathlib.Topology.Algebra.InfiniteSum.DiscreteConvolution`: `mulFiber`, `convolution`, `ringConvolution` and their laws) re-exported through `Basic`; library-owned, in `RadiiPolynomial.DiscreteConvolution`: the fiber equivalences (`mulFiberEquiv`, `sigmaMulFiberEquiv`), the point mass `delta` (`delta_eq_single`), the two-atom rule `single_ringConvolution_single` (any monoid index, additive `ℤ` included), triple-fiber associativity (`ringConvolution_assoc` under explicit summability, via the `HasSum` transfers `hasSum_sigma_leftMulAssoc`/`hasSum_sigma_rightMulAssoc`), the operation equality `ringConvolution_eq_finiteMulConvolution` with the finite-fiber convolution on indices with `Finset.HasMulAntidiagonal` (an equality of operations on `M → R`, not of carriers), and their additive twins (`Basic`, `Ring`); the topology-free finite-fiber core `Finite` (`finiteMulConvolution` over any `Mul` index with `Finset.HasMulAntidiagonal`, `finiteAddConvolution` by `to_additive`; laws at their weakest hypotheses, including the general-coefficient atom laws `single_one_left_apply`/`single_one_right_apply` and the map law `map_finiteMulConvolution`), of which the module `CauchyProduct` (definition `cauchyProduct`) is the natural-index specialization (`cauchyProduct_eq_finiteAddConvolution`), with the coefficient view `toPowerSeries` into `PowerSeries R` and its bundled `S`-linear equivalence `toPowerSeriesLinearEquiv`, real-free (no `Mathlib.Basic.Real.Basic` in its closure); the adapter `CauchyProductReal` owns the one real-number specialization `cauchyProduct.ratCast` (the cast `ℚ → ℝ` through the Cauchy product, from `cauchyProduct.map_cauchyProduct`), imported by the hub and explicitly by its consumer `Algebra/Polynomial/MvPolynomial/WeightedL1`; the topology-free wrapper `FiniteFiber` (imports only `Finite` and Mathlib algebra): the `def` synonyms `FiniteFiberConvolution M R` / `FiniteFiberAddConvolution M R` of all functions `M → R` with pointwise additive/module data, the convolution `Mul`, the unit `single 1 1` (`single 0 1`), the semiring and ring branches from `NonUnitalNonAssocSemiring` to `CommRing` (finite fibers explicit on every branch, `DecidableEq M` on the unital ones) and `Algebra S`; computation face `coeff`, extensionality by all coefficients; no instance on raw `M → R`; the power-series connections `FiniteFiber/PowerSeries` (imports `FiniteFiber`, `CauchyProduct` and Mathlib's power series; no topology): the ring equivalences `FiniteFiberAddConvolution.toPowerSeriesRingEquiv : FiniteFiberAddConvolution ℕ R ≃+* PowerSeries R` (forward map = `cauchyProduct.toPowerSeries`, `[Semiring R]` only) and `FiniteFiberAddConvolution.toMvPowerSeriesRingEquiv : FiniteFiberAddConvolution (σ →₀ ℕ) R ≃+* MvPowerSeries σ R` (identity on coefficients, explicit `[DecidableEq σ]`, no finiteness of `σ`), with scalar compatibility for every `[Module S R]`; the topology-free connection `FiniteFiber/MonoidAlgebra` (imports `FiniteFiber`, `Mathlib.Algebra.MonoidAlgebra.Defs`, `Mathlib.Algebra.Ring.Subsemiring.Basic`): the injective ring homomorphism `ofMonoidAlgebra R M : MonoidAlgebra R M →+* FiniteFiberConvolution M R` (additive twin `ofAddMonoidAlgebra`), its range characterized as the finitely supported elements (`mem_rangeS_ofMonoidAlgebra`, one closure package: `RingHom.rangeS`), and the ring isomorphism `ofMonoidAlgebraEquivRangeS` onto that range with the noncomputable inverse `toMonoidAlgebra` (`Finsupp.ofSupportFinite`); not generally onto (onto on a finite index and with one-element coefficients; tests only); the bridge `cauchyProduct.eq_addRingConvolution` to Mathlib's additive-index ring convolution (`Ring`) |
+| `Algebra/Convolution` | Mathlib's discrete-convolution primitives and laws through `Basic`; generic point masses, two-atom multiplication and associativity under explicit fiber/triple summability in `Ring`, including additive images with coefficient order preserved. The topology-free `Finite` core keeps finite-fiber convolution, its application formula and first-input scalar action. `CauchyProduct` keeps the natural-index operation, its finite-fiber equality, coefficient/range/support formulas, `toPowerSeries` coefficient view and generic `map_cauchyProduct`. Additional finite-fiber laws and power-series compatibility belong to staged recovery records; `toPowerSeriesLinearEquiv` is not a shipped service. |
 | `Algebra/Polynomial` | Semantic `MvPolynomial` calculus and computable `CompPoly` syntax, with Taylor and finite Laurent/Chebyshev interpreters, and certificate constants read off the syntax (`CompPoly/Bounds`, `CompPoly/Chebyshev/Bounds`: `normBound`, `lipschitzBound`, `derivativeBound`) |
-| `Algebra/Ring` | Mathlib-only ring identities for an idempotent head `P` and its complement `1 - P` (`HeadTailIdentities`: composition, defect and inverse-defect identities) |
-| `Algebra/Rees/Laurent` | Laurent/\|k\|-filtered Rees family `U R ⊆ R[X][T;T⁻¹]` with its atoms, tail ideal and structure constants (`Family`); the Euler derivation and the finite-core diagonal/cutoff calculus with the tail-inverse criterion and the specialization ring hom `specU t : U R →+* R[T;T⁻¹]` (coefficientwise evaluation at `t`, carrying `deltaU`, `qDelta`, `PH` to `deltaL` and the multipliers `diagL`) (`Euler`; only its four operator-level identities `PH_comp_one_sub`, `one_sub_comp_PH`, `PH_qDelta_tail`, `PH_add_qDelta_tail` sit in the documented local-instance section `Selection`, every other statement uses the default instances); the carrier-free Γ exponent identities and the real inverse bound `gammaW_inv_le` (`Gamma`, `GammaCutoff`); Mathlib-only |
-| `Analysis/Calculus` | One Mathlib-only bridge on coordinate projections, `fderiv_pi_apply` (`Pi`, `@[simp]`); differentiability of a projection is Mathlib's `@[fun_prop] differentiable_apply` |
-| `Analysis/Norm` | Carrier-neutral finite-sum inequalities in `RadiiPolynomial.NormHelpers` (`FiniteSum`, Mathlib-only imports): real-valued (weighted triangle, uniform factor, index swap) and normed-ring (`norm_sum_mul_pi_le`: `‖∑ i, f i * h i‖ ≤ (∑ i, ‖f i‖) * ‖h‖` over any `NonUnitalSeminormedRing`), the single proof home of that bound, of which the two `MvPolyBridge` names are consumer-compatibility faces |
-| `Analysis/SequenceSpace/WeightedL1` | Generic weighted `l1` sequence spaces whose one fiber datum is the chosen frame `FiberTrivialization 𝕜 M E` (`FiberTrivialization`, independent of `lpOneAlg`): linear equivalences `θ_m : 𝕜 ≃ₗ[𝕜] E m`, bundled as continuous linear equivalences `equivL`, with the derived atom `θ_m 1` and weight `‖θ_m 1‖`; there is no ring-data or scalar-compatibility class. The frame is part of the datum: scalar coordinates, scalar singles, the weight classes and the convolution product take it as an instance argument, equal weights do not determine the product (the `−1` frame keeps every weight and negates the product, `tests/FT/FrameReindexProbes`), and a second frame on the same family is selected explicitly (`letI`), never by inference. Two layers. `Carrier` (imports only `FiberTrivialization`, Mathlib's `lpSpace` and `TransferInstance`; no index operation, no convolution): the Beurling-weight classes `lpOneAlgWeightMul`/`lpOneAlgWeightSubMul` (and multiplicative twins) stated on `FiberTrivialization.weight`; the frame-free carrier `lpOneAlg M E` with its normed-group/complete/normed-space instances and norm faces; the frame-free fiber insertion `fiberSingle m (x : E m)`, bundled as the linear isometry `fiberSingleₗᵢ m : E m →ₗᵢ[𝕜] lpOneAlg M E`, with `norm_fiberSingle` and the expansions `hasSum_fiberSingle`, `hasSum_fiberSingle_mapCLM`; the θ-coordinates `toRealSeq f m = θ_m⁻¹ (f m)` (`toRealSeq_apply`, `equiv_toRealSeq`) bundled as the injective linear map `toRealSeqₗ : lpOneAlg M E →ₗ[𝕜] (M → 𝕜)`, the weighted norm `norm_eq_abs_toReal_mul_weight` and the bound `abs_toRealSeq_le` under `∀ m, 1 ≤ weight m`; the sign split of the norm over `ℤ` (`norm_eq_tsum_natCast_add_tsum_neg`, finite-support sums `norm_eq_bilatFinSum`, `norm_eq_natFinSum_of_finSupp`); scalar singles `single m x = fiberSingle m (θ_m x)` and the mode expansion, `evalCLM`, and the pointwise column-norm bounds `norm_le_of_cols`. `Algebra` (imports `Carrier` and `Algebra/Convolution/Ring`): the convolution ring transported through the frame (`mul_apply : (f * g) k = θ_k ((θ⁻¹f ⋆ θ⁻¹g)_k)`, `one_apply : 1 m = θ_m (δ_m)`), with the frame-indexed convolution classes `lpOneAlgConvCompat`/`lpOneMulAlgConvCompat` and their two summability routes from a submultiplicative weight, finite antidiagonals (`instConvCompatOfAntidiag`, priority 1100, no completeness) or a complete scalar field (`instConvCompatOfWeightMul`), neither needing weight ≥ 1; `Ring`/`NormedRing` from the index monoid, `DecidableEq` and convolution compatibility, `Algebra`/`NormedAlgebra` from the linearity of `θ⁻¹`, `CommRing`/`NormedCommRing` over a commutative index, and `NormOneClass` from the field `ω_0 = 1` of `lpOneAlgWeightMul` with no convolution witness. On top: the universal-property API (`liftCLM`, atom extensionality, `single_mul_single`, `singleCLM m = fiberSingleₗᵢ m ∘ equivL m`, one-sided multiplication `mulLeftCLM`/`mulRightCLM` with norm bounds) (`UniversalProperty`); the curried column principle and atom-supremum formulas for bilinear/trilinear maps, one frame per slot (`Multilinear`); the one-slot column principle `‖T‖ = ⨆ i, colRatio T i` (`Columns`, carrier-only); bounded scalar diagonals `diagCLM`, finite-head projections `headProj`/`tailProj` (both frame-free) and the exact head/tail aggregation of column ratios and operator norms (`Diagonal`, carrier-only: imports `Columns`, not `UniversalProperty`). `ScalarInstances` (imports `Scalar` and `Carrier`) registers the standard frame of `WeightedScalar` (`θ_m` the identity of `𝕜`, `fiberTrivialization_weight : weight m = w m`), the only `FiberTrivialization` instance of the library, and its weight classes. |
-| `Analysis/SequenceSpace/CharacterTopology` | Carrier-independent topology of pointwise convergence on continuous characters (`Gelfand.pointwiseTopology`) and its continuity API: elimination `Gelfand.continuous_character_apply` and introduction `Gelfand.continuous_of_continuous_apply` (the universal property of the induced topology) |
-| `Analysis/SequenceSpace/Geometric` | Taylor coefficient algebras, differentiation, evaluation, analytic extensionality, radius restriction, full-disc power series and complex synthesis (`Analytic`), and the character space as the closed disc (`Spectrum`, which installs the shared `Gelfand.pointwiseTopology` as a `local instance`); every module declares inside namespace `RadiiPolynomial` (the evaluation family of `Evaluation`/`EvaluationDerivative` is `RadiiPolynomial.l1Weighted.eval…`), and the geometric fibers `ScaledReal`, `geomFiber`, `OmegaScaledReal` are `WeightedScalar` abbreviations carrying its standard frame (`geomFiber_weight : FiberTrivialization.weight n = νⁿ`, `Aeval`) |
-| `Analysis/SequenceSpace/Chebyshev` | Bilateral storage, the flip-fixed physical algebra, the finite Galerkin carrier `FνN` with its even padding `ιN` and projection `πN` (`Galerkin`), the unnormalized one-sided cosine interface `OneSided` (symmetric extension and restriction as continuous maps, the reflected product with its exact constants; a different normalization from the bordered carrier), evaluation, analytic extensionality, the Laurent character space as the closed annulus (`LaurentSpectrum`), and the physical spectrum: classification, Bernstein ellipse, series, topology, holomorphy on the open ellipse with endpoint analyticity (`Spectrum/*`); both character spaces install the shared `Gelfand.pointwiseTopology` as a `local instance`; `Scalar` also owns the bilateral geometric fiber `geomFiberZ 𝕜 ν` of the Fourier carrier, so `Fourier/Support` imports `Chebyshev/Scalar` (with `WeightedL1/UniversalProperty`) and not the Chebyshev algebra; module chain: `Scalar` (bilateral weight, `geomFiberZ` with its frame weight `geomFiberZ_weight : FiberTrivialization.weight k = ν^|k|`, atom norm `lpOneAlg.norm_single_geomFiberZ`, the real fiber-norm bridge `ScaledRealZ.norm_equiv_apply`) → `Algebra` (`l1Chebyshev`, coefficient faces incl. `summable_norm_natCast`, `norm_fiber_natCast`, `finSum_le_norm`, `ext_natCast_negSucc`) → `Symmetrize` (`IsSymmetric`, `symmetrize`, `symmetrize_CLM`, `natEmbed`; the import hub through which `UnitLift`, `Bordered` and `CompPoly/Chebyshev/Coefficients` reach symmetrization) → { `UnitLift` → `Evaluation` (`eval`, `evalAtCLM`); `UConversion` (T↔U on raw storage) → `Bordered` (`nonnegRestrict`, `borderedTU_equiv`, the fiber-norm bridge `BorderedScaledReal.norm_equiv_apply`) } → `SymmetricSubalgebra` (`symmetricRetract`, a continuous linear retraction, not an algebra hom; `nonnegRestrictCLM`; `physicalBorderedEquiv : symmetricSubalgebra ν ≃ₗᵢ[ℝ] l1Bordered ν`, linear and isometric, not multiplicative) → `Galerkin`, `OneSided`, `AnalyticExt`; there is no `Bordered → SymmetricSubalgebra` edge |
-| `Analysis/SequenceSpace/Fourier` | Bilateral `ℤ`-window and band support on the geometric carrier `lpOneAlg ℤ (geomFiberZ 𝕜 ν)` (`winZ`, the far-antitone window maximum principle, the coefficient norm, `band_mul`, `band_pow`), and the exact finite-window operator norm of the tail-diagonal defect `M P L_b Q + R L_b` (`defect`, `opNorm_defect_eq_sup'`, explicit and joint head-block forms, `opNorm_joint_defect_eq_sup'`), attained as a weighted column ratio at an atom (`defect_attained`); the Γ leakage layer on the same carrier over real scalars `[NormedAlgebra ℝ 𝕜]` (`gammaDiag`, `gammaInvDiag`, the all-coefficient head/tail leakage estimates and the Γ majorant `norm_defect_le_gamma`, `Fourier/GammaLeakage`; its `norm_mulLeftCLM_le` is the carrier lemma `lpOneAlg.norm_mulLeftCLM_le`); no Fourier module declares into `Rees.Laurent` (`gammaW_inv_le` lives in `Rees/Laurent/Gamma`); imports Analysis and `Algebra/Rees/Laurent/Gamma` |
-| `Analysis/SequenceSpace/CrossGeometry` | Bounded maps between coefficient geometries, their evaluation and differentiation naturality, and the character obstructions (`CharacterObstruction`: no real extension of the zero physical character, two complex extensions) |
-| `Core` | Abstract Newton map and radii polynomial with local and finite-dimensional faces (`Theorem`), canonical bounds (`Bounds`), the degree-general `Z₂` engine (`AlgebraZ2`), and certificate transport (`Transport`); every declaration of the four modules lies in namespace `RadiiPolynomial` (the former root family of `Theorem` — `I_E`, `NewtonLikeMap`, `generalRadiiPolynomial`/`radiiPolynomial`/`simpleRadiiPolynomial`, `general_radii_polynomial_theorem`, … — moved there in the DEFER round, no aliases) |
+| `Analysis/Calculus` | Coordinate differentiation uses Mathlib's projection and continuous-linear-map calculus directly. The former library `Pi` bridge and polynomial-derivative automation are historical recovery material, not shipped modules. |
+| `Analysis/Norm` | Carrier-neutral finite-sum inequalities in `RadiiPolynomial.NormHelpers` (`FiniteSum`, Mathlib-only imports): real-valued (weighted triangle, uniform factor, index swap) and normed-ring (`norm_sum_mul_pi_le`: `‖∑ i, f i * h i‖ ≤ (∑ i, ‖f i‖) * ‖h‖` over any `NonUnitalSeminormedRing`), the single proof home of that bound, invoked directly by polynomial, Galerkin and Taylor Jacobian consumers |
+| `Analysis/SequenceSpace/WeightedL1` | The frame-free `lpOneAlg M E` carrier, chosen `FiberTrivialization 𝕜 M E`, fiber atoms, scalar coordinates and weighted norm identities form the base. A frame is explicit mathematical data: equal weights need not give equal convolution products. `Algebra` registers one additive-index operation family globally; `instMulMul`, `instMulOne`, `instMulRing`, `instMulNormedRing` remain named explicit data. Both convolution-compatibility families retain their own instances. Arbitrary multiplicative monoids use the `Additive M` index/fiber presentation. The tsum and finite-antidiagonal routes retain their distinct completeness hypotheses. Submultiplicativity, unit normalization and an explicit coefficient-extraction lower bound remain separate assumptions. `UniversalProperty` retains the bounded `liftCLM`/`liftAlgHom` contracts, atom computation and extensionality; `Diagonal` retains bounded diagonals and finite head/tail projections, including tail contractivity under `NormedField` without a frame or completeness assumption. Exact column/multilinear and head/tail aggregation families belong to staged records, not shipped `Columns`/`Multilinear` modules. |
+| `Analysis/SequenceSpace/CharacterTopology` | The pointwise character-topology family is owned by the staged topology record; the former shipped owner module is removed. |
+| `Analysis/SequenceSpace/Geometric` | Taylor coefficient algebras, retained differentiation/evaluation and full-disc complex power-series synthesis (`Analytic`) use the canonical additive-index weighted ℓ¹ structure on `ℕ`. The geometric fibers are `WeightedScalar` abbreviations with the standard frame. Analytic extensionality, radius-restriction and character-spectrum families are owned by staged recovery records; they are not shipped owners. |
+| `Analysis/SequenceSpace/Chebyshev` | Bilateral storage with fiber `geomFiberZ`, the flip-fixed physical algebra, symmetrization and retained evaluation/U-conversion primitives, bordered storage and retraction, and the finite Galerkin carrier `FνN` with padding `ιN` and projection `πN`. The full one-sided cosine principle, physical/bordered isometric equivalence and Laurent/physical spectrum families have staged record ownership. Retained one-sided restriction/embedding primitives used by the IVP remain shipped; record ownership does not restore the full old interface. |
+| `Analysis/SequenceSpace/CrossGeometry` | Bounded maps between coefficient geometries and their evaluation and differentiation naturality |
+| `Core` | Abstract Newton map and radii polynomial with local and finite-dimensional faces (`Theorem`), canonical bounds (`Bounds`), the degree-general `Z₂` engine (`AlgebraZ2`), and finite-dimensional pulled-back-norm and isometric zero transport (`Transport`); every declaration of the four modules lies in namespace `RadiiPolynomial` (the former root family of `Theorem` — `I_E`, `NewtonLikeMap`, `generalRadiiPolynomial`/`radiiPolynomial`/`simpleRadiiPolynomial`, `general_radii_polynomial_theorem`, … — moved there in the DEFER round, no aliases) |
 | `Operators/Matrix` | Finite weighted matrices and their continuous-linear realizations, bundled as the algebra equivalence `FinWeightedMatrix.toWeightedCLMAlgEquiv` (units correspond: `isUnit_toWeightedCLM_iff`); matrices over a normed real algebra acting on `R^n` with the sup norm (`SupNorm`: `matCLM` and the row-sum operator-norm bound `opNorm_le_of_rowSum`) |
 | `Operators/BlockDiagonal` | Finite-plus-tail operators, lifts, composition, and scalar specialization; `Basic` imports only `Geometric/Scalar`, `Norm/FiniteSum`, `Matrix/WeightedNorm` and Mathlib's `FDeriv.Add`/`FDeriv.Mul`, while `WeightedL1` imports `Core/Bounds` and `Geometric/Basic` |
-| `Operators/HeadTail` | Bounded-operator transport of the head/tail ring identities (`HeadTail.composition_identity`, its `headProj` instance and the norm-one scalar face); imported only by higher consumers, never by `Algebra` or `Analysis` |
-| `Certification` | RadiiPolynomial witness reductions, residual (Neumann) certificates for approximate inverses and finite Bézout identities with finite-support completeness, and adapters to external LeanCert; the LeanCert-free exact-rational finite-matrix layer `Rational/Matrix` (stored ℚ columns, the `I − A B` defect, weighted and block matrix norms in exact ℚ, `activeBlockNormQ`, `blockActionQ`, and the CLM-norm, entry and action bridges; imports only `Operators/BlockDiagonal/Scalar` and `Mathlib.Data.List.GetD`), imported by `Rational/Grid`, `LeanCertAdapter`, the facade and the family faces `IVP/Taylor`, `IVP/Chebyshev`, `PowerSeries/PolynomialZero`; `IVP/Chebyshev` imports `Applications/IVP/Chebyshev/Polynomial` (the narrow owner, not the facade); the family faces carry `StdChebIVPData.Z₁_le_semiMajor_of_Q`/`_of_checksK` and `IVP.StdIVPData.ivpCoeffs_abar_eq_zero_of_compPoly`/`_mem_of_compPoly`, and are not in the `Certification` facade |
-| `Tactic` | Proof automation: `pderiv_simp` (`PDerivSimp`, Mathlib-only, with a `tests` section that runs the macro), `auto_poly_fderiv` (`AutoPolyFDeriv`: Mathlib `fderiv` sets, the projection bridge `fderiv_pi_apply`, projection differentiability through Mathlib's `differentiable_apply`, and the Pi-level bridge `l1Weighted.smul_proj_eq_leftMul_comp_proj` declared in `Geometric/Basic`), the term elaborator `compPolyOf%` (`MakeCompPoly`), and the certificate tactics `finmatrix_bound`/`finmatrix_dyadic` (`FinMatrixBound`, imports `LeanCertAdapter`; syntax kinds `RadiiPolynomial.Tactic.finMatrixBound`/`finMatrixDyadic`) |
-| `Applications/IVP/VectorField.lean` | Geometry-free ODE right-hand side `IVP.vectorField` of a `CompPoly` system and its calculus: `C^ω` and differentiability (`contDiff_vectorField(_pi)`, `differentiable_vectorField(_pi)`), the syntactic Lipschitz faces (`vectorField_lipschitzOnWith`, `lipschitzOnWith_vectorField_closedBall`, `exists_lipschitz_vectorField_closedBall`); imports `CompPoly/{Core,Bounds,Derivative}` only (no ℓ¹ carrier); both discretizations state their function-space conclusions through it |
+| `Certification` | RadiiPolynomial witness reductions, adapters to external LeanCert, with the residual/Neumann and finite-support completeness families owned by staged recovery records; the LeanCert-free exact-rational finite-matrix layer `Rational/Matrix` (stored ℚ columns, the `I − A B` defect, weighted and block matrix norms in exact ℚ, `activeBlockNormQ`, the shared `blockActionQ` with direct `SystemBlockDiagData.action_eq_blockActionQ` bridges (Taylor tail multiplier `n⁻¹`, Chebyshev `(2n)⁻¹`; each family retains its residual, support window and weighted norm sum), and the CLM-norm and entry bridges; imports only `Operators/BlockDiagonal/Scalar` and `Mathlib.Data.List.GetD`), imported by `Rational/Grid`, `LeanCertAdapter`, the facade and the family faces `IVP/Taylor`, `IVP/Chebyshev`, `PowerSeries/PolynomialZero`; `IVP/Chebyshev` imports `Applications/IVP/Chebyshev/Polynomial` (the narrow owner, not the facade); the retained family faces include `IVP.StdIVPData.ivpCoeffs_abar_eq_zero_of_compPoly`/`_mem_of_compPoly`; the specialized Chebyshev semi-major certificate family has staged record ownership |
+| `Tactic` | `finmatrix_bound` (`FinMatrixBound`, importing `LeanCertAdapter`) applies a supplied bridge and closes its rational certificate check through the configured LeanCert verification route. Polynomial derivative macros and `compPolyOf%` reification are retired service interfaces with historical recovery material. Dyadic syntax, elaboration, evaluators and the dyadic self-test have staged ownership; production `finmatrix_bound`, Taylor `t_bound` and their shared data remain shipped. |
+| `Applications/IVP/VectorField.lean` | Geometry-free ODE right-hand side `IVP.vectorField` of a `CompPoly` system and the retained syntactic Lipschitz faces (`vectorField_lipschitzOnWith`, `lipschitzOnWith_vectorField_closedBall`, `exists_lipschitz_vectorField_closedBall`); imports `CompPoly/{Core,Bounds,Derivative}` only (no ℓ¹ carrier); both discretizations state their function-space conclusions through it |
 | `Applications/IVP/Taylor` | Taylor-coefficient IVP operator, Jacobian (with the syntactic `ivp_Dφ_norm_le_of_compPoly` socket), theorem, analytic bridge (`Analytic`: the ball-solution predicate `IVP.IsBallSolution` — initial value, trajectory in `closedBall 0 R` and the ODE on `(-ν, ν)`, with no analyticity hypothesis — met by the canonical solution `x_analytic` and unique on the interval), real analyticity of the canonical trajectory (`Analyticity`: `IVP.analyticOnNhd_x_analytic`), complex time (`ComplexTime`: complex trajectory and vector field), and the example-facing polynomial faces `StdIVPData.existsUnique_of_compPoly`, `Z₁_le_of_compPoly`, `Z₂_le_of_compPoly`, `analytic_existsUnique_of_compPoly_of_radii`, `StdIVPData.existsUnique_ivpCoeffs_of_compPoly`, `StdIVPData.analytic_existsUnique_of_compPoly` |
-| `Applications/IVP/Chebyshev` | Chebyshev-coefficient IVP operator, block-diagonal realization, polynomial residual/Jacobian adapter (`ChebyshevIVP.banachField` and syntactic Z₁/Z₂ constants), return to the IVP, analyticity of the canonical realization across `[-1, 1]` for `ν > 1` (`Analyticity`), and the example-facing faces `StdChebIVPData.existsUnique_of_compPoly`, `StdChebIVPData.Z₂_le_of_compPoly_max`, `StdChebIVPData.defect_finBlockNorm_lt_one_of_radii`, and (`AnalyticPolynomial`) `solution_existsUnique_of_compPoly`, `solution_existsUnique_of_two_le_of_compPoly`, `analytic_solution_existsUnique_of_two_le_of_compPoly`; `chebyshevShiftDiv` is by definition the U-factorization `-(uIntegrate (chebyshevToU c))`, and the Z₁ chain rests on one core `chebyshev_Z₁_component_le_semiMajor` with the `ν/(N+1)` forms through `semiMajor_div_le_div` (`Operator`, no `CrossGeometry/Joukowski` edge); the XCheb defect lift is the XL1 lift transported along `OneSided.restr`/`natEmbed`, and `composedApproxCheb` abbreviates `BlockDiagLift.composedApproxCLM` (`BlockDiagonal`, imports `Chebyshev/OneSided`); `TCtail` is componentwise `lpOneAlg.tailProj (Icc 0 N) ∘ chebyshevShiftDiv_CLM` and `TCtailElem_norm_le_tail` lives with it (`Lambda`, imports `WeightedL1/Diagonal`); row 0 of `F` is endpoint evaluation (`chebyshevIvpCoeffs_zero_eq_eval`, `FAseq_zero_eq_eval`), and `IVP.chebyshevBoundary` is `l1Chebyshev.evalAtCLM (-1)` (`Boundary`) |
-| `Applications/IVP/Boundary.lean` | Shared split-boundary and anchored-primitive mechanism for IVP realizations |
+| `Applications/IVP/Chebyshev` | Chebyshev-coefficient IVP operator, block-diagonal realization, polynomial residual/Jacobian adapter (`ChebyshevIVP.banachField` and syntactic Z₁/Z₂ constants), return to the IVP, analyticity of the canonical realization across `[-1, 1]` for `ν > 1` (`Analyticity`), and the example-facing faces `StdChebIVPData.existsUnique_of_compPoly`, `StdChebIVPData.Z₂_le_of_compPoly_max`, `StdChebIVPData.defect_finBlockNorm_lt_one_of_radii`, and (`AnalyticPolynomial`) `solution_existsUnique_of_compPoly`, `solution_existsUnique_of_two_le_of_compPoly`, `analytic_solution_existsUnique_of_two_le_of_compPoly`; `chebyshevShiftDiv` is by definition the U-factorization `-(uIntegrate (chebyshevToU c))`, and the specialized shift-div and semi-major families are recovered in staged records; the XCheb defect lift is the XL1 lift transported along `OneSided.restr`/`natEmbed`, and `composedApproxCheb` abbreviates `BlockDiagLift.composedApproxCLM` (`BlockDiagonal`, imports `Chebyshev/OneSided`); `TCtail` is componentwise `lpOneAlg.tailProj (Icc 0 N) ∘ chebyshevShiftDiv_CLM` and `TCtailElem_norm_le_tail` lives with it (`Lambda`, imports `WeightedL1/Diagonal`); row 0 of `F` is endpoint evaluation (`chebyshevIvpCoeffs_zero_eq_eval`, `FAseq_zero_eq_eval`), the additional `IVP.chebyshevBoundary` and split-boundary family belong to staged IVP-boundary records |
+| `Applications/IVP/Boundary.lean` | The split-boundary and anchored-primitive family has staged IVP-boundary record ownership; this former shipped module is removed. |
 | `Applications/PowerSeries` | Polynomial zeros `P(x) - c = 0` on `ℓ¹_ν` for a univariate `CompPoly` of any degree: the approximate inverse and derivative and the `Z₁`, `Z₂` bounds (`PolynomialZero`); `Z₂` bounds for maps whose derivative is affine in `leftMul`, as corollaries of the degree-general engine (`AffineZ2`, a transition module) |
-| `Applications/FiniteDimensional` | The row-sum face on `R^n` over a finite-dimensional normed real algebra `R` (`Face`: `enclosure_of_rowSum`), polynomial systems with rational certificate data (`Polynomial`: `StdFinDimData` and the decidable check `ChecksC`), the scalar instance `n = 1` (`Scalar`), and periodic points on a finite-dimensional real normed space (`Periodic`) |
-| `Applications/Galerkin` | The polynomial Galerkin face (`Face`): a `CompPoly` system between a lift, a projection and continuous linear parts (`polyFace`), its derivative `DpolyFace` from the syntactic Jacobian, the centred bounds from `derivativeCentredBound`, and on the finite Galerkin carrier the `Z₂`-shaped bound `norm_fderiv_galerkinFace_sub_le`; the componentwise maps `Galerkin.I`/`Galerkin.Pi'` are `ContinuousLinearMap.piMap` of `ιN`/`πN` |
-| `Applications/Fourier` | The general-symbol semilinear consumer on `lpOneAlg ℤ (geomFiberZ 𝕜 ν)` (`Semilinear`): for any symbol `lam` and any bounded tail diagonal `r`, the preconditioned map `precondMap` and its model derivative `modelDeriv` with `DG(ā) − B₀ = −defect` (`fderiv_sub_modelDeriv`), the raw identification under `r = 0` on the head and `r_k λ_k = 1` off it, the exact finite window `norm_fderiv_sub_modelDeriv_eq_sup'` with window `B + max (N + 1) K₀` and attainment, the degree window `(d − 1) N + max (N + 1) K₀`, and the Γ majorant `norm_fderiv_sub_modelDeriv_le_gamma` (a universal head bound, not the exact window norm); the first-order family `λ_k = i k` as its specialization (`SemilinearFirstOrder`: `ikSymbol`, the first-tail bound `1/(N + 1)`, the window `N + m + 1`); imports Analysis/SequenceSpace/Fourier/GammaLeakage, Operators/HeadTail and Algebra/Polynomial/MvPolynomial/Calculus |
+| `Applications/FiniteDimensional` | The row-sum enclosure face on finite-dimensional normed real algebras, rational polynomial certificates (`StdFinDimData`, `ChecksC`) and scalar specialization remain shipped. The periodic-point family is owned by a staged record. |
+| `Applications/Galerkin` | The polynomial Galerkin face (`Face`): a `CompPoly` system between a lift, a projection and continuous linear parts (`polyFace`), its derivative `DpolyFace` from the syntactic Jacobian, the centred bounds from `derivativeCentredBound`, with consumers using the generic bound `norm_DpolyFace_sub_le`; the componentwise maps `Galerkin.I`/`Galerkin.Pi'` are `ContinuousLinearMap.piMap` of `ιN`/`πN` |
 | `Examples` | End-to-end mathematical applications and numerical certificates |
 
 The external LeanCert library remains a Lake dependency. `Certification/LeanCertAdapter.lean`
-contains only project-specific bridges into that dependency: the dyadic evaluators (`colNormSumDyadic`,
-`checkMatrixNormDyadic`, `scalarBlockDiagActionEval`, `systemBlockDiagActionEval`, with their correctness lemmas) and
-the LeanCert-free per-column decomposition `finWeightedMatrixNorm_le_via_cols` that serves `finmatrix_dyadic`.
-The exact-ℚ layer lives in `Certification/Rational/Matrix.lean`; only the `Certification` facade, `LeanCertAdapter`,
-`Tactic/FinMatrixBound` and the modules importing them load LeanCert.
+keeps weighted-term and system block-diagonal action evaluators with their correctness proofs.
+The exact-ℚ layer lives in `Certification/Rational/Matrix.lean`; the production matrix tactic is
+`finmatrix_bound`. Dyadic checker support is recovered outside shipped imports.
 
 ## Import Rules
 
@@ -67,9 +60,7 @@ The exact-ℚ layer lives in `Certification/Rational/Matrix.lean`; only the `Cer
    A specialized Certification adapter may import an application discretization to verify its concrete certificate data; Algebra, Analysis, Core, Operators and Applications do not import Certification or Tactic.
 5. `Applications` may import all reusable mathematical layers, but never `Examples`.
 6. `Examples` are terminal consumers; reusable library modules never import them.
-   Example families do not import one another either: the single surviving
-   cross-family `Examples -> Examples` edge is
-   `Examples/Transport/TwinTransport.lean -> Examples/IVP/Chebyshev/Example1421/Certificate.lean`.
+   Example families do not import one another.
 7. `Tactic` is tooling. Generic polynomial tactics must not depend on applications;
    certificate tactics may depend on `Certification`.
 
@@ -79,11 +70,10 @@ Use the facade modules at application boundaries:
 
 - `RadiiPolynomial.Algebra.Convolution`
 - `RadiiPolynomial.Algebra.Polynomial`
-- `RadiiPolynomial.Algebra.Rees.Laurent`
 - `RadiiPolynomial.Analysis.SequenceSpace.WeightedL1`
+- `RadiiPolynomial.Analysis.SequenceSpace.WeightedLp`
 - `RadiiPolynomial.Analysis.SequenceSpace.Geometric`
 - `RadiiPolynomial.Analysis.SequenceSpace.Chebyshev`
-- `RadiiPolynomial.Analysis.SequenceSpace.Fourier`
 - `RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry`
 - `RadiiPolynomial.Core`
 - `RadiiPolynomial.Operators.Matrix`
@@ -91,7 +81,6 @@ Use the facade modules at application boundaries:
 - `RadiiPolynomial.Certification`
 - `RadiiPolynomial.Applications.IVP.Taylor`
 - `RadiiPolynomial.Applications.IVP.Chebyshev`
-- `RadiiPolynomial.Applications.Fourier`
 
 Internal library modules should still import the narrow module that owns a declaration.
 Facades are for examples and downstream users, not a substitute for precise internal edges.
@@ -105,9 +94,9 @@ Facades are for examples and downstream users, not a substitute for precise inte
   independent of the chosen valid bounds. `CompPoly.Chebyshev` interprets stored inputs
   through symmetrization and symmetrizes derivative directions as well. Generic algebra-hom
   naturality belongs to `CompPoly.Core`; the derivative of `MvPolynomial.aeval` belongs to
-  `MvPolynomial.Calculus`. The regularity of the real evaluation `x ↦ p.evalBanach x` on `ℝ^L`
-  (`MvPolyBridge.contDiff_evalBanach`, `differentiable_evalBanach`) belongs to `CompPoly/Derivative`, beside the
-  syntactic gradient and Jacobian; `CompPoly/WeightedL1` imports `CompPoly/Derivative` and keeps only ℓ¹-carrier semantics.
+  `MvPolynomial.Calculus`. The derivative of the real evaluation `x ↦ p.evalBanach x` on `ℝ^L`
+  is exposed through `CompPoly.hasFDerivAt_evalBanach` in `CompPoly/Derivative`, beside the
+  syntactic gradient and Jacobian; the former smoothness/differentiability convenience wrappers are retired; `CompPoly/WeightedL1` imports `CompPoly/Derivative` and keeps only ℓ¹-carrier semantics.
 - `Applications/IVP/Chebyshev/Polynomial.lean` connects the polynomial interpreter to raw
   residuals, exact rational Jacobian columns, and the bounded preconditioned derivative.
   Finite Chebyshev output rows can depend on high input modes: a finite square Jacobian
@@ -125,13 +114,12 @@ Facades are for examples and downstream users, not a substitute for precise inte
   strengthenings live in per-example modules with the same axiom sets as the example's
   main theorem: `Analyticity` for Examples 8.1, 8.3 and 14.2.1, and in addition
   `ComplexTime` for Example 8.3.
-- The topology of pointwise convergence on continuous characters is defined once, without a
-  carrier, as `Gelfand.pointwiseTopology` in
-  `Analysis/SequenceSpace/CharacterTopology.lean`, together with its continuity introduction/elimination
-  API (`Gelfand.continuous_of_continuous_apply`, `Gelfand.continuous_character_apply`). The three character-space modules
-  (`TaylorSpectrum`, `LaurentSpectrum`, `PhysicalSpectrum`) specialize it in one line and
-  each keeps its own `local instance`; no global `TopologicalSpace` instance is installed on
-  any `→A[ℝ] ℂ` type.
+- Pointwise character topologies are recovery services: `B5RecordGelfandTopology` owns the
+  common topology and continuity interfaces; `B5RecordTaylorSpectrum`, `B5RecordLaurentSpectrum`
+  and `B5RecordPhysicalSpectrum` own the character-space specializations. The removed
+  `Analysis/SequenceSpace/CharacterTopology.lean` is a historical owner, not a shipped module.
+  Recovery modules use their own local topology instances; importing the shipped coefficient
+  carriers does not install a global character-space topology.
 - `Analysis/SequenceSpace/Chebyshev/Spectrum/*` sits ABOVE `CrossGeometry/Joukowski.lean`
   (it is the Joukowski-side theory of the physical carrier), so the Chebyshev facade
   transitively imports CrossGeometry and Geometric; `CrossGeometry` modules must not import
@@ -168,6 +156,142 @@ imports them, and each is built by its module name. Families: `CH`, `FD`, `FZ`, 
 `FT` (the fiber-trivialization probes `tests/FT/FiberTrivializationProbes.lean`; the frame re-index probes
 `tests/FT/FrameReindexProbes.lean`: real and complex scalars, non-unit weights, the frame-free primitives, both
 convolution summability routes, and two distinct frames on one family with the `−1`-frame theorem; the import-order
-probes `tests/FT/ImportOrderA.lean`/`ImportOrderB.lean`), `TY` (the Taylor
-all-generated face, `tests/TY/AllGenerated.lean`) and `TC` (tactic quotation tests,
-`tests/TC/FinMatrixBound.lean`).
+probes `tests/FT/ImportOrderA.lean`/`ImportOrderB.lean`), `TC` (tactic quotation tests,
+`tests/TC/FinMatrixBound.lean`) and `WL` (weighted-ℓᵖ regression checks, including `LiftBoundChecks`). `TailKernelChecks` and the full `Example81L2/` caller chain
+belong to the staged R30 finite-tail-kernel record. The finite-fiber convolution law probes
+belong to `B5RecordFiniteFiberConvolution`. The former `Example81L1NewAPI` witness is retained in
+the early-U37a recovery record after its production migration.
+
+
+## API-v2 finite-p integration (2026-10-19)
+
+This section describes the isolated API-v2 copy. `WeightedLp/Carrier` and `Module` provide framed scalar coordinates, atoms and completeness on Mathlib lp. `Operators/LiftBound` specifies bounded finite synthesis by its extension, atom computation, pointwise bound and uniqueness/converse laws. Construction uses a normed field and a complete target; operator-norm statements retain a nontrivially normed field. `Operators/Schur` supplies an independent sufficient producer, with the coefficient identity relating its operator to the canonical extension. Absolute row summability inferred from unconditional convergence remains a separate real/complex assertion.
+
+`Compatibility/WeightedL1Iso` identifies the p=1 carrier; bounds for an already supplied operator require no scalar completeness. `Compatibility/TaylorTailL1` owns the coefficient/operator bridge. The family numerical certificate and its shared per-pair assembly are in `Certification/IVP/Taylor`; analysis has no certification dependency. `WeightedScalar.instCompleteSpace` now transfers completeness through the existing scalar equivalence and works for complete trivially normed fields.
+
+Production Example81 uses the kernel-column Z₁ clause on its unchanged ℓ¹ carrier, data,
+norm, bounds and radius. The generated-only contract and its former `AllGenerated` test are
+staged recoverable evidence outside shipped source. The production consumer trail
+exposes LiftBound's finite-synthesis contract and the p=1 compatibility service through the
+existing production imports; no direct root/facade lift import is needed. Production retains its
+existing Y₀/native proof. The independent ℓ² witness and its ten-module caller/test chain
+are owned by the staged R30 finite-tail-kernel record. That record has its own ball, map and
+preconditioner and returns a solution on (-1,1); it is outside the shipped root. No global convolution algebra on the ℓ²
+state is introduced.
+
+## Isolated API-copy U10 retirement (2026-10-19)
+
+The prior Fourier ℓ¹ semilinear/finite-window/Γ stack, its head-tail transport, and the Laurent Rees family are archived outside this Lake source tree. The 32 exact source modules, their build artifacts, and all 1783 elaborated declaration types and axiom sets are recoverable in `../probes/records/U10_retired_20261019/`. The five root imports and empty facade sources were removed. No essential classical example imports this cluster. Historical rename entries below or in `RENAMES.md` describe earlier generations, not current availability. Re-entry requires a concrete mathematical consumer and minimal assumptions; there are no compatibility aliases. ReferenceBook compatibility is deferred. The replacement ℓ² Fourier consumer is described below; its coefficient certificate does not reproduce the retired exact ℓ¹ norm results.
+
+## Weighted ℓ² Fourier consumer in the isolated API copy
+
+`Analysis/SequenceSpace/WeightedLp` exposes the bounded symbol action, the Schur
+producer, the bilateral product and the finite-block/tail operator bounds. `Module.symbolAction₀`
+is the operator-series action of ℓ¹ symbols with a positive weight v on ℓᵖ states whose weight
+is v-moderate. If v is additionally submultiplicative, `symbolAction₀_eq` identifies the series
+with the universal algebra lift `symbolAction`; its construction, generator computation,
+multiplicativity, uniqueness and norm laws are the contract of the consumed series, not extra
+consumer proof dependencies. No unit-weight normalization premise is imposed. Pointwise diagonals
+and finite-block bounds for an existing operator do not require scalar completeness.
+
+For `X = ℓ²_(ν^|n|)(ℤ;ℂ)` and `Y = ℓ∞_(ν^|n|)(ℤ;ℂ)`, `Bilateral.Product` supplies
+`q : X × X → Y` at ν ≥ 1. `TailDiagonal` supplies the return map Y → X, the separate X → X
+diagonal, and the single coefficient-disjoint square-norm identity. `Bilateral.Quadratic`
+composes the product with a return map. `Fourier.ConvolutionAction` owns only the geometric moderation constant; `TailDefect` and `FiniteBlock` own the full shared-input defect and finite
+matrix composition before entrywise modulus. The resulting operator-norm aggregation is an
+upper bound, not an equality of independently optimized summands. The physical matrix map
+`matrixOf T n k = coeff (T (single k 1)) n` belongs to `FiniteBlock`.
+
+`Examples/Fourier/Duffing/{IkData,Numbers,Algebra,Certificate}` gives the quadratic
+Helmholtz–Duffing coefficient problem `u'' + c₁ u' + c₂ u − u² = c₃ cos t`.
+The numerical candidate and four bounds give a radii-polynomial certificate, raw coefficient
+zeros, a local uniqueness/enclosure statement and conjugate-reflection reality. The raw residual
+is sequence-valued: the identity with the bounded map is coefficientwise through `rawA`, not
+an unsupported assertion that the residual itself belongs to Y. The head certificate has no
+phantom c₃ parameter; forcing and its residual bound retain c₃. The default Examples facade
+imports this actual certificate. Reconstruction as a periodic C² function is a separate result.
+
+### M1 fix-forward scope
+
+The consumer calls the operator series directly; the specialized `Fourier.L` round trip is
+retired. Canonical finite-sum coordinate laws `coeff_sum` and `coeff_sum_single` live in Carrier,
+and FiniteBlock uses them. The density theorem and the p=∞ obstruction live with the
+generic LiftBound contract, exposed through Example81 after U37a; the obstruction records
+its finite-p limitation, not a production
+p=∞ use. The two scalarized/p=2 Schur faces used by the pending Taylor ℓ² chain live in
+Taylor/TailKernel. Their callers import that actual owner; pending slices remain outside the
+root. Unused producer specializations are recoverable in the M1-FIX archive. The generic exact
+cross-exponent diagonal norm law remains a specification of the used smoothing arrow, with its
+attainment construction as proof support. The derivative Lipschitz bounds require a complete
+nontrivially normed field and use ‖2‖≤2 and the tail upper bound; RCLike is reserved for the exact
+attainment specification. This distinction is recorded in the A4 contract/reach tables.
+
+## Post-U37a exact-attainment disposition (M1-PARK migration)
+
+This successor delta supersedes only the exact-attainment classification in the earlier M1-FIX
+record. The Fourier consumer retains the cross-exponent upper bound `norm_tailDiagInf_le` and
+its NormedField construction/coordinate laws. It does not consume the exact-attainment theorem.
+`norm_tailDiagInf_eq` and the exclusively used unit-magnitude, empty-index and linear-application
+support are proved in the frozen records and parked from the shipped API. Their exact source,
+elaborated types and axiom references remain recoverable; parking is not loss of proof history.
+
+The generic `invWeightSeq`, `norm_apply_invWeightSeq` and necessary `norm_equiv_inv_weight`
+support move, with unchanged FQNs and RCLike hypotheses, to LiftBound before its infinite-index
+boundary. They serve that independently checked boundary, not a new p=∞ production consumer.
+The unused `invWeightSeq_apply` and `coeff_invWeightSeq` coordinate views are parked. The
+production upper-bound Fourier route and U37a's kernel-column migration are unchanged. The exact source, type and execution records are under the local campaign’s
+`codex/W2_INTEGRATION_v1/M1_PARK_v1/` evidence directory.
+
+After U37a, LiftBound is exposed through the production Taylor consumer. Moving these three
+boundary-support faces changes their owner, not their root availability. The parked support
+was not uniformly RCLike: the two linear application laws used NormedField and the empty-index
+law used NontriviallyNormedField; their archived statements retain those weaker assumptions.
+
+## Recoverable mathematical records
+
+The cross-geometry character countermodels, four selected semantic/degree Hessian faces,
+and finite-fiber wrapper/embedding/ring-equivalence layer with its three exclusive CV tests
+are recorded in the [typed recovery record](../probes/records/B2_staged_services/MANIFEST.json)
+outside the shipped interface. The raw finite convolution core, generic Cauchy product and
+`toPowerSeries` coefficient view, first degree-drop bound and numeral simp service remain shipped.
+The additional finite-fiber laws and bundled power-series bridge belong to
+`B5RecordFiniteFiberConvolution` and `B5RecordPowerSeriesBridge`. The retained Taylor
+power-series-on-ball and full-disc analyticity services remain shipped; the converse local
+analytic representation and extensionality family belongs to `B5RecordTaylorAnalytic`. The bounded Taylor evaluator is the universal arrow in `Geometric/Aeval`;
+`Geometric/Evaluation` identifies its real specialization with the coordinate series. Bound task records carry execution,
+acceptance, source-generation and declaration-disposition facts.
+
+Chebyshev boundary-character separation, local physical determination and the specific reverse-map
+injectivity exit are also in that recovery record. The bounded coefficient map
+`CrossGeometry.chebyshevToTaylorCLM` remains shipped. Additional character and inverse-map laws
+are recovered by `B5RecordJoukowski` and `B5RecordPhysicalSpectrum`; their presence in recovery
+does not add them to the shipped interface.
+
+B4 stages the generated-only `IVP.TaylorCertQ` contract, its slot-choice supports and the
+former Taylor `AllGenerated` test together in the outside-source record's
+[`staged/U42bGeneratedContract.lean`](../probes/records/B4_weight_and_generated_services/staged/U42bGeneratedContract.lean)
+and [`staged/AllGenerated.lean`](../probes/records/B4_weight_and_generated_services/staged/AllGenerated.lean).
+`StdIVPDataQ`, `ofStd`, realization, the per-bound checks and soundness services, and the
+production Example81 kernel-column route remain. The unused `RadiiPolynomial.SeqL1`
+spelling retires; the weighted-ℓ¹ carrier and block-diagonal services remain. Positive,
+submultiplicative and unit-normalized weight assumptions stay separate, and extraction
+retains its explicit lower bound. The [B4 binding record](../probes/records/B4_weight_and_generated_services/AFTER_ACCEPTANCE.json)
+binds installation, execution evidence and declaration status.
+
+## Universal geometric evaluation (U25)
+
+`Geometric/Aeval` constructs the bounded algebra arrow from `Geometric/Basic` and
+`WeightedL1/UniversalProperty`. `Geometric/Evaluation` imports that arrow and first proves
+`l1Weighted.aeval_of_norm_le_apply_real` directly from its series. Real multiplicativity then
+follows from `map_mul`; it does not construct another algebra hom. Linear and algebraic
+views are the standard projections of `aeval_of_norm_le`. Termwise differentiation remains
+in `EvaluationDerivative`.
+
+The coordinate function is defined at every real input; its agreement with the bounded
+arrow carries the closed-disc admissibility condition. Generic target estimates retain
+`max (1) ‖1‖` without a new `NormOneClass` assumption. Zero trace and the anchored primitive
+remain available at every positive weight, including weights below one; evaluation at minus
+one retains its separate admissibility condition. Cross-geometry maps, naturality and
+physical-character statements retain their geometric hypotheses.
+
+At installation, [`AFTER_ACCEPTANCE.json`](../probes/records/U25_universal_geometric_evaluation/AFTER_ACCEPTANCE.json) binds the accepted source/object generation, executed owner/consumer and independent model/data checks, and declaration dispositions.

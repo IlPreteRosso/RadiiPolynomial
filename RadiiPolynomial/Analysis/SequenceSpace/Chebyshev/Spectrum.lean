@@ -2,7 +2,7 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Basic
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Classification
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Ellipse
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Series
-import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Topology
+import Mathlib.Topology.Algebra.Algebra
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Holomorphic
 
 /-! Public API for the complex character space of the physical Chebyshev algebra:

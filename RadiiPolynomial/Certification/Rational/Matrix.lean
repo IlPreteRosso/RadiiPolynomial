@@ -25,8 +25,7 @@ The module imports no `LeanCert` module; the dyadic evaluators are in
    CLM norm bounds.
 5. `activeBlockNormQ` — active-block norm with a caller-computed scale
    (`activeBlockNorm_component_le`).
-6. `scalarBlockDiagAction` and `ScalarBlockDiagData.toScalarCLM_toSeq_eq_action`.
-7. `blockActionQ` — the exact ℚ action of a block-diagonal operator with stored columns and a
+6. `blockActionQ` — the exact ℚ action of a block-diagonal operator with stored columns and a
    rational tail diagonal; `SystemBlockDiagData.action_eq_blockActionQ` — its cast bridge.
 -/
 
@@ -256,21 +255,6 @@ theorem finiteBlockMatrixNorm_defect_le_of_Q {L N : ℕ} [NeZero L] {ν : PosRea
       exact this)
     hν h
 
-/-- Combined CLM norm bound from ℚ block columns + ℚ tail bound.
-`‖A.toCLM‖ ≤ finiteBlockMatrixNormQ + tailBound_q ≤ C` — no intermediate named constants. -/
-lemma norm_toCLM_le_of_Q {L N : ℕ} [NeZero L] {ν : PosReal}
-    (A : SystemBlockDiagData L N)
-    (blockCols : Fin L → Fin L → Fin (N + 1) → Array ℚ) (ν_q tailBound_q : ℚ) {C : ℚ}
-    (hcols : ∀ l j : Fin L, ∀ k i : Fin (N + 1),
-      A.finBlock l j i k = ((blockCols l j k).getD (i : ℕ) 0 : ℝ))
-    (hν : (ν : ℝ) = (ν_q : ℝ))
-    (htail : A.tailBound = (tailBound_q : ℝ))
-    (hle : finiteBlockMatrixNormQ L N blockCols ν_q + tailBound_q ≤ C) :
-    ‖A.toCLM (ν := ν)‖ ≤ (C : ℝ) :=
-  (A.norm_toCLM_le (ν := ν)).trans <|
-    (add_le_add
-      (finiteBlockMatrixNorm_le_of_Q_le A.finBlock blockCols ν_q hcols hν (le_refl _))
-      (le_of_eq htail)).trans (by exact_mod_cast hle)
 
 /-- Combined scalar CLM norm bound from ℚ columns + ℚ tail bound.
 `‖A.toScalarCLM‖ ≤ max(finWeightedMatrixNormQ, tailBound_q) ≤ C` — one decidable inequality.
@@ -291,34 +275,11 @@ lemma norm_toScalarCLM_le_of_Q {N : ℕ} {ν : PosReal}
 
 /-! ## Block-diagonal action on coefficient data
 
-The real action of a scalar block-diagonal operator, read off its stored columns and tail
-coefficient (`scalarBlockDiagAction`), and its identification with `toScalarCLM`. The dyadic
-evaluator of the action norm terms (`scalarBlockDiagActionEval`) is in `LeanCertAdapter`. -/
+The retained exact rational action is `blockActionQ`, with cast bridge
+`SystemBlockDiagData.action_eq_blockActionQ` below. The scalar-specialized action/evaluator
+wrappers formerly documented here are retired. -/
 
-/-- Block-diagonal action in ℝ: finite modes use matrix-vector product,
-tail modes use diagonal multiplication. Certificate-facing API. -/
-noncomputable def scalarBlockDiagAction {N : ℕ} (matCols : Fin (N + 1) → Array ℝ)
-    (vec : ℕ → ℝ) (tailCoeff : ℝ) (n : ℕ) : ℝ :=
-  if n ≤ N then ∑ j : Fin (N + 1), (matCols j).getD n 0 * vec j
-  else tailCoeff * vec n
 
-/-- Bridge: `toSeq(A.toScalarCLM v)[n] = scalarBlockDiagAction ...`.
-Pure ℝ signature — no ℚ types in parameters or hypotheses. -/
-lemma ScalarBlockDiagData.toScalarCLM_toSeq_eq_action {N : ℕ} {ν : PosReal}
-    (A : ScalarBlockDiagData N) (v : l1Weighted ν)
-    (matCols : Fin (N + 1) → Array ℝ) (vec : ℕ → ℝ) (tailCoeff : ℝ)
-    (hmat : ∀ j i : Fin (N + 1), A.finBlock0 i j = (matCols j).getD (i : ℕ) 0)
-    (hvec : ∀ n, l1Weighted.toSeq v n = vec n)
-    (htail : ∀ n, N < n → A.tailDiag0 n = tailCoeff)
-    (n : ℕ) :
-    l1Weighted.toSeq (A.toScalarCLM (ν := ν) v) n =
-      scalarBlockDiagAction matCols vec tailCoeff n := by
-  simp only [scalarBlockDiagAction]
-  by_cases hn : n ≤ N
-  · rw [ite_eq_left hn, A.toScalarCLM_toSeq_fin (ν := ν) v ⟨n, Nat.lt_succ_of_le hn⟩]
-    simp_rw [hmat, hvec]
-  · push Not at hn
-    rw [ite_eq_right (not_le.mpr hn), A.toScalarCLM_toSeq_tail v n hn, htail n hn, hvec]
 
 /-! ## System block-diagonal action in exact ℚ -/
 

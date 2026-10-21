@@ -60,10 +60,6 @@ theorem derivativeCentredBound_fisherQuad {K : Type*} [Field K] (β δ : Fin 1 �
   simp [CompPoly.derivativeCentredBound, fisherQuad]
   ring
 
-/-- The exact rational instance of `derivativeCentredBound_fisherQuad`, kernel-checked. -/
-theorem fisherQuad_centred_Q :
-    CompPoly.derivativeCentredBound fisherQuad (fun _ => (7 : ℚ)) (fun _ => 1 / 8) = 2 * (1 / 8) := by
-  decide +kernel
 
 end Constants
 
@@ -166,20 +162,7 @@ theorem norm_A_fderiv_fisherGalerkin_sub_le (lam : ℝ) (A : FνN ν₁ N →L[�
         (h1.trans (mul_le_mul_of_nonneg_right h3 (norm_nonneg _))) (norm_nonneg _)
     _ = 2 * |lam| * ‖A‖ * r * ‖h‖ := by ring
 
-/-- The operator-norm hypothesis of Example 2.4.15 holds for the carrier's own constant: in the
-weighted norm `‖(amb ν₁ N).symm ·‖`, `A` is bounded by the operator norm of `A` read on the carrier. -/
-theorem hAnorm_of_carrier (A : (Fin (N + 1) → ℝ) →L[ℝ] (Fin (N + 1) → ℝ)) (y : Fin (N + 1) → ℝ) :
-    ‖(amb ν₁ N).symm (A y)‖ ≤
-      ‖((amb ν₁ N).symm : (Fin (N + 1) → ℝ) →L[ℝ] FνN ν₁ N).comp
-        (A.comp (amb ν₁ N : FνN ν₁ N →L[ℝ] (Fin (N + 1) → ℝ)))‖ * ‖(amb ν₁ N).symm y‖ :=
-  (((amb ν₁ N).symm : (Fin (N + 1) → ℝ) →L[ℝ] FνN ν₁ N).comp
-    (A.comp (amb ν₁ N : FνN ν₁ N →L[ℝ] (Fin (N + 1) → ℝ)))).le_opNorm ((amb ν₁ N).symm y)
 
-/-- The carrier form of the Fisher weight (Example 2.4.15 at `ν = 1`): read through `amb`, the
-carrier norm is `|x₀| + 2 Σ_{k ≥ 1} |x_k|`. The weighted norm of Example 2.4.15 is this one. -/
-theorem norm_amb_symm_ν₁ (x : Fin (N + 1) → ℝ) :
-    ‖(amb ν₁ N).symm x‖ = ∑ k : Fin (N + 1), (if (k : ℕ) = 0 then (1 : ℝ) else 2) * |x k| := by
-  simp [norm_amb_symm, wt, borderedWeight, mul_comm]
 
 end Fisher
 

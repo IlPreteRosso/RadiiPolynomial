@@ -137,9 +137,6 @@ def symmetrize_CLM : l1Chebyshev ν →L[ℝ] l1Chebyshev ν :=
 @[simp] lemma symmetrize_CLM_apply (a : l1Chebyshev ν) :
     symmetrize_CLM a = symmetrize a := rfl
 
-lemma symmetrize_CLM_norm_le :
-    ‖(symmetrize_CLM : l1Chebyshev ν →L[ℝ] l1Chebyshev ν)‖ ≤ 2 :=
-  LinearMap.mkContinuous_norm_le _ (by norm_num) _
 
 /-- The symmetrized element is symmetric. -/
 lemma symmetrize_isSymmetric (a : l1Chebyshev ν) : (symmetrize a).IsSymmetric := by
@@ -281,20 +278,6 @@ theorem natEmbed_toSeq (a : l1Weighted ν) (k : ℤ) :
 @[simp] theorem norm_natEmbed (a : l1Weighted ν) : ‖natEmbed a‖ = ‖a‖ :=
   norm_natEmbedFun a
 
-/-- The ℕ-supported embedding sends the one-sided single at `n` to the bilateral single at
-`n`. -/
-theorem natEmbed_single (n : ℕ) (x : ℝ) :
-    natEmbed (lpOneAlg.single n x : l1Weighted ν) = single (n : ℤ) x :=
-  lpOneAlg.ext_toRealSeq (funext fun k => by
-    show toSeq _ k = toSeq _ k
-    rw [natEmbed_toSeq, toSeq_single]
-    split_ifs with h1 h2 h2
-    · show lpOneAlg.toRealSeq (lpOneAlg.single n x : l1Weighted ν) k.toNat = x
-      rw [lpOneAlg.toRealSeq_single, ite_eq_left (by omega)]
-    · show lpOneAlg.toRealSeq (lpOneAlg.single n x : l1Weighted ν) k.toNat = 0
-      rw [lpOneAlg.toRealSeq_single, ite_eq_right (by omega)]
-    · omega
-    · rfl)
 
 end NatEmbed
 

@@ -1,3 +1,5 @@
+@../../AGENTS.md
+
 # RadiiPolynomial — Project Instructions
 
 This is a Lean 4 formalization of radii polynomial methods for rigorous ODE solution verification, based on the reference book at `docs/reference_book/`.
@@ -22,7 +24,7 @@ RadiiPolynomial/
     Applications/PowerSeries/    -- polynomial zeros on l1_nu (operators, bounds, affine Z2 transition)
     Applications/FiniteDimensional/ -- the row-sum face on R^n and rational polynomial systems
     Applications/Galerkin/       -- the polynomial Galerkin face on the finite Chebyshev carrier
-    Applications/Fourier/        -- the general-symbol semilinear consumer on the bilateral geometric fiber
+    Applications/Fourier/        -- general-symbol semilinear ℓ¹ layer: no end consumer; archived at the API-v2 merge (user 2026-10-18); the Fourier consumer of record is book §10.1 Duffing on ℓ²
     Examples/                    -- grouped by problem family and discretization
 ```
 
@@ -47,7 +49,7 @@ The semantic bridge from the sequence-space zero F(a) = 0 back to the original e
 **Algebra architecture:**
 - `lpOneAlg M E` (`Analysis/SequenceSpace/WeightedL1/Carrier.lean`; the convolution ring in `Algebra.lean`) — generic ℓ¹
   Banach algebra with non-uniform fibers
-- `WeightedScalar w m` — parameterized fiber ℝ with norm `|x|·w(m)`
+- `WeightedScalar 𝕜 w m` — the fiber `𝕜` (any `NormedField`) with positive weight `w` (`[PosWeight w]`), norm `‖x‖ * w(m)` and the standard `FiberTrivialization` frame; `ScaledReal ν` / `ScaledRealZ ν` are its real specializations, `geomFiber 𝕜 ν` / `geomFiberZ 𝕜 ν` the scalar-general geometric fibers
 - `l1Weighted ν := lpOneAlg ℕ (ScaledReal ν)` — Taylor power series
 - `l1Chebyshev ν := lpOneAlg ℤ (ScaledRealZ ν)` — Chebyshev bilateral series
 
@@ -74,9 +76,9 @@ rw [hfd]
 
 Also: `ext` on `l1Weighted` CLMs goes too deep into `ScaledReal` — always use `ext1 h` instead.
 
-### totalDegree is noncomputable
+### Polynomial constants come from the syntax
 
-Don't try to prove `totalDegree (phi_spec l) <= 2` by structural decomposition — it's extremely verbose. Instead verify the CONSEQUENCE directly:
+For example certificate constants, use the `CompPoly` bounds rather than proving an ad hoc degree bound by structural decomposition. Norm, Lipschitz and derivative constants are read off the `CompPoly` syntax (`normBound`, `lipschitzBound`, `derivativeBound`; UBIQUITOUS_LANGUAGE "Bounds from syntax"). Where a consequence must still be checked directly:
 - `simp` with `pderiv_X`, `pderiv_mul`, `pderiv_C_mul` reduces iterated pderivs to constants
 - `auto_poly_fderiv` handles the Banach-space fderiv layer
 
@@ -117,10 +119,12 @@ shift (`i = j − N`), and bridge to the analytic side with
 
 ## Design decisions
 
-### IVP codomain: raw N -> R, not typed omega space
+API design philosophy of record (effective API, two-layer operator membership, module rule and ship test, what not to revive): the `radii-poly-api-design` skill, section "Effective API — measured definition" and the bullets after it; dated priorities live in the project memory index.
 
-`ivpCoeffs` and `chebyshevIvpCoeffs` return raw `N -> R`, not elements of the omega-weighted space. The omega space is never formalized as a type for F's output because:
-1. F(a) is immediately fed to A then discarded — no one manipulates F(a) as an l1_omega element
+### IVP codomain: raw N -> R, not typed ϖ space
+
+`ivpCoeffs` and `chebyshevIvpCoeffs` return raw `N -> R`, not elements of the ϖ-weighted space (ϖ is the IVP codomain weight; Lean names and the code-formatted expressions below spell it `omega`). The ϖ space is never formalized as a type for F's output because:
+1. F(a) is immediately fed to A then discarded — no one manipulates F(a) as an ℓ¹_ϖ element
 2. Proving `F(a) in l1_omega` for every `a` would be significant extra work with zero downstream benefit
 3. All bounds (Y0, Z0, Z1, Z2) work at the raw coefficient level
 4. Matches the reference book: computations never use `||F(a)||_omega`
@@ -151,13 +155,10 @@ The certificate provides: ℚ column arrays, `hcols` (ℝ entries = ℚ cast), `
 When the goal bound involves ℝ division (e.g., `≤ (C : ℝ) / 2`), rewrite first:
 `rw [show (C : ℝ) / 2 = ((C / 2 : ℚ) : ℝ) from by push_cast; ring]`
 
-### Generic DF verification API
+### Example-facing IVP interface
 
-The `ivp_hDF_block_nat` + `MvPolyBridge` API eliminates equation-specific Jacobian definitions. The user provides `phi_spec : Fin L -> MvPolynomial (Fin L) Q` and the API:
-- Computes Jacobian entries via `mvPolyCoeffQ(pderiv m (phi_spec j))`
-- Verifies numerical Jacobian against symbolic one via `native_decide`
-
-New IVP examples should use `ivp_hDF_block_nat`, not manual Jacobian definitions.
+An IVP example supplies only what it owns: the polynomial system `f_cpoly : Fin L → CompPoly L`, the initial condition, the numbers (candidate, finite blocks, rational bounds) and the radii inequality. It uses the `_of_compPoly` faces directly or through the family certificate checkers (`StdIVPData.existsUnique_of_compPoly`, `StdIVPData.composedApprox_eq_fderiv_G_fin_of_compPoly`, `StdChebIVPData.existsUnique_of_compPoly`; UBIQUITOUS_LANGUAGE "End-consumer interface"); the library derives differentiability, the Fréchet derivative and the symbolic Jacobian. `ivp_hDF_block_nat` is an internal step (`Applications/IVP/Taylor/Standard.lean`), not an example-facing API.
+For the Taylor finite-Jacobian bridge, the remaining example-specific obligation is the finite-block equality `hDF_nat` against `IVP.ivp_DF_of_Dφ_nat`; Examples 8.1 and 8.3 prove it with `native_decide`. The numerical bounds and radii inequality remain certificate obligations.
 
 ## Reference book
 

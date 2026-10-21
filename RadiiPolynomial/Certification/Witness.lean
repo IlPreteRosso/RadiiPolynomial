@@ -45,50 +45,8 @@ section GeneralL
 
 variable {ν : PosReal} {L N : ℕ}
 
-/-- Support bound for general L: if `v` vanishes componentwise for `n > M` and `M ≥ N`,
-then `A.toCLM v` vanishes componentwise for `n > M`. -/
-lemma SystemBlockDiagData.toCLM_support [NeZero L]
-    (A : SystemBlockDiagData L N) (v : XL1 ν L) (M : ℕ) (hMN : N ≤ M)
-    (hsupp : ∀ l, ∀ n, M < n → toCoeff (ν := ν) v l n = 0) :
-    ∀ l, ∀ n, M < n → toCoeff (ν := ν) (A.toCLM (ν := ν) v) l n = 0 := by
-  intro l n hn
-  rw [SystemBlockDiagData.toCoeff_toCLM]
-  rw [SystemBlockDiagData.action_tail _ _ _ _ (by omega : N < n)]
-  rw [hsupp l n hn, mul_zero]
 
-/-- Per-component norm of `A.toCLM v` as a finite sum when `v` has support ≤ M. -/
-lemma SystemBlockDiagData.norm_toCLM_component_eq_Icc_sum [NeZero L]
-    (A : SystemBlockDiagData L N) (v : XL1 ν L) (M : ℕ) (hMN : N ≤ M)
-    (hsupp : ∀ l, ∀ n, M < n → toCoeff (ν := ν) v l n = 0)
-    (l : Fin L) :
-    ‖(A.toCLM (ν := ν) v) l‖ =
-    ∑ n ∈ Finset.Icc 0 M,
-      |l1Weighted.toSeq ((A.toCLM (ν := ν) v) l) n| * (ν : ℝ) ^ n :=
-  l1Weighted.norm_eq_Icc_sum_of_support _ M (A.toCLM_support v M hMN hsupp l)
 
-/-- **Y₀ pipeline (general L)**: bound `‖A.toCLM(v)‖` via per-component finite sums.
-
-For finitely-supported `v` with support ≤ M ≥ N, the per-component norm of `A.toCLM v`
-equals a finite sum of `|A.action(toCoeff v) l n| * ν^n`. The caller bounds each component
-sum (typically via `finsum_bound using systemBlockDiagActionEval`).
-
-This mirrors the sup norm of the product space: `‖A.toCLM v‖ = max_l ‖(A.toCLM v) l‖`,
-reduced to evaluable finite sums by the block-diagonal support structure. -/
-lemma SystemBlockDiagData.norm_toCLM_apply_le [NeZero L]
-    (A : SystemBlockDiagData L N) (v : XL1 ν L)
-    (M : ℕ) (hMN : N ≤ M)
-    (hsupp : ∀ l, ∀ n, M < n → toCoeff (ν := ν) v l n = 0)
-    {C : ℝ} (hC : 0 ≤ C)
-    (hcomp : ∀ l : Fin L,
-      ∑ n ∈ Finset.Icc 0 M,
-        |A.action (toCoeff (ν := ν) v) l n| * (ν : ℝ) ^ n ≤ C) :
-    ‖A.toCLM (ν := ν) v‖ ≤ C := by
-  refine (pi_norm_le_iff_of_nonneg hC).mpr fun l => ?_
-  rw [A.norm_toCLM_component_eq_Icc_sum v M hMN hsupp l]
-  simp_rw [show ∀ n, l1Weighted.toSeq ((A.toCLM (ν := ν) v) l) n =
-    A.action (toCoeff (ν := ν) v) l n from fun n =>
-      A.toCoeff_toCLM (ν := ν) v l n]
-  exact hcomp l
 
 end GeneralL
 
@@ -123,18 +81,7 @@ end ScalarSpecialization
 
 section ArrayElements
 
-/-- The finitely supported element of `ℓ¹_ν` read off a zero-padded rational array.
-General in `ν`, `arr`. -/
-noncomputable def l1OfArrayQ {ν : PosReal} (arr : Array ℚ) : l1Weighted ν :=
-  l1Weighted.mk (fun n => ((arr.getD n 0 : ℚ) : ℝ)) (by
-    rw [l1Weighted.mem_iff]
-    refine summable_of_ne_finset_zero (s := Finset.range arr.size) fun n hn => ?_
-    rw [Finset.mem_range, not_lt] at hn
-    simp [Array.getD_eq_getD_getElem?, hn])
 
-/-- General in `ν`, `arr`. -/
-@[simp] theorem l1OfArrayQ_toSeq {ν : PosReal} (arr : Array ℚ) (n : ℕ) :
-    l1Weighted.toSeq (l1OfArrayQ (ν := ν) arr) n = ((arr.getD n 0 : ℚ) : ℝ) := rfl
 
 /-- Bridge: an element of `ℓ¹_ν` whose coefficients are the casts of rationals `q` supported in
 `[0, M]`, at a weight `ν` that is the cast of `ν_q`, has norm equal to the cast of the exact
@@ -154,11 +101,10 @@ end ArrayElements
 The Z₀ and ‖A‖ bounds reduce to `finWeightedMatrixNorm` (for L=1) or
 `finiteBlockMatrixNorm` (for general L), computed via column norms.
 
-Key bridge lemmas from `Operators/Matrix/WeightedNorm.lean` (used directly, no re-export):
-- `FiniteWeightedNorm.matrixColNorm_le_of_arrayColNormIccSum`: array bounds → column norm
-  bounds
-- `FiniteWeightedNorm.finWeightedMatrixNorm_le_of_matrixColNorm_le`: column bounds → matrix
-  norm bound
+The shipped exact-rational bridge is
+`FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le` in `Certification/Rational/Matrix.lean`.
+The older array-to-column and column-to-matrix helper family is recovered in
+`B5RecordDyadicP2`; it is not re-exported by this file.
 
 For general L, `finiteBlockMatrixNorm` = `max_l Σ_j blockEntryNorm l j` where each
 `blockEntryNorm ν A.finBlock l j = finWeightedMatrixNorm ν (A.finBlock l j)`

@@ -71,12 +71,7 @@ def f_cpoly : Fin L → CompPoly L
 def f (a : Fin L → l1Weighted ν_val) (l : Fin L) : l1Weighted ν_val :=
   (f_cpoly l).evalBanach a
 
-def f_spec (j : Fin L) : MvPolynomial (Fin L) ℚ :=
-  (f_cpoly j).toMvPoly
 
-lemma f_eq_spec (a : XL1 ν_val L) (l : Fin L) :
-    f a l = MvPolyBridge.evalInBanach (f_spec l) a :=
-  MvPolyBridge.compPoly_evalBanach_eq_evalInBanach _ _
 
 /-- The sequence-space operator `F`, generated from the vector field `f` via
 the IVP Taylor recurrence `IVP.ivpCoeffs`:
@@ -93,9 +88,6 @@ def F (a : XL1 ν_val L) : SystemCoeff L :=
 def Df (h : Fin L → l1Weighted ν_val) : Fin L → l1Weighted ν_val :=
   fun l => fderiv ℝ (fun a => f a l) data.abar h
 
-lemma differentiable_f_component (l : Fin L) :
-    Differentiable ℝ (fun a : XL1 ν_val L => f a l) := by
-  exact MvPolyBridge.differentiable_evalBanach_l1Weighted (f_cpoly l)
 
 /-! ## 5. DF Correctness (Jacobian via `ivp_hDF_block_nat`) -/
 
@@ -139,21 +131,11 @@ private lemma abar_toSeq_zero (l : Fin L) (k : ℕ) (hk : N < k) :
 /-- The support index of `F(ā)` read off the syntax: `supportM f_cpoly N = 2N + 1`. -/
 private lemma supportM_eq : IVP.supportM f_cpoly N = 2 * N + 1 := by decide
 
-lemma f_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N < n) :
-    l1Weighted.toSeq (f data.abar l) n = 0 := by
-  have h := data.ivpCoeffs_abar_eq_zero_of_compPoly f_cpoly x₀ l (n + 1)
-    (by rw [supportM_eq]; omega)
-  change ((n : ℝ) + 1) * l1Weighted.toSeq (data.abar l) (n + 1) -
-    l1Weighted.toSeq (f data.abar l) n = 0 at h
-  rwa [abar_toSeq_zero l (n + 1) (by omega), mul_zero, zero_sub, neg_eq_zero] at h
 
 lemma F_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
     IVP.ivpCoeffs f x₀ data.abar l n = 0 :=
   data.ivpCoeffs_abar_eq_zero_of_compPoly f_cpoly x₀ l n (supportM_eq ▸ hn)
 
-lemma F_abar_mem (l : Fin L) :
-    l1Weighted.Mem ν_val (F data.abar l) :=
-  data.ivpCoeffs_abar_mem_of_compPoly f_cpoly x₀ l
 
 /-! ## 8. Norm bounds for ā components -/
 

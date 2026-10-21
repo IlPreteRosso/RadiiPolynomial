@@ -17,17 +17,17 @@ import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Diagonal
 `TA` and `TC` are CLMs (`constG p` is a constant vector). Crude norm constants
 suffice for differentiability of `TA` and `TCblock`. `TCtail` is the composite of bundled
 maps, the tail projection `lpOneAlg.tailProj` after `chebyshevShiftDiv_CLM`; its
-componentwise bounds are `TCtailElem_norm_le` (`ν/2 + 1/(2ν)`, from
-`chebyshevShiftDiv_norm_le'`) and the sharp `TCtailElem_norm_le_tail` (`ν/(N+1)`).
+retained componentwise bound is `TCtailElem_norm_le_tail`, with constant `ν/(N+1)`.
 
 The equation-generic rows (`FAseq`, `FCseq`, `constFseq`) and the tail
 operator `TCtail` live at the `ChebyshevIVP` level; everything that needs the
 numerical data lives in the `StdChebIVPData` namespace, parameterized by
 `d : StdChebIVPData ν L N`.
 
-Outputs: `StdChebIVPData.hasFDerivAt_G`, `StdChebIVPData.differentiable_G`,
-`StdChebIVPData.fderiv_G` (+ the pointwise `toSeq` bridges used by the Z₁/Z₂ faces of
-Certification/IVP/Chebyshev.lean).
+The derivative witness is `StdChebIVPData.hasFDerivAt_G`, together with the pointwise
+`toSeq` bridges used by `Certification/IVP/Chebyshev.lean`. Consumers obtain
+differentiability or the derivative value from this witness through Mathlib's
+`HasFDerivAt.differentiableAt` and `HasFDerivAt.fderiv` interfaces.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -199,11 +199,6 @@ lemma TCtailElem_toSeq_neg (v : l1Chebyshev ν) (m : ℕ) :
   rw [TCtailElem, lpOneAlg.toRealSeq_tailProj, ite_eq_right (by simp only [Finset.mem_Icc]; omega)]
   exact chebyshevShiftDiv_toSeq_negSucc v m
 
-/-- Norm bound `(ν/2 + 1/(2ν)) ‖v‖` for the tail component: the tail projection is a
-contraction, then `chebyshevShiftDiv_norm_le'`. -/
-lemma TCtailElem_norm_le (v : l1Chebyshev ν) :
-    ‖TCtailElem N v‖ ≤ ((ν : ℝ) / 2 + 1 / (2 * (ν : ℝ))) * ‖v‖ :=
-  (lpOneAlg.norm_tailProj_apply_le (𝕜 := ℝ) _ _).trans (chebyshevShiftDiv_norm_le' v)
 
 end TCtail
 
@@ -211,8 +206,8 @@ section TCtailSharp
 
 variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
-/-- The tail part of `TC` has norm at most `ν / (N + 1)` times the norm of its input: the
-sharp sibling of `TCtailElem_norm_le`. `TCtailElem N v` vanishes on the modes `≤ N` and is
+/-- The tail part of `TC` has norm at most `ν / (N + 1)` times the norm of its input.
+`TCtailElem N v` vanishes on the modes `≤ N` and is
 `chebyshevShiftDiv v` beyond, so `chebyshev_Z₁_component_le` applies. -/
 theorem TCtailElem_norm_le_tail (N : ℕ) (v : l1Chebyshev ν) :
     ‖TCtailElem N v‖ ≤ (ν : ℝ) / ((N : ℝ) + 1) * ‖v‖ := by
@@ -247,7 +242,6 @@ def TCtail : XCheb ν L →L[ℝ] XCheb ν L :=
     (lpOneAlg.tailProj (𝕜 := ℝ) (Finset.Icc 0 (N : ℤ)) ∘L chebyshevShiftDiv_CLM) ∘L
       ContinuousLinearMap.proj l
 
-@[simp] lemma TCtail_apply (c : XCheb ν L) : TCtail N c = TCtailFun N c := rfl
 
 end TCtailCLM
 
@@ -466,7 +460,6 @@ def TA : XCheb ν L →L[ℝ] XCheb ν L :=
       show ‖d.TAfun a‖ ≤ _
       exact d.TAfun_norm_le a
 
-@[simp] lemma TA_apply (a : XCheb ν L) : d.TA a = d.TAfun a := rfl
 
 /-! ### TCblock — preconditioned block rows of the `c`-part -/
 
@@ -558,12 +551,10 @@ def TCblock : XCheb ν L →L[ℝ] XCheb ν L :=
       show ‖d.TCblockFun c‖ ≤ _
       exact d.TCblockFun_norm_le c
 
-@[simp] lemma TCblock_apply (c : XCheb ν L) : d.TCblock c = d.TCblockFun c := rfl
 
 /-- The linear-in-`c` part of G. -/
 def TC : XCheb ν L →L[ℝ] XCheb ν L := d.TCblock + TCtail N
 
-lemma TC_apply (c : XCheb ν L) : d.TC c = d.TCblockFun c + TCtailFun N c := rfl
 
 /-! ### The decomposition and the derivative of G -/
 
@@ -665,19 +656,7 @@ lemma hasFDerivAt_G (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L �
       = d.TA + d.TC.comp DΦ from by rw [zero_add]] at h
   exact h
 
-/-- Differentiability obligation of `StdChebIVPData.existsUnique`. -/
-lemma differentiable_G (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ)
-    (DΦ : XCheb ν L → (XCheb ν L →L[ℝ] XCheb ν L))
-    (hDΦ : ∀ a, HasFDerivAt (fun x => (fun l => φ x l)) (DΦ a) a) :
-    Differentiable ℝ (d.G φ p) :=
-  fun a => (d.hasFDerivAt_G φ p a (DΦ a) (hDΦ a)).differentiableAt
 
-lemma fderiv_G (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ)
-    (DΦ : XCheb ν L → (XCheb ν L →L[ℝ] XCheb ν L))
-    (hDΦ : ∀ a, HasFDerivAt (fun x => (fun l => φ x l)) (DΦ a) a)
-    (a : XCheb ν L) :
-    fderiv ℝ (d.G φ p) a = d.TA + d.TC.comp (DΦ a) :=
-  (d.hasFDerivAt_G φ p a (DΦ a) (hDΦ a)).fderiv
 
 end StdChebIVPData
 

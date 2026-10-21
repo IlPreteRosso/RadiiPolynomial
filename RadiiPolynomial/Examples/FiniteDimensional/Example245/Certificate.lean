@@ -1,4 +1,4 @@
-import RadiiPolynomial.Examples.FiniteDimensional.Example245.Algebra
+import RadiiPolynomial.Core
 import RadiiPolynomial.Certification.LeanCertAdapter
 import RadiiPolynomial.Applications.FiniteDimensional.Scalar
 
@@ -17,7 +17,7 @@ abbreviations keep the example's hand-derived constants.
 
 open scoped Topology BigOperators
 open Metric Set Filter ContinuousLinearMap
-open RadiiPolynomial Example245
+open RadiiPolynomial
 open MvPolyBridge
 
 namespace Example245.Cert
@@ -26,11 +26,6 @@ namespace Example245.Cert
 
 noncomputable abbrev f     : ℝ → ℝ := fun x => x ^ 2 - 2
 noncomputable abbrev xBar  : ℝ := 13 / 10
-noncomputable abbrev A     : ℝ →L[ℝ] ℝ := smulCLM (19 / 50)
-noncomputable abbrev A_dag : ℝ →L[ℝ] ℝ := smulCLM (13 / 5)
-noncomputable abbrev Y₀_bound : ℝ := 1 / 8
-noncomputable abbrev Z₀_bound : ℝ := 1 / 80
-noncomputable abbrev Z₂_bound : ℝ → ℝ := fun _ => 19 / 25
 noncomputable abbrev r₀    : ℝ := 3 / 20
 
 /-! ## Certificate data -/

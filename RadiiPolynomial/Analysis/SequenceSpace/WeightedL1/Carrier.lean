@@ -11,18 +11,19 @@ and no convolution. The convolution ring structure is in `WeightedL1/Algebra.lea
 
 ## Contents
 
-* The Beurling-weight classes `lpOneAlgWeightMul`, `lpOneAlgWeightSubMul` (and their
-  multiplicative twins), stated on the weight `FiberTrivialization.weight` of the chosen frame.
+* The submultiplicative-weight class `lpOneAlgWeightMul` (and its multiplicative twin),
+  and the independent unit normalization `lpOneAlgWeightNormalized`,
+  stated on the weight `FiberTrivialization.weight` of the chosen frame.
 * The structure `lpOneAlg`, its normed-group, complete-space and normed-space instances, and the
   norm faces `norm_eq_tsum`, `summable_norm`, `norm_apply_le_norm`.
 * Frame-free fiber insertion `fiberSingle m x` (`x : E m`), bundled as the linear isometry
   `fiberSingleₗᵢ m : E m →ₗᵢ[𝕜] lpOneAlg M E`, its norm `norm_fiberSingle` and the expansion
-  `hasSum_fiberSingle`, also pushed through any continuous linear map (`hasSum_fiberSingle_mapCLM`).
+  `hasSum_fiberSingle`; a continuous linear map transports that sum by `HasSum.map`.
 * Scalar coordinates through the chosen frame `θ`: the coefficient sequence
   `toRealSeq f m = θ_m⁻¹ (f m)` with extensionality `ext_toRealSeq`, its additive and scalar faces,
-  the bundle `toRealSeqₗ : lpOneAlg M E →ₗ[𝕜] (M → 𝕜)` (`toRealSeq_injective`,
-  `toRealSeq_finset_sum`), the weighted norm `norm_eq_abs_toReal_mul_weight`, and the bound
-  `abs_toRealSeq_le` when every weight is at least `1`.
+  the bundle `toRealSeqₗ : lpOneAlg M E →ₗ[𝕜] (M → 𝕜)` and `toRealSeq_finset_sum`,
+  with extensionality `ext_toRealSeq` and weighted norm `norm_eq_abs_toReal_mul_weight`.
+  An explicit lower bound on the weights remains separate from submultiplicativity.
 * Over the index `ℤ` with any fibers: the sign split `norm_eq_tsum_natCast_add_tsum_neg`, its
   vanishing-negative form `norm_eq_tsum_natCast_of_neg`, and the finite-support sums
   `norm_eq_bilatFinSum`, `norm_eq_natFinSum_of_finSupp`.
@@ -41,10 +42,11 @@ takes the frame it is about as an instance argument.
 
 ## Typeclass convention
 
-The weight classes come in pairs: the additive classes (`lpOneAlgWeightMul`,
-`lpOneAlgWeightSubMul`) are declared directly, and the multiplicative ones
-(`lpOneMulAlgWeightMul`, `lpOneMulAlgWeightSubMul`) are linked to them by
-`@[to_additive existing]`. Helper definitions and lemmas are stated in multiplicative spelling and
+The additive submultiplicative-weight class `lpOneAlgWeightMul` is declared directly, and its
+multiplicative twin `lpOneMulAlgWeightMul` is linked to it by `@[to_additive existing]`.
+Unit normalization `lpOneAlgWeightNormalized` has no multiplicative
+twin: its consumer `lpOneAlg.instNormOneClass` uses an additive index monoid. Helper definitions
+and lemmas are stated in multiplicative spelling and
 generate their additive versions via `@[to_additive]` (`mulToRealSeq` ↦ `toRealSeq`);
 `mulToRealSeq` itself needs no monoid structure on `M`.
 -/
@@ -55,20 +57,20 @@ noncomputable section
 
 namespace RadiiPolynomial
 
-/-! ### Beurling-weight classes (indexed by the chosen frame) -/
+/-! ### Submultiplicative weights and unit normalization (indexed by the chosen frame) -/
 
-/-- Beurling weight of the chosen frame (additive index monoid): `ω_{j+l} ≤ ω_j ω_l` and
-`ω_0 = 1`, with `ω_m = FiberTrivialization.weight m = ‖θ_m 1‖`. -/
+/-- Submultiplicative weight of the chosen frame (additive index monoid):
+`ω_{j+l} ≤ ω_j ω_l`, with `ω_m = FiberTrivialization.weight m = ‖θ_m 1‖`.
+Unit normalization is the independent class `lpOneAlgWeightNormalized`. -/
 class lpOneAlgWeightMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
     [AddMonoid M] [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)]
     [FiberTrivialization 𝕜 M E] where
   weight_add_le : ∀ j l : M,
     FiberTrivialization.weight (E := E) (j + l) ≤
       FiberTrivialization.weight (E := E) j * FiberTrivialization.weight (E := E) l
-  weight_zero : FiberTrivialization.weight (E := E) (0 : M) = 1
 
-/-- Beurling weight of the chosen frame (multiplicative index monoid): `ω_{j*l} ≤ ω_j ω_l` and
-`ω_1 = 1`. Sufficient for the convolution ring on `lpOneAlg` when `[HasMulAntidiagonal M]`
+/-- Submultiplicative weight of the chosen frame (multiplicative index monoid):
+`ω_{j*l} ≤ ω_j ω_l`. Sufficient for the convolution ring on `lpOneAlg` when `[HasMulAntidiagonal M]`
 (finite fibers, `lpOneAlg.instMulConvCompatOfAntidiag`) or when `𝕜` is complete
 (`lpOneAlg.instMulConvCompatOfWeightMul`). -/
 @[to_additive existing (dont_translate := E 𝕜) lpOneAlgWeightMul]
@@ -78,29 +80,13 @@ class lpOneMulAlgWeightMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*
   weight_mul_le : ∀ j l : M,
     FiberTrivialization.weight (E := E) (j * l) ≤
       FiberTrivialization.weight (E := E) j * FiberTrivialization.weight (E := E) l
-  /-- Weight at identity = 1: ensures `‖1‖ = 1` (NormOneClass). -/
-  weight_one : FiberTrivialization.weight (E := E) (1 : M) = 1
 
-/-- Submultiplicative weight of the chosen frame with weight ≥ 1 (additive index monoid). -/
-class lpOneAlgWeightSubMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
-    [AddMonoid M] [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)]
-    [FiberTrivialization 𝕜 M E] extends lpOneAlgWeightMul 𝕜 M E where
-  /-- Weight ≥ 1: feeds the fiberwise bound `‖toRealSeq f m‖ ≤ ‖f m‖` (`abs_toRealSeq_le`),
-  embedding the extracted `𝕜`-sequence into unweighted `ℓ¹`. -/
-  one_le_weight : ∀ m, 1 ≤ FiberTrivialization.weight (E := E) m
-
-/-- Submultiplicative weight of the chosen frame with weight ≥ 1 (multiplicative index monoid).
-The weight ≥ 1 axiom is not used for Cauchy sum convergence (submultiplicativity alone suffices,
-see `instMulConvCompatOfWeightMul`); it feeds the fiberwise bound
-`‖mulToRealSeq f m‖ ≤ ‖f m‖` (`abs_mulToRealSeq_le`, which needs only the weight ≥ 1 field),
-embedding the extracted `𝕜`-sequence into unweighted `ℓ¹`. -/
-@[to_additive existing (dont_translate := E 𝕜) lpOneAlgWeightSubMul]
-class lpOneMulAlgWeightSubMul (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*) (E : M → Type*)
-    [Monoid M] [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)]
-    [FiberTrivialization 𝕜 M E] extends lpOneMulAlgWeightMul 𝕜 M E where
-  /-- Weight ≥ 1: feeds the fiberwise bound `‖mulToRealSeq f m‖ ≤ ‖f m‖`
-  (`abs_mulToRealSeq_le`), embedding the extracted `𝕜`-sequence into unweighted `ℓ¹`. -/
-  one_le_weight : ∀ m, 1 ≤ FiberTrivialization.weight (E := E) m
+/-- Unit normalization of the chosen additive frame: its zero-mode atom has norm one.
+This is independent of submultiplicativity and convolution compatibility. -/
+class lpOneAlgWeightNormalized (𝕜 : outParam Type*) [NormedField 𝕜] (M : Type*)
+    (E : M → Type*) [Zero M] [∀ m, NormedAddCommGroup (E m)]
+    [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] : Prop where
+  weight_zero : FiberTrivialization.weight (E := E) (0 : M) = 1
 
 /-! ### lpOneAlg Structure -/
 
@@ -132,6 +118,7 @@ instance instCompleteSpace [∀ m, CompleteSpace (E m)] : CompleteSpace (lpOneAl
 instance : CoeFun (lpOneAlg M E) (fun _ => ∀ m, E m) where
   coe f := f.toLp
 
+
 /-- NormedSpace 𝕜 for lpOneAlg, transferred from lp. No algebraic constraint on M needed. -/
 instance instNormedSpaceBase {𝕜 : Type*} [NormedField 𝕜] [∀ m, NormedSpace 𝕜 (E m)] :
     NormedSpace 𝕜 (lpOneAlg M E) :=
@@ -139,10 +126,6 @@ instance instNormedSpaceBase {𝕜 : Type*} [NormedField 𝕜] [∀ m, NormedSpa
     norm_smul_le := fun r f => by
       show ‖r • f.toLp‖ ≤ _; exact norm_smul_le r f.toLp }
 
-@[simp] theorem toLp_zero : (0 : lpOneAlg M E).toLp = 0 := rfl
-@[simp] theorem toLp_add (f g : lpOneAlg M E) : (f + g).toLp = f.toLp + g.toLp := rfl
-@[simp] theorem toLp_neg (f : lpOneAlg M E) : (-f).toLp = -f.toLp := rfl
-@[simp] theorem toLp_sub (f g : lpOneAlg M E) : (f - g).toLp = f.toLp - g.toLp := rfl
 
 @[simp] theorem toLp_smul {𝕜 : Type*} [NormedField 𝕜] [∀ m, NormedSpace 𝕜 (E m)]
     (r : 𝕜) (f : lpOneAlg M E) : (r • f).toLp = r • f.toLp := rfl
@@ -162,10 +145,6 @@ theorem summable_norm (f : lpOneAlg M E) : Summable (fun m => ‖f m‖) := by
   rw [memℓp_gen_iff (by norm_num : 0 < (1 : ℝ≥0∞).toReal)] at hf
   simpa using hf
 
-/-- Shifted norm sums are summable: `∑ ‖f(m + s)‖ < ∞` for any `s`. -/
-theorem summable_norm_shift [AddRightCancelMonoid M] (f : lpOneAlg M E) (s : M) :
-    Summable (fun m => ‖f (m + s)‖) :=
-  (summable_norm f).comp_injective (add_left_injective s)
 
 /-- Product norm summability: `∑ ‖f a‖ * ‖g b‖ < ∞` over `M × M`. -/
 theorem summable_norm_prod (f g : lpOneAlg M E) :
@@ -236,7 +215,8 @@ theorem mulToRealSeq_smul (r : 𝕜) (f : lpOneAlg M E) :
     mulToRealSeq (r • f) = r • mulToRealSeq f :=
   funext fun m => map_smul (FiberTrivialization.equiv (E := E) m).symm r (f m)
 
-/-- The coefficient map `toRealSeq` as a `𝕜`-linear map (injective: `toRealSeq_injective`). -/
+/-- The coefficient map `toRealSeq` as a `𝕜`-linear map; its coordinate extensionality
+is `ext_toRealSeq`. -/
 def toRealSeqₗ : lpOneAlg M E →ₗ[𝕜] (M → 𝕜) where
   toFun := toRealSeq
   map_add' := toRealSeq_add
@@ -245,10 +225,6 @@ def toRealSeqₗ : lpOneAlg M E →ₗ[𝕜] (M → 𝕜) where
 @[simp] theorem toRealSeqₗ_apply (f : lpOneAlg M E) :
     toRealSeqₗ (𝕜 := 𝕜) f = toRealSeq f := rfl
 
-/-- The coefficient map `toRealSeq` is injective: two elements of `lpOneAlg M E` with the same
-coefficients in every fiber are equal. -/
-theorem toRealSeq_injective : Function.Injective (toRealSeq : lpOneAlg M E → M → 𝕜) :=
-  fun _ _ h => ext_toRealSeq h
 
 /-- Coefficient extraction commutes with finite sums (`map_sum` of `toRealSeqₗ`). -/
 theorem toRealSeq_finset_sum {ι : Type*} (s : Finset ι) (a : ι → lpOneAlg M E) (k : M) :
@@ -264,18 +240,7 @@ section WeightOneLe
 
 variable {𝕜 : Type*} [NormedField 𝕜] [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]
 
-/-- `‖mulToRealSeq f m‖ ≤ ‖f m‖` when every weight of the frame is at least `1`. -/
-@[to_additive (dont_translate := E 𝕜) abs_toRealSeq_le
-  /-- `‖toRealSeq f m‖ ≤ ‖f m‖` when every weight of the frame is at least `1`. -/]
-theorem abs_mulToRealSeq_le (hw : ∀ m, 1 ≤ FiberTrivialization.weight (E := E) m)
-    (f : lpOneAlg M E) (m : M) : ‖mulToRealSeq f m‖ ≤ ‖f m‖ := by
-  rw [norm_eq_abs_mulToReal_mul_weight f m]
-  exact le_mul_of_one_le_right (norm_nonneg _) (hw m)
 
-@[to_additive (dont_translate := E 𝕜) summable_abs_toRealSeq]
-theorem summable_abs_mulToRealSeq (hw : ∀ m, 1 ≤ FiberTrivialization.weight (E := E) m)
-    (f : lpOneAlg M E) : Summable (fun m => ‖mulToRealSeq f m‖) :=
-  (summable_norm f).of_nonneg_of_le (fun _ => norm_nonneg _) (abs_mulToRealSeq_le hw f)
 
 end WeightOneLe
 
@@ -378,9 +343,6 @@ variable [DecidableEq M]
 def fiberSingle (m : M) (x : E m) : lpOneAlg M E :=
   ⟨lp.single 1 m x⟩
 
-/-- The insertion is `Pi.single` at every index. -/
-theorem fiberSingle_apply (m : M) (x : E m) (k : M) :
-    fiberSingle m x k = (Pi.single m x : ∀ k, E k) k := rfl
 
 /-- The inserted vector sits at its own index. -/
 @[simp] theorem fiberSingle_apply_self (m : M) (x : E m) : fiberSingle m x m = x :=
@@ -390,10 +352,6 @@ theorem fiberSingle_apply (m : M) (x : E m) (k : M) :
 theorem fiberSingle_apply_of_ne {m k : M} (x : E m) (h : k ≠ m) : fiberSingle m x k = 0 :=
   Pi.single_eq_of_ne h _
 
-/-- The insertion of `0` is `0` (scalar-free; the `map_zero` of `fiberSingleₗᵢ`). -/
-@[simp] theorem fiberSingle_zero (m : M) : fiberSingle m (0 : E m) = 0 := by
-  show mk (lp.single 1 m 0) = mk 0
-  rw [lp.single_zero]
 
 /-- The insertion is additive (scalar-free; the `map_add` field of `fiberSingleₗᵢ`). -/
 theorem fiberSingle_add (m : M) (x y : E m) :
@@ -416,8 +374,6 @@ def fiberSingleₗᵢ [∀ m, NormedSpace 𝕜 (E m)] (m : M) : E m →ₗᵢ[�
     rw [lp.single_smul]
   norm_map' := norm_fiberSingle m
 
-@[simp] theorem coe_fiberSingleₗᵢ [∀ m, NormedSpace 𝕜 (E m)] (m : M) :
-    ⇑(fiberSingleₗᵢ (𝕜 := 𝕜) (E := E) m) = fiberSingle m := rfl
 
 /-- Every element is the norm-convergent sum of its fiber insertions (transfer of
 `lp.hasSum_single` through the wrapper). -/
@@ -425,12 +381,6 @@ theorem hasSum_fiberSingle (h : lpOneAlg M E) :
     HasSum (fun m : M => fiberSingle m (h m)) h :=
   (lp.hasSum_single (by norm_num) h.toLp).map (mkAddHom (E := E)) (isometry_mk (E := E)).continuous
 
-/-- The fiber expansion pushed through a continuous linear map (for the inherited action). -/
-theorem hasSum_fiberSingle_mapCLM [∀ m, NormedSpace 𝕜 (E m)] {F : Type*} [NormedAddCommGroup F]
-    [NormedSpace 𝕜 F]
-    (W : lpOneAlg M E →L[𝕜] F) (h : lpOneAlg M E) :
-    HasSum (fun m : M => W (fiberSingle m (h m))) (W h) :=
-  (hasSum_fiberSingle h).mapL W
 
 end FiberSingle
 
@@ -501,8 +451,6 @@ def evalCLM (m : M) : lpOneAlg M E →L[𝕜] E m :=
       map_smul' := fun _ _ => rfl }
     1 (fun f => by rw [one_mul]; exact norm_apply_le_norm f m)
 
-@[simp] theorem evalCLM_apply (m : M) (f : lpOneAlg M E) :
-    evalCLM (𝕜 := 𝕜) m f = f m := rfl
 
 end EvalCLM
 

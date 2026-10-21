@@ -54,17 +54,7 @@ def ScalarBlockDiagData.ofParts
     intro _ n hn
     simpa using tailBound_spec n hn
 
-@[simp] lemma ScalarBlockDiagData.finBlock0_ofParts
-    (finBlock : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
-    (tailDiag : ℕ → ℝ) (tailBound : ℝ)
-    (tailBound_spec : ∀ n, N < n → |tailDiag n| ≤ tailBound) :
-    (ScalarBlockDiagData.ofParts (N := N) finBlock tailDiag tailBound tailBound_spec).finBlock0 = finBlock := rfl
 
-@[simp] lemma ScalarBlockDiagData.tailDiag0_ofParts
-    (finBlock : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
-    (tailDiag : ℕ → ℝ) (tailBound : ℝ)
-    (tailBound_spec : ∀ n, N < n → |tailDiag n| ≤ tailBound) (n : ℕ) :
-    (ScalarBlockDiagData.ofParts (N := N) finBlock tailDiag tailBound tailBound_spec).tailDiag0 n = tailDiag n := rfl
 
 lemma ScalarBlockDiagData.finiteBlockMatrixNorm_eq
     (A : ScalarBlockDiagData N) :
@@ -72,23 +62,7 @@ lemma ScalarBlockDiagData.finiteBlockMatrixNorm_eq
   unfold finiteBlockMatrixNorm blockRowNorm blockEntryNorm ScalarBlockDiagData.finBlock0
   simp
 
-/-- Scalar-form operator norm bound:
-`‖A.toCLM‖ ≤ ‖A_fin‖_{1,ν} + tailBound`. -/
-lemma ScalarBlockDiagData.norm_toCLM_le
-    (A : ScalarBlockDiagData N) :
-    ‖A.toCLM (ν := ν)‖ ≤ FiniteWeightedNorm.finWeightedMatrixNorm ν A.finBlock0 + A.tailBound := by
-  have := SystemBlockDiagData.norm_toCLM_le (ν := ν) (L := 1) (N := N) (A := A)
-  rwa [ScalarBlockDiagData.finiteBlockMatrixNorm_eq (A := A)] at this
 
-/-- Scalar (`L=1`) `Z₀` transfer from defect identity to the canonical norm API. -/
-lemma ScalarBlockDiagData.Z₀_norm_le_of_eq_defect
-    (A B D : ScalarBlockDiagData N)
-    (hD : ContinuousLinearMap.id ℝ (XL1 ν 1) -
-        (A.toCLM (ν := ν)).comp (B.toCLM (ν := ν)) = D.toCLM (ν := ν)) :
-    Z₀_norm (A.toCLM (ν := ν)) (B.toCLM (ν := ν)) ≤
-      FiniteWeightedNorm.finWeightedMatrixNorm ν D.finBlock0 + D.tailBound := by
-  have := SystemBlockDiagData.Z₀_norm_le_of_eq_defect (ν := ν) A B D hD
-  rwa [D.finiteBlockMatrixNorm_eq (ν := ν)] at this
 
 /-- Identify `(ℓ¹_ν)^1` with `ℓ¹_ν` via `ContinuousLinearEquiv.funUnique`. -/
 abbrev scalarSpaceEquiv (ν : PosReal) : XL1 ν 1 ≃L[ℝ] l1Weighted ν :=
@@ -160,14 +134,6 @@ lemma ScalarBlockDiagData.injective_toScalarCLM_of_toCLM_injective
   have hin : (fun _ => x) = (fun _ => y) := h_inj hxy_sys
   exact congrArg (fun f => f 0) hin
 
-/-- Scalar injectivity criterion on `l1Weighted` via `toScalarCLM`. -/
-lemma ScalarBlockDiagData.injective_toScalarCLM_of_parts
-    (A : ScalarBlockDiagData N)
-    (h_fin : Function.Injective A.finBlock0.mulVec)
-    (h_tail : ∀ n, N < n → A.tailDiag0 n ≠ 0) :
-    Function.Injective (A.toScalarCLM (ν := ν)) := by
-  exact A.injective_toScalarCLM_of_toCLM_injective (ν := ν)
-    (A.injective_toCLM_of_parts (ν := ν) h_fin h_tail)
 
 /-- Scalar Neumann-style injectivity criterion at `toCLM` level:
 if `‖I - A.finBlock0 * B‖_{1,ν} < 1` and the tail diagonal is nonzero, then
@@ -222,14 +188,7 @@ variable {ν : PosReal} {N : ℕ}
 
 /-! ### XL1 ν 1 norm lemmas -/
 
-/-- For `L = 1`, the product norm equals the single component norm. -/
-lemma norm_XL1_fin1 (x : XL1 ν 1) : ‖x‖ = ‖x 0‖ := by
-  have hx : x = fun _ => x 0 := funext fun i => congrArg x (Subsingleton.elim i 0)
-  rw [hx, pi_norm_const]
 
-/-- Helper: for `L = 1`, any `x : XL1 ν 1` equals the constant function at `x 0`. -/
-lemma XL1_fin1_eq_const (x : XL1 ν 1) : x = fun _ => x 0 :=
-  funext fun i => congrArg x (Fin.eq_zero i)
 
 /-! ### Coefficient access for `toScalarCLM` -/
 
@@ -334,21 +293,6 @@ lemma ScalarBlockDiagData.norm_id_sub_comp_toScalarCLM_le
 
 /-! ### Scalar operator norm bound -/
 
-/-- Scalar operator norm bound for `toScalarCLM`:
-`‖A.toScalarCLM‖ ≤ finWeightedMatrixNorm + tailBound`. -/
-lemma ScalarBlockDiagData.norm_toScalarCLM_le
-    (A : ScalarBlockDiagData N) :
-    ‖A.toScalarCLM (ν := ν)‖ ≤
-    FiniteWeightedNorm.finWeightedMatrixNorm ν A.finBlock0 + A.tailBound := by
-  apply ContinuousLinearMap.opNorm_le_bound _
-    (add_nonneg (FiniteWeightedNorm.finWeightedMatrixNorm_nonneg (ν := ν) A.finBlock0)
-      A.tailBound_nonneg)
-  intro x
-  rw [ScalarBlockDiagData.toScalarCLM_apply]
-  refine (norm_le_pi_norm _ 0).trans ?_
-  have := (ContinuousLinearMap.le_opNorm (A.toCLM (ν := ν)) (fun _ => x)).trans
-    (mul_le_mul_of_nonneg_right (A.norm_toCLM_le (ν := ν)) (norm_nonneg _))
-  rwa [pi_norm_const] at this
 
 /-- Tail action weighted bound: the weighted tail contribution of `A.toScalarCLM x`
 is bounded by `tailBound` times the weighted tail of `x`. -/
@@ -483,7 +427,7 @@ lemma ScalarBlockDiagData.Z₀_le_finWeightedMatrixNorm_of_tailCancel
   rw [show (A.defectOfTailCancel B htail_L).finBlock = fun _ _ =>
       (1 - A.finBlock0 * B.finBlock0) from by
     ext l j; simp [SystemBlockDiagData.defectOfTailCancel, defectOfBlockDiagOp,
-      ScalarBlockDiagData.finBlock0, show l = (0 : Fin 1) from Fin.eq_zero l, show j = (0 : Fin 1) from Fin.eq_zero j]]
+      SystemBlockDiagData.toBlockDiagOp, ScalarBlockDiagData.finBlock0, show l = (0 : Fin 1) from Fin.eq_zero l, show j = (0 : Fin 1) from Fin.eq_zero j]]
   exact le_of_eq (ScalarBlockDiagData.finiteBlockMatrixNorm_eq (ν := ν)
     (A := ⟨fun _ _ => 1 - A.finBlock0 * B.finBlock0, fun _ _ => 0, 0, by intro l n _; simp⟩))
 

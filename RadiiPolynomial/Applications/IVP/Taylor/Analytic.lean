@@ -21,12 +21,11 @@ to give the full existence + uniqueness statement on `(-ν, ν)`.
   satisfies `IsBallSolution`.
 - `StdIVPData.analytic_eq_canonical`: pinning — any ball solution equals
   `x_analytic` on the interval.
-- `StdIVPData.analytic_unique`: any two ball solutions agree.
 - `StdIVPData.analytic_existsUnique`: existence + uniqueness packaged
   ("∃ unique modulo `Set.EqOn (Ioo)`" — strict `∃!` over `ℝ → Fin L → ℝ`
   doesn't hold because candidates can differ outside the interval).
 
-Three tiers of faces. The four theorems above take an arbitrary coefficient
+Three tiers of faces. The three theorems above take an arbitrary coefficient
 nonlinearity `φ` with a bridge to `banachField φ_cpoly` and the contraction
 `Z₀ < 1`. The `_of_compPoly` faces fix `φ := banachField φ_cpoly`. The
 `_of_compPoly_of_radii` faces additionally take the four certified bounds and the
@@ -149,26 +148,6 @@ theorem analytic_eq_canonical
   d.analytic_uniqueness_wrapper φ x₀ φ_cpoly h_phi_eq h_defect_lt_one
     xTilde hxTilde_ball hG g hg.init hg.in_R hg.solves
 
-/-- **Uniqueness**: any two ball solutions agree on `(-ν, ν)`. -/
-theorem analytic_unique
-    (φ : XL1 ν L → Fin L → l1Weighted ν) (x₀ : Fin L → ℝ)
-    (φ_cpoly : Fin L → CompPoly L)
-    (h_phi_eq : ∀ a l, banachField φ_cpoly a l = φ a l)
-    (h_defect_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
-    {r₀ : ℝ}
-    (xTilde : XL1 ν L)
-    (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
-    (hG : d.G φ x₀ xTilde = 0)
-    (g₁ g₂ : ℝ → Fin L → ℝ)
-    (h₁ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
-      (‖(d.abar : XL1 ν L)‖ + r₀) g₁)
-    (h₂ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
-      (‖(d.abar : XL1 ν L)‖ + r₀) g₂) :
-    Set.EqOn g₁ g₂ (Set.Ioo (-(ν : ℝ)) ν) :=
-  (d.analytic_eq_canonical φ x₀ φ_cpoly h_phi_eq h_defect_lt_one
-    xTilde hxTilde_ball hG g₁ h₁).trans
-  (d.analytic_eq_canonical φ x₀ φ_cpoly h_phi_eq h_defect_lt_one
-    xTilde hxTilde_ball hG g₂ h₂).symm
 
 /-- **Existence + uniqueness on `(-ν, ν)`**. The `∃` paired with the
 universal-uniqueness clause is the standard "∃! modulo `Set.EqOn`" pattern;
@@ -233,22 +212,6 @@ theorem analytic_eq_canonical_of_compPoly
   d.analytic_eq_canonical (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
     h_defect_lt_one xTilde hxTilde_ball hG g hg
 
-/-- `analytic_unique` with the coefficient nonlinearity taken from the syntax. -/
-theorem analytic_unique_of_compPoly
-    (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
-    (h_defect_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
-    {r₀ : ℝ}
-    (xTilde : XL1 ν L)
-    (hxTilde_ball : xTilde ∈ Metric.closedBall (d.abar : XL1 ν L) r₀)
-    (hG : d.G (banachField φ_cpoly) x₀ xTilde = 0)
-    (g₁ g₂ : ℝ → Fin L → ℝ)
-    (h₁ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
-      (‖(d.abar : XL1 ν L)‖ + r₀) g₁)
-    (h₂ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
-      (‖(d.abar : XL1 ν L)‖ + r₀) g₂) :
-    Set.EqOn g₁ g₂ (Set.Ioo (-(ν : ℝ)) ν) :=
-  d.analytic_unique (banachField φ_cpoly) x₀ φ_cpoly (fun _ _ => rfl)
-    h_defect_lt_one xTilde hxTilde_ball hG g₁ g₂ h₁ h₂
 
 /-- `analytic_existsUnique` with the coefficient nonlinearity taken from the syntax:
 the whole function-space endpoint from one polynomial system, a certified zero, and the
@@ -328,34 +291,6 @@ theorem analytic_eq_canonical_of_compPoly_of_radii
       hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)
     xTilde hxTilde_ball hG g hg
 
-/-- `analytic_unique_of_compPoly` from the bounds alone: the zero is chosen by
-`existsUnique_of_compPoly`. -/
-theorem analytic_unique_of_compPoly_of_radii
-    (φ_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
-    {Y₀ Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
-    (hr₀ : 0 < r₀)
-    (hY₀ : Y₀_norm (d.G (banachField φ_cpoly) x₀) d.abar
-      (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ Y₀)
-    (hZ₀fin : finiteBlockMatrixNorm ν d.defect.finBlock ≤ Z₀)
-    (hZ₁ : Z₁_norm (d.G (banachField φ_cpoly) x₀) d.abar
-      (ContinuousLinearMap.id ℝ (XL1 ν L))
-      ((StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ Z₁)
-    (hZ₂ : ∀ c ∈ Metric.closedBall (d.abar : XL1 ν L) r₀,
-      Z₂_norm (d.G (banachField φ_cpoly) x₀) d.abar
-        (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤ Z₂ r₀ * r₀)
-    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r₀ < 0)
-    (g₁ g₂ : ℝ → Fin L → ℝ)
-    (h₁ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
-      (‖(d.abar : XL1 ν L)‖ + r₀) g₁)
-    (h₂ : IVP.IsBallSolution (ν := ν) φ_cpoly x₀
-      (‖(d.abar : XL1 ν L)‖ + r₀) g₂) :
-    Set.EqOn g₁ g₂ (Set.Ioo (-(ν : ℝ)) ν) := by
-  obtain ⟨xTilde, hball, hG⟩ :=
-    (d.existsUnique_of_compPoly φ_cpoly x₀ hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii).exists
-  exact d.analytic_unique_of_compPoly φ_cpoly x₀
-    (d.defect_finBlockNorm_lt_one_of_radii (banachField φ_cpoly) x₀
-      hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)
-    xTilde hball hG g₁ g₂ h₁ h₂
 
 /-- **The Taylor function-space endpoint from the bounds alone**: existence and
 uniqueness on `(-ν, ν)` of the analytic solution with trajectory in

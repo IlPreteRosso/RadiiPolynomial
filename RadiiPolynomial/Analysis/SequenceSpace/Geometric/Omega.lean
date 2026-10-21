@@ -38,7 +38,6 @@ lemma omegaWeight_pos : 0 < omegaWeight ν n := by
   unfold omegaWeight
   exact div_pos (pow_pos ν.coe_pos _) (Nat.cast_pos.mpr (Nat.succ_pos n))
 
-lemma omegaWeight_nonneg : 0 ≤ omegaWeight ν n := le_of_lt omegaWeight_pos
 
 end OmegaScaledReal
 
@@ -64,8 +63,11 @@ abbrev ofReal : ℝ ≃+ OmegaScaledReal ν n := WeightedScalar.ofReal
 lemma norm_def (x : OmegaScaledReal ν n) :
     ‖x‖ = |toReal x| * omegaWeight ν n := rfl
 
+
 @[simp] lemma toReal_apply (x : OmegaScaledReal ν n) : toReal x = x := rfl
+
 @[simp] lemma ofReal_apply (x : ℝ) : (ofReal x : OmegaScaledReal ν n) = x := rfl
+
 
 end OmegaScaledReal
 
@@ -81,9 +83,6 @@ variable {ν : PosReal}
 /-- Underlying real sequence. -/
 def toSeq (a : l1Omega ν) : ℕ → ℝ := fun n => OmegaScaledReal.toReal (a n)
 
-/-- Extensionality through coefficients. -/
-lemma ext {a b : l1Omega ν} (h : ∀ n, toSeq a n = toSeq b n) : a = b :=
-  lp.ext (funext h)
 
 /-- Membership predicate for omega-weighted `ℓ¹`. -/
 def Mem (ν : PosReal) (a : ℕ → ℝ) : Prop :=
@@ -93,23 +92,7 @@ def Mem (ν : PosReal) (a : ℕ → ℝ) : Prop :=
 def mk (a : ℕ → ℝ) (ha : Mem ν a) : l1Omega ν :=
   ⟨fun n => OmegaScaledReal.ofReal (a n), ha⟩
 
-/-- Coefficient evaluation agrees with the underlying coordinate. -/
-@[simp] lemma toSeq_apply (a : l1Omega ν) (n : ℕ) : toSeq a n = a n := rfl
-@[simp] lemma mk_apply (a : ℕ → ℝ) (ha : Mem ν a) (n : ℕ) : toSeq (mk a ha) n = a n := rfl
-@[simp] lemma zero_toSeq (n : ℕ) : toSeq (0 : l1Omega ν) n = 0 := rfl
-@[simp] lemma neg_toSeq (a : l1Omega ν) (n : ℕ) : toSeq (-a) n = -toSeq a n := rfl
-@[simp] lemma add_toSeq (a b : l1Omega ν) (n : ℕ) :
-    toSeq (a + b) n = toSeq a n + toSeq b n := rfl
-@[simp] lemma sub_toSeq (a b : l1Omega ν) (n : ℕ) :
-    toSeq (a - b) n = toSeq a n - toSeq b n := rfl
-@[simp] lemma smul_toSeq (c : ℝ) (a : l1Omega ν) (n : ℕ) :
-    toSeq (c • a) n = c * toSeq a n := rfl
 
-lemma norm_eq_tsum (a : l1Omega ν) :
-    ‖a‖ = ∑' n, |toSeq a n| * OmegaScaledReal.omegaWeight ν n := by
-  have h := lp.norm_eq_tsum_rpow (p := (1 : ℝ≥0∞)) (by norm_num : 0 < (1 : ℝ≥0∞).toReal) a
-  simp only [ENNReal.toReal_one, Real.rpow_one, one_div, inv_one] at h
-  exact h
 
 lemma mem_iff (a : ℕ → ℝ) :
     Mem ν a ↔ Summable (fun n => |a n| * OmegaScaledReal.omegaWeight ν n) := by
@@ -131,15 +114,6 @@ lemma omegaWeight_mul_index (n : ℕ) :
   unfold OmegaScaledReal.omegaWeight
   rw [mul_div_cancel₀ _ (Nat.cast_ne_zero.mpr (Nat.succ_ne_zero n))]
 
-/-- Omega weight bounded by the geometric weight up to a factor `ν`: `ω_n ≤ ν · ν^n` for
-all `n`. The bound `ω_n = ν^{n+1}/(n+1) ≤ ν^{n+1} ≤ ν^n` holds only when `ν ≤ 1`, so this
-weaker but unconditional bound keeps the factor `ν`. -/
-lemma omegaWeight_le_nu_mul_pow (n : ℕ) :
-    OmegaScaledReal.omegaWeight ν n ≤ (ν : ℝ) * (ν : ℝ) ^ n := by
-  unfold OmegaScaledReal.omegaWeight
-  rw [pow_succ, mul_comm ((ν : ℝ) ^ n) (ν : ℝ)]
-  exact div_le_self (mul_nonneg ν.coe_nonneg (pow_nonneg ν.coe_nonneg _))
-    (Nat.one_le_cast.mpr (Nat.succ_pos n))
 
 /-- If `a ∈ ℓ¹_ν`, then the derivative-shifted sequence `{(n+1)·a_{n+1}}` belongs to `ℓ¹_ω`.
 This is the key membership lemma for IVP zero-finding maps.
@@ -159,33 +133,7 @@ lemma l1Omega.deriv_shift_mem (a : l1Weighted ν) :
   exact ((l1Weighted.mem_iff (ν := ν) (l1Weighted.toSeq a)).mp a.toLp.2).comp_injective
     (fun (n m : ℕ) (h : n + 1 = m + 1) => by omega)
 
-/-- If `a ∈ ℓ¹_ν`, then `a ∈ ℓ¹_ω` (membership only; the norm bound `ν · ‖a‖_ν` that
-follows termwise is not stated here).
-Since `ω_n ≤ ν · ν^n`, geometric summability implies omega summability. -/
-lemma l1Omega.geom_to_omega_mem (a : l1Weighted ν) :
-    l1Omega.Mem ν (l1Weighted.toSeq a) := by
-  rw [l1Omega.mem_iff]
-  apply Summable.of_nonneg_of_le
-  · intro n; exact mul_nonneg (abs_nonneg _) OmegaScaledReal.omegaWeight_nonneg
-  · intro n
-    exact mul_le_mul_of_nonneg_left (omegaWeight_le_nu_mul_pow n) (abs_nonneg _)
-  · have hsm := ((l1Weighted.mem_iff (ν := ν) (l1Weighted.toSeq a)).mp a.toLp.2).mul_left (ν : ℝ)
-    simp_rw [show ∀ n, (ν : ℝ) * (|l1Weighted.toSeq a n| * (ν : ℝ) ^ n) =
-      |l1Weighted.toSeq a n| * ((ν : ℝ) * (ν : ℝ) ^ n) from fun n => by ring] at hsm
-    exact hsm
 
-/-- `ℓ¹_ω` membership is closed under subtraction. -/
-lemma l1Omega.mem_sub {f g : ℕ → ℝ} (hf : l1Omega.Mem ν f) (hg : l1Omega.Mem ν g) :
-    l1Omega.Mem ν (fun n => f n - g n) := by
-  rw [l1Omega.mem_iff] at hf hg ⊢
-  refine (hf.add hg).of_nonneg_of_le
-    (fun n => mul_nonneg (abs_nonneg _) OmegaScaledReal.omegaWeight_nonneg)
-    fun n => ?_
-  have hab : |f n - g n| ≤ |f n| + |g n| :=
-    abs_le.mpr ⟨by linarith [neg_abs_le (f n), le_abs_self (g n)],
-      by linarith [le_abs_self (f n), neg_abs_le (g n)]⟩
-  exact (mul_le_mul_of_nonneg_right hab OmegaScaledReal.omegaWeight_nonneg).trans_eq
-    (add_mul _ _ _)
 
 end Bridges
 
@@ -193,80 +141,16 @@ section Shift
 
 variable {ν : PosReal}
 
-/-- Right-shift sequence: `(S a)_0 = 0`, `(S a)_{k+1} = a_k`.
-Ref: §8.2, eq. (8.25). -/
-private def shift_seq (a : l1Weighted ν) : ℕ → ℝ
-  | 0 => 0
-  | n + 1 => l1Weighted.toSeq a n
 
-private lemma shift_mem (a : l1Weighted ν) : l1Weighted.Mem ν (shift_seq a) := by
-  rw [l1Weighted.mem_iff, ← summable_nat_add_iff (k := 1)]
-  have h : ∀ n, |shift_seq a (n + 1)| * (ν : ℝ) ^ (n + 1) =
-      (ν : ℝ) * (|l1Weighted.toSeq a n| * (ν : ℝ) ^ n) := by
-    intro n; simp only [shift_seq, pow_succ]; ring
-  simp_rw [h]
-  exact (l1Weighted.summable_weighted a).mul_left _
 
-/-- The right-shift operator on `l1Weighted ν`.
-Ref: §8.2, eq. (8.25) — `(S a)_k = a_{k-1}` for `k ≥ 1`, zero at `k = 0`.
-Bounded: `‖S a‖ ≤ ν · ‖a‖`. -/
-noncomputable def shift (a : l1Weighted ν) : l1Weighted ν :=
-  l1Weighted.mk (shift_seq a) (shift_mem a)
 
-@[simp] lemma shift_zero_mode (a : l1Weighted ν) :
-    l1Weighted.toSeq (shift a) 0 = 0 := rfl
 
-@[simp] lemma shift_succ_mode (a : l1Weighted ν) (n : ℕ) :
-    l1Weighted.toSeq (shift a) (n + 1) = l1Weighted.toSeq a n := rfl
 
-private lemma shift_toSeq (a : l1Weighted ν) (n : ℕ) :
-    l1Weighted.toSeq (shift a) n = shift_seq a n := rfl
 
-lemma shift_linear_add (a b : l1Weighted ν) :
-    shift (a + b) = shift a + shift b := by
-  apply l1Weighted.ext; intro n
-  simp only [shift_toSeq, l1Weighted.add_toSeq]
-  cases n with
-  | zero => simp [shift_seq]
-  | succ n => rfl
 
-lemma shift_linear_smul (r : ℝ) (a : l1Weighted ν) :
-    shift (r • a) = r • shift a := by
-  apply l1Weighted.ext; intro n
-  simp only [shift_toSeq, l1Weighted.smul_toSeq]
-  cases n with
-  | zero => simp [shift_seq]
-  | succ n => rfl
 
-lemma shift_norm_le (a : l1Weighted ν) :
-    ‖shift a‖ ≤ (ν : ℝ) * ‖a‖ := by
-  rw [l1Weighted.norm_eq_tsum, l1Weighted.norm_eq_tsum]
-  conv_lhs => arg 1; ext n; rw [show l1Weighted.toSeq (shift a) n = shift_seq a n
-    from shift_toSeq a n]
-  have hsumm : Summable (fun n => |shift_seq a n| * (ν : ℝ) ^ n) :=
-    (l1Weighted.mem_iff _).mp (shift_mem a)
-  have hb : Summable (fun n => |l1Weighted.toSeq a n| * (ν : ℝ) ^ n) :=
-    l1Weighted.summable_weighted a
-  rw [hsumm.tsum_eq_zero_add]
-  simp only [shift_seq, abs_zero, zero_mul, zero_add]
-  rw [← tsum_mul_left]
-  exact ((summable_nat_add_iff (k := 1)).mpr hsumm).tsum_le_tsum
-    (fun n => le_of_eq (by simp only [pow_succ]; ring))
-    (hb.mul_left _)
 
-/-- The right-shift operator as a CLM on `l1Weighted ν`.
-Ref: §8.2, eq. (8.25). Built with the bound `‖S a‖ ≤ ν · ‖a‖` (`shift_norm_le`), so
-`‖S‖ ≤ ν`; the equality `‖S‖ = ν` is not stated here. -/
-noncomputable def shift_CLM : l1Weighted ν →L[ℝ] l1Weighted ν :=
-  LinearMap.mkContinuous
-    { toFun := shift
-      map_add' := shift_linear_add
-      map_smul' := fun r a => by simp [shift_linear_smul] }
-    (ν : ℝ)
-    shift_norm_le
 
-@[simp] lemma shift_CLM_apply (a : l1Weighted ν) :
-    shift_CLM a = shift a := rfl
 
 end Shift
 
@@ -308,8 +192,6 @@ private lemma shiftDivN_mem (b : l1Weighted ν) : l1Weighted.Mem ν (shiftDivN_s
 noncomputable def shiftDivN (b : l1Weighted ν) : l1Weighted ν :=
   l1Weighted.mk (shiftDivN_seq b) (shiftDivN_mem b)
 
-@[simp] lemma shiftDivN_zero_mode (b : l1Weighted ν) :
-    l1Weighted.toSeq (shiftDivN b) 0 = 0 := rfl
 
 @[simp] lemma shiftDivN_succ_mode (b : l1Weighted ν) (n : ℕ) :
     l1Weighted.toSeq (shiftDivN b) (n + 1) =
@@ -434,105 +316,7 @@ theorem tail_shiftDivN_sum_le {N : ℕ} {ι : Type*} (s : Finset ι) (x : ι →
   rw [hmap]
   exact norm_sum_le _ _
 
-/-- **Column completeness for the Z₁ tail operator** (tightening B). If every
-column of `π_{>N} ∘ shiftDivN ∘ leftMul b` at a basis vector `single M 1` has
-tail mass at most `C · ν^M`, then on every `h` the tail mass is at most
-`C · ‖h‖`. This is the completeness rule of the linear lift
-(`lpOneAlg.eq_liftCLM_of_cols` + `norm_liftCLM_apply_le`) applied to the tail
-operator realized as the CLM `tailProj_CLM N ∘L shiftDivN_CLM ∘L leftMul b`.
-Compare `shiftDivN_tailTsum_le_div`, the `ν/(N+1) · ‖b‖` recipe this
-sharpens. -/
-lemma shiftDivN_leftMul_tail_le_of_cols (b : l1Weighted ν) (N : ℕ) {C : ℝ}
-    (hcol : ∀ M : ℕ,
-      ∑' n, |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single M 1)) (n + (N + 1))| *
-        (ν : ℝ) ^ (n + (N + 1)) ≤ C * (ν : ℝ) ^ M) :
-    ∀ h : l1Weighted ν,
-      ∑' n, |l1Weighted.toSeq (shiftDivN (b * h)) (n + (N + 1))| *
-        (ν : ℝ) ^ (n + (N + 1)) ≤ C * ‖h‖ := by
-  intro h
-  -- The tail operator as a CLM out of the sequence space.
-  have hnormW : ∀ x : l1Weighted ν,
-      ‖((l1Weighted.tailProj_CLM N).comp
-        (shiftDivN_CLM.comp (l1Weighted.leftMul b))) x‖ =
-        ∑' n, |l1Weighted.toSeq (shiftDivN (b * x)) (n + (N + 1))| *
-          (ν : ℝ) ^ (n + (N + 1)) :=
-    fun x => l1Weighted.norm_tailProj_eq_tailTsum N (shiftDivN (b * x))
-  have hv : ∀ m : ℕ,
-      ‖((l1Weighted.tailProj_CLM N).comp
-        (shiftDivN_CLM.comp (l1Weighted.leftMul b))) (lpOneAlg.single m 1)‖ ≤
-        C * FiberTrivialization.weight (E := ScaledReal ν) m := by
-    intro m
-    rw [WeightedScalar.fiberTrivialization_weight,
-      ← l1Weighted.single_eq_lpOneAlg_single, hnormW]
-    exact hcol m
-  have hlift := lpOneAlg.eq_liftCLM_of_cols
-    ((l1Weighted.tailProj_CLM N).comp (shiftDivN_CLM.comp (l1Weighted.leftMul b))) hv
-  have hle := lpOneAlg.norm_liftCLM_apply_le _ C hv h
-  rw [hlift] at hle
-  rw [← hnormW h]
-  exact hle
 
-/-- **Column antitonicity above the cutoff** (tightening B). For `N ≤ M`, the
-weighted column tail mass of the Z₁ tail operator at basis index `M + 1` is at
-most `ν` times the one at `M`. Stated in the un-normalized form
-`tailTsum (M+1) ≤ ν · tailTsum M` — i.e. `col (M+1) ≤ col M` after dividing by
-`ν^{M+1}` — which is the form the ℚ bridge
-(`Certification/ColumnTailBound.lean`) consumes: it reduces the `∀ M` column
-hypothesis of `shiftDivN_leftMul_tail_le_of_cols` to the finite range `M ≤ N`.
-The inequality is termwise (`1/(m+1) ≤ 1/m` on tail modes), so no support
-hypothesis on `b` is needed. -/
-lemma shiftDivN_leftMul_tail_col_antitone (b : l1Weighted ν) {N M : ℕ}
-    (hNM : N ≤ M) :
-    ∑' n, |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single (M + 1) 1)) (n + (N + 1))| *
-        (ν : ℝ) ^ (n + (N + 1)) ≤
-      (ν : ℝ) * ∑' n, |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single M 1)) (n + (N + 1))| *
-        (ν : ℝ) ^ (n + (N + 1)) := by
-  -- Coefficient shift: `(b · δ_{M+1})_{j+1} = (b · δ_M)_j`.
-  have hshift : ∀ j : ℕ,
-      l1Weighted.toSeq (b * l1Weighted.single (M + 1) 1) (j + 1) =
-        l1Weighted.toSeq (b * l1Weighted.single M 1) j := by
-    intro j
-    rw [l1Weighted.toSeq_mul_single, l1Weighted.toSeq_mul_single]
-    by_cases hj : M ≤ j
-    · rw [ite_eq_left (by omega : M + 1 ≤ j + 1), ite_eq_left hj]
-      congr 1
-      omega
-    · rw [ite_eq_right (by omega : ¬ M + 1 ≤ j + 1), ite_eq_right hj]
-  have hsumm1 := (summable_nat_add_iff (k := N + 1)).mpr
-    (l1Weighted.summable_weighted (shiftDivN (b * l1Weighted.single (M + 1) 1)))
-  have hsumm0 := (summable_nat_add_iff (k := N + 1)).mpr
-    (l1Weighted.summable_weighted (shiftDivN (b * l1Weighted.single M 1)))
-  -- Split off the head mode `N + 1`; it vanishes because `M + 1 > N`.
-  rw [hsumm1.tsum_eq_zero_add]
-  have hhead : |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single (M + 1) 1)) (0 + (N + 1))| *
-      (ν : ℝ) ^ (0 + (N + 1)) = 0 := by
-    rw [zero_add, shiftDivN_succ_mode, l1Weighted.toSeq_mul_single,
-      ite_eq_right (by omega : ¬ M + 1 ≤ N)]
-    simp
-  rw [hhead, zero_add]
-  -- Termwise: mode `m+1` of the shifted column against mode `m` of the original.
-  have hterm : ∀ n : ℕ,
-      |l1Weighted.toSeq (shiftDivN (b * l1Weighted.single (M + 1) 1)) (n + 1 + (N + 1))| *
-        (ν : ℝ) ^ (n + 1 + (N + 1)) ≤
-      (ν : ℝ) * (|l1Weighted.toSeq (shiftDivN (b * l1Weighted.single M 1)) (n + (N + 1))| *
-        (ν : ℝ) ^ (n + (N + 1))) := by
-    intro n
-    have e1 : n + 1 + (N + 1) = n + (N + 1) + 1 := by omega
-    have e2 : n + (N + 1) = n + N + 1 := by omega
-    rw [e1, e2, shiftDivN_succ_mode, shiftDivN_succ_mode, hshift]
-    rw [abs_div, abs_div,
-      abs_of_nonneg (show (0 : ℝ) ≤ (↑(n + N + 1 + 1) : ℝ) from Nat.cast_nonneg _),
-      abs_of_nonneg (show (0 : ℝ) ≤ (↑(n + N + 1) : ℝ) from Nat.cast_nonneg _),
-      pow_succ]
-    have hmono : |l1Weighted.toSeq (b * l1Weighted.single M 1) (n + N)| / (↑(n + N + 1 + 1) : ℝ) ≤
-        |l1Weighted.toSeq (b * l1Weighted.single M 1) (n + N)| / (↑(n + N + 1) : ℝ) :=
-      div_le_div_of_nonneg_left (abs_nonneg _)
-        (by exact_mod_cast Nat.succ_pos (n + N))
-        (by exact_mod_cast (by omega : n + N + 1 ≤ n + N + 1 + 1))
-    refine le_trans (le_of_eq (by ring)) (mul_le_mul_of_nonneg_left
-      (mul_le_mul_of_nonneg_right hmono (pow_nonneg ν.2.le _)) ν.2.le)
-  refine (((summable_nat_add_iff (k := 1)).mpr hsumm1).tsum_le_tsum hterm
-    (hsumm0.mul_left _)).trans (le_of_eq tsum_mul_left)
 
 end ShiftDivN
 
@@ -540,87 +324,16 @@ section LambdaN
 
 variable {ν : PosReal}
 
-/-- Tail divide-by-index sequence: 0 for `k ≤ N`, `a_k / k` for `k ≥ N + 1`.
-Ref: §8.2, eq. (8.26). -/
-private def lambdaN_seq (N : ℕ) (a : l1Weighted ν) (n : ℕ) : ℝ :=
-  if N < n then l1Weighted.toSeq a n / (n : ℝ) else 0
 
-private lemma lambdaN_mem (N : ℕ) (a : l1Weighted ν) :
-    l1Weighted.Mem ν (lambdaN_seq N a) := by
-  rw [l1Weighted.mem_iff]
-  refine (l1Weighted.summable_weighted a).of_nonneg_of_le
-    (fun n => mul_nonneg (abs_nonneg _) (pow_nonneg ν.2.le _))
-    fun n => ?_
-  simp only [lambdaN_seq]
-  split_ifs with hn
-  · have hn1 : (1 : ℝ) ≤ (n : ℝ) := Nat.one_le_cast.mpr (by omega)
-    apply mul_le_mul_of_nonneg_right _ (pow_nonneg ν.2.le _)
-    rw [abs_div, abs_of_pos (lt_of_lt_of_le one_pos hn1)]
-    exact div_le_self (abs_nonneg _) hn1
-  · simp only [abs_zero, zero_mul]
-    exact mul_nonneg (abs_nonneg _) (pow_nonneg ν.2.le _)
 
-/-- Tail divide-by-index operator on `l1Weighted ν`.
-Ref: §8.2, eq. (8.26) — `(Λ_N a)_k = 0` for `k ≤ N`, `a_k / k` for `k ≥ N + 1`.
-Bounded: `‖Λ_N a‖ ≤ 1/(N+1) · ‖a‖` (Lemma 8.2.4). -/
-noncomputable def lambdaN (N : ℕ) (a : l1Weighted ν) : l1Weighted ν :=
-  l1Weighted.mk (lambdaN_seq N a) (lambdaN_mem N a)
 
-@[simp] lemma lambdaN_le_mode (N : ℕ) (a : l1Weighted ν) (n : ℕ) (hn : n ≤ N) :
-    l1Weighted.toSeq (lambdaN N a) n = 0 := by
-  show lambdaN_seq N a n = 0
-  simp [lambdaN_seq, not_lt.mpr hn]
 
-@[simp] lemma lambdaN_gt_mode (N : ℕ) (a : l1Weighted ν) (n : ℕ) (hn : N < n) :
-    l1Weighted.toSeq (lambdaN N a) n = l1Weighted.toSeq a n / (n : ℝ) := by
-  show lambdaN_seq N a n = l1Weighted.toSeq a n / (n : ℝ)
-  simp [lambdaN_seq, hn]
 
-private lemma lambdaN_toSeq (N : ℕ) (a : l1Weighted ν) (n : ℕ) :
-    l1Weighted.toSeq (lambdaN N a) n = lambdaN_seq N a n := rfl
 
-lemma lambdaN_linear_add (N : ℕ) (a b : l1Weighted ν) :
-    lambdaN N (a + b) = lambdaN N a + lambdaN N b := by
-  apply l1Weighted.ext; intro n
-  simp only [lambdaN_toSeq, l1Weighted.add_toSeq, lambdaN_seq]
-  split_ifs <;> simp [add_div]
 
-lemma lambdaN_linear_smul (N : ℕ) (r : ℝ) (a : l1Weighted ν) :
-    lambdaN N (r • a) = r • lambdaN N a := by
-  apply l1Weighted.ext; intro n
-  simp only [lambdaN_toSeq, l1Weighted.smul_toSeq, lambdaN_seq]
-  split_ifs <;> simp [mul_div_assoc]
 
-lemma lambdaN_norm_le (N : ℕ) (a : l1Weighted ν) :
-    ‖lambdaN N a‖ ≤ 1 / (↑(N + 1) : ℝ) * ‖a‖ := by
-  unfold lambdaN
-  refine l1Weighted.norm_mk_le_of_pointwise _ _ a _ fun n => ?_
-  simp only [lambdaN_seq]
-  split_ifs with hn
-  · have hn1 : (0 : ℝ) < ↑(N + 1) := by positivity
-    have hle : (↑(N + 1) : ℝ) ≤ (n : ℝ) := Nat.cast_le.mpr (by omega)
-    have hn_pos : (0 : ℝ) < (n : ℝ) := lt_of_lt_of_le hn1 hle
-    rw [abs_div, abs_of_pos hn_pos]
-    calc |l1Weighted.toSeq a n| / (n : ℝ)
-        = |l1Weighted.toSeq a n| * ((n : ℝ)⁻¹) := div_eq_mul_inv _ _
-      _ ≤ |l1Weighted.toSeq a n| * ((↑(N + 1) : ℝ)⁻¹) :=
-          mul_le_mul_of_nonneg_left (by rwa [inv_le_inv₀ hn_pos hn1]) (abs_nonneg _)
-      _ = 1 / (↑(N + 1) : ℝ) * |l1Weighted.toSeq a n| := by rw [one_div]; ring
-  · simp only [abs_zero]
-    exact mul_nonneg (by positivity) (abs_nonneg _)
 
-/-- Tail divide-by-index as a CLM on `l1Weighted ν`.
-Ref: §8.2, eq. (8.26) — `‖Λ_N‖ ≤ 1/(N+1)` (Lemma 8.2.4). -/
-noncomputable def lambdaN_CLM (N : ℕ) : l1Weighted ν →L[ℝ] l1Weighted ν :=
-  LinearMap.mkContinuous
-    { toFun := lambdaN N
-      map_add' := lambdaN_linear_add N
-      map_smul' := fun r a => by simp [lambdaN_linear_smul] }
-    (1 / (↑(N + 1) : ℝ))
-    (lambdaN_norm_le N)
 
-@[simp] lemma lambdaN_CLM_apply (N : ℕ) (a : l1Weighted ν) :
-    lambdaN_CLM N a = lambdaN N a := rfl
 
 end LambdaN
 
@@ -649,52 +362,10 @@ noncomputable def derivShift (a : l1Weighted ν) : l1Omega ν :=
 @[simp] lemma derivShift_apply (a : l1Weighted ν) (n : ℕ) :
     l1Omega.toSeq (derivShift a) n = ((n : ℝ) + 1) * l1Weighted.toSeq a (n + 1) := rfl
 
-lemma derivShift_linear_add (a b : l1Weighted ν) :
-    derivShift (a + b) = derivShift a + derivShift b := by
-  apply l1Omega.ext; intro n
-  show ((n : ℝ) + 1) * l1Weighted.toSeq (a + b) (n + 1) =
-       ((n : ℝ) + 1) * l1Weighted.toSeq a (n + 1) +
-       ((n : ℝ) + 1) * l1Weighted.toSeq b (n + 1)
-  rw [l1Weighted.add_toSeq]; ring
 
-lemma derivShift_linear_smul (r : ℝ) (a : l1Weighted ν) :
-    derivShift (r • a) = r • derivShift a := by
-  apply l1Omega.ext; intro n
-  show ((n : ℝ) + 1) * l1Weighted.toSeq (r • a) (n + 1) =
-       r * (((n : ℝ) + 1) * l1Weighted.toSeq a (n + 1))
-  rw [l1Weighted.smul_toSeq]; ring
 
-lemma derivShift_norm_le (a : l1Weighted ν) :
-    ‖derivShift a‖ ≤ ‖a‖ := by
-  rw [l1Omega.norm_eq_tsum, l1Weighted.norm_eq_tsum]
-  -- Each term: |D(a)_n| · ω_n = (n+1)·|a_{n+1}|·ω_n = |a_{n+1}|·ν^{n+1}
-  have h_term_eq : ∀ n, |l1Omega.toSeq (derivShift a) n| * OmegaScaledReal.omegaWeight ν n
-                  = |l1Weighted.toSeq a (n + 1)| * (ν : ℝ) ^ (n + 1) := fun n => by
-    have hcast : (n : ℝ) + 1 = ↑(n + 1) := by push_cast; ring
-    have hpos : (0 : ℝ) < ↑(n + 1) := by positivity
-    rw [derivShift_apply, hcast, abs_mul, abs_of_pos hpos,
-        mul_comm (↑(n + 1) : ℝ) _, mul_assoc, omegaWeight_mul_index]
-  have hb : Summable (fun n => |l1Weighted.toSeq a n| * (ν : ℝ) ^ n) :=
-    l1Weighted.summable_weighted a
-  rw [show (fun n => |l1Omega.toSeq (derivShift a) n| * OmegaScaledReal.omegaWeight ν n) =
-      (fun n => |l1Weighted.toSeq a (n + 1)| * (ν : ℝ) ^ (n + 1)) from funext h_term_eq]
-  -- Σ |a_{n+1}|·ν^{n+1} = (Σ |a_n|·ν^n) - |a_0|·ν^0 ≤ Σ |a_n|·ν^n
-  rw [hb.tsum_eq_zero_add]
-  linarith [mul_nonneg (abs_nonneg (l1Weighted.toSeq a 0)) (pow_nonneg ν.2.le 0)]
 
-/-- The derivative-shift operator as a CLM `ℓ¹_ν →L[ℝ] ℓ¹_ω`.
-Operator norm ≤ 1.
-Ref: Proposition 8.1.5. -/
-noncomputable def derivShift_CLM : l1Weighted ν →L[ℝ] l1Omega ν :=
-  LinearMap.mkContinuous
-    { toFun := derivShift
-      map_add' := derivShift_linear_add
-      map_smul' := fun r a => by simp [derivShift_linear_smul] }
-    1
-    (fun a => by rw [one_mul]; exact derivShift_norm_le a)
 
-@[simp] lemma derivShift_CLM_apply (a : l1Weighted ν) :
-    derivShift_CLM a = derivShift a := rfl
 
 end DerivShift
 
@@ -766,25 +437,8 @@ quite control the boundary. Used to express the time-derivative of `l1Weighted.e
 def l1Omega.eval (b : l1Omega ν) (t : ℝ) : ℝ :=
   ∑' n, l1Omega.toSeq b n * t ^ n
 
-theorem l1Omega.eval_at_zero (b : l1Omega ν) : l1Omega.eval b 0 = l1Omega.toSeq b 0 := by
-  unfold l1Omega.eval
-  rw [tsum_eq_single 0 (fun n hn => by simp [hn])]
-  simp
 
-theorem l1Omega.eval_add (b c : l1Omega ν) {t : ℝ} (ht : |t| < ν) :
-    l1Omega.eval (b + c) t = l1Omega.eval b t + l1Omega.eval c t := by
-  show ∑' n, l1Omega.toSeq (b + c) n * t ^ n =
-       (∑' n, l1Omega.toSeq b n * t ^ n) + ∑' n, l1Omega.toSeq c n * t ^ n
-  simp_rw [show ∀ n, l1Omega.toSeq (b + c) n = l1Omega.toSeq b n + l1Omega.toSeq c n
-    from l1Omega.add_toSeq b c, add_mul]
-  exact (l1Omega.summable_eval b ht).tsum_add (l1Omega.summable_eval c ht)
 
-theorem l1Omega.eval_smul (r : ℝ) (b : l1Omega ν) (t : ℝ) :
-    l1Omega.eval (r • b) t = r * l1Omega.eval b t := by
-  show ∑' n, l1Omega.toSeq (r • b) n * t ^ n = r * ∑' n, l1Omega.toSeq b n * t ^ n
-  simp_rw [show ∀ n, l1Omega.toSeq (r • b) n = r * l1Omega.toSeq b n
-    from l1Omega.smul_toSeq r b, mul_assoc]
-  rw [tsum_mul_left]
 
 end Eval
 

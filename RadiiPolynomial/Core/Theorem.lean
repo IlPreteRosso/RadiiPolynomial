@@ -141,10 +141,6 @@ variable [NormedAddCommGroup F] [NormedSpace ℝ F]
 /-- The Newton-like operator T(x) = x - Af(x) for maps from E to F -/
 def NewtonLikeMap (A : F →L[ℝ] E) (f : E → F) (x : E) : E := x - A (f x)
 
-/-- Newton-like map is differentiable when f is. -/
-lemma NewtonLikeMap.differentiable {A : F →L[ℝ] E} {f : E → F}
-    (hf : Differentiable ℝ f) : Differentiable ℝ (NewtonLikeMap A f) :=
-  differentiable_id.sub (A.differentiable.comp hf)
 
 end NewtonLikeOperator
 
@@ -243,8 +239,6 @@ lemma generalRadiiPolynomial_alt_form (Y₀ Z₀ Z₁ : ℝ) (Z₂ : ℝ → ℝ
 def radiiPolynomial (Y₀ Z₀ : ℝ) (Z₂ : ℝ → ℝ) (r : ℝ) : ℝ :=
   Z₂ r * r^2 - (1 - Z₀) * r + Y₀
 
-/-- Simple Z bound: Z(r) = Z₀ + Z₂(r)·r -/
-def Z_bound (Z₀ : ℝ) (Z₂ : ℝ → ℝ) (r : ℝ) : ℝ := Z₀ + Z₂ r * r
 
 /-- Simple radii polynomial as special case of general one -/
 lemma radiiPolynomial_is_special_case (Y₀ Z₀ : ℝ) (Z₂ : ℝ → ℝ) (r : ℝ) :
@@ -252,42 +246,13 @@ lemma radiiPolynomial_is_special_case (Y₀ Z₀ : ℝ) (Z₂ : ℝ → ℝ) (r 
   unfold radiiPolynomial generalRadiiPolynomial
   ring
 
-/-- Alternative form for simple polynomial -/
-lemma radiiPolynomial_alt_form (Y₀ Z₀ : ℝ) (Z₂ : ℝ → ℝ) (r : ℝ) :
-  radiiPolynomial Y₀ Z₀ Z₂ r = (Z_bound Z₀ Z₂ r - 1) * r + Y₀ := by
-  unfold radiiPolynomial Z_bound
-  ring
 
 /-- Simple polynomial for fixed point theorem (used in Theorem 2.4.1) -/
 def simpleRadiiPolynomial (Y₀ : ℝ) (Z : ℝ → ℝ) (r : ℝ) : ℝ :=
   (Z r - 1) * r + Y₀
 
-/-- Horner evaluation of a coefficient list over any semiring:
-`hornerEval [c₀, c₁, …, c_d] x = c₀ + x (c₁ + x (⋯ + x c_d)) = Σ_k x^k c_k` (the multiplication by
-`x` acts on the left at every rung; when `x` commutes with the coefficients this is the usual
-`Σ_k c_k x^k`).
 
-It represents a polynomial `Z₂` bound in the statements of the list faces
-(`hZ₂ : Z₂ x = hornerEval cs x`) and of the `ℚ` endpoint checker `radiiPolyQ`. It is a named
-public `def` rather than `Polynomial.eval`: `Polynomial ℚ` is `Finsupp`-based and does not reduce
-in the kernel, whereas `hornerEval` on a `List ℚ` does, so endpoint values can be checked by
-`decide +kernel`; `map_hornerEval` transports it along a ring homomorphism such as `ℚ → ℝ`. -/
-def hornerEval {R : Type*} [Semiring R] (cs : List R) (x : R) : R :=
-  cs.foldr (fun c acc => c + x * acc) 0
 
-/-- Defining equation of `hornerEval` on the empty list. -/
-@[simp] theorem hornerEval_nil {R : Type*} [Semiring R] (x : R) : hornerEval [] x = 0 := rfl
-
-/-- Defining equation of `hornerEval` on a cons. -/
-@[simp] theorem hornerEval_cons {R : Type*} [Semiring R] (c : R) (cs : List R) (x : R) :
-    hornerEval (c :: cs) x = c + x * hornerEval cs x := rfl
-
-/-- Ring homomorphisms commute with Horner evaluation. -/
-theorem map_hornerEval {R S : Type*} [Semiring R] [Semiring S] (φ : R →+* S) (cs : List R)
-    (x : R) : φ (hornerEval cs x) = hornerEval (cs.map φ) (φ x) := by
-  induction cs with
-  | nil => simp
-  | cons c cs ih => simp [ih]
 
 end RadiiPolynomialDefinitions
 
@@ -310,14 +275,6 @@ lemma general_radii_poly_neg_implies_Z_lt_one
   Z_bound_general Z₀ Z₁ Z₂ r₀ < 1 := by
   rw [generalRadiiPolynomial_alt_form] at h_poly; nlinarith
 
-/-- Simple version: if p(r₀) < 0 then Z(r₀) < 1 -/
-lemma radii_poly_neg_implies_Z_bound_lt_one
-  {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
-  (hY₀ : 0 ≤ Y₀)
-  (hr₀ : 0 < r₀)
-  (h_poly : radiiPolynomial Y₀ Z₀ Z₂ r₀ < 0) :
-  Z_bound Z₀ Z₂ r₀ < 1 := by
-  rw [radiiPolynomial_alt_form] at h_poly; nlinarith
 
 /-- Simple polynomial version -/
 lemma simple_radii_poly_neg_implies_Z_lt_one
@@ -328,45 +285,9 @@ lemma simple_radii_poly_neg_implies_Z_lt_one
   Z r₀ < 1 := by
   unfold simpleRadiiPolynomial at h_poly; nlinarith
 
-/-- A function convex on `[a, b]` and negative at both ends is negative on `[a, b]`. -/
-theorem radiiPoly_neg_on_Icc_of_convexOn {p : ℝ → ℝ} {a b : ℝ}
-    (hp : ConvexOn ℝ (Set.Icc a b) p) (ha : p a < 0) (hb : p b < 0) :
-    ∀ r ∈ Set.Icc a b, p r < 0 := fun r hr => by
-  have hab : a ≤ b := hr.1.trans hr.2
-  exact (hp.le_on_segment (Set.left_mem_Icc.2 hab) (Set.right_mem_Icc.2 hab)
-    (by rwa [segment_eq_Icc hab])).trans_lt (max_lt ha hb)
 
-/-- For a coefficient list with nonnegative entries, `r ↦ (Σ_k c_k r^k) r^n` is convex on
-`[0, ∞)` (induction on the list: `(c + r h(r)) r^n = c r^n + h(r) r^(n+1)`). -/
-theorem convexOn_hornerEval_mul_pow {cs : List ℝ} (hcs : ∀ c ∈ cs, 0 ≤ c) (n : ℕ) :
-    ConvexOn ℝ (Set.Ici 0) (fun r => hornerEval cs r * r ^ n) := by
-  induction cs generalizing n with
-  | nil => simpa using convexOn_const (0 : ℝ) (convex_Ici (0 : ℝ))
-  | cons c cs ih =>
-    refine (((convexOn_pow n).smul (hcs c List.mem_cons_self)).add
-      (ih (fun d hd => hcs d (List.mem_cons_of_mem _ hd)) (n + 1))).congr fun r _ => ?_
-    simp only [Pi.add_apply, smul_eq_mul, hornerEval_cons]; ring
 
-/-- **Convexity of the radii polynomial with a polynomial `Z₂`.** If `Z₂ = Σ_k cs[k] r^k` on
-`[a, b]` with every `cs[k] ≥ 0` and `a ≥ 0`, then
-`p(r) = Σ_k cs[k] r^(k+2) - (1 - Z₀) r + Y₀` is convex on `[a, b]`. The identity
-`Z₂ = hornerEval cs` is needed on `[a, b]` only; no degree is fixed. -/
-theorem convexOn_radiiPolynomial_of_poly {Y₀ Z₀ a b : ℝ} {Z₂ : ℝ → ℝ} {cs : List ℝ}
-    (hcs : ∀ c ∈ cs, 0 ≤ c) (hZ₂ : ∀ x ∈ Set.Icc a b, Z₂ x = hornerEval cs x) (ha : 0 ≤ a) :
-    ConvexOn ℝ (Set.Icc a b) (radiiPolynomial Y₀ Z₀ Z₂) := by
-  refine (((convexOn_hornerEval_mul_pow hcs 2).subset (fun x hx => ha.trans hx.1)
-    (convex_Icc a b)).add ((LinearMap.convexOn ((-(1 - Z₀)) • LinearMap.id) (convex_Icc a b)).add
-      (convexOn_const Y₀ (convex_Icc a b)))).congr fun x hx => ?_
-  simp only [Pi.add_apply, LinearMap.smul_apply, LinearMap.id_apply, smul_eq_mul, radiiPolynomial,
-    hZ₂ x hx]
-  ring
 
-/-- An interval on which `p` is negative lies in one order-connected component of the negative
-set `{r | p r < 0}`. -/
-theorem Icc_subset_ordConnectedComponent_of_neg {p : ℝ → ℝ} {a b r₀ : ℝ}
-    (hr₀ : r₀ ∈ Set.Icc a b) (hneg : ∀ r ∈ Set.Icc a b, p r < 0) :
-    Set.Icc a b ⊆ Set.ordConnectedComponent {r | p r < 0} r₀ :=
-  Set.subset_ordConnectedComponent hr₀ hneg
 
 end RadiiPolynomialImplications
 
@@ -398,99 +319,9 @@ theorem norm_id_sub_comp_le_Z_bound
   rw [hsplit]
   exact (norm_sub_le _ _).trans (add_le_add ((norm_add_le _ _).trans (add_le_add h_Z₀ h_Z₁)) h_W)
 
-/-- Y₀ bound for Newton operator: ‖T(x̄) - x̄‖ ≤ Y₀
 
-    This reformulates equation (7.30) for the Newton-like operator.
-    For T(x) = x - A(f(x)), we have T(x̄) - x̄ = -A(f(x̄)). -/
-lemma newton_operator_Y_bound
-  {f : E → F} {xBar : E} {A : F →L[ℝ] E} {Y₀ : ℝ}
-  (h_bound : ‖A (f xBar)‖ ≤ Y₀) :
-  let T := NewtonLikeMap A f
-  ‖T xBar - xBar‖ ≤ Y₀ := by
-  unfold NewtonLikeMap
-  -- T(x̄) - x̄ = (x̄ - A(f(x̄))) - x̄ = -A(f(x̄))
-  simp only [sub_sub_cancel_left, norm_neg]
-  exact h_bound
 
-/-- Derivative of the Newton-like operator in the E to F setting
 
-    For T(x) = x - A(f(x)) where f : E → F and A : F →L[ℝ] E:
-    DT(x) = I_E - A ∘ Df(x)
-
-    The composition A ∘ Df(x) has type E →L[ℝ] E since:
-    - Df(x) : E →L[ℝ] F
-    - A : F →L[ℝ] E
-    - A ∘ Df(x) : E →L[ℝ] E -/
-lemma newton_operator_fderiv
-  {f : E → F} {A : F →L[ℝ] E} {x : E}
-  (hf_diff : Differentiable ℝ f) :
-  fderiv ℝ (NewtonLikeMap A f) x = I_E - A.comp (fderiv ℝ f x) := by
-  unfold NewtonLikeMap
-
-  -- D(x) = I_E (derivative of identity)
-  have h1 : fderiv ℝ (fun x => x) x = I_E := fderiv_fun_id
-
-  -- D(A(f(x))) = A ∘ Df(x) by chain rule
-  have h2 : fderiv ℝ (fun x => A (f x)) x = A.comp (fderiv ℝ f x) := by
-    have : (fun x => A (f x)) = A ∘ f := rfl
-    rw [this, fderiv_comp]
-    · -- For continuous linear map A: D[A](y) = A
-      rw [ContinuousLinearMap.fderiv]
-    · -- A is differentiable everywhere
-      exact A.differentiableAt
-    · -- f is differentiable at x
-      exact hf_diff.differentiableAt
-
-  -- D(g - h) = Dg - Dh (linearity of derivative)
-  have h_sub : fderiv ℝ (fun x => x - A (f x)) x =
-      fderiv ℝ (fun x => x) x - fderiv ℝ (fun x => A (f x)) x := by
-    apply fderiv_sub differentiableAt_id
-    exact A.differentiableAt.comp x hf_diff.differentiableAt
-
-  rw [h_sub, h1, h2]
-
-/-- General derivative bound for Newton operator on closed ball
-
-    ‖DT(c)‖ ≤ Z₀ + Z₁ + Z₂(r)·r  for all c ∈ B̄ᵣ(x̄)
-
-    This uses the decomposition (equation 7.35):
-    DT(c) = I_E - A∘Df(c)
-          = [I_E - A∘A†] + A∘[A† - Df(x̄)] + A∘[Df(x̄) - Df(c)]
-
-    Applying bounds:
-    - ‖I_E - A∘A†‖ ≤ Z₀             (eq. 7.31)
-    - ‖A∘[A† - Df(x̄)]‖ ≤ Z₁         (eq. 7.32)
-    - ‖A∘[Df(c) - Df(x̄)]‖ ≤ Z₂(r)·r  (eq. 7.33) -/
-lemma newton_operator_derivative_bound_general
-  {f : E → F} {xBar : E} {A : F →L[ℝ] E} {A_dagger : E →L[ℝ] F}
-  {Z₀ Z₁ : ℝ} {Z₂ : ℝ → ℝ} {r : ℝ}
-  (hf_diff : Differentiable ℝ f)
-  (h_Z₀ : ‖I_E - A.comp A_dagger‖ ≤ Z₀)                       -- eq. 7.31
-  (h_Z₁ : ‖A.comp (A_dagger - fderiv ℝ f xBar)‖ ≤ Z₁)         -- eq. 7.32
-  (h_Z₂ : ∀ c ∈ Metric.closedBall xBar r,                     -- eq. 7.33
-    ‖A.comp (fderiv ℝ f c - fderiv ℝ f xBar)‖ ≤ Z₂ r * r)
-  (c : E) (hc : c ∈ Metric.closedBall xBar r) :
-  ‖fderiv ℝ (NewtonLikeMap A f) c‖ ≤ Z_bound_general Z₀ Z₁ Z₂ r := by
-  rw [newton_operator_fderiv hf_diff]
-  exact RadiiPolynomial.norm_id_sub_comp_le_Z_bound h_Z₀ h_Z₁ (h_Z₂ c hc)
-
-/-- Simple derivative bound (when A† = Df(x̄), so Z₁ = 0)
-
-    This is used in Theorem 2.4.2 when E = F or when we can set A† = Df(x̄).
-
-    ‖DT(c)‖ ≤ Z₀ + Z₂(r)·r for all c ∈ B̄ᵣ(x̄) -/
-lemma newton_operator_derivative_bound_simple
-  {f : E → F} {xBar : E} {A : F →L[ℝ] E}
-  {Z₀ : ℝ} {Z₂ : ℝ → ℝ} {r : ℝ}
-  (hf_diff : Differentiable ℝ f)
-  (h_Z₀ : ‖I_E - A.comp (fderiv ℝ f xBar)‖ ≤ Z₀)                   -- eq. 2.15
-  (h_Z₂ : ∀ c ∈ Metric.closedBall xBar r,                          -- eq. 2.16
-    ‖A.comp (fderiv ℝ f c - fderiv ℝ f xBar)‖ ≤ Z₂ r * r)
-  (c : E) (hc : c ∈ Metric.closedBall xBar r) :
-  ‖fderiv ℝ (NewtonLikeMap A f) c‖ ≤ Z_bound Z₀ Z₂ r := by
-  rw [newton_operator_fderiv hf_diff]
-  simpa [Z_bound] using RadiiPolynomial.norm_id_sub_comp_le_Z_bound (P := fderiv ℝ f xBar)
-    (Z₁ := 0) h_Z₀ (by simp) (h_Z₂ c hc)
 
 end OperatorBounds
 
@@ -501,47 +332,6 @@ section HelperLemmas
 ## Helper Lemmas for Fixed Point Theorems
 -/
 
-/-- T maps the closed ball into itself when the radii polynomial is negative
-
-    This is a key step in applying the Banach fixed point theorem.
-
-    Given:
-    - ‖T(x̄) - x̄‖ ≤ Y₀                          (initial displacement bound)
-    - ‖DT(c)‖ ≤ Z(r₀) for all c ∈ B̄ᵣ₀(x̄)       (derivative bound)
-    - p(r₀) < 0 where p(r) = (Z(r) - 1)r + Y₀  (radii polynomial condition)
-
-    We prove: T : B̄ᵣ₀(x̄) → B̄ᵣ₀(x̄) (T maps the ball to itself)
-
-    Strategy:
-    1. From p(r₀) < 0, extract: Z(r₀)·r₀ + Y₀ < r₀
-    2. For x ∈ B̄ᵣ₀(x̄), use Mean Value Theorem:
-       ‖T(x) - T(x̄)‖ ≤ Z(r₀)·‖x - x̄‖ ≤ Z(r₀)·r₀
-    3. Triangle inequality:
-       ‖T(x) - x̄‖ ≤ ‖T(x) - T(x̄)‖ + ‖T(x̄) - x̄‖
-                   ≤ Z(r₀)·r₀ + Y₀ < r₀
-    4. Therefore T(x) ∈ B̄ᵣ₀(x̄) -/
-lemma simple_maps_closedBall_to_itself
-  {T : E → E} {xBar : E}
-  {Y₀ : ℝ} {Z : ℝ → ℝ} {r₀ : ℝ}
-  (hT_diff : Differentiable ℝ T)            -- T differentiable on E
-  (hr₀ : 0 < r₀)                            -- r₀ > 0 (positive radius)
-  (h_bound_Y : ‖T xBar - xBar‖ ≤ Y₀)        -- Initial displacement bound
-  (h_bound_Z : ∀ c ∈ closedBall xBar r₀,    -- Derivative bound on B̄ᵣ₀(x̄)
-    ‖fderiv ℝ T c‖ ≤ Z r₀)
-  (h_Z_nonneg : 0 ≤ Z r₀)                   -- Z(r₀) ≥ 0 (needed for monotonicity)
-  (h_radii : simpleRadiiPolynomial Y₀ Z r₀ < 0) :  -- p(r₀) < 0
-  MapsTo T (closedBall xBar r₀) (closedBall xBar r₀) := by
-  intro x hx
-  have h_mvt : ‖T x - T xBar‖ ≤ Z r₀ * ‖x - xBar‖ :=
-    Convex.norm_image_sub_le_of_norm_fderiv_le (𝕜 := ℝ) (fun c _ => hT_diff c)
-      (fun c hc => h_bound_Z c (((convex_closedBall xBar r₀).segment_subset
-        (mem_closedBall_self hr₀.le) hx) hc))
-      (convex_segment xBar x) (left_mem_segment ℝ xBar x) (right_mem_segment ℝ xBar x)
-  rw [mem_closedBall, dist_eq_norm] at hx ⊢
-  have h_tri : ‖T x - xBar‖ ≤ ‖T x - T xBar‖ + ‖T xBar - xBar‖ := by
-    rw [← sub_add_sub_cancel (T x) (T xBar) xBar]; exact norm_add_le _ _
-  linarith [mul_le_mul_of_nonneg_left hx h_Z_nonneg,
-    show Z r₀ * r₀ + Y₀ < r₀ from by unfold simpleRadiiPolynomial at h_radii; linarith]
 
 end HelperLemmas
 
@@ -686,27 +476,6 @@ theorem general_radii_polynomial_theorem_local
     general_radii_polynomial_theorem_nondegenerate_local hr₀ h_Y₀ h_Z₀ h_Z₁ h_Z₂ hf h_radii hA_inj
   exact ⟨x, ⟨ball_subset_closedBall hx, hfx⟩, fun z ⟨hz, hz0⟩ => hu z hz hz0⟩
 
-/-- **Local simple radii polynomial theorem**: the conclusion of
-`simple_radii_polynomial_theorem_EtoF` from derivative data `Df` on the closed ball only
-(`A† = Df x̄`, so `Z₁ = 0`). -/
-theorem radii_polynomial_theorem_EtoF_local
-    {f : E → F} {Df : E → E →L[ℝ] F} {xBar : E} {A : F →L[ℝ] E}
-    {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
-    (hr₀ : 0 < r₀)
-    (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀)
-    (h_Z₀ : ‖I_E - A.comp (Df xBar)‖ ≤ Z₀)
-    (h_Z₂ : ∀ c ∈ closedBall xBar r₀, ‖A.comp (Df c - Df xBar)‖ ≤ Z₂ r₀ * r₀)
-    (hf : ∀ x ∈ closedBall xBar r₀, HasFDerivWithinAt f (Df x) (closedBall xBar r₀) x)
-    (h_radii : radiiPolynomial Y₀ Z₀ Z₂ r₀ < 0)
-    (hA_inj : Function.Injective A) :
-    ∃! xTilde ∈ closedBall xBar r₀, f xTilde = 0 := by
-  obtain ⟨x, hx, hfx, -, hu⟩ := radii_polynomial_theorem_of_norm_id_sub_le_local
-    (Z := Z_bound Z₀ Z₂) hr₀ h_Y₀
-    (fun c hc => by
-      simpa [Z_bound] using norm_id_sub_comp_le_Z_bound (A_dagger := Df xBar) (P := Df xBar)
-        (Z₁ := 0) h_Z₀ (by simp) (h_Z₂ c hc))
-    hf ((radiiPolynomial_alt_form ..).symm.trans_lt h_radii) hA_inj
-  exact ⟨x, ⟨ball_subset_closedBall hx, hfx⟩, fun z ⟨hz, hz0⟩ => hu z hz hz0⟩
 
 end LocalTheorems
 
@@ -729,33 +498,6 @@ If p(r₀) < 0, then there exists a unique fixed point x̃ ∈ B̄ᵣ₀(x̄).
 
 variable [CompleteSpace E]
 
-/-- **Theorem 7.6.1**: General Fixed Point Theorem for Banach Spaces
-
-    Let T : E → E be Fréchet differentiable and x̄ ∈ E. Suppose:
-    - ‖T(x̄) - x̄‖ ≤ Y₀                      (eq. 7.27)
-    - ‖DT(x)‖ ≤ Z(r₀) for all x ∈ B̄ᵣ₀(x̄)   (eq. 7.28, needed at r = r₀ only)
-
-    Define p(r) := (Z(r) - 1)r + Y₀.
-
-    If r₀ > 0 and p(r₀) < 0, then there exists a unique
-    x̃ ∈ B̄ᵣ₀(x̄) such that T(x̃) = x̃.
-
-    This is the Banach space version of Theorem 2.4.1. (which is in ℝⁿ)
-
-    Proof: one application of the local form
-    `RadiiPolynomial.general_fixed_point_theorem_local` (derivative data within the ball). -/
-theorem general_fixed_point_theorem
-  {T : E → E} {xBar : E}
-  {Y₀ : ℝ} {Z : ℝ → ℝ} {r₀ : ℝ}
-  (hT_diff : Differentiable ℝ T)
-  (hr₀ : 0 < r₀)
-  (h_bound_Y : ‖T xBar - xBar‖ ≤ Y₀)                        -- eq. 7.27
-  (h_bound_Z : ∀ c ∈ Metric.closedBall xBar r₀, ‖fderiv ℝ T c‖ ≤ Z r₀)  -- eq. 7.28
-  (h_radii : simpleRadiiPolynomial Y₀ Z r₀ < 0) :           -- p(r₀) < 0, assumption
-  ∃! xTilde ∈ Metric.closedBall xBar r₀, T xTilde = xTilde := by
-  obtain ⟨x, hx, hfix, hu⟩ := RadiiPolynomial.general_fixed_point_theorem_local hr₀
-    (fun x _ => (hT_diff x).hasFDerivAt.hasFDerivWithinAt) h_bound_Y h_bound_Z h_radii
-  exact ⟨x, ⟨ball_subset_closedBall hx, hfix⟩, fun z ⟨hz, hzf⟩ => hu z hz hzf⟩
 
 end FixedPointTheorem
 
@@ -845,99 +587,12 @@ This still works for f : E → F with different spaces, but requires tighter bou
 
 variable [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
 
-/-- **Theorem 2.4.2 (Generalized)**: Simple Radii Polynomial Theorem for E to F
-
-    Given a differentiable f : E → F and approximate inverse A : F →L[ℝ] E satisfying:
-
-    - ‖A(f(x̄))‖ ≤ Y₀                               (eq. 2.14)
-    - ‖I_E - A∘Df(x̄)‖ ≤ Z₀                         (eq. 2.15)
-    - ‖A∘[Df(c) - Df(x̄)]‖ ≤ Z₂(r₀)·r₀ for c ∈ B̄ᵣ₀(x̄) (eq. 2.16, at r₀)
-
-    If p(r₀) < 0 where p(r) = Z₂(r)r² - (1-Z₀)r + Y₀ (eq. 2.17),
-    then there exists a unique x̃ ∈ B̄ᵣ₀(x̄) with f(x̃) = 0.
-
-    This is a special case of the general theorem with A† = Df(x̄) (so Z₁ = 0).
-
-    Proof: one application of the local form
-    `RadiiPolynomial.radii_polynomial_theorem_EtoF_local` (derivative data `fderiv ℝ f`
-    within the closed ball). -/
-theorem simple_radii_polynomial_theorem_EtoF
-  {f : E → F} {xBar : E} {A : F →L[ℝ] E}
-  {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ}
-  (hr₀ : 0 < r₀)
-  (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀)                                      -- eq. 2.14
-  (h_Z₀ : ‖I_E - A.comp (fderiv ℝ f xBar)‖ ≤ Z₀)                  -- eq. 2.15
-  (h_Z₂ : ∀ c ∈ Metric.closedBall xBar r₀,                        -- eq. 2.16
-    ‖A.comp (fderiv ℝ f c - fderiv ℝ f xBar)‖ ≤ Z₂ r₀ * r₀)
-  (hf_diff : Differentiable ℝ f)
-  (h_radii : radiiPolynomial Y₀ Z₀ Z₂ r₀ < 0)                     -- eq. 2.17
-  (hA_inj : Function.Injective A) :
-  ∃! xTilde ∈ Metric.closedBall xBar r₀, f xTilde = 0 :=
-  RadiiPolynomial.radii_polynomial_theorem_EtoF_local hr₀ h_Y₀ h_Z₀ h_Z₂
-    (fun x _ => (hf_diff x).hasFDerivAt.hasFDerivWithinAt) h_radii hA_inj
 
 end SimpleRadiiPolynomialTheorem
 
 
 
-section SplitMonotonicity
-/-!
-## Split monotonicity of the radii polynomial
 
-Acceptance `p(r₀) < 0` is NOT preserved by loosening bound values: at
-`r = 1, Y₀ = Z₀ = Z₁ = 0.1, Z₂ = 0` the polynomial is `-0.7`, but loosening
-`Z₀` to `0.9` flips it to `+0.1`. So "looser-than-valid is valid" is false as
-a rule about acceptance. The two directions that do hold:
-
-* `generalRadiiPolynomial_anti_bounds` — acceptance under tightening: at a
-  fixed radius, componentwise smaller bound values keep the polynomial
-  negative.
-* `general_radii_polynomial_theorem_of_le` — sound-bound weakening composed
-  with the abstract theorem: the four norm hypotheses may be verified against
-  exact values while the radii inequality is checked at componentwise larger
-  (e.g. dyadic outer-rounded) values.
-
-Together these give "the dyadic check suffices" without the false converse.
--/
-
-variable [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
-
-/-- Acceptance under tightening: componentwise smaller bound values preserve
-    negativity of the general radii polynomial at a fixed radius. -/
-lemma generalRadiiPolynomial_anti_bounds
-    {Y₀ Y₀' Z₀ Z₀' Z₁ Z₁' : ℝ} {Z₂ Z₂' : ℝ → ℝ} {r : ℝ}
-    (hr : 0 < r)
-    (hY : Y₀' ≤ Y₀) (hZ₀ : Z₀' ≤ Z₀) (hZ₁ : Z₁' ≤ Z₁) (hZ₂ : Z₂' r ≤ Z₂ r)
-    (h : generalRadiiPolynomial Y₀ Z₀ Z₁ Z₂ r < 0) :
-    generalRadiiPolynomial Y₀' Z₀' Z₁' Z₂' r < 0 := by
-  unfold generalRadiiPolynomial at h ⊢
-  nlinarith [mul_le_mul_of_nonneg_right hZ₂ (sq_nonneg r),
-    mul_le_mul_of_nonneg_right hZ₀ hr.le,
-    mul_le_mul_of_nonneg_right hZ₁ hr.le]
-
-/-- Sound-bound weakening composed with the abstract theorem: certify through
-    any componentwise larger bound values at which the polynomial inequality
-    is checked. -/
-theorem general_radii_polynomial_theorem_of_le
-  {f : E → F} {xBar : E} {A : F →L[ℝ] E} {A_dagger : E →L[ℝ] F}
-  {Y₀ Y₀' Z₀ Z₀' Z₁ Z₁' : ℝ} {Z₂ Z₂' : ℝ → ℝ} {r₀ : ℝ}
-  (hr₀ : 0 < r₀)
-  (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀) (hY : Y₀ ≤ Y₀')
-  (h_Z₀ : ‖I_E - A.comp A_dagger‖ ≤ Z₀) (hZ₀ : Z₀ ≤ Z₀')
-  (h_Z₁ : ‖A.comp (A_dagger - fderiv ℝ f xBar)‖ ≤ Z₁) (hZ₁ : Z₁ ≤ Z₁')
-  (h_Z₂ : ∀ c ∈ Metric.closedBall xBar r₀,
-    ‖A.comp (fderiv ℝ f c - fderiv ℝ f xBar)‖ ≤ Z₂ r₀ * r₀)
-  (hZ₂ : Z₂ r₀ ≤ Z₂' r₀)
-  (hf_diff : Differentiable ℝ f)
-  (h_radii : generalRadiiPolynomial Y₀' Z₀' Z₁' Z₂' r₀ < 0)
-  (hA_inj : Function.Injective A) :
-  ∃! xTilde ∈ Metric.closedBall xBar r₀, f xTilde = 0 :=
-  general_radii_polynomial_theorem hr₀ (h_Y₀.trans hY) (h_Z₀.trans hZ₀)
-    (h_Z₁.trans hZ₁)
-    (fun c hc => (h_Z₂ c hc).trans (mul_le_mul_of_nonneg_right hZ₂ hr₀.le))
-    hf_diff h_radii hA_inj
-
-end SplitMonotonicity
 
 
 
@@ -963,18 +618,7 @@ section Adapters
 
 variable [NormedAddCommGroup F] [NormedSpace ℝ F]
 
-/-- Derivative-data adapter, global form: `Differentiable ℝ f` gives `fderiv` derivative data
-within any set. -/
-theorem hasFDerivWithinAt_fderiv_of_differentiable {f : E → F} (hf : Differentiable ℝ f)
-    (s : Set E) : ∀ x ∈ s, HasFDerivWithinAt f (fderiv ℝ f x) s x :=
-  fun x _ => (hf x).hasFDerivAt.hasFDerivWithinAt
 
-/-- Derivative-data adapter, open-set form: differentiability on an open `U ⊇ s` gives `fderiv`
-derivative data within `s`. -/
-theorem hasFDerivWithinAt_fderiv_of_differentiableOn {f : E → F} {U s : Set E} (hU : IsOpen U)
-    (hs : s ⊆ U) (hf : DifferentiableOn ℝ f U) :
-    ∀ x ∈ s, HasFDerivWithinAt f (fderiv ℝ f x) s x :=
-  fun x hx => ((hf x (hs hx)).differentiableAt (hU.mem_nhds (hs hx))).hasFDerivAt.hasFDerivWithinAt
 
 end Adapters
 
@@ -1038,111 +682,12 @@ theorem enclosure_of_radii {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {
   enclosure_of_general (A_dagger := Df xBar) (Z₁ := 0) hr₀ h_Y₀ h_Z₀ (by simp) h_Z₂ hf
     (by rw [← radiiPolynomial_is_special_case]; exact h_radii)
 
-/-- Global-derivative face: `Differentiable ℝ f` and `Df = fderiv ℝ f`. -/
-theorem enclosure_of_differentiable {f : E → E} {xBar : E} {A : E →L[ℝ] E}
-    {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ} (hr₀ : 0 < r₀)
-    (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀)
-    (h_Z₀ : ‖ContinuousLinearMap.id ℝ E - A.comp (fderiv ℝ f xBar)‖ ≤ Z₀)
-    (h_Z₂ : ∀ c ∈ closedBall xBar r₀,
-      ‖A.comp (fderiv ℝ f c - fderiv ℝ f xBar)‖ ≤ Z₂ r₀ * r₀)
-    (hf_diff : Differentiable ℝ f)
-    (h_radii : radiiPolynomial Y₀ Z₀ Z₂ r₀ < 0) : Enclosure f (fderiv ℝ f) A xBar r₀ :=
-  enclosure_of_radii hr₀ h_Y₀ h_Z₀ h_Z₂ (hasFDerivWithinAt_fderiv_of_differentiable hf_diff _)
-    h_radii
 
-/-- **Open-set face.** The derivative data come from `DifferentiableOn ℝ f U` on an open `U`
-containing the closed ball of the single radius `r₀`; the `Z₂` bound is demanded at `r₀` only and
-the sign condition is `radiiPolynomial` at `r₀`. Exactly `enclosure_of_radii` with the
-`DifferentiableOn` adapter. -/
-theorem enclosure_of_differentiableOn {U : Set E} (hU : IsOpen U) {f : E → E} {xBar : E}
-    {A : E →L[ℝ] E} {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {r₀ : ℝ} (hr₀ : 0 < r₀)
-    (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀)
-    (h_Z₀ : ‖ContinuousLinearMap.id ℝ E - A.comp (fderiv ℝ f xBar)‖ ≤ Z₀)
-    (h_Z₂ : ∀ c ∈ closedBall xBar r₀, ‖A.comp (fderiv ℝ f c - fderiv ℝ f xBar)‖ ≤ Z₂ r₀ * r₀)
-    (hballU : closedBall xBar r₀ ⊆ U) (hf : DifferentiableOn ℝ f U)
-    (h_radii : radiiPolynomial Y₀ Z₀ Z₂ r₀ < 0) : Enclosure f (fderiv ℝ f) A xBar r₀ :=
-  enclosure_of_radii hr₀ h_Y₀ h_Z₀ h_Z₂
-    (hasFDerivWithinAt_fderiv_of_differentiableOn hU hballU hf) h_radii
 
-/-- Output of the two-radius face: `p < 0` on `[rlo, rhi]` and an `Enclosure` at both radii. -/
-structure PairEnclosure (f : E → E) (Df : E → E →L[ℝ] E) (A : E →L[ℝ] E) (xBar : E)
-    (p : ℝ → ℝ) (rlo rhi : ℝ) : Prop where
-  neg : ∀ r ∈ Set.Icc rlo rhi, p r < 0
-  lower : Enclosure f Df A xBar rlo
-  upper : Enclosure f Df A xBar rhi
 
-omit [FiniteDimensional ℝ E] in
-/-- The radii of a `PairEnclosure` form an interval inside one order-connected component of the
-negative set of `p`. -/
-theorem PairEnclosure.Icc_subset_component {f : E → E} {Df : E → E →L[ℝ] E} {A : E →L[ℝ] E}
-    {xBar : E} {p : ℝ → ℝ} {rlo rhi : ℝ} (h : PairEnclosure f Df A xBar p rlo rhi) {r₀ : ℝ}
-    (hr₀ : r₀ ∈ Set.Icc rlo rhi) : Set.Icc rlo rhi ⊆ Set.ordConnectedComponent {r | p r < 0} r₀ :=
-  Icc_subset_ordConnectedComponent_of_neg hr₀ h.neg
 
-/-- **Two-radius face** with convexity of the radii polynomial as a hypothesis. -/
-theorem enclosure_pair {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : E →L[ℝ] E}
-    {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {rlo rhi : ℝ} (hrlo : 0 < rlo) (hle : rlo ≤ rhi)
-    (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀)
-    (h_Z₀ : ‖ContinuousLinearMap.id ℝ E - A.comp (Df xBar)‖ ≤ Z₀)
-    (h_Z₂lo : ∀ c ∈ closedBall xBar rlo, ‖A.comp (Df c - Df xBar)‖ ≤ Z₂ rlo * rlo)
-    (h_Z₂hi : ∀ c ∈ closedBall xBar rhi, ‖A.comp (Df c - Df xBar)‖ ≤ Z₂ rhi * rhi)
-    (hf : ∀ x ∈ closedBall xBar rhi, HasFDerivWithinAt f (Df x) (closedBall xBar rhi) x)
-    (hconv : ConvexOn ℝ (Set.Icc rlo rhi) (radiiPolynomial Y₀ Z₀ Z₂))
-    (hpm : radiiPolynomial Y₀ Z₀ Z₂ rlo < 0) (hpp : radiiPolynomial Y₀ Z₀ Z₂ rhi < 0) :
-    PairEnclosure f Df A xBar (radiiPolynomial Y₀ Z₀ Z₂) rlo rhi := by
-  have hs := closedBall_subset_closedBall (x := xBar) hle
-  exact ⟨radiiPoly_neg_on_Icc_of_convexOn hconv hpm hpp,
-    enclosure_of_radii hrlo h_Y₀ h_Z₀ h_Z₂lo (fun x hx => (hf x (hs hx)).mono hs) hpm,
-    enclosure_of_radii (hrlo.trans_le hle) h_Y₀ h_Z₀ h_Z₂hi hf hpp⟩
 
-/-- **Two-radius face, polynomial `Z₂` of any degree**, local derivative data, convexity
-discharged by `convexOn_radiiPolynomial_of_poly`. A constant or affine `Z₂` is the one- or
-two-element list `[c₀]`, `[c₀, c₁]`; global derivative data enter through
-`hasFDerivWithinAt_fderiv_of_differentiable`. -/
-theorem enclosure_pair_poly {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : E →L[ℝ] E}
-    {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {cs : List ℝ} {rlo rhi : ℝ}
-    (hcs : ∀ c ∈ cs, 0 ≤ c) (hZ₂ : ∀ x ∈ Set.Icc rlo rhi, Z₂ x = hornerEval cs x)
-    (hrlo : 0 < rlo) (hle : rlo ≤ rhi)
-    (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀)
-    (h_Z₀ : ‖ContinuousLinearMap.id ℝ E - A.comp (Df xBar)‖ ≤ Z₀)
-    (h_Z₂lo : ∀ c ∈ closedBall xBar rlo, ‖A.comp (Df c - Df xBar)‖ ≤ Z₂ rlo * rlo)
-    (h_Z₂hi : ∀ c ∈ closedBall xBar rhi, ‖A.comp (Df c - Df xBar)‖ ≤ Z₂ rhi * rhi)
-    (hf : ∀ x ∈ closedBall xBar rhi, HasFDerivWithinAt f (Df x) (closedBall xBar rhi) x)
-    (hpm : radiiPolynomial Y₀ Z₀ Z₂ rlo < 0) (hpp : radiiPolynomial Y₀ Z₀ Z₂ rhi < 0) :
-    PairEnclosure f Df A xBar (radiiPolynomial Y₀ Z₀ Z₂) rlo rhi :=
-  enclosure_pair hrlo hle h_Y₀ h_Z₀ h_Z₂lo h_Z₂hi hf
-    (convexOn_radiiPolynomial_of_poly hcs hZ₂ hrlo.le) hpm hpp
 
-/-- **Per-radius face** with convexity of the radii polynomial as a hypothesis: every radius of
-`[rlo, rhi]` carries an `Enclosure`. -/
-theorem enclosure_Icc {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : E →L[ℝ] E}
-    {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {rlo rhi : ℝ} (hrlo : 0 < rlo)
-    (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀)
-    (h_Z₀ : ‖ContinuousLinearMap.id ℝ E - A.comp (Df xBar)‖ ≤ Z₀)
-    (h_Z₂ : ∀ r ∈ Set.Icc rlo rhi, ∀ c ∈ closedBall xBar r, ‖A.comp (Df c - Df xBar)‖ ≤ Z₂ r * r)
-    (hf : ∀ x ∈ closedBall xBar rhi, HasFDerivWithinAt f (Df x) (closedBall xBar rhi) x)
-    (hconv : ConvexOn ℝ (Set.Icc rlo rhi) (radiiPolynomial Y₀ Z₀ Z₂))
-    (hpm : radiiPolynomial Y₀ Z₀ Z₂ rlo < 0) (hpp : radiiPolynomial Y₀ Z₀ Z₂ rhi < 0) :
-    ∀ r ∈ Set.Icc rlo rhi, Enclosure f Df A xBar r := fun r hr => by
-  have hs := closedBall_subset_closedBall (x := xBar) hr.2
-  exact enclosure_of_radii (hrlo.trans_le hr.1) h_Y₀ h_Z₀ (h_Z₂ r hr)
-    (fun x hx => (hf x (hs hx)).mono hs) (radiiPoly_neg_on_Icc_of_convexOn hconv hpm hpp r hr)
-
-/-- **Per-radius face, polynomial `Z₂` of any degree**, local derivative data, convexity
-discharged: every radius of `[rlo, rhi]` carries both `p(r) < 0` and an `Enclosure`. -/
-theorem enclosure_Icc_poly {f : E → E} {Df : E → E →L[ℝ] E} {xBar : E} {A : E →L[ℝ] E}
-    {Y₀ Z₀ : ℝ} {Z₂ : ℝ → ℝ} {cs : List ℝ} {rlo rhi : ℝ}
-    (hcs : ∀ c ∈ cs, 0 ≤ c) (hZ₂ : ∀ x ∈ Set.Icc rlo rhi, Z₂ x = hornerEval cs x)
-    (hrlo : 0 < rlo)
-    (h_Y₀ : ‖A (f xBar)‖ ≤ Y₀)
-    (h_Z₀ : ‖ContinuousLinearMap.id ℝ E - A.comp (Df xBar)‖ ≤ Z₀)
-    (h_Z₂ : ∀ r ∈ Set.Icc rlo rhi, ∀ c ∈ closedBall xBar r, ‖A.comp (Df c - Df xBar)‖ ≤ Z₂ r * r)
-    (hf : ∀ x ∈ closedBall xBar rhi, HasFDerivWithinAt f (Df x) (closedBall xBar rhi) x)
-    (hpm : radiiPolynomial Y₀ Z₀ Z₂ rlo < 0) (hpp : radiiPolynomial Y₀ Z₀ Z₂ rhi < 0) :
-    ∀ r ∈ Set.Icc rlo rhi, radiiPolynomial Y₀ Z₀ Z₂ r < 0 ∧ Enclosure f Df A xBar r :=
-  have hconv := convexOn_radiiPolynomial_of_poly (Y₀ := Y₀) (Z₀ := Z₀) hcs hZ₂ hrlo.le
-  fun r hr => ⟨radiiPoly_neg_on_Icc_of_convexOn hconv hpm hpp r hr,
-    enclosure_Icc hrlo h_Y₀ h_Z₀ h_Z₂ hf hconv hpm hpp r hr⟩
 
 /-- **Finite-dimensional local radii polynomial theorem, general form**: general `A†` (`Z₁`
 slot), `Z₂ : ℝ → ℝ`, derivative data on the closed ball only. Injectivity of `A` is not a

@@ -1,8 +1,6 @@
 import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Certification.LeanCertAdapter
 import RadiiPolynomial.Certification.IVP.Taylor
-import RadiiPolynomial.Tactic.AutoPolyFDeriv
-import RadiiPolynomial.Tactic.MakeCompPoly
 import RadiiPolynomial.Algebra.Polynomial
 import RadiiPolynomial.Examples.IVP.Taylor.Example81.Numbers
 
@@ -58,70 +56,22 @@ open MvPolyBridge (CompPoly) in
 def f_cpoly : Fin L → CompPoly L
   | _ => .X 0 * .X 0 - .X 0
 
-/-- The literal syntax is what `compPolyOf%` reifies the nonlinearity's own lambda to:
-the certificate-level witness that the elaborator and the hand-written AST agree. -/
-theorem f_cpoly_reified :
-    f_cpoly 0 = compPolyOf% (fun u : Fin L → ℝ => u 0 * u 0 - u 0) := rfl
 
 def f (a : Fin L → l1Weighted ν_val) (l : Fin L) : l1Weighted ν_val :=
   (f_cpoly l).evalBanach a
 
-def f_spec (j : Fin L) : MvPolynomial (Fin L) ℚ :=
-  (f_cpoly j).toMvPoly
 
-lemma f_eq_spec (a : XL1 ν_val L) (l : Fin L) :
-    f a l = MvPolyBridge.evalInBanach (f_spec l) a :=
-  MvPolyBridge.compPoly_evalBanach_eq_evalInBanach _ _
 
 /-! ## 4. Fréchet derivative Df -/
 
-lemma differentiable_f_component (l : Fin L) :
-    Differentiable ℝ (fun a : XL1 ν_val L => f a l) := by
-  exact MvPolyBridge.differentiable_evalBanach_l1Weighted (f_cpoly l)
 
-private abbrev proj_L (l : Fin L) :=
-  ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin L => l1Weighted ν_val) l
 
-/-- Fréchet derivative of f: Df(a)(h) = 2·a₀·h₀ - h₀. -/
-lemma fderiv_f (a : XL1 ν_val L) :
-    fderiv ℝ (fun a : XL1 ν_val L => a 0 * a 0 - a 0) a =
-    (l1Weighted.leftMul (a 0)).comp (proj_L 0) +
-    (l1Weighted.leftMul (a 0)).comp (proj_L 0) - proj_L 0 := by
-  auto_poly_fderiv
 
-/-- Df at ābar: Df(h)₀ = 2·ā₀·h₀ - h₀ = (2ā₀ - 1)·h₀. -/
-def Df (h : Fin L → l1Weighted ν_val) : Fin L → l1Weighted ν_val
-  | _ => 2 • (data.abar 0 * h 0) - h 0
 
-lemma Df_eq_fderiv (h : XL1 ν_val L) (l : Fin L) :
-    Df h l = (fderiv ℝ (fun a => f a l) data.abar) h := by
-  fin_cases l
-  show 2 • (data.abar 0 * h 0) - h 0 =
-    (fderiv ℝ (fun a : XL1 ν_val L => a 0 * a 0 - a 0) data.abar) h
-  rw [fderiv_f]
-  simp only [sub_apply, add_apply,
-    ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply,
-    l1Weighted.leftMul_apply]
-  rw [show (2 : ℕ) • (data.abar 0 * h 0) = data.abar 0 * h 0 + data.abar 0 * h 0
-    from two_nsmul _]
 
 /-! ## 5. DF Correctness (Jacobian matches numerical data) -/
 
-private lemma hDF_nat :
-    ∀ (j m : Fin L) (row col : Fin (N + 1)),
-      (DF_col j m (col : ℕ)).getD (row : ℕ) 0 =
-        IVP.ivp_DF_of_Dφ_nat
-          (fun j m k => ((f_cpoly j).pderiv m).evalCoeff data.abar_Q k)
-          j m (row : ℕ) (col : ℕ) := by
-  native_decide
 
-/-- `data.composedApprox = fderiv(G)` on finite modes (modes `0 ≤ n ≤ N`).
-The `CompPoly` adapter derives the symbolic specification, differentiability, and
-coefficient bridge; `hDF_nat` is the remaining equation-specific matrix check. -/
-lemma composedApprox_eq_fderiv_G_fin (h : XL1 ν_val L) (l : Fin L) (n : ℕ) (hn : n ≤ N) :
-    toCoeff (ν := ν_val) (data.composedApprox.toCLM (ν := ν_val) h) l n =
-      toCoeff (ν := ν_val) ((fderiv ℝ (data.G f x₀) data.abar) h) l n :=
-  data.composedApprox_eq_fderiv_G_fin_of_compPoly f_cpoly x₀ hDF_nat h l n hn
 
 /-! ## 6. ℚ Bridges -/
 
@@ -153,59 +103,19 @@ lemma F_bridge (l : Fin L) (n : ℕ) :
     (IVP.ivpCoeffsQ f_cpoly data.abar_Q x₀_q 0 n : ℝ)
   exact data.ivpCoeffs_abar_eq_cast_of_compPoly f_cpoly x₀ x₀_q hx₀ 0 n
 
-private lemma abar_toSeq_zero (k : ℕ) (hk : N < k) :
-    l1Weighted.toSeq (data.abar 0) k = 0 := by
-  rw [data.abar_toSeq_eq, data.abar_Q_getD_eq_zero 0 k hk, Rat.cast_zero]
 
 /-- The support index of `F(ā)` read off the syntax: `supportM f_cpoly N = 2N + 1`. -/
 private lemma supportM_eq : IVP.supportM f_cpoly N = 2 * N + 1 := by decide
 
-lemma f_abar_support (n : ℕ) (hn : 2 * N < n) :
-    l1Weighted.toSeq (f data.abar 0) n = 0 := by
-  have h := data.ivpCoeffs_abar_eq_zero_of_compPoly f_cpoly x₀ 0 (n + 1)
-    (by rw [supportM_eq]; omega)
-  change ((n : ℝ) + 1) * l1Weighted.toSeq (data.abar 0) (n + 1) -
-    l1Weighted.toSeq (f data.abar 0) n = 0 at h
-  rwa [abar_toSeq_zero (n + 1) (by omega), mul_zero, zero_sub, neg_eq_zero] at h
 
 lemma F_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
     IVP.ivpCoeffs f x₀ data.abar l n = 0 :=
   data.ivpCoeffs_abar_eq_zero_of_compPoly f_cpoly x₀ l n (supportM_eq ▸ hn)
 
-lemma F_abar_mem (l : Fin L) :
-    l1Weighted.Mem ν_val (F data.abar l) :=
-  data.ivpCoeffs_abar_mem_of_compPoly f_cpoly x₀ l
 
 /-! ## 7. Norm bounds for ā components -/
 
-/-- ℚ array for `2•ā₀ - 1` (precomputed literal for fast `native_decide`). -/
-def two_abar_sub_one_Q : Array ℚ :=
-  #[0, -1/2, 0, 1/24, 0, -1/240, 0, 17/40320, 0, -31/725760, 0]
 
-/-- Bridge: `toSeq(2•ā₀ - 1) k = (two_abar_sub_one_Q.getD k 0 : ℝ)`. -/
-lemma two_abar_sub_one_toSeq (k : ℕ) :
-    l1Weighted.toSeq (2 • data.abar 0 - (1 : l1Weighted ν_val)) k =
-      (two_abar_sub_one_Q.getD k 0 : ℝ) := by
-  rw [l1Weighted.toSeq_nsmul_sub_one 2 (data.abar 0) k, data.abar_toSeq_eq 0 k]
-  -- data.abar_Q 0 = abar_0 by definition
-  change (2 : ℝ) * ((abar_0.getD k 0 : ℚ) : ℝ) - _ = _
-  have hℚ : ∀ i : Fin (N + 1),
-      (2 : ℚ) * abar_0.getD (i : ℕ) 0 - (if (i : ℕ) = 0 then 1 else 0) =
-      two_abar_sub_one_Q.getD (i : ℕ) 0 := by native_decide
-  by_cases hk : k < N + 1
-  · have := hℚ ⟨k, hk⟩
-    convert congrArg ((↑) : ℚ → ℝ) this using 1
-    · push_cast; split_ifs <;> simp
-  · have hsz1 : abar_0.size = N + 1 := by decide
-    have hsz2 : two_abar_sub_one_Q.size = N + 1 := by decide
-    have hk1 : ¬(k < abar_0.size) := by omega
-    have hk2 : ¬(k < two_abar_sub_one_Q.size) := by omega
-    simp [Array.getD, hk1, hk2]; cases k with | zero => omega | succ => simp
 
-lemma two_abar_sub_one_support (n : ℕ) (hn : N < n) :
-    l1Weighted.toSeq (2 • data.abar 0 - (1 : l1Weighted ν_val)) n = 0 := by
-  rw [two_abar_sub_one_toSeq]
-  simp [Array.getD, show ¬(n < two_abar_sub_one_Q.size) from by
-    simp [two_abar_sub_one_Q, N] at hn ⊢; omega]
 
 end Example81

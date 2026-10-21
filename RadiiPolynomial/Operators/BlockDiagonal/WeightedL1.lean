@@ -33,22 +33,8 @@ section SystemBlockDiagConcrete
 
 variable {ν : PosReal} {L N : ℕ}
 
-/-- Concrete sequence family for RadiiPolynomial: weighted `ℓ¹_ν`. -/
-abbrev SeqL1 := fun ν : PosReal => l1Weighted ν
-
 /-- Concrete system space `(ℓ¹_ν)^L`. -/
-abbrev XL1 (ν : PosReal) (L : ℕ) := X SeqL1 ν L
-
-/-! Shortcut instances. `XL1 ν L` is an `abbrev` of `Fin L → l1Weighted ν`; these re-export the
-`Pi` instances so that synthesis at `XL1` stops here instead of searching through `Pi` and
-`lpOneAlg`. -/
-
-instance instXL1Ring : Ring (XL1 ν L) := inferInstance
-instance instXL1CommRing : CommRing (XL1 ν L) := inferInstance
-instance instXL1NormedRing : NormedRing (XL1 ν L) := inferInstance
-instance instXL1NormOneClass [NeZero L] : NormOneClass (XL1 ν L) := inferInstance
-instance instXL1Algebra : Algebra ℝ (XL1 ν L) := inferInstance
-instance instXL1NormedAlgebra : NormedAlgebra ℝ (XL1 ν L) := inferInstance
+abbrev XL1 (ν : PosReal) (L : ℕ) := Fin L → l1Weighted ν
 
 /-- Extract coefficient functions from a concrete system state. -/
 def toCoeff (x : XL1 ν L) : SystemCoeff L :=
@@ -65,7 +51,7 @@ lemma toCoeff_mem (x : XL1 ν L) (l : Fin L) :
 
 lemma toCoeff_eq_zero {x : XL1 ν L} {j : Fin L} (h : x j = 0) (n : ℕ) :
     toCoeff (ν := ν) x j n = 0 := by
-  simp only [toCoeff, h, l1Weighted.zero_toSeq]
+  exact (congrArg (fun y : l1Weighted ν => l1Weighted.toSeq y n) h).trans rfl
 
 @[simp] lemma toCoeff_ofCoeff
     (c : SystemCoeff L) (hc : ∀ l : Fin L, l1Weighted.Mem ν (c l))
@@ -73,10 +59,6 @@ lemma toCoeff_eq_zero {x : XL1 ν L} {j : Fin L} (h : x j = 0) (n : ℕ) :
     toCoeff (ofCoeff (ν := ν) c hc) l n = c l n := by
   simp [toCoeff, ofCoeff, l1Weighted.mk]; rfl
 
-@[simp] lemma ofCoeff_apply
-    (c : SystemCoeff L) (hc : ∀ l : Fin L, l1Weighted.Mem ν (c l))
-    (l : Fin L) :
-    ofCoeff (ν := ν) c hc l = l1Weighted.mk (c l) (hc l) := rfl
 
 /-- `toCoeff` is injective: elements of `(ℓ¹_ν)^L` are determined by their coefficients. -/
 lemma toCoeff_injective : Function.Injective (toCoeff (ν := ν) (L := L)) := by
@@ -86,7 +68,6 @@ lemma toCoeff_injective : Function.Injective (toCoeff (ν := ν) (L := L)) := by
   exact fun n => congr_fun (congr_fun h l) n
 
 /-- Extensionality for `XL1`: two elements are equal iff their coefficients agree. -/
-@[ext]
 lemma XL1.ext {x y : XL1 ν L} (h : ∀ l n, toCoeff x l n = toCoeff y l n) : x = y :=
   toCoeff_injective (funext fun l => funext fun n => h l n)
 
@@ -96,14 +77,12 @@ lemma XL1.ext {x y : XL1 ν L} (h : ∀ l n, toCoeff x l n = toCoeff y l n) : x 
 @[simp] lemma toCoeff_add (x y : XL1 ν L) (l : Fin L) (n : ℕ) :
     toCoeff (ν := ν) (x + y) l n = toCoeff x l n + toCoeff y l n := rfl
 
-@[simp] lemma toCoeff_neg (x : XL1 ν L) (l : Fin L) (n : ℕ) :
-    toCoeff (ν := ν) (-x) l n = -toCoeff x l n := rfl
 
-@[simp] lemma toCoeff_sub (x y : XL1 ν L) (l : Fin L) (n : ℕ) :
-    toCoeff (ν := ν) (x - y) l n = toCoeff x l n - toCoeff y l n := rfl
+
 
 @[simp] lemma toCoeff_smul (r : ℝ) (x : XL1 ν L) (l : Fin L) (n : ℕ) :
     toCoeff (ν := ν) (r • x) l n = r * toCoeff x l n := rfl
+
 
 lemma SystemBlockDiagData.actionFinite_mem
     (A : SystemBlockDiagData L N) (c : SystemCoeff L) (l : Fin L) :
@@ -428,56 +407,9 @@ lemma SystemBlockDiagData.toCoeff_comp_toCLM [NeZero L]
 
 /-! ## 2. CLM Composition And Residual Bridges -/
 
-/-- Function-level coefficient identity for CLM composition. -/
-lemma SystemBlockDiagData.toCoeff_comp_toCLM_eq_action [NeZero L]
-    (A B : SystemBlockDiagData L N) (x : XL1 ν L) :
-    toCoeff (ν := ν) ((A.toCLM (ν := ν)).comp (B.toCLM (ν := ν)) x) =
-      A.action (B.action (toCoeff (ν := ν) x)) := by
-  funext l n
-  exact SystemBlockDiagData.toCoeff_comp_toCLM
-    (ν := ν) (A := A) (B := B) (x := x) (l := l) (n := n)
 
-/-- Coefficient identity for the residual operator `id - A ∘ B`. -/
-lemma SystemBlockDiagData.toCoeff_id_sub_comp_toCLM [NeZero L]
-    (A B : SystemBlockDiagData L N) (x : XL1 ν L) (l : Fin L) (n : ℕ) :
-    toCoeff (ν := ν) ((ContinuousLinearMap.id ℝ (XL1 ν L) -
-      (A.toCLM (ν := ν)).comp (B.toCLM (ν := ν))) x) l n =
-      toCoeff (ν := ν) x l n - A.action (B.action (toCoeff (ν := ν) x)) l n := by
-  rw [sub_apply]
-  change l1Weighted.toSeq
-      ((x - ((A.toCLM (ν := ν)).comp (B.toCLM (ν := ν)) x)) l) n =
-      toCoeff (ν := ν) x l n - A.action (B.action (toCoeff (ν := ν) x)) l n
-  rw [Pi.sub_apply, l1Weighted.sub_toSeq]
-  change toCoeff (ν := ν) x l n -
-      toCoeff (ν := ν) (((A.toCLM (ν := ν)).comp (B.toCLM (ν := ν)) x)) l n =
-    toCoeff (ν := ν) x l n - A.action (B.action (toCoeff (ν := ν) x)) l n
-  rw [SystemBlockDiagData.toCoeff_comp_toCLM_eq_action
-    (ν := ν) (A := A) (B := B) (x := x)]
 
-/-- Finite-mode coefficient form of `(id - A ∘ B)x` (`n ≤ N`). -/
-lemma SystemBlockDiagData.toCoeff_id_sub_comp_toCLM_finite [NeZero L]
-    (A B : SystemBlockDiagData L N) (x : XL1 ν L)
-    (l : Fin L) (n : ℕ) (hn : n ≤ N) :
-    toCoeff (ν := ν) ((ContinuousLinearMap.id ℝ (XL1 ν L) -
-      (A.toCLM (ν := ν)).comp (B.toCLM (ν := ν))) x) l n =
-      toCoeff (ν := ν) x l n -
-        ∑ j : Fin L, ∑ k : Fin (N + 1),
-          A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k * (B.action (toCoeff (ν := ν) x) j k) := by
-  rw [SystemBlockDiagData.toCoeff_id_sub_comp_toCLM (ν := ν) (A := A) (B := B) (x := x) (l := l) (n := n)]
-  rw [SystemBlockDiagData.action_comp_finite
-    (A := A) (B := B) (b := toCoeff (ν := ν) x) (l := l) (n := n) hn]
 
-/-- Tail-mode coefficient form of `(id - A ∘ B)x` (`N < n`). -/
-lemma SystemBlockDiagData.toCoeff_id_sub_comp_toCLM_tail [NeZero L]
-    (A B : SystemBlockDiagData L N) (x : XL1 ν L)
-    (l : Fin L) (n : ℕ) (hn : N < n) :
-    toCoeff (ν := ν) ((ContinuousLinearMap.id ℝ (XL1 ν L) -
-      (A.toCLM (ν := ν)).comp (B.toCLM (ν := ν))) x) l n =
-      (1 - A.tailDiag l n * B.tailDiag l n) * toCoeff (ν := ν) x l n := by
-  rw [SystemBlockDiagData.toCoeff_id_sub_comp_toCLM (ν := ν) (A := A) (B := B) (x := x) (l := l) (n := n)]
-  rw [SystemBlockDiagData.action_comp_tail
-    (A := A) (B := B) (b := toCoeff (ν := ν) x) (l := l) (n := n) hn]
-  ring
 
 lemma SystemBlockDiagData.norm_toCLM_le [NeZero L]
     (A : SystemBlockDiagData L N) :
@@ -490,19 +422,9 @@ lemma toCLM_ext_of_toCoeff_eq
     (T S : XL1 ν L →L[ℝ] XL1 ν L)
     (hcoeff : ∀ x : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ,
       toCoeff (ν := ν) (T x) l n = toCoeff (ν := ν) (S x) l n) :
-    T = S := by
-  ext x l n
-  simpa [toCoeff] using hcoeff x l n
+    T = S :=
+  ContinuousLinearMap.ext fun x => XL1.ext fun l n => hcoeff x l n
 
-/-- `Z₀` bound transfer to the canonical Core API from a defect CLM identity. -/
-lemma SystemBlockDiagData.Z₀_norm_le_of_eq_defect [NeZero L]
-    (A B D : SystemBlockDiagData L N)
-    (hD : ContinuousLinearMap.id ℝ (XL1 ν L) -
-        (A.toCLM (ν := ν)).comp (B.toCLM (ν := ν)) = D.toCLM (ν := ν)) :
-    Z₀_norm (A.toCLM (ν := ν)) (B.toCLM (ν := ν)) ≤
-      finiteBlockMatrixNorm ν D.finBlock + D.tailBound := by
-  show ‖_‖ ≤ _; rw [hD]
-  exact D.norm_toCLM_le (ν := ν)
 
 /-- Per-coefficient zero-input recovery from zero-action. Given `A`'s
 finite-block injectivity and tail nonvanishing, `A.action c = 0` (pointwise)
@@ -593,79 +515,8 @@ provides a CLM (typically `fderiv ℝ f x̄`) that matches B on both finite and 
 
 This is the key lemma for IVP problems where A† has unbounded tail diagonal. -/
 
-/-- Coefficient-level identity for `(I - A∘DF)(x)` on finite modes (n ≤ N):
-equals the defect block action when DF matches B's finite blocks. -/
-private lemma defectOfBlockDiagOp_coeff_finite [NeZero L]
-    (A : SystemBlockDiagData L N) (B : BlockDiagOp L N)
-    (c_df c_x : SystemCoeff L)
-    (hfin : ∀ l : Fin L, ∀ n : Fin (N + 1),
-      c_df l n = ∑ j : Fin L, ∑ k : Fin (N + 1), B.finBlock l j n k * c_x j k)
-    (l : Fin L) (n : ℕ) (hn : n ≤ N) :
-    c_x l n - A.action c_df l n =
-      (defectOfBlockDiagOp A B).action c_x l n := by
-  set n' : Fin (N + 1) := ⟨n, Nat.lt_succ_of_le hn⟩
-  -- flattened: `c_df = B *ᵥ c_x` and the defect block is `1 - A * B`
-  have hdf : (fun p : Fin L × Fin (N + 1) => c_df p.1 p.2) =
-      B.finBlock.toMatrix *ᵥ fun p => c_x p.1 p.2 :=
-    funext fun ⟨j, k⟩ => by simp [hfin, Matrix.mulVec, dotProduct, Fintype.sum_prod_type]
-  have hD : (defectOfBlockDiagOp A B).finBlock.toMatrix =
-      1 - A.finBlock.toMatrix * B.finBlock.toMatrix := by
-    rw [← FiniteBlockMatrix.toMatrix_blockMul, ← FiniteBlockMatrix.toMatrix_blockId]; rfl
-  rw [SystemBlockDiagData.action_fin_eq_toMatrix_mulVec A c_df l n',
-    SystemBlockDiagData.action_fin_eq_toMatrix_mulVec (defectOfBlockDiagOp A B) c_x l n',
-    hdf, Matrix.mulVec_mulVec, hD, Matrix.sub_mulVec, Matrix.one_mulVec]
-  rfl
 
-/-- Coefficient-level identity for `(I - A∘DF)(x)` on tail modes (N < n):
-equals the defect tail action (= 0) when tails cancel. -/
-private lemma defectOfBlockDiagOp_coeff_tail [NeZero L]
-    (A : SystemBlockDiagData L N) (B : BlockDiagOp L N)
-    (c_df c_x : SystemCoeff L) (l : Fin L) (n : ℕ)
-    (htail_df : c_df l n = B.tailDiag l n * c_x l n)
-    (hcancel : A.tailDiag l n * B.tailDiag l n = 1)
-    (hlt : N < n) :
-    c_x l n - A.action c_df l n =
-      (defectOfBlockDiagOp A B).action c_x l n := by
-  rw [SystemBlockDiagData.action_tail A c_df l n hlt, htail_df,
-      SystemBlockDiagData.action_tail (defectOfBlockDiagOp A B) c_x l n hlt]
-  show c_x l n - A.tailDiag l n * (B.tailDiag l n * c_x l n) =
-      (defectOfBlockDiagOp A B).tailDiag l n * c_x l n
-  simp only [defectOfBlockDiagOp]
-  rw [show A.tailDiag l n * (B.tailDiag l n * c_x l n) =
-    (A.tailDiag l n * B.tailDiag l n) * c_x l n from by ring,
-    hcancel, one_mul, sub_self, zero_mul]
 
-/-- CLM-level identity: `I - A.toCLM ∘ DF_CLM = (defectOfBlockDiagOp A B).toCLM`
-when `DF_CLM` matches `B` on both finite modes (via `finBlock`) and tail modes
-(via `tailDiag`), and the tail diagonals of A and B cancel to 1. -/
-lemma defectOfBlockDiagOp_toCLM_eq [NeZero L]
-    (A : SystemBlockDiagData L N) (B : BlockDiagOp L N)
-    (DF_CLM : XL1 ν L →L[ℝ] XL1 ν L)
-    (hfin : ∀ x : XL1 ν L, ∀ l : Fin L, ∀ n : Fin (N + 1),
-      toCoeff (ν := ν) (DF_CLM x) l n =
-        ∑ j : Fin L, ∑ k : Fin (N + 1), B.finBlock l j n k * toCoeff (ν := ν) x j k)
-    (htail : ∀ x : XL1 ν L, ∀ l : Fin L, ∀ n : ℕ, N < n →
-      toCoeff (ν := ν) (DF_CLM x) l n = B.tailDiag l n * toCoeff (ν := ν) x l n)
-    (hcancel : ∀ l : Fin L, ∀ n : ℕ, N < n → A.tailDiag l n * B.tailDiag l n = 1) :
-    ContinuousLinearMap.id ℝ (XL1 ν L) -
-      (A.toCLM (ν := ν)).comp DF_CLM =
-    (defectOfBlockDiagOp A B).toCLM (ν := ν) := by
-  apply toCLM_ext_of_toCoeff_eq; intro x l n
-  -- Reduce to coefficient-level: c_x l n - A.action(c_df) l n = defect.action(c_x) l n
-  -- where c_x = toCoeff x and c_df = toCoeff (DF_CLM x)
-  -- Rewrite LHS to coefficient form: x_{l,n} - A.action(toCoeff(DF x))_{l,n}
-  -- Expand LHS: toCoeff((I - A∘DF)(x)) = toCoeff(x) - toCoeff(A(DF(x)))
-  --           = toCoeff(x) - A.action(toCoeff(DF(x)))
-  -- Expand RHS: toCoeff(defect.toCLM(x)) = defect.action(toCoeff(x))
-  simp only [sub_apply, ContinuousLinearMap.coe_id', id_eq,
-    ContinuousLinearMap.comp_apply, SystemBlockDiagData.toCoeff_toCLM]
-  show toCoeff (ν := ν) x l n - A.action (toCoeff (ν := ν) (DF_CLM x)) l n =
-    (defectOfBlockDiagOp A B).action (toCoeff (ν := ν) x) l n
-  by_cases hn : n ≤ N
-  · exact defectOfBlockDiagOp_coeff_finite A B _ _ (hfin x) l n hn
-  · exact defectOfBlockDiagOp_coeff_tail A B _ _ l n
-      (htail x l n (Nat.lt_of_not_ge hn)) (hcancel l n (Nat.lt_of_not_ge hn))
-      (Nat.lt_of_not_ge hn)
 
 /-! ## 4b. Z₀ Bridge For Composed CLM (IVP Case)
 
@@ -774,70 +625,8 @@ Composition norm bounds when the inner operator kills finite modes.
 General-L versions of the scalar APIs in `Scalar.lean`.
 -/
 
-/-- Composition norm bound when the inner operator `T` kills finite modes (general L).
-If `toCoeff(T h) l n = 0` for all `l`, `n ≤ N`, then `A.toCLM` acts on `T(h)` purely
-via its tail diagonal, giving `‖A.toCLM.comp T‖ ≤ A.tailBound * ‖T‖`. -/
-lemma SystemBlockDiagData.norm_comp_of_fin_kill [NeZero L]
-    (A : SystemBlockDiagData L N) (T : XL1 ν L →L[ℝ] XL1 ν L)
-    (hfin : ∀ h, ∀ l : Fin L, ∀ n, n ≤ N → toCoeff (ν := ν) (T h) l n = 0) :
-    ‖(A.toCLM (ν := ν)).comp T‖ ≤ A.tailBound * ‖T‖ := by
-  apply ContinuousLinearMap.opNorm_le_bound _
-    (mul_nonneg A.tailBound_nonneg (ContinuousLinearMap.opNorm_nonneg T))
-  intro h
-  show ‖A.toCLM (ν := ν) (T h)‖ ≤ _
-  -- Pi norm: suffices to bound each component
-  refine (pi_norm_le_iff_of_nonneg (mul_nonneg
-    (mul_nonneg A.tailBound_nonneg (ContinuousLinearMap.opNorm_nonneg T))
-    (norm_nonneg h))).2 ?_
-  intro l
-  -- Decompose ‖(A(Th))_l‖ into finite + tail
-  have hdecomp := A.applyX_component_eq_finite_add_tail (ν := ν) (T h) l
-  change ‖A.applyX (ν := ν) (T h) l‖ ≤ _
-  rw [hdecomp]
-  -- Finite part: all input coefficients are zero → actionFinite = 0
-  have h_fin_zero :
-      l1Weighted.mk (A.actionFinite (toCoeff (ν := ν) (T h)) l)
-        (A.actionFinite_mem (ν := ν) (toCoeff (ν := ν) (T h)) l) = 0 :=
-    l1Weighted.ext fun n => by
-      simp only [l1Weighted.mk_apply, l1Weighted.zero_toSeq]
-      exact A.actionFinite_eq_zero_of_coeff_fin_zero _
-        (fun j k => hfin h j k (Nat.lt_succ_iff.mp k.2)) l n
-  rw [h_fin_zero, zero_add]
-  -- Tail part: ≤ tailBound * ‖(Th)_l‖ ≤ tailBound * ‖Th‖ ≤ tailBound * ‖T‖ * ‖h‖
-  have h_tail := A.actionTail_component_norm_le (ν := ν) (T h) l
-  have h_comp_le : ‖(T h) l‖ ≤ ‖T h‖ := norm_le_pi_norm (T h) l
-  have h_op : ‖T h‖ ≤ ‖T‖ * ‖h‖ := ContinuousLinearMap.le_opNorm T h
-  exact h_tail.trans (mul_le_mul_of_nonneg_left
-    (h_comp_le.trans h_op) A.tailBound_nonneg) |>.trans_eq (by ring)
 
-/-- Operator norm domination at system level: if `D` kills finite modes per component
-and agrees with `E` on tail modes per component, then `‖D‖ ≤ ‖E‖`.
-General-L version of `l1Weighted.opNorm_le_of_fin_kill_tail_eq`. -/
-lemma XL1.opNorm_le_of_fin_kill_tail_eq (N : ℕ)
-    (D E : XL1 ν L →L[ℝ] XL1 ν L)
-    (hfin : ∀ h, ∀ l : Fin L, ∀ n, n ≤ N → toCoeff (ν := ν) (D h) l n = 0)
-    (htail : ∀ h, ∀ l : Fin L, ∀ n, N < n →
-      toCoeff (ν := ν) (D h) l n = toCoeff (ν := ν) (E h) l n) :
-    ‖D‖ ≤ ‖E‖ :=
-  ContinuousLinearMap.opNorm_le_bound _ (ContinuousLinearMap.opNorm_nonneg E) fun h =>
-    (pi_norm_le_iff_of_nonneg (mul_nonneg (ContinuousLinearMap.opNorm_nonneg E) (norm_nonneg h))).2
-      fun l => (l1Weighted.norm_le_of_fin_zero_tail_eq ((D h) l) ((E h) l) (N + 1)
-        (fun n hn => hfin h l n (by omega)) (fun n hn => htail h l n (by omega))).trans
-        ((norm_le_pi_norm (E h) l).trans (ContinuousLinearMap.le_opNorm E h))
 
-/-- Z₁ pipeline (general L): if `T` kills finite modes and is dominated by `E` on tail,
-then `‖A.toCLM.comp T‖ ≤ A.tailBound * ‖E‖ ≤ C`. Equation-independent. -/
-lemma SystemBlockDiagData.Z₁_le_of_fin_kill_tail_dom [NeZero L] (N : ℕ)
-    (A : SystemBlockDiagData L N)
-    (T E : XL1 ν L →L[ℝ] XL1 ν L)
-    (hfin : ∀ h, ∀ l : Fin L, ∀ n, n ≤ N → toCoeff (ν := ν) (T h) l n = 0)
-    (htail : ∀ h, ∀ l : Fin L, ∀ n, N < n →
-      toCoeff (ν := ν) (T h) l n = toCoeff (ν := ν) (E h) l n)
-    (C : ℝ) (hC : A.tailBound * ‖E‖ ≤ C) :
-    ‖(A.toCLM (ν := ν)).comp T‖ ≤ C :=
-  (A.norm_comp_of_fin_kill T hfin).trans
-    ((mul_le_mul_of_nonneg_left (XL1.opNorm_le_of_fin_kill_tail_eq N T E hfin htail)
-      A.tailBound_nonneg).trans hC)
 
 /-! ## 7. Z₀ Triangle Combiner (IVP Case)
 
@@ -845,20 +634,6 @@ When the true Fréchet derivative differs from the block-diagonal A† on tail m
 `‖I - A∘DF‖` decomposes as `‖D.toCLM + A.toCLM∘T‖ ≤ ‖D.toCLM‖ + ‖A.toCLM∘T‖`
 where D is the finite defect and T is the tail linearization error. -/
 
-/-- Triangle-inequality combiner for Z₀ when `I - A∘DF = D + A∘T`. -/
-lemma Z₀_norm_le_of_defect_plus_tail_error [NeZero L]
-    {ν : PosReal} {A : SystemBlockDiagData L N}
-    {DF_CLM : XL1 ν L →L[ℝ] XL1 ν L}
-    {D : SystemBlockDiagData L N}
-    {T : XL1 ν L →L[ℝ] XL1 ν L}
-    (hdecomp : ContinuousLinearMap.id ℝ (XL1 ν L) -
-        (A.toCLM (ν := ν)).comp DF_CLM = D.toCLM (ν := ν) + (A.toCLM (ν := ν)).comp T)
-    {Z₀_bnd Z₁_bnd : ℝ}
-    (hZ₀ : ‖D.toCLM (ν := ν)‖ ≤ Z₀_bnd)
-    (hZ₁ : ‖(A.toCLM (ν := ν)).comp T‖ ≤ Z₁_bnd) :
-    Z₀_norm (A.toCLM (ν := ν)) DF_CLM ≤ Z₀_bnd + Z₁_bnd := by
-  show ‖_‖ ≤ _; rw [hdecomp]
-  exact (norm_add_le _ _).trans (add_le_add hZ₀ hZ₁)
 
 /-! ## 8. Finite Block Injectivity From Defect Norm < 1
 

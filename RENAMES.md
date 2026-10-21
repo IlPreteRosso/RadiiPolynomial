@@ -2375,7 +2375,2770 @@ new lemmas; `action_comp_finite` and `action_fin_eq_sum_mulVec` stay (callers in
   contract.
 
 
+## WN-1 — submultiplicativity and independent unit normalization
+
+API-v2 copy change: full copied build, all 630 saved endpoint-type/axiom checks, and the independent normalization controls passed. The frozen pre-repair changed-module/control audit recorded 643 checked declarations on the three standard axioms, twelve actual compatibility producer selections, and priorities 1100/1000. The repaired copy passed a fresh default build (4,423 jobs), the unchanged saved 630-endpoint type/axiom gate, and the changed-module/control audit with 636 checked declarations (564 imported + 68 controls/helpers + 4 support). Four unused normalization instances were removed and nine test witnesses changed to theorem form. The initial prediction of 639 omitted three lazily generated `pow2Z.eq_1` declarations that disappear when their only `simp [pow2Z]` requests are removed; the failed prediction and all prior evidence are retained. All surviving imported types, universe parameters and axiom sets are unchanged; six local scratch-control types differ only in pinned hygienic binder names caused by the audit file relocation. All twelve stored producer expressions remain identical. The rebuilt production/default and FT stages have no warnings; the external diagnostic leaf retains its 26 pre-existing control warnings. Fresh evidence and the exact reconciliation are under `REPAIR_v2/`; the final packet is `freeze_v2/`. Independent peer acceptance remains separate; evidence is under the WN-1 directory named next. Source contract: `exterior/tmp/lp_api_campaign_20261017/codex/WEIGHT_NORMALIZATION_SPLIT_v1/BRIEF.md`; exact eleven-file candidate: its `CANDIDATE.json`. This entry supersedes the normalization-field rows in E1 and the `instNormOneClass` assumption recorded in E1b; those historical records stay intact.
+
+| Old declaration or contract | Canonical replacement or revised contract | Kind |
+|---|---|---|
+| `RadiiPolynomial.lpOneAlgWeightMul`, `RadiiPolynomial.lpOneMulAlgWeightMul` | Submultiplicativity only; the identity-weight equations are removed. Their extensions by weight ≥ 1 also carry no normalization. | Weakened contract |
+| `RadiiPolynomial.SubMulWeightBase`, `RadiiPolynomial.SubMulWeight` | Positive submultiplicativity, with weight ≥ 1 in the latter; neither contains normalization. Existing index assumptions stay fixed. | Weakened contract |
+| `RadiiPolynomial.lpOneAlgWeightMul.weight_zero` | `RadiiPolynomial.lpOneAlgWeightNormalized.weight_zero`, supplied independently for the actual chosen frame. | Removed projection; no alias |
+| `RadiiPolynomial.SubMulWeightBase.weight_zero` | `RadiiPolynomial.NormalizedWeight.weight_zero`; the new Prop class assumes only `Zero M`, independently of positivity and submultiplicativity. | Removed projection; no alias |
+| `RadiiPolynomial.lpOneMulAlgWeightMul.weight_one` | An explicit identity-weight equation where needed. The former projection-only tests now take that equation as a hypothesis; WN-1 adds no multiplicative normalization class. | Removed projection; no alias |
+| `RadiiPolynomial.lpOneAlg.instNormOneClass` | Uses `lpOneAlgWeightNormalized` instead of `lpOneAlgWeightMul`; still needs no convolution compatibility. `lpOneAlg.norm_one_eq : ‖1‖ = weight 0` needs neither weight class. | Revised hypothesis |
+| Standard-frame normalization previously bundled into `WeightedScalar.instLpOneAlgWeightMul` | `RadiiPolynomial.WeightedScalar.instLpOneAlgWeightNormalized` from `PosWeight w` and `NormalizedWeight w`. The existing submultiplicativity bridge retains its own service. | Split instance |
+| Geometric, bilateral and bordered constructors' bundled `weight_zero` fields | Independent `ScaledReal.instNormalizedWeight` and `ScaledRealZ.instNormalizedWeight`. Bilateral normalization holds for every positive radius; its submultiplicativity still requires radius ≥ 1. The unused bordered normalization instance is removed: the saved endpoint trail reaches no norm-one unit on `l1Bordered`, whose automatic ring is not the physical Chebyshev product. The equation `borderedWeight_zero` remains. | Split instances; unused bordered instance removed |
+
+The convolution compatibility abstraction and both producers, the physical norm, product, ring/algebra structures and route priorities retain their existing roles. Ring and normed-algebra consumers need no identity-weight normalization. Norm-one consumers receive the independent witness. All affected FT constructors and normalization probes migrate directly; no compatibility layer is introduced.
+
+
 ## PLANNED (deferred; logged 2026-10-15 on the user's instruction — executes with the ℓ^p/ℓ² revamp, not before)
 | old | new | file | step | reason |
 |---|---|---|---|---|
-| `l1Weighted.evalContinuousAlgHom` (+ `_apply`, `_gen`, `_comp_radiusRestrict` faces) | the lift face `l1Weighted.aeval_of_norm_le ν z hz` / `evalC` (C = 1 evaluation through `liftAlgHom → geomAeval → geomAeval_of_norm_le`) | `Analysis/SequenceSpace/Geometric/Evaluation.lean:301` (def; multiplicativity by Mertens) | revamp (WeightedLp/ℓ² adoption) | OLDER ARROW that does not factor through the lift. `Aeval.lean:367–371` (`aeval_eq_evalContinuousAlgHom`) proves it EQUAL to the lift face by uniqueness on the generator, so retiring it is a re-route, not a statement change. Consumers to re-route: `Applications/IVP/Taylor/Boundary.lean:22` (`taylorBoundaryCharacter`), `Applications/IVP/Chebyshev/Boundary.lean`, `CrossGeometry/Joukowski.lean` (:373, :393, :542, :561), `CrossGeometry/ChebyshevTaylor.lean` (:121–133), `Geometric/RadiusRestriction.lean`, `Geometric/EvalC.lean:68` (the bridge itself). Keep the bridge theorem as the migration witness until the last consumer moves; then RETIRE with the replacement named here. Model of the target shape: `Applications/IVP/Taylor/ComplexTime.lean:29–33` `complexEval_evalBanach = CompPoly.map_evalBanach (evalC ν z hz).toAlgHom p a` → `Examples/IVP/Taylor/Example83/ComplexTime.lean:38` `lorenz_complex_ivp`. User's words (2026-10-15): "this should be logged as deprecate when we revamp the codebase to include lp Mul and l2 stuff". |
+| `l1Weighted.evalContinuousAlgHom` (+ `_apply`, `_gen`, `_comp_radiusRestrict` faces) | the lift face `l1Weighted.aeval_of_norm_le ν z hz` / `evalC` (C = 1 evaluation through `liftAlgHom → geomAeval → geomAeval_of_norm_le`) | `Analysis/SequenceSpace/Geometric/Evaluation.lean:301` (def; multiplicativity by Mertens) | **EXECUTED (U25)**; historical revamp (WeightedLp/ℓ² adoption) plan ([U25 section](#u25--one-universal-geometric-evaluator)) | **Historical rationale and then-current source locators:** OLDER ARROW that does not factor through the lift. `Aeval.lean:367–371` (`aeval_eq_evalContinuousAlgHom`) proves it EQUAL to the lift face by uniqueness on the generator, so retiring it is a re-route, not a statement change. Consumers to re-route: `Applications/IVP/Taylor/Boundary.lean:22` (`taylorBoundaryCharacter`), `Applications/IVP/Chebyshev/Boundary.lean`, `CrossGeometry/Joukowski.lean` (:373, :393, :542, :561), `CrossGeometry/ChebyshevTaylor.lean` (:121–133), `Geometric/RadiusRestriction.lean`, `Geometric/EvalC.lean:68` (the bridge itself). Keep the bridge theorem as the migration witness until the last consumer moves; then RETIRE with the replacement named here. Model of the target shape: `Applications/IVP/Taylor/ComplexTime.lean:29–33` `complexEval_evalBanach = CompPoly.map_evalBanach (evalC ν z hz).toAlgHom p a` → `Examples/IVP/Taylor/Example83/ComplexTime.lean:38` `lorenz_complex_ivp`. User's words (2026-10-15): "this should be logged as deprecate when we revamp the codebase to include lp Mul and l2 stuff". |
+
+## W2 integration: carrier and completeness (2026-10-19)
+
+- Added the generic `WeightedLp.Carrier` and the minimal `WeightedLp.Module` services to the API copy as integration modules; public facade unchanged until their consumer landing.
+- Moved `exponent_toReal_pos` from the scratch RowBound file into Carrier. The unused RowBound API stays in the probe record; no forwarding alias.
+- Kept coefficient reconstruction and fibre/carrier completeness from scratch Module; omitted index-group symbol-action sections until the Fourier consumer reaches them. Completeness now assumes `NormedField` and `CompleteSpace` instead of `RCLike`.
+- Removed diagnostic commands from the library modules; pinned originals and type/axiom evidence are under `exterior/api_v2/probes/records/W2_originals` and the campaign W2 integration record. R1/R2 each build and pass all 630 saved endpoint-type and unchanged-axiom checks.
+
+
+## W2 R4: Taylor regression witness (2026-10-19)
+
+The accepted scratch chain is relocated to the API copy. Its library services stay outside the public facade pending the named production-consumer gate; the separate ℓ² witness lives under `Examples/tests/WL/Example81L2`. The generic tail kernel and its Taylor return now have separate owning modules. `Differential` remains example-local. No compatibility aliases are introduced.
+
+| Previous public name | Current public name |
+|---|---|
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Araw` | `Example81.L2.Araw` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.DFraw` | `Example81.L2.DFraw` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Data.A_col` | `Example81.L2.Data.A_col` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Data.DF_col` | `Example81.L2.Data.DF_col` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Data.abar_0` | `Example81.L2.Data.abar_0` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Ddiag` | `Example81.L2.Ddiag` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.H_aStar` | `Example81.L2.H_aStar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.H_eq_logistic` | `Example81.L2.H_eq_logistic` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.H_eq_zero_iff` | `Example81.L2.H_eq_zero_iff` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.aStar` | `Example81.L2.aStar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.aStar_mem` | `Example81.L2.aStar_mem` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.abs_xStar_sub_le` | `Example81.L2.abs_xStar_sub_le` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.embedXL1` | `Example81.L2.embedXL1` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.eqOn_xStar_of_solution` | `Example81.L2.eqOn_xStar_of_solution` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.eqOn_x_analytic_of_isBallSolution` | `Example81.L2.eqOn_x_analytic_of_isBallSolution` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.eq_aStar_of_H_eq_zero` | `Example81.L2.eq_aStar_of_H_eq_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.eq_of_H_eq_zero` | `Example81.L2.eq_of_H_eq_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.example81_l2_solution` | `Example81.L2.example81_l2_solution` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.example81_l2_solution_existsUnique` | `Example81.L2.example81_l2_solution_existsUnique` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.example81_l2_solution_spec` | `Example81.L2.example81_l2_solution_spec` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.hasDerivAt_sumSeries_of_H_eq_zero` | `Example81.L2.hasDerivAt_sumSeries_of_H_eq_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.hasDerivAt_xStar` | `Example81.L2.hasDerivAt_xStar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.isBallSolution_aStar` | `Example81.L2.isBallSolution_aStar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.ivpCoeffs_embedXL1_eq_zero` | `Example81.L2.ivpCoeffs_embedXL1_eq_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.logistic_recurrence_unique` | `Example81.L2.logistic_recurrence_unique` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.norm_embedXL1_aStar_le` | `Example81.L2.norm_embedXL1_aStar_le` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.sumSeries` | `Example81.L2.sumSeries` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.sumSeries_eq_x_analytic` | `Example81.L2.sumSeries_eq_x_analytic` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.sumSeries_zero_of_H_eq_zero` | `Example81.L2.sumSeries_zero_of_H_eq_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.toCoeff_embedXL1` | `Example81.L2.toCoeff_embedXL1` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.trajRadius` | `Example81.L2.trajRadius` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.xStar` | `Example81.L2.xStar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.FunctionSpace.xStar_zero` | `Example81.L2.xStar_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.H` | `Example81.L2.H` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.H_apply` | `Example81.L2.H_apply` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.L` | `Example81.L2.L` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.L_comp_P` | `Example81.L2.L_comp_P` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.L_eq_id_sub_Pi_S` | `Example81.L2.L_eq_id_sub_Pi_S` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Lhead` | `Example81.L2.Lhead` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.LheadQ` | `Example81.L2.LheadQ` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.LheadQ_entries` | `Example81.L2.LheadQ_entries` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.LheadQ_mul_PheadQ` | `Example81.L2.LheadQ_mul_PheadQ` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Lhead_entries` | `Example81.L2.Lhead_entries` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Lhead_mul_Phead` | `Example81.L2.Lhead_mul_Phead` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.N` | `Example81.L2.N` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.P` | `Example81.L2.P` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.P_H_abar` | `Example81.L2.P_H_abar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.P_comp_L` | `Example81.L2.P_comp_L` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.P_comp_Q` | `Example81.L2.P_comp_Q` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.P_delta_eleven` | `Example81.L2.P_delta_eleven` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.P_delta_zero_coeff_two` | `Example81.L2.P_delta_zero_coeff_two` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.P_injective` | `Example81.L2.P_injective` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.P_injective_bound` | `Example81.L2.P_injective_bound` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.P_norm_le` | `Example81.L2.P_norm_le` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.PcolSupport` | `Example81.L2.PcolSupport` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Phead` | `Example81.L2.Phead` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.PheadQ` | `Example81.L2.PheadQ` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.PheadQ_col_bound` | `Example81.L2.PheadQ_col_bound` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.PheadQ_mul_LheadQ` | `Example81.L2.PheadQ_mul_LheadQ` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.PheadQ_row_bound` | `Example81.L2.PheadQ_row_bound` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Phead_col_bound` | `Example81.L2.Phead_col_bound` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Phead_mul_Lhead` | `Example81.L2.Phead_mul_Lhead` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Phead_row_bound` | `Example81.L2.Phead_row_bound` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Pi` | `Example81.L2.Pi` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Pi_comp_S_comp_Q` | `Example81.L2.Pi_comp_S_comp_Q` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Pkernel` | `Example81.L2.Pkernel` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.PkernelQ` | `Example81.L2.PkernelQ` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.PkernelQ_column_zero_sq` | `Example81.L2.PkernelQ_column_zero_sq` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Pkernel_col_support` | `Example81.L2.Pkernel_col_support` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Pkernel_fin` | `Example81.L2.Pkernel_fin` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Pkernel_row_support` | `Example81.L2.Pkernel_row_support` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Pkernel_schur` | `Example81.L2.Pkernel_schur` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.ProwSupport` | `Example81.L2.ProwSupport` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.PschurCLM` | `Example81.L2.PschurCLM` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.PschurCLM_eq_P` | `Example81.L2.PschurCLM_eq_P` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Q` | `Example81.L2.Q` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Q_comp_P` | `Example81.L2.Q_comp_P` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.S` | `Example81.L2.S` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.S_eq` | `Example81.L2.S_eq` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.T` | `Example81.L2.T` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.T_eq_tailIntegratedProduct` | `Example81.L2.T_eq_tailIntegratedProduct` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.T_eq_tailKernelCLM` | `Example81.L2.T_eq_tailKernelCLM` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.X` | `Example81.L2.X` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Y0_bound` | `Example81.L2.Y0_bound` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Z0_bound` | `Example81.L2.Z0_bound` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Z0_identity` | `Example81.L2.Z0_identity` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Z0_slot` | `Example81.L2.Z0_slot` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Z1_bound` | `Example81.L2.Z1_bound` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Z2_ball_bound` | `Example81.L2.Z2_ball_bound` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Z2_difference_bound` | `Example81.L2.Z2_difference_bound` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.Z2_slot` | `Example81.L2.Z2_slot` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.abar` | `Example81.L2.abar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.abarQ` | `Example81.L2.abarQ` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.beta` | `Example81.L2.beta` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.betaQ` | `Example81.L2.betaQ` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.betaQ_explicit` | `Example81.L2.betaQ_explicit` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff` | `Example81.L2.coeff` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_H_abar` | `Example81.L2.coeff_H_abar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_H_abar_eleven_ne_zero` | `Example81.L2.coeff_H_abar_eleven_ne_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_H_abar_head` | `Example81.L2.coeff_H_abar_head` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_H_abar_of_gt` | `Example81.L2.coeff_H_abar_of_gt` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_P_delta` | `Example81.L2.coeff_P_delta` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_Q` | `Example81.L2.coeff_Q` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_S` | `Example81.L2.coeff_S` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_S_fin` | `Example81.L2.coeff_S_fin` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_T` | `Example81.L2.coeff_T` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_T_range` | `Example81.L2.coeff_T_range` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_abar` | `Example81.L2.coeff_abar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_abar_fin` | `Example81.L2.coeff_abar_fin` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_abar_of_gt` | `Example81.L2.coeff_abar_of_gt` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_beta` | `Example81.L2.coeff_beta` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.coeff_beta_of_gt` | `Example81.L2.coeff_beta_of_gt` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.contraction_value` | `Example81.L2.contraction_value` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.delta` | `Example81.L2.delta` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.differentiable_H` | `Example81.L2.differentiable_H` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.example81_l2_coefficient_zero` | `Example81.L2.example81_l2_coefficient_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.example81_l2_coefficient_zero_nondegenerate` | `Example81.L2.example81_l2_coefficient_zero_nondegenerate` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.fderiv_H_abar` | `Example81.L2.fderiv_H_abar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.hasFDerivAt_H` | `Example81.L2.hasFDerivAt_H` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.hasFDerivWithinAt_H` | `Example81.L2.hasFDerivWithinAt_H` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.kernel` | `Example81.L2.kernel` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.kernel_11_10` | `Example81.L2.kernel_11_10` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.kernel_11_9` | `Example81.L2.kernel_11_9` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.kernel_12_10` | `Example81.L2.kernel_12_10` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.kernel_13_11` | `Example81.L2.kernel_13_11` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.kernel_row_finite` | `Example81.L2.kernel_row_finite` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.kernel_row_summable` | `Example81.L2.kernel_row_summable` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.normFact` | `Example81.L2.normFact` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.normPosWeight` | `Example81.L2.normPosWeight` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.norm_P_H_abar_pos` | `Example81.L2.norm_P_H_abar_pos` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.norm_T_le` | `Example81.L2.norm_T_le` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.norm_comp_fderiv_H_sub_le` | `Example81.L2.norm_comp_fderiv_H_sub_le` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.norm_comp_fderiv_H_sub_le_of_norm_le` | `Example81.L2.norm_comp_fderiv_H_sub_le_of_norm_le` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.norm_sq_P_H_abar` | `Example81.L2.norm_sq_P_H_abar` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.norm_sq_P_delta_zero` | `Example81.L2.norm_sq_P_delta_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.not_P_norm_le_one` | `Example81.L2.not_P_norm_le_one` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.one_lt_norm_P_delta_zero` | `Example81.L2.one_lt_norm_P_delta_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.radii_neg` | `Example81.L2.radii_neg` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.radii_value` | `Example81.L2.radii_value` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.residualCoeff` | `Example81.L2.residualCoeff` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.residualFact` | `Example81.L2.residualFact` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.residualPosWeight` | `Example81.L2.residualPosWeight` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.symbolMass_beta` | `Example81.L2.symbolMass_beta` |
+| `RadiiPolynomial.WeightedLpCodex.Example81L2.tailKernel_eq_kernel` | `Example81.L2.tailKernel_eq_kernel` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.Pi` | `RadiiPolynomial.WeightedLp.WithHead.Pi` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.Pi_comp_Pi` | `RadiiPolynomial.WeightedLp.WithHead.Pi_comp_Pi` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.Pi_comp_Q` | `RadiiPolynomial.WeightedLp.WithHead.Pi_comp_Q` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.Q` | `RadiiPolynomial.WeightedLp.WithHead.Q` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.Q_comp_Pi` | `RadiiPolynomial.WeightedLp.WithHead.Q_comp_Pi` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.Q_comp_Q` | `RadiiPolynomial.WeightedLp.WithHead.Q_comp_Q` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.Q_comp_withHead` | `RadiiPolynomial.WeightedLp.WithHead.Q_comp_withHead` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.Xp` | `RadiiPolynomial.WeightedLp.WithHead.Xp` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.coeff_Pi` | `RadiiPolynomial.WeightedLp.WithHead.coeff_Pi` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.coeff_Pi_fin` | `RadiiPolynomial.WeightedLp.WithHead.coeff_Pi_fin` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.coeff_Pi_of_gt` | `RadiiPolynomial.WeightedLp.WithHead.coeff_Pi_of_gt` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.coeff_Q_fin` | `RadiiPolynomial.WeightedLp.WithHead.coeff_Q_fin` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.coeff_Q_of_gt` | `RadiiPolynomial.WeightedLp.WithHead.coeff_Q_of_gt` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.coeff_headCore_fin` | `RadiiPolynomial.WeightedLp.WithHead.coeff_headCore_fin` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.coeff_headCore_of_gt` | `RadiiPolynomial.WeightedLp.WithHead.coeff_headCore_of_gt` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.coeff_withHead_fin` | `RadiiPolynomial.WeightedLp.WithHead.coeff_withHead_fin` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.coeff_withHead_of_gt` | `RadiiPolynomial.WeightedLp.WithHead.coeff_withHead_of_gt` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.headCore` | `RadiiPolynomial.WeightedLp.WithHead.headCore` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.withHead` | `RadiiPolynomial.WeightedLp.WithHead.withHead` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.withHead_comp` | `RadiiPolynomial.WeightedLp.WithHead.withHead_comp` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.withHead_comp_Q` | `RadiiPolynomial.WeightedLp.WithHead.withHead_comp_Q` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.withHead_one` | `RadiiPolynomial.WeightedLp.WithHead.withHead_one` |
+| `RadiiPolynomial.WeightedLpCodex.FiniteBlock.withHead_zero` | `RadiiPolynomial.WeightedLp.WithHead.withHead_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.Tests.H` | `Example81.L2.Logistic.H` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.Tests.H_eq_zero_iff` | `Example81.L2.Logistic.H_eq_zero_iff` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.Tests.H_half_delta_half_ne_zero` | `Example81.L2.Logistic.H_half_delta_half_ne_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.Tests.coeff_H_succ` | `Example81.L2.Logistic.coeff_H_succ` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.Tests.coeff_H_zero` | `Example81.L2.Logistic.coeff_H_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.Tests.q` | `Example81.L2.Logistic.q` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.X` | `RadiiPolynomial.WeightedLp.Taylor.X` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.coeff` | `RadiiPolynomial.WeightedLp.Taylor.coeff` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.coeff_integratedProduct_succ` | `RadiiPolynomial.WeightedLp.Taylor.coeff_integratedProduct_succ` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.coeff_integratedProduct_zero` | `RadiiPolynomial.WeightedLp.Taylor.coeff_integratedProduct_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.coeff_integrationCLM_succ` | `RadiiPolynomial.WeightedLp.Taylor.coeff_integrationCLM_succ` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.coeff_integrationCLM_zero` | `RadiiPolynomial.WeightedLp.Taylor.coeff_integrationCLM_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.delta` | `RadiiPolynomial.WeightedLp.Taylor.delta` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.differentiable_quadraticMap` | `Example81.L2.Differential.differentiable_quadraticMap` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.differentiable_residual` | `Example81.L2.Differential.differentiable_residual` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.fderiv_quadraticMap` | `Example81.L2.Differential.fderiv_quadraticMap` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.fderiv_quadraticMap_zero` | `Example81.L2.Differential.fderiv_quadraticMap_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.fderiv_residual` | `Example81.L2.Differential.fderiv_residual` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.fderiv_residual_zero` | `Example81.L2.Differential.fderiv_residual_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.geoPos` | `RadiiPolynomial.WeightedLp.Taylor.geoPos` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.geoWeight` | `RadiiPolynomial.WeightedLp.Taylor.geoWeight` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.hasFDerivAt_quadraticMap` | `Example81.L2.Differential.hasFDerivAt_quadraticMap` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.hasFDerivAt_residual` | `Example81.L2.Differential.hasFDerivAt_residual` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.integratedProduct` | `RadiiPolynomial.WeightedLp.Taylor.integratedProduct` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.integratedProduct_delta_zero` | `RadiiPolynomial.WeightedLp.Taylor.integratedProduct_delta_zero` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.integratedProduct_single_single` | `RadiiPolynomial.WeightedLp.Taylor.integratedProduct_single_single` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.integratedProduct_symm` | `RadiiPolynomial.WeightedLp.Taylor.integratedProduct_symm` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.integrationCLM` | `RadiiPolynomial.WeightedLp.Taylor.integrationCLM` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.norm_comp_fderiv_residual_sub_le` | `Example81.L2.Differential.norm_comp_fderiv_residual_sub_le` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.norm_comp_fderiv_residual_sub_le_of_norm_le` | `Example81.L2.Differential.norm_comp_fderiv_residual_sub_le_of_norm_le` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.norm_delta` | `RadiiPolynomial.WeightedLp.Taylor.norm_delta` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.norm_fderiv_quadraticMap_sub_le` | `Example81.L2.Differential.norm_fderiv_quadraticMap_sub_le` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.norm_integratedProduct_apply_le` | `RadiiPolynomial.WeightedLp.Taylor.norm_integratedProduct_apply_le` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.norm_integratedProduct_eq` | `RadiiPolynomial.WeightedLp.Taylor.norm_integratedProduct_eq` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.norm_integratedProduct_le` | `RadiiPolynomial.WeightedLp.Taylor.norm_integratedProduct_le` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.norm_integratedProduct_left_le` | `RadiiPolynomial.WeightedLp.Taylor.norm_integratedProduct_left_le` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.norm_integrationCLM_eq` | `RadiiPolynomial.WeightedLp.Taylor.norm_integrationCLM_eq` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.norm_sq_eq_tsum` | `RadiiPolynomial.WeightedLp.Taylor.norm_sq_eq_tsum` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.not_bound_below_radius` | `RadiiPolynomial.WeightedLp.Taylor.not_bound_below_radius` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.quadraticMap` | `Example81.L2.Differential.quadraticMap` |
+| `RadiiPolynomial.WeightedLpCodex.Taylor.residual` | `Example81.L2.Differential.residual` |
+
+
+### W2 scalar and consumer-premise correction
+
+Schur construction and coordinate laws now use `NormedField` plus scalar completeness; only operator-norm laws retain `NontriviallyNormedField`. No public names changed. Example81.L2 differential upper-bound laws remove the redundant `0 ≤ M` premise (already implied by `‖P‖ ≤ M`), and the Z₂ consumer no longer supplies that hint. Exact source deltas and before/after types are retained in the W2 integration evidence.
+
+
+## W2 R5: finite-synthesis contract and ℓ¹ adapter (2026-10-19)
+
+The generic finite-p LiftBound construction, atom computation, uniqueness and converse enter together. Specialized unconsumed producers stay in the archived scratch record. WeightedL1Iso bounds an existing arrow without scalar completeness; completeness remains on construction of the extension. `TaylorTailL1` now owns only the coefficient-to-ℓ¹ operator bridge; the family certificate declarations move to `Certification/IVP/TaylorKernel.lean`, keeping their names. Example81.NewAPI preserves the production coefficient and raw-residual theorem statements; its test module moves under `Examples/tests/WL`. No public aliases or facade imports are added. Test projection Q uses the retained WithHead.Q service.
+
+
+### U51: scalar completeness via the frame
+
+`WeightedScalar.instCompleteSpace` now needs `NormedField` and `CompleteSpace` rather than `NontriviallyNormedField`. Its proof transfers completeness through the existing scalar identity frame with bounds `w m` and `(w m)⁻¹`; no extra instance or alias is introduced. The API-copy gate checks a complete trivially normed field as well as ℝ and ℂ.
+
+The finite-p LiftBound extension, generator computation, uniqueness, pointwise bounds and kernel/Schur identification now use `NormedField` with completeness only where a limit is constructed. The six operator-norm faces retain `NontriviallyNormedField`; the separate reverse implication from unconditional to absolute summability retains `RCLike`. Matrix.Continuous and Chebyshev.Galerkin explicitly import their finite-dimensional continuity interface, which no longer arrives through scalar completeness.
+
+## Isolated-copy U10 retirement — 2026-10-19
+
+Earlier migration rows remain provenance, not an inventory of the current copy.
+
+| Old family | Disposition | Capability removed from this copy | Recovery |
+| --- | --- | --- | --- |
+| `Analysis/SequenceSpace/Fourier`, `Applications/Fourier`, `Algebra/Ring/HeadTailIdentities`, `Operators/HeadTail`, FZ tests | Archived to probe; no replacement alias | ℓ¹ exact finite-window/attainment and Γ semilinear defect calculus, head-tail identities | `../probes/records/U10_retired_20261019/` |
+| `Algebra/Rees/Laurent` and RS tests | Retired, no replacement | Filtered Laurent/Rees family, Euler/Γ and finite-core diagonal specialization calculus | Same source/type/axiom archive |
+
+The Fourier ℓ² replacement is a different operator-bound route, not a claim that these exact ℓ¹ capabilities are equivalent or superseded mathematically. Re-entry requires a concrete consumer and a fresh minimality review. Five root import edges were removed; essential classical example paths are preserved. No LIVE source changed; ReferenceBook compatibility is deferred.
+
+## Isolated-copy Fourier ℓ² integration — 2026-10-19
+
+| Source service | Current home | Disposition |
+| --- | --- | --- |
+| Accepted scratch Module and Schur action/diagonal/Laurent faces | `WeightedLp/Module`, `Operators/Schur` | Restore only the consumed services; preserve the weaker M0 frames |
+| CF0–CF4 bilateral product, return map, shared norm split and defect | `WeightedLp/Bilateral/*`, `Operators/{TailDiagonal,HeadProj,TailDefect}` | Selected structural services, no ℓ² convolution algebra |
+| Scratch `Fourier/LinearDefect` four action faces | `Fourier/ConvolutionAction` | Module rename; four public names unchanged; no forwarding alias |
+| Scratch Chebyshev ψ1 helper | `WeightedLp/Operators/TailDiagonal` | Pure real summability/majorant at the neutral owner; no Chebyshev tail import |
+| Scratch Schur `matrixOf` | `WeightedLp/Operators/FiniteBlock` | Exact physical coefficient definition restored as a genuine consumer dependency; generic normed-field frame |
+| CF5a.1 finite matrix/leakage | `WeightedLp/Operators/FiniteBlock` | Composition before modulus; existing-arrow norm bound no longer assumes scalar completeness |
+| CF5a.2/CF5b Duffing coefficient endpoint | `Examples/Fourier/Duffing/{IkData,Numbers,Algebra,Certificate}` | Namespace `FourierDuffing`, numerical namespace `.Numbers`, terminal namespace `.Certificate`; four coefficient endpoints, no C² reconstruction |
+| Phantom forcing parameter of the head `Cert` | `FourierDuffing.Cert c₁ c₂ N ν` | c₃ removed only from this structure; retained in forcing, residual hypotheses and equation |
+
+Exact selected-head provenance and parent repairs are recorded under
+`exterior/tmp/lp_api_campaign_20261017/codex/W2_INTEGRATION_v1/` at the workspace root.
+The old ℓ¹/Rees stack remains in the recoverable U10 archive; its exact-norm capabilities are
+not claimed to be interchangeable with the ℓ² operator upper bounds. The M0 Taylor witness
+chains remain explicit tests pending their production-consumer decision.
+
+M1 facade correction: the generic `Operators/LiftBound` contract remains SHIP-PENDING U37a outside the shipped root, as required by MERGE_EXECUTION_PLAN §1.3/D10. The Fourier chain consumes the independent Schur producer and weighted ℓ¹ algebra action; no artificial liftCLM edge is inserted.
+
+## M1 fix-forward — direct series and retained specifications (2026-10-19)
+
+- Removed `Fourier.L`, `Fourier.coeff_L`, `Fourier.norm_L_le` and the consumer's
+  `symbolAction₀_eq_L` round trip. `ConvolutionAction` supplies geometric moderation only.
+- Renamed `coeff_incl_L`, `prodCLM_eq_incl_L`, `two_smul_prodCLM_eq_incl_L` to their
+  `*_symbolAction₀` names and stated them directly on the operator series; no aliases.
+- Moved `coeff_sum` and `coeff_sum_single` from LiftBound to Carrier, with their original
+  arbitrary-p NormedField statements. FiniteBlock's duplicate `coeff_finset_sum_single` is retired.
+- Moved `dense_span_single` and the three p=∞ boundary faces to LiftBound, outside the root
+  while the generic contract is pending. The boundary is a contract condition, not a p=∞ consumer.
+- Moved `norm_kernelCLM_two_le` and `schurBound_weightedScalar_iff` into Taylor/TailKernel,
+  preserving its pending D6 consumers; NormBounds now imports the owning module.
+- Parked the named unused wrapper/producer faces, including the diagonal Schur trio, in the
+  exact before/span archives under W2_INTEGRATION_v1/M1_FIX_v1. Per-name actions and replacements
+  are in CORE/DECLARATION_DISPOSITIONS.json, CONSUMER/REMOVED.json and NAME_MAP.json.
+- The complete Module lift remains a contract of `symbolAction₀` under submultiplicativity,
+  with F=0 where no actual endpoint reaches it. It is not counted as a synthetic consumer gain.
+- Weakened both Quadratic Lipschitz bounds to NontriviallyNormedField + CompleteSpace, with
+  unchanged numerical bounds. The four closed Duffing statements, numerical data and radii are unchanged.
+
+## Early U37a — production kernel-column route (isolated-copy migration record)
+
+| Before | After | Disposition |
+|---|---|---|
+| Certification/IVP/TaylorKernel F6 | Certification/IVP/Taylor, same retained FQNs | Real move; staging owner retires only after production/AllGenerated pass; no shim |
+| StdIVPData column/kernel assembly copies | Z₁_le_of_pairBound and its private sign helper | Both old bound statements use one assembly; no third proof copy |
+| colSupQ_nonneg / kerColMaxQ_nonneg | Exact source recovery spans | Unused after assembly replacement; private pair-bound sign test supplies the needed sign |
+| ChecksZ₁By .column → ChecksZ₁col/Z₁col_sound | ChecksZ₁ker/Z₁ker_sound | CHANGED-SUBST; no unconditional nonpositive-weight equivalence claim |
+| Example81.Cert.z1_checks / Z₁_le_exact | Same names; kernel predicate/soundness | Production statements/data/Y₀ proof unchanged; original630 pin classification remains an execution gate |
+| Tests.TY.all81 / main81 | Same active test and generic call | Generated predicate substitution recorded; endpoint type preserved |
+| Examples/tests/WL/Example81L1NewAPI | Real production Certificate and active AllGenerated | Retire duplicate only after validation; recoverable source/statement controls, no lower-axiom Y₀ adoption claim |
+
+The original630 baseline and old frozen controls are immutable. Generic C1/C2/p=∞ controls
+remain independently checked. The D6 ℓ² Taylor chain remains pending; the old column/Omega
+capabilities are not retired wholesale. The candidate retirement actions are not execution
+receipts; parent records the actual before/after generation and per-theorem axiom result.
+
+The private `z1_checks` implementation row is classified as CHANGED-SUBST: the executed census checks 629 unchanged saved types and one evidence-only transport of that private row to its original saved type, with all 630 original axiom sets unchanged. This is not a claim of 630 direct definitional type preservations. The original oracle and failed resource-limit runs remain immutable. The transport is not in the library. Complete declaration comparison covers 222 declarations in five current owners, with the seven-to-five owner/retirement mapping explicit. The recovery and post-retirement validation records are under `codex/W2_INTEGRATION_v1/EARLY_U37A_v1/` in the local campaign evidence.
+
+## Post-U37a M1-PARK successor (scoped migration)
+
+| Before | After | Disposition |
+|---|---|---|
+| Carrier.invWeightSeq / norm_apply_invWeightSeq / norm_equiv_inv_weight | Operators/LiftBound, same FQNs | Exact move of the witness and necessary norm support for the generic finite-p boundary; no alias |
+| Carrier.invWeightSeq_apply / coeff_invWeightSeq | Recoverable exact source/type record | Unused coordinate views parked under F1 |
+| TailDiagonal.norm_tailDiagInf_eq and its exclusively used attainment support | Recoverable exact source/type record | Proved in the frozen records; parked from shipped API under N-a |
+| TailDiagonal.norm_tailDiagInf_le and its construction/coordinate/upper-bound support | Same declarations and proofs | Actual Fourier upper-bound route unchanged |
+
+This supersedes the earlier exact-attainment contract/support disposition only. Historical
+packets, probes, audit tables and FINAL_FIX1.json retain their original bytes; consult the
+separate M1_PARK successor status note. No numerical data, upper bound, physical endpoint or
+U37a proof route is changed by this migration.
+
+
+## U32 — one realization chain from a proved evaluator bound
+
+The generic chain takes `C : NNReal` and a proved uniform bound for the existing evaluation CLM. The default and contractive polynomial sockets select bounds 2 and 1 internally. The canonical coefficient witness also supplies the analytic socket.
+
+| Before | After | Disposition |
+|---|---|---|
+| `ChebyshevIVP.eval_traj_in_closedBall` | `ChebyshevIVP.eval_traj_in_closedBall_of_evalBound` | Merged into the generic evaluator-bound service; existing polynomial socket statements retained |
+| `ChebyshevIVP.eval_traj_in_closedBall_of_two_le` | `ChebyshevIVP.eval_traj_in_closedBall_of_evalBound` | Merged into the generic evaluator-bound service; existing polynomial socket statements retained |
+| `ChebyshevIVP.StdChebIVPData.x_sol_mem_closedBall` | `ChebyshevIVP.StdChebIVPData.x_sol_mem_closedBall_of_evalBound` | Merged into the generic evaluator-bound service; existing polynomial socket statements retained |
+| `ChebyshevIVP.StdChebIVPData.x_sol_mem_closedBall_of_two_le` | `ChebyshevIVP.StdChebIVPData.x_sol_mem_closedBall_of_evalBound` | Merged into the generic evaluator-bound service; existing polynomial socket statements retained |
+| `ChebyshevIVP.StdChebIVPData.x_sol_isSolution` | `ChebyshevIVP.StdChebIVPData.x_sol_isSolution_of_evalBound` | Merged into the generic evaluator-bound service; existing polynomial socket statements retained |
+| `ChebyshevIVP.StdChebIVPData.x_sol_isSolution_of_two_le` | `ChebyshevIVP.StdChebIVPData.x_sol_isSolution_of_evalBound` | Merged into the generic evaluator-bound service; existing polynomial socket statements retained |
+| `ChebyshevIVP.StdChebIVPData.solution_eq_canonical` | `ChebyshevIVP.StdChebIVPData.solution_eq_canonical_of_evalBound` | Merged into the generic evaluator-bound service; existing polynomial socket statements retained |
+| `ChebyshevIVP.StdChebIVPData.solution_eq_canonical_of_two_le` | `ChebyshevIVP.StdChebIVPData.solution_eq_canonical_of_evalBound` | Merged into the generic evaluator-bound service; existing polynomial socket statements retained |
+| `ChebyshevIVP.StdChebIVPData.solution_existsUnique` | `ChebyshevIVP.StdChebIVPData.solution_existsUnique_of_evalBound` | Merged into the generic evaluator-bound service; existing polynomial socket statements retained |
+| `ChebyshevIVP.StdChebIVPData.solution_existsUnique_of_two_le` | `ChebyshevIVP.StdChebIVPData.solution_existsUnique_of_evalBound` | Merged into the generic evaluator-bound service; existing polynomial socket statements retained |
+
+The ten generic-core names above are replaced without aliases. `RadiiPolynomial.l1Chebyshev.norm_evalAtCLM_le_of_two_le` exposes the existing sharp pointwise bound as a norm bound for the same CLM. `ChebyshevIVP.StdChebIVPData.exists_canonical_solution_of_compPoly_of_evalBound` derives polynomial structural obligations once for the three retained sockets. The five Example1421 endpoints, coefficient data, radii and competitor class are preserved; the two example source files are unchanged. Execution, actual proof-use and trust evidence: `exterior/tmp/lp_api_campaign_20261017/codex/W2_INTEGRATION_v1/U32_v1/`.
+
+
+### U32 migration follow-up — explicit witness and default-radius service
+
+The retired `StdChebIVPData.solution_existsUnique` maps to `solution_existsUnique_of_evalBound`, whose conclusion is now `∃ xTilde, IsSolution … (x_sol xTilde) ∧ …` rather than `∃ g, IsSolution … g ∧ …`. A former default caller supplies `C = 2` with `l1Chebyshev.norm_evalAtCLM_le`. The retired `solution_existsUnique_of_two_le` maps to the same new canonical-witness conclusion, supplying `C = 1` with `l1Chebyshev.norm_evalAtCLM_le_of_two_le hν`.
+
+The `C = 2` socket is retained for the preserved default `Example1421.Cert.main_solution_existsUnique` radius `2 * (‖abar‖ + r)`. Its retention does not establish an intermediate-weight production consumer.
+
+
+## U15a — retire transport demonstrations and their two Example1421 residues
+
+The following 42 original census roots are RETIRED without replacement. Exact whole source files remain recoverable in the linked archive; [current complete types, raw Names and axioms](../probes/records/U15a_kappa_demo_roots42/evidence/CAPTURE42.jsonl) are pinned in the U15a record. Original ordinals below are zero based and retained without renumbering survivors.
+
+This step removes KappaToy's native-versus-transport comparison and TwinTransport's generic κ-budget/scalar-collapse demonstrations, plus the two residues used only by TwinTransport. Generic non-isometric repricing in Core/Transport remains present pending the separate U15b disposition. No isometric replacement of that capability is claimed. Re-entry requires a concrete consumer and reviewed capability case.
+
+| Original ordinal | Module | Exact original root | Disposition | Replacement | Recovery |
+|---:|---|---|---|---|---|
+| 58 | `RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Certificate` | `Example1421.Cert.margin_clears_gate` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/IVP/Chebyshev/Example1421/Certificate.lean) |
+| 67 | `RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Algebra` | `Example1421.G_diff` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/IVP/Chebyshev/Example1421/Algebra.lean) |
+| 403 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.A` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 404 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.Adag` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 405 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.F'` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 406 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.bside_accepts_half` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 407 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.c` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 408 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.f` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 409 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.f_xBar` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 410 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.fderiv_at_xBar` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 411 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.fderiv_f` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 412 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.fderiv_f_affine` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 413 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.gate_rejects_half` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 414 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hAinj` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 415 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hAnorm` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 416 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hY₀` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 417 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hZ₀` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 418 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hZ₁` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 419 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hZ₂` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 420 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hasFDerivAt_f` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 421 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hdiff` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 422 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hsquare` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 423 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hα` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 424 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.hβ` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 425 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.instFactLeRealOfNatToRealν₂` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 426 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.instFactLtRealOfNatToRealν₂` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 427 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.kdata` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 428 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.kdata_checks` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 429 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.leftMul_one` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 430 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.transported_existsUnique` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 431 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.u` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 432 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.xBar` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 433 | `RadiiPolynomial.Examples.Transport.KappaToy` | `KappaToy.ν₂` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 434 | `RadiiPolynomial.Examples.Transport.TwinTransport` | `TwinTransport.finOneCollapse` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/TwinTransport.lean) |
+| 435 | `RadiiPolynomial.Examples.Transport.TwinTransport` | `TwinTransport.norm_collapse_le` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/TwinTransport.lean) |
+| 436 | `RadiiPolynomial.Examples.Transport.TwinTransport` | `TwinTransport.norm_collapse_symm_le` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/TwinTransport.lean) |
+| 437 | `RadiiPolynomial.Examples.Transport.TwinTransport` | `TwinTransport.twin_scalar_certificate` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/TwinTransport.lean) |
+| 438 | `RadiiPolynomial.Examples.Transport.TwinTransport` | `TwinTransport.twin_transports` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/TwinTransport.lean) |
+| 626 | `RadiiPolynomial.Examples.Transport.KappaToy` | `_private.RadiiPolynomial.Examples.Transport.KappaToy.0.KappaToy.hc` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 627 | `RadiiPolynomial.Examples.Transport.KappaToy` | `_private.RadiiPolynomial.Examples.Transport.KappaToy.0.KappaToy.hx` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 628 | `RadiiPolynomial.Examples.Transport.KappaToy` | `_private.RadiiPolynomial.Examples.Transport.KappaToy.0.KappaToy.hν` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/KappaToy.lean) |
+| 629 | `RadiiPolynomial.Examples.Transport.TwinTransport` | `_private.RadiiPolynomial.Examples.Transport.TwinTransport.0.TwinTransport.expandCLM` | RETIRED (κ) | none | [whole source](../probes/records/U15a_kappa_demo_roots42/source/src/RadiiPolynomial/Examples/Transport/TwinTransport.lean) |
+
+
+## U15b — retain the consumed transport services
+
+The five κ-repricing declarations below are RETIRED without replacement. Their lost service is generic certificate repricing between possibly non-isometric real normed spaces along a supplied commuting square, with bounds `(αY₀, αβZ₀, αβZ₁, αβ²Z₂(β·))`, radius equation `r₀ = βr₁`, target completeness and approximate-inverse injectivity; the margin form uses `β > 0`, and the rational gate proves its numerical premise. Retained metric-isometry zero transport does not replace this repricing service.
+
+The four derivative/Z₂ helpers and linear-isometry convenience face are ARCHIVED to a probe as separate capabilities. The former provide derivative conjugation and local pulled-back Z₂ estimates; the latter supplies a convenience signature over a linear isometry. Re-entry requires a concrete consumer and reviewed capability case. No aliases or new replacement wrappers are introduced.
+
+Complete [old module source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) is retained. Current full elaborated types, raw Names, per-declaration axioms and actual generated-owner inventory are bound in the [U15b typed archive](../probes/records/U15b_core_transport/MANIFEST.json) and its [full fourteen-declaration capture](../probes/records/U15b_core_transport/evidence/TRANSPORT.jsonl). The archive records exactly five RETIRED and five ARCHIVED/probe faces; two kept services and two auxiliaries are contextual evidence, with auxiliary compiler ranges explicitly null.
+
+| Exact original declaration | Disposition | Replacement | Recovery |
+|---|---|---|---|
+| `RadiiPolynomial.transported_radii_identity` | RETIRED (κ) | none | [whole source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) |
+| `RadiiPolynomial.transport_radii_polynomial` | RETIRED (κ) | none | [whole source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) |
+| `RadiiPolynomial.transport_radii_polynomial_of_margin` | RETIRED (κ) | none | [whole source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) |
+| `RadiiPolynomial.gateQ` | RETIRED (κ) | none | [whole source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) |
+| `RadiiPolynomial.gateQ_sound` | RETIRED (κ) | none | [whole source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) |
+| `RadiiPolynomial.hasFDerivAt_conj` | ARCHIVED to probe | none | [whole source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) |
+| `RadiiPolynomial.fderiv_conj_apply` | ARCHIVED to probe | none | [whole source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) |
+| `RadiiPolynomial.Z₂_transport` | ARCHIVED to probe | none | [whole source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) |
+| `RadiiPolynomial.Z₂_transport_lip` | ARCHIVED to probe | none | [whole source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) |
+| `RadiiPolynomial.existsUnique_zero_transport_linear` | ARCHIVED to probe | none | [whole source](../probes/records/U15b_core_transport/source/src/RadiiPolynomial/Core/Transport.lean) |
+
+`RadiiPolynomial.rp_transport_local` and `RadiiPolynomial.existsUnique_zero_transport` are kept byte-for-byte, together with their existing importers. Core.Transport owns no original630 census root, so this adds no original-root retirements to U15a's `587 direct + 1 existing private transport + 42 RETIRED` classification. Actual generated-name changes are recorded separately after compiler enumeration.
+
+
+## U39/K13 — archive inverse T↔U transport and split monotonicity
+
+The exact ChebyshevFromU, BorderedTransport and SplitMonotonicity sections are archived as probes. This removes inverse series/membership/linearity/norm/round-trip and conditioning services, the bordered Banach linear equivalence and compatibility formulas, and the two packaged split-monotonicity/override faces. The retained one-way conversion, integration, physical-carrier equivalence and isometric zero transport do not replace these capabilities. Re-entry requires a concrete consumer and reviewed capability case. No replacement wrapper or alias is added.
+
+The [typed archive](../probes/records/U39_transport_monotonicity/MANIFEST.json), [exact63 compiler-name joins](../probes/records/U39_transport_monotonicity/evidence/SELECTED63.json) and [full297-owner context](../probes/records/U39_transport_monotonicity/evidence/STRUCTURED_INDEX.json) preserve the63 explicit source commands (47 public,16 private) and complete types, raw Names, kinds, axioms and compiler ranges. Only those63 source commands have the direct archive disposition. Unselected context comprises 129 compiler-ranged retained source records and 105 records without compiler ranges. The completed AFTER global checks found 47 unchanged observed profiles and 58 absent names. The absent names were assessed as removed-section support: 32 have stored-value paths from removed source declarations, 5 have reverse type/value paths to removed source declarations, and 21 have qualified compiler-support inferences from simp preprocessing or elaboration. The last group is an explicitly qualified inference, not a stored dependency-path claim; range absence alone establishes neither generation nor survival. Eleven simp registrations and the section-local Fact instance leave with their complete sections.
+
+| Source owner and original head line | Actual compiler declaration | Disposition | Typed/source recovery |
+|---|---|---|---|
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:270` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered.0.RadiiPolynomial.borderedToU_mem` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:307` | `RadiiPolynomial.borderedToU` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:310` | `RadiiPolynomial.borderedToU_toSeq` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:314` | `RadiiPolynomial.borderedToU_add` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:320` | `RadiiPolynomial.borderedToU_smul` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:329` | `RadiiPolynomial.borderedToU_norm_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:391` | `RadiiPolynomial.borderedToU_CLM` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:400` | `RadiiPolynomial.borderedToU_CLM_apply` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:406` | `RadiiPolynomial.borderedToU_nonnegRestrict` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:420` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered.0.RadiiPolynomial.borderedFromU_fiber_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:440` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered.0.RadiiPolynomial.borderedFromU_mem` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:452` | `RadiiPolynomial.borderedFromU` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:457` | `RadiiPolynomial.borderedFromU_toSeq` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:462` | `RadiiPolynomial.borderedFromU_add` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:472` | `RadiiPolynomial.borderedFromU_smul` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:485` | `RadiiPolynomial.nonnegRestrict_chebyshevFromU` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:493` | `RadiiPolynomial.borderedFromU_norm_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:505` | `RadiiPolynomial.borderedToU_borderedFromU` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:513` | `RadiiPolynomial.borderedFromU_borderedToU` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:539` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered.0.RadiiPolynomial.fact_one_le_of_one_lt` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:544` | `RadiiPolynomial.borderedFromU_CLM` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:552` | `RadiiPolynomial.borderedFromU_CLM_apply` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:557` | `RadiiPolynomial.borderedTU_equiv` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:562` | `RadiiPolynomial.borderedTU_equiv_apply` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:565` | `RadiiPolynomial.borderedTU_equiv_symm_apply` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:568` | `RadiiPolynomial.coe_borderedTU_equiv` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:571` | `RadiiPolynomial.coe_borderedTU_equiv_symm` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:584` | `RadiiPolynomial.borderedToU_CLM_norm_mul_borderedFromU_CLM_norm_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean:596` | `RadiiPolynomial.norm_borderedTU_equiv_mul_norm_symm_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/Bordered.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:372` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.one_lt_nu` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:373` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.one_le_nu` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:376` | `RadiiPolynomial.invsq_nonneg` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:378` | `RadiiPolynomial.one_lt_nusq` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:381` | `RadiiPolynomial.invsq_lt_one` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:385` | `RadiiPolynomial.summable_abs_toSeq_shift` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:393` | `RadiiPolynomial.summable_toSeq_shift` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:398` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.chebyshevFromU_seq` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:403` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.chebyshevFromU_seq_ofNat` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:407` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.chebyshevFromU_seq_negSucc` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:413` | `RadiiPolynomial.fromU_row_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:438` | `RadiiPolynomial.fromU_prod_summable` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:459` | `RadiiPolynomial.fromU_marginal_summable` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:468` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.chebyshevFromU_fiber_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:487` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.chebyshevFromU_memℓp` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:511` | `RadiiPolynomial.chebyshevFromU` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:517` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.chebyshevFromU_toSeq` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:521` | `RadiiPolynomial.chebyshevFromU_toSeq_natCast` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:526` | `RadiiPolynomial.chebyshevFromU_toSeq_negSucc` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:530` | `RadiiPolynomial.chebyshevFromU_add` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:549` | `RadiiPolynomial.chebyshevFromU_smul` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:573` | `RadiiPolynomial.chebyshevToU_chebyshevFromU` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:598` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.summable_toRealSeq_even` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:610` | `RadiiPolynomial.chebyshevFromU_chebyshevToU_toSeq` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:636` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.chebyshevFromU_elem_negSucc` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:641` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.chebyshevFromU_elem_natCast_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:648` | `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UConversion.0.RadiiPolynomial.chebyshevFromU_norm_support` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:661` | `RadiiPolynomial.chebyshevFromU_norm_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:708` | `RadiiPolynomial.chebyshevFromU_CLM` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:716` | `RadiiPolynomial.chebyshevFromU_CLM_apply` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:728` | `RadiiPolynomial.chebyshevToU_CLM_norm_mul_chebyshevFromU_CLM_norm_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean:743` | `RadiiPolynomial.chebyshevToU_CLM_comp_chebyshevFromU_CLM` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Analysis/SequenceSpace/Chebyshev/UConversion.lean) |
+| `RadiiPolynomial/Core/Theorem.lean:907` | `RadiiPolynomial.generalRadiiPolynomial_anti_bounds` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Core/Theorem.lean) |
+| `RadiiPolynomial/Core/Theorem.lean:921` | `RadiiPolynomial.general_radii_polynomial_theorem_of_le` | ARCHIVED to probe | [type/raw](../probes/records/U39_transport_monotonicity/evidence/OWNERS.jsonl); [whole source](../probes/records/U39_transport_monotonicity/source/src/RadiiPolynomial/Core/Theorem.lean) |
+
+
+## NORMONE — use the generic normalized algebra API
+
+| Old declaration | Canonical mathematical service | Disposition and recovery |
+|---|---|---|
+| `RadiiPolynomial.l1Weighted.norm_one_eq` | `norm_one` via the existing `lpOneAlg.instNormOneClass` | Retired duplicate hand-tsum lemma. [Actual type and axioms](../probes/records/NORMONE_generic_norm/evidence/OWNERS.jsonl); [whole source](../probes/records/NORMONE_generic_norm/source/src/RadiiPolynomial/Analysis/SequenceSpace/Geometric/Basic.lean). |
+| `RadiiPolynomial.l1Weighted.norm_algebraMap` | Mathlib `norm_algebraMap'` on `l1Weighted ν`, for every `ν : PosReal` | Retired specialized wrapper. [Actual type and axioms](../probes/records/NORMONE_generic_norm/evidence/OWNERS.jsonl); [whole source](../probes/records/NORMONE_generic_norm/source/src/RadiiPolynomial/Analysis/SequenceSpace/Geometric/Basic.lean). The MvPolynomial constant-norm proof calls the generic theorem directly at its unchanged statement. |
+
+The [recovery record](../probes/records/NORMONE_generic_norm/MANIFEST.json) preserves both whole owner sources, the two actual old typed rows and the complete 166-declaration BEFORE context (140 geometric and 26 polynomial); the other 164 records are contextual, including the retained constant-norm theorem. The [executed BEFORE checks](../probes/records/NORMONE_generic_norm/evidence/PARENT_CAPTURE_CHECKS.json) record 4,694 actual and predicted imports, 44,378 unchanged artifact pins and 224 unchanged source/config/doc pins. The [generic proof probe](../probes/records/NORMONE_generic_norm/evidence/BEFORE_PROBE_RESULT.json) passed for all positive radii and explicitly for ν = 1/2. Its six proof roots exclude both retired geometric Names from their actual stored proof/type dependency closure and use `propext`, `Classical.choice` and `Quot.sound`.
+
+The old names retire while the mathematical norm-one and norm-map services remain supplied by the canonical generic API, with no new premise, alias, wrapper or instance. The deferred Ch08 call is `ReferenceBook/Ch08/Sec2Theorem.lean:341`, in private `SystemBoundsPoly.norm_aeval_monomial_le`; its source trail is Hessian/ζ majorant → Lemma 8.2.10 → Theorem 8.2.2 → Theorem 8.2.11. The replacement is `rw [_root_.norm_algebraMap', Real.norm_eq_abs]`; RBC source is unchanged. `algebraMap_apply`, the ℚ action and the distinct generic `lpOneAlg.norm_one_eq` remain unchanged. Neither removed helper owns an original 630-census root.
+
+The later [NORMONE AFTER source status](../probes/records/NORMONE_generic_norm/CURRENT.md) and [acceptance evidence](../probes/records/NORMONE_generic_norm/AFTER_ACCEPTANCE.json) record bilateral source acceptance at freeze `0bfa90b9`. The original archive README, MANIFEST and ARCHIVE_ACCEPTANCE remain immutable creation-time records; their earlier AFTER-pending wording is historical. The accepted premises were already minimal and remain unchanged.
+
+## Z₀ example residue — retain the finite-block and family services
+
+| Old declaration | Disposition | Recovery and retained service |
+|---|---|---|
+| `Example1421.Cert.Z₀_le` (original 630 ordinal 45) | Retired unused example wrapper; no replacement declaration or alias. | [Actual old type and axioms](../probes/records/Z0_example1421_operator_bound/evidence/OWNERS.jsonl); [whole old Certificate source](../probes/records/Z0_example1421_operator_bound/source/src/RadiiPolynomial/Examples/IVP/Chebyshev/Example1421/Certificate.lean). The unchanged `Z₀_finBlockNorm_le`, grid check and family `ChebyshevIVP.StdChebIVPData.Z₀_le` still supply the bound. |
+
+The [recovery record](../probes/records/Z0_example1421_operator_bound/MANIFEST.json) preserves one retirement row, 82 other owner records and five separately labelled endpoint controls. The [executed BEFORE capture checks](../probes/records/Z0_example1421_operator_bound/evidence/PARENT_CAPTURE_CHECKS.json) record 83 actual Certificate declarations (44 with compiler ranges, 39 without), 6,665 actual/predicted imports and 67,130 unchanged artifact pins. Four function/analytic endpoints explicitly pass the retained local finite-block bound; `main_theorem` instead supplies `checksK_data` through `certified_of_checksK`, which reconstructs the same finite-block/operator bound. All numerical data, bounds, radii, endpoint statements and competitor classes are unchanged.
+
+## U31 — one rational block action for Taylor and Chebyshev certificates
+
+| Removed family declaration | Existing canonical service | Recovery |
+|---|---|---|
+| `IVP.actionQ` | `RadiiPolynomial.blockActionQ` with head columns `fun l j k => A_col l j k.val` and tail `(fun _ n => (n : ℚ)⁻¹)` | [Whole old Taylor source](../probes/records/U31_rational_block_action/source/src/RadiiPolynomial/Certification/IVP/Taylor.lean); [typed recovery](../probes/records/U31_rational_block_action/MANIFEST.json). |
+| `ChebyshevIVP.actionQ` | The same `blockActionQ`, with tail `(fun _ n => (2 * (n : ℚ))⁻¹)` | [Whole old Chebyshev source](../probes/records/U31_rational_block_action/source/src/RadiiPolynomial/Certification/IVP/Chebyshev.lean); [typed recovery](../probes/records/U31_rational_block_action/MANIFEST.json). |
+| `IVP.StdIVPData.action_eq_actionQ` | Direct `SystemBlockDiagData.action_eq_blockActionQ` in the Taylor Y₀ soundness proof | [Typed/source recovery](../probes/records/U31_rational_block_action/MANIFEST.json). |
+| `ChebyshevIVP.StdChebIVPData.action_eq_actionQ` | Direct `SystemBlockDiagData.action_eq_blockActionQ` in the Chebyshev Y₀ soundness proof | [Typed/source recovery](../probes/records/U31_rational_block_action/MANIFEST.json). |
+
+The four duplicate definitions/normalization wrappers retire outright, with no alias, instance or new interface. Reciprocal multiplication equals the old total rational division, including at divisor zero; finite-head indices are unchanged. The existing matrix action and bridge are unchanged. Each family retains its residual interpreter, support window and weighted norm sum; support still uses `N ≤ M`. Matrix and Example1421 Certificate source bytes remain unchanged.
+
+**CHANGED-SUBST, executed:** Independent old/new Y₀ and whole-checker/data-field substitutions were kernel-checked on both BEFORE and AFTER generations. At the fixed Example1421 data, the independent old and canonical new Y₀ computations equal the exact rational `q = a/b`; `q ≤ 10⁻²¹` and rejection at `(a−1)/b < q` were kernel-checked. The original630 AFTER accounting is `583 direct + 3 CHANGED-SUBST + 1 previous original566 transport + 43 retired`. The three substituted original rows are zero-based ordinal 450 (`checksK`), 451 (`checksK_data`) and 460 (`k_Y₀`). All non-Y₀ clauses, numerical inputs, radii, equation/initial value and five Example1421 endpoint statements were preserved. The [canonical AFTER record](../probes/records/U31_rational_block_action/AFTER_ACCEPTANCE.json) records the executed source result; declaration-head equality alone is not its semantic evidence.
+
+The BEFORE original630 accounting was `586 direct + 1 existing private original566 transport + 43 retired`; the executed substitution evidence yields the AFTER split above. The 43 existing retirements and original566 transport retain their identities. The [historical recovery record](../probes/records/U31_rational_block_action/MANIFEST.json) preserves the four actual old types, stored values and axioms, both whole old sources and their object companions, the 381-owner context and 24 controls. The [status guide](../probes/records/U31_rational_block_action/CURRENT.md) separates historical archive publication from later source acceptance. [Executed BEFORE evidence](../probes/records/U31_rational_block_action/evidence/BEFORE_CAPTURE_RESULT.json) records 6,768 actual/predicted imports, 67,669 artifact POST pins and 52,891 recursive trust nodes; [trust facts](../probes/records/U31_rational_block_action/evidence/TRUST_FACTS.json) retain native-axiom context explicitly. The 41 [independent BEFORE controls](../probes/records/U31_rational_block_action/evidence/BEFORE_CONTROLS_RESULT.json) establish old/new action and predicate facts with standard three or fewer axioms; these are distinct from production AFTER verification.
+
+
+**Required consumer reach:** Production Examples 8.1/8.3 bound Y₀ through `IVP.ivp_Y₀_le` with LeanCert `finsum_bound`, not the exact-ℚ Taylor Y₀ socket. In the reviewed required consumer set, that Taylor socket (`StdIVPDataQ.ChecksY₀`, `Y₀_sound`, `certified_of_checksBy`) is reached only by the selected `Examples/tests/TY/AllGenerated` test (`Tests.TY.main81`); it is calibration/test-only and remains with the agreed later U42b staging together with its test. The shared generic action is justified by Example 14.2.1 production reach. This rider adds no new unit or staging change.
+
+## B1 — canonical replacements and inactive-root omissions (U12/U13/U17/U20/U35e)
+
+| Retired declaration | Canonical mathematical service |
+|---|---|
+| `IVP.tail_shiftDivN_sum_le` | `RadiiPolynomial.tail_shiftDivN_sum_le`, with the same finite-set tail bound. |
+| `MvPolyBridge.CompPoly.Chebyshev.chebDerivativeLipschitzBound_mono` | `MvPolyBridge.CompPoly.Chebyshev.derivativeLipschitzBound_mono`; the Chebyshev radii-monotonicity law, not its base-polynomial counterpart. |
+| `MvPolyBridge.CompPoly.norm_sum_mul_pi_le` | `RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le` over any `NonUnitalSeminormedRing` and finite index. |
+| `MvPolyBridge.norm_sum_mul_pi_le` | The same generic law at the existing weighted-ℓ¹/Pi types. |
+| `RadiiPolynomial.cauchyProduct.ratCast` | `cauchyProduct.map_cauchyProduct (Rat.castHom ℝ)` directly at the coefficient consumer. The Real-only module and its two import edges are removed. |
+| `IVP.StdIVPDataQ.weight` | Explicit positive-real subtype `⟨(q.ν_q : ℝ), by exact_mod_cast hpos⟩`; no new public helper. |
+| `IVP.StdIVPDataQ.toStd` | Existing `q.toStdIVPData ν hν`, with that explicit subtype and `rfl` for the old default. `ofStd` and `toStdIVPData_ofStd` remain. |
+
+The [recovery record](../probes/records/B1_canonical_replacements/MANIFEST.json) is the typed/source recovery archive for the seven retired names and omitted copy-root bytes. Alias/forward spellings retire without compatibility aliases. The finite-sum consumers use the existing generic law directly; their norms and hypotheses are unchanged. B1's executed BEFORE joins identify the actual weight/default helpers with the preserved old-weight/default constructor bodies. The canonical inline realization was kernel-checked at the captured dependent type after the explicit old-weight substitution, with unchanged axioms; this is a verified transport, not literal preservation of the removed raw head. The original proof-recovery limitations are recorded below.
+
+U13 omits only the inactive copy-root `Makefile`, `lake-manifest.json.disable`, `REFACTORING_LOG.md`, `MARKER_DIFF.txt` and `STMT_DIFF.txt`. Active Lake configuration/package pins, `.gitignore` patterns and the separate checkdecls dependency remain unchanged. The module `Algebra/Convolution/CauchyProductReal.lean` is retired separately under U20. No numerical data, bound, radius or competitor class changes.
+
+Deferred ReferenceBook repoints, without an RBC edit or build gate: `Ch08/Sec2Theorem.lean:516` uses `MvPolyBridge.norm_sum_mul_pi_le`; `Ch10/Sec2BoundsZ2.lean:309,417` uses the CompPoly forward. Each call moves to `RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le` at the same arguments. B1's source and required-consumer checks were executed; the [canonical AFTER record](../probes/records/B1_canonical_replacements/AFTER_ACCEPTANCE.json) binds the accepted source generation and observations. B1's original630 shape partition is `586 ordinary shape pins + 1 previous original566 transport + 43 retired`; its semantic partition is `583 direct + 3 inherited CHANGED-SUBST + 1 previous original566 transport + 43 retired`. The three inherited substitutions retain their exact identities. The two additional auxiliary exits are separately qualified: `toStd._proof_1` has a full captured original proof value; `weight._proof_1` has an independent witness at its exact old positivity type and unchanged axioms, without an original proof-byte identity claim. Both statements and full original source remain recoverable. This wording does not promote the archival BEFORE record into AFTER evidence.
+
+## B2 — recoverable mathematical records (U18/U33/U41/U42a)
+
+The [typed recovery record](../probes/records/B2_staged_services/MANIFEST.json) preserves
+original source, full types and stored values where available, actual private/generated
+identities and axioms for the services below. Their statements remain mathematical evidence
+outside the shipped root. Execution, acceptance, source-generation and row-disposition facts
+are recorded in the bound B2 task records; a recovery entry alone does not assert global
+unusedness or mathematical irrelevance.
+
+| Slice | Full declaration name outside the shipped root | Mathematical service |
+|---|---|---|
+| U18 | `RadiiPolynomial.CrossGeometry.real_laurent_character_joukowski_ne_zero` | No real Laurent character kills the Joukowski generator. |
+| U18 | `RadiiPolynomial.CrossGeometry.physical_zero_character_has_no_real_extension` | No real continuous Laurent extension of the physical zero character. |
+| U18 | `RadiiPolynomial.CrossGeometry.circle_character_restriction` | Complex circle evaluation restricts to physical real evaluation. |
+| U18 | `RadiiPolynomial.CrossGeometry.physical_zero_character_has_complex_extension` | Complex Laurent extension above zero at I. |
+| U18 | `RadiiPolynomial.CrossGeometry.physical_zero_character_has_second_complex_extension` | Second complex extension above zero at −I. |
+| U18 | `RadiiPolynomial.CrossGeometry.complex_restriction_not_injective` | Complex Laurent restriction is not injective. |
+| U33 | `MvPolyBridge.norm_fderiv_diff_evalInBanach_of_const_second_pderiv` | Semantic derivative-difference bound from a supplied constant second-derivative table. |
+| U33 | `MvPolyBridge.fderiv_diff_zero_of_D₂_zero` | Zero derivative difference for a component with zero supplied table. |
+| U33 | `MvPolynomial.totalDegree_pderiv_pderiv_eq_zero` | Second partial derivative has degree zero under degree ≤ 2. |
+| U33 | `MvPolynomial.pderiv_pderiv_eq_C_of_totalDegree_le_two` | Second partial derivative is a constant under degree ≤ 2. |
+| U42a | `RadiiPolynomial.l1Chebyshev.ext_of_evalLaurentC_circle` | Boundary complex characters separate bilateral elements. |
+| U42a | `RadiiPolynomial.l1Chebyshev.ext_of_eventuallyEq_eval` | Local physical determination at ν > 1. |
+| U42a | `RadiiPolynomial.CrossGeometry.chebyshevToTaylorAeval_injective` | Injective reverse restriction under its semiMinor gate. |
+
+U18's six countermodel witnesses, U33's four semantic/degree faces and U42a's three
+determination/injectivity faces retain their original typed statements and source in that record.
+Re-entry requires a concrete consumer of the corresponding mathematical service. The protected
+`MvPolynomial.C_ofNat_eq`, `MvPolynomial.totalDegree_pderiv_le` and generic bilinear norm bound
+remain library interfaces; no unconsumed Hessian replacement pair was added.
+
+### U41 — finite-fiber carrier and algebra interfaces
+
+| API part | Actual public names represented in recovery |
+|---|---|
+| Carriers | `RadiiPolynomial.FiniteFiberConvolution`, `RadiiPolynomial.FiniteFiberAddConvolution` |
+| Coordinate and atom interfaces | `RadiiPolynomial.FiniteFiberConvolution.ofFun`, `RadiiPolynomial.FiniteFiberConvolution.toFun`, `RadiiPolynomial.FiniteFiberConvolution.coeff`, `RadiiPolynomial.FiniteFiberConvolution.single`, `RadiiPolynomial.FiniteFiberConvolution.ext`; `RadiiPolynomial.FiniteFiberAddConvolution.ofFun`, `RadiiPolynomial.FiniteFiberAddConvolution.toFun`, `RadiiPolynomial.FiniteFiberAddConvolution.coeff`, `RadiiPolynomial.FiniteFiberAddConvolution.single`, `RadiiPolynomial.FiniteFiberAddConvolution.ext` |
+| Registered algebra interfaces | `RadiiPolynomial.FiniteFiberConvolution.instSemiring`, `RadiiPolynomial.FiniteFiberConvolution.instRing`, `RadiiPolynomial.FiniteFiberConvolution.instAlgebra`; `RadiiPolynomial.FiniteFiberAddConvolution.instSemiring`, `RadiiPolynomial.FiniteFiberAddConvolution.instRing`, `RadiiPolynomial.FiniteFiberAddConvolution.instAlgebra` |
+| Monoid-algebra embedding and range | `RadiiPolynomial.FiniteFiberConvolution.ofMonoidAlgebra`, `RadiiPolynomial.FiniteFiberConvolution.toMonoidAlgebra`, `RadiiPolynomial.FiniteFiberConvolution.mem_rangeS_ofMonoidAlgebra`, `RadiiPolynomial.FiniteFiberConvolution.ofMonoidAlgebraEquivRangeS`; `RadiiPolynomial.FiniteFiberAddConvolution.ofAddMonoidAlgebra`, `RadiiPolynomial.FiniteFiberAddConvolution.toAddMonoidAlgebra`, `RadiiPolynomial.FiniteFiberAddConvolution.mem_rangeS_ofAddMonoidAlgebra`, `RadiiPolynomial.FiniteFiberAddConvolution.ofAddMonoidAlgebraEquivRangeS` |
+| Power-series ring equivalences | `RadiiPolynomial.FiniteFiberAddConvolution.toPowerSeriesRingEquiv`, `RadiiPolynomial.FiniteFiberAddConvolution.toMvPowerSeriesRingEquiv` |
+| Computation, inverse and scalar laws for the equivalences | `RadiiPolynomial.FiniteFiberAddConvolution.toPowerSeriesRingEquiv_apply`, `RadiiPolynomial.FiniteFiberAddConvolution.coeff_toPowerSeriesRingEquiv`, `RadiiPolynomial.FiniteFiberAddConvolution.coeff_toPowerSeriesRingEquiv_symm`, `RadiiPolynomial.FiniteFiberAddConvolution.toPowerSeriesRingEquiv_smul`; `RadiiPolynomial.FiniteFiberAddConvolution.coeff_toMvPowerSeriesRingEquiv`, `RadiiPolynomial.FiniteFiberAddConvolution.coeff_toMvPowerSeriesRingEquiv_symm`, `RadiiPolynomial.FiniteFiberAddConvolution.toMvPowerSeriesRingEquiv_smul` |
+
+The [complete typed recovery inventory](../probes/records/B2_staged_services/evidence/DECLARATION_RECORD_INDEX.json)
+includes all 389 actual declarations of the three U41 library owners, with full Names and raw-row
+locators. Source/compiler joins identify 145 named API entries: 76 written public source commands,
+67 actual `to_additive` translations selected at their source attributes, and the two intentional
+`ext_iff` API companions. Their module split is 108 carrier/algebra, 28 monoid-algebra and 9 power-series
+entries. This is source-facing named API coverage, not an exhaustive public-status classification
+of generated or anonymous declarations. Proof auxiliaries and the other 244 rows retain their
+context roles. The three exclusive CV tests remain in the full recovery context. Re-entry requires
+a concrete wrapper/embedding/ring-equivalence consumer; the generic raw finite convolution core,
+Cauchy product and PowerSeries linear bridge remain library services.
+
+There is no replacement alias, deprecation layer or newly invented generic Hessian interface.
+Geometric.AnalyticExt, Chebyshev reverse-map construction/evaluation/algebra/generator faces,
+the required classical/function/complex-time endpoints, fixed tests and four Duffing roots
+including reality retain their interfaces. No Duffing C² reconstruction or hint gain is claimed.
+
+
+## B3 — canonical finite-Pi spaces and polynomial evaluation (U16/U22/U29)
+
+The generic state-space spellings `RadiiPolynomial.X` and `RadiiPolynomial.Y` are
+replaced by their finite-Pi types. `RadiiPolynomial.XL1 ν L` remains the concrete
+abbreviation `Fin L → l1Weighted ν`; its coefficient and block-operator services
+remain. The six shortcut instances `instXL1Ring`, `instXL1CommRing`,
+`instXL1NormedRing`, `instXL1NormOneClass`, `instXL1Algebra` and
+`instXL1NormedAlgebra` give way to the existing Pi instances. The norm-one instance
+still needs a nonempty index. The four generic norm services retain their original
+real normed-space hypotheses; no completeness or stronger weight premise is added.
+
+`ChebyshevIVP.clm_apply_eq_sum` is replaced at its two callers by the component
+identity from `ContinuousLinearMap.sum_comp_single`. The implementation helpers
+`zmax`, `zmin`, `zsum` and the dependent proof `zsum_eq` become private in the same
+module. `list_range_map_sum`, `evalFast`, `evalFast_eq` and `evalChebFast` retain their
+services. The clipped exact-rational algorithm and its support premise are unchanged.
+The sole `ball_lt_add` call uses the local natural-number split in Example14.2.1.
+
+`MvPolyBridge.evalInBanach p a` is replaced by `MvPolynomial.aeval a p`, with the
+argument order reversed. The consumed semantic services have the following names.
+
+| Previous name | Canonical name |
+|---|---|
+| `MvPolyBridge.toSeq_evalInBanach_of_coeffs` | `MvPolyBridge.toSeq_aeval_of_coeffs` |
+| `MvPolyBridge.fderiv_evalInBanach` | `MvPolyBridge.fderiv_aeval` |
+| `MvPolyBridge.fderiv_diff_evalInBanach` | `MvPolyBridge.fderiv_diff_aeval` |
+| `MvPolyBridge.toSeq_fderiv_evalInBanach` | `MvPolyBridge.toSeq_fderiv_aeval` |
+| `MvPolyBridge.norm_evalInBanach_sub_le` | `MvPolyBridge.norm_aeval_sub_le` |
+| `MvPolyBridge.norm_fderiv_evalInBanach_le` | `MvPolyBridge.norm_fderiv_aeval_le` |
+| `MvPolyBridge.norm_fderiv_diff_evalInBanach_bilinear` | `MvPolyBridge.norm_fderiv_diff_aeval_bilinear` |
+| `MvPolyBridge.compPoly_evalBanach_eq_evalInBanach` | `MvPolyBridge.compPoly_evalBanach_eq_aeval` |
+| `MvPolyBridge.CompPoly.sum_norm_evalInBanach_pderiv_le` | `MvPolyBridge.CompPoly.sum_norm_aeval_pderiv_le` |
+
+The C/X/add/mul/neg/sub and partial-of-X forwards use the existing `aeval` and map
+laws. The constant-norm formula uses `MvPolynomial.aeval_C` and
+`norm_algebraMap'`; differentiability uses `MvPolynomial.hasFDerivAt_aeval` and its
+`differentiableAt` consequence. The unused CompPoly algebra-evaluation forward uses
+`MvPolyBridge.CompPoly.evalAlg_eq_aeval` directly. The retained rational
+CompPoly-to-Banach bridge remains rational; it introduces no real-coefficient
+mapping or scalar-tower premise. The pointwise bilinear derivative bound retains
+its hypothesis at the supplied pair.
+
+Eight specialized simp registrations leave with their forwards. Canonical formulas
+and consumer elaboration are separate from a claim that every former `simp` call
+behaves identically. The typed recovery record at
+`../probes/records/B3_canonical_pi_aeval/` records old source, exact compiler Names,
+old and normalized types, captured values, and trust evidence. The executed disposition
+is bound by `../probes/records/B3_canonical_pi_aeval/AFTER_ACCEPTANCE.json`. A source name
+map alone is not a compiler census or an unusedness proof.
+
+ReferenceBook Ch08 uses of the generic state-space spelling in `Sec2`, `Sec2Theorem`,
+`Sec5Taylor` and `Sec5Verified` are deferred repoints; no ReferenceBook file or published
+theorem is edited by this copy-only migration.
+
+## U25 — one universal geometric evaluator
+
+The independent real algebra-hom construction is retired. `l1Weighted.aeval_of_norm_le`
+is the bounded arrow; its real series identity is proved first, and `eval_mul` is derived
+from its multiplication law. The earlier planned-revamp entry is historical.
+
+At installation, [`AFTER_ACCEPTANCE.json`](../probes/records/U25_universal_geometric_evaluation/AFTER_ACCEPTANCE.json) binds the accepted source/object generation, executed owner/consumer and independent model/data checks, and declaration dispositions.
+
+| Source head | Disposition and retained service |
+| --- | --- |
+| `RadiiPolynomial.l1Weighted.eval_mul_trunc` | No retained service requires the finite truncation detour; exact eval_mul remains via canonical map_mul. |
+| `RadiiPolynomial.l1Weighted.evalAlgHom'` | Retired captured BEFORE construction `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalAlgHom'` and its captured auxiliaries `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalAlgHom'._proof_1`, `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalAlgHom'._proof_2`, `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation.0.RadiiPolynomial.l1Weighted.evalAlgHom'._proof_3`. No replacement private construction; the canonical arrow is `l1Weighted.aeval_of_norm_le ν z hz`. |
+| `RadiiPolynomial.l1Weighted.evalContinuousAlgHom` | l1Weighted.aeval_of_norm_le ν z hz |
+| `RadiiPolynomial.l1Weighted.evalContinuousAlgHom_apply` | New l1Weighted.aeval_of_norm_le_apply_real, independently proved from series FIRST. |
+| `RadiiPolynomial.l1Weighted.eval_CLM` | (l1Weighted.aeval_of_norm_le ν z hz).toContinuousLinearMap |
+| `RadiiPolynomial.l1Weighted.eval_CLM_apply` | ContinuousAlgHom.coe_toContinuousLinearMap plus new real series bridge. |
+| `RadiiPolynomial.l1Weighted.evalAlgHom` | (l1Weighted.aeval_of_norm_le ν z hz).toAlgHom |
+| `RadiiPolynomial.l1Weighted.evalAlgHom_apply` | Canonical toAlgHom coercion plus new real series bridge. |
+| `RadiiPolynomial.l1Weighted.evalContinuousAlgHom_gen` | Existing aeval_of_norm_le_gen; convert l1Weighted.single using single_eq_lpOneAlg_single when necessary. |
+| `RadiiPolynomial.l1Weighted.aeval_eq_evalContinuousAlgHom` | No old hom remains. The new coordinate series bridge does not use old uniqueness/hom proofs. |
+| `RadiiPolynomial.l1Weighted.evalContinuousAlgHom_comp_radiusRestrict` | Existing generic aeval_of_norm_le_comp_radiusRestrict at B=ℝ; real coordinate consequences use new series bridge. |
+| `RadiiPolynomial.CrossGeometry.evalContinuousAlgHom_comp_chebyshevToTaylorAeval` | Same geometric gates and physical character; canonical real aeval replaces old constructed hom. |
+| `RadiiPolynomial.l1Weighted.aeval_of_norm_le_apply_real` | Universal series formula → coefficient identification + real scalar multiplication; no old hom or real multiplicativity. |
+| `RadiiPolynomial.l1Weighted.eval_mul` | map_mul.symm of canonical real arrow, rewritten by FIRST bridge; old orientation retained. |
+| `RadiiPolynomial.l1Weighted.hasDerivAt_eval` | Coordinate analytic series theorem; module docstring only changed. |
+
+This list identifies twelve selected old source heads: eleven removals and one renamed
+naturality service. It is not a count of compiler-generated declarations. The actual private
+constructor and its auxiliaries are identified by the captured compiler inventory. No
+compatibility aliases are introduced. The coordinate evaluator, derivative statements,
+canonical boundary data and required classical, EX81-L2 and Duffing consumers are retained.
+The zero-boundary construction does not acquire a weight-at-least-one premise.
+
+## B4 — explicit weight bounds and staged generated Taylor services
+
+B4 follows the U34 execution decision, U42b staging ruling and U48 hypothesis split. The [binding B4 record](../probes/records/B4_weight_and_generated_services/AFTER_ACCEPTANCE.json)
+is the authority for the installed generation, executed verification, exact compiler Names,
+full types/data and axioms, and recoverable BEFORE sources. Counts below concern selected
+source heads, not compiler-generated declarations; the exact capture is supplied through
+that record.
+
+`Tactic/PDerivSimp.lean` and its root import retire together. U34's completed experiment
+built the 23 required module/root groups without that edge, compared all 39 selected endpoint
+full types and stored proof terms exactly, and checked root-importing predicate replays with
+the positive canary and expected negative tactic-presence control. The retained owner records
+and actual tactic absence were checked separately. This supports deletion in the required
+consumer environment, not equivalence of every possible future `simp` call. No replacement
+tactic, alias or additional theorem premise is introduced; the other tactic services remain.
+
+The generated-only Taylor contract is staged with its test, not shipped through a new module.
+Its thirteen selected source heads are `IVP.TaylorCertQ`, its `margin`, `ChecksRadii` and
+`ChecksBy`, `IVP.Z₁Slot`, and `IVP.StdIVPDataQ.ChecksZ₁By`, `instDecidableChecksZ₁By`,
+`radii_sound`, `certified_of_bounds`, `certified_ivpCoeffs_of_bounds`, `Z₁By_sound`,
+`certified_of_checksBy` and `certified_ivpCoeffs_of_checksBy`. The four test heads
+`Tests.TY.dataQ`, `C81`, `all81` and `main81` move with it. The complete extension and test
+are recoverable as [`staged/U42bGeneratedContract.lean`](../probes/records/B4_weight_and_generated_services/staged/U42bGeneratedContract.lean)
+and [`staged/AllGenerated.lean`](../probes/records/B4_weight_and_generated_services/staged/AllGenerated.lean)
+under the same B4 record. The five rational certificate numbers, exact split conjunction,
+selected kernel-column predicate, override bounds and unique-zero/raw-residual conclusions
+are retained in that record. Production keeps `StdIVPDataQ`, `ofStd`, realization and its
+round trip, all per-bound checks/soundness, and the essential Example81 kernel-column route.
+The U31 rider above describes the earlier test-only reach and planned staging; B4 records
+that staging disposition without rewriting its historical evidence or the closed B3/U25 records.
+
+U48 removes these eight selected source heads. The positive, submultiplicative and normalized
+classes remain separate; the actual extraction bound is retained explicitly.
+
+| Removed source head | Canonical assumption or retained service |
+| --- | --- |
+| `RadiiPolynomial.SuperUnitWeight` | Explicit `∀ m, 1 ≤ w m` at extraction; positivity remains `PosWeight w`. |
+| `RadiiPolynomial.SubMulWeight` | `SubMulWeightBase w` for convolution; separate explicit lower bound for extraction. |
+| `RadiiPolynomial.lpOneAlgWeightSubMul` | `lpOneAlgWeightMul` for additive convolution; separate explicit frame-weight lower bound for extraction. |
+| `RadiiPolynomial.lpOneMulAlgWeightSubMul` | `lpOneMulAlgWeightMul` for multiplicative convolution; separate explicit frame-weight lower bound for extraction. |
+| `RadiiPolynomial.WeightedScalar.instLpOneAlgWeightSubMul` | Translate the supplied bound by `WeightedScalar.fiberTrivialization_weight` at extraction. |
+| `RadiiPolynomial.ScaledReal.instSubMulWeight` | Existing positive-radius submultiplicativity and independent normalization remain; supply the power lower bound when needed. |
+| `RadiiPolynomial.ScaledRealZ.instSubMulWeight` | Bilateral submultiplicativity still requires `Fact (1 ≤ ν)`; supply the power lower bound explicitly at extraction. |
+| `RadiiPolynomial.borderedWeight.instSubMulWeight` | Existing positivity and submultiplicativity remain; supply the bordered-weight lower bound when needed. |
+
+The retained extraction theorem types and bodies are unchanged. Scalar `PosWeight`,
+`SubMulWeightBase` and `NormalizedWeight`, and frame `lpOneAlgWeightMul`,
+`lpOneMulAlgWeightMul` and `lpOneAlgWeightNormalized`, retain their distinct contracts.
+The two updated FT examples exercise extraction using the explicit bound. No replacement
+bundle, hidden `Fact` packaging of that bound, or compatibility alias is introduced. Existing
+analytic radius assumptions are not erased, and unit normalization does not imply
+submultiplicativity or replace the extraction bound.
+
+`RadiiPolynomial.SeqL1` is the one selected source shortcut retired from
+`Operators/BlockDiagonal/WeightedL1.lean`; its captured type/body remain recoverable through
+the B4 record. This removes only the unused spelling `fun ν : PosReal => l1Weighted ν`,
+not the carrier, the production Pi state spaces or any block-diagonal mathematical service.
+
+## B5 — operation coherence and selective mathematical recovery
+
+The weighted ℓ¹ carrier has one globally registered additive-index operation family.
+The multiplicative constructors `instMulMul`, `instMulOne`, `instMulRing`,
+`instMulNormedRing` are explicit data; the compatibility families retain their own instances, and
+arbitrary multiplicative monoids have the `Additive M` index/fiber presentation. This keeps
+the original weight, completeness and normalization hypotheses separate.
+
+Selective records own the finite-fiber law family, column and head/tail principles,
+operator/IVP extensions, analytic/spectral families and the Example81 ℓ² route. These records
+import surviving primitives and earlier records; they do not ship or restore the whole old API.
+The two finite-convolution tests accompany their record, and the Example81 ℓ² route keeps
+its six exact controls with its library/caller/test chain.
+
+Surviving consumers use canonical maps and laws: coefficient singles use `coeff_single`
+and `Pi.single_eq_of_ne`; generic lift bounds replace the geometric restatement; negation
+and subtraction use the retained bundled maps' `map_neg`/`map_sub`; projection derivatives
+and polynomial powers use Mathlib calculus. Validation of retained services follows these
+repoints, while tests of staged mathematics accompany their owning records. Polynomial
+derivative macros and `compPolyOf%` reification are retired interfaces with historical source
+recovery. Dyadic syntax/checker/test ownership is staged; production `finmatrix_bound`,
+Taylor `t_bound` and shared certificate data remain in the library.
+
+The final B5 record binds source dispositions, exact generated-name accounting, typed/axiom
+preservation, consumer controls and executed recovery. Historical B1–B4 and U25 entries
+above retain their original evidence scope; their former live-surface descriptions are read
+with the later B5 dispositions.
+
+## B5 exact retirement and recovery ledger (FF-B5-1/2/4)
+
+The canonical [B5 AFTER record](../probes/records/B5_universal_api_retirement/AFTER_ACCEPTANCE.json) binds execution and installation status for this ledger. The [exact retired-Name catalog](../probes/records/B5_universal_api_retirement/RETIRED_NAME_CATALOG.json) records all 1943 shipping absences, their accepted v3 classes and executed command/module bases. NON-FACE entries are owned private/generated/support Names, not additional accepted v3 faces.
+
+Staged rows identify selective recovery sources outside the shipping API. The [30 private-helper relocations](../probes/records/B5_universal_api_retirement/PRIVATE_HELPER_RELOCATIONS.md) preserve exact old/new Names and source ownership; their mathematical claims remain bound to each executed TYPE/DATA/trust/cone record. No production compatibility aliases are introduced.
+
+Packet-completeness records: [original630 census](../probes/records/B5_universal_api_retirement/ORIGINAL630_CENSUS.json) (444 present +143 B5 retirements:105 EXAMPLE-DELETE,10 R-ELAB,28 C13 private supports;43 historical), [retrospective term-derived P9 roots](../probes/records/B5_universal_api_retirement/P9_TERM_ROOTS.json), [three build-preflight repairs](../probes/records/B5_universal_api_retirement/BUILD_PREFLIGHT_REPAIR.json), and [immutable executed shipping reader](../probes/records/B5_universal_api_retirement/EXECUTED_SHIPPING_READER.json). These supersede incomplete earlier packet pointers without rewriting B1–B4 or U25 history.
+
+| Retired exact Name | Accepted v3 class | Executed action | Selective record source |
+|---|---|---|---|
+| `ChebyshevIVP.StdChebIVPData.A_finBlock_eq` | R-ELAB | DELETE | — |
+| `ChebyshevIVP.StdChebIVPData.G_toSeq_negSucc` | STAGE | STAGE | [staged/B5RecordChebNegativeModes.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordChebNegativeModes.lean) |
+| `ChebyshevIVP.StdChebIVPData.TA_apply` | R-ELAB | DELETE | — |
+| `ChebyshevIVP.StdChebIVPData.TC_apply` | R-ELAB | DELETE | — |
+| `ChebyshevIVP.StdChebIVPData.TCblock_apply` | R-ELAB | DELETE | — |
+| `ChebyshevIVP.StdChebIVPData.Z₁_le_semiMajor_of_Q` | STAGE | STAGE | [staged/B5RecordChebSemiMajor.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordChebSemiMajor.lean) |
+| `ChebyshevIVP.StdChebIVPData.Z₁_le_semiMajor_of_checksK` | STAGE | STAGE | [staged/B5RecordChebSemiMajor.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordChebSemiMajor.lean) |
+| `ChebyshevIVP.StdChebIVPData.composedApprox` | DELETE | DELETE | — |
+| `ChebyshevIVP.StdChebIVPData.differentiable_G` | DELETE | DELETE | — |
+| `ChebyshevIVP.StdChebIVPData.fderiv_G` | DELETE | DELETE | — |
+| `ChebyshevIVP.StdChebIVPData.neg_modes_zero_of_G_zero` | STAGE | STAGE | [staged/B5RecordChebNegativeModes.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordChebNegativeModes.lean) |
+| `ChebyshevIVP.StdChebIVPData.tailCancel` | DELETE | DELETE | — |
+| `ChebyshevIVP.TCtailElem_norm_le` | DELETE | DELETE | — |
+| `ChebyshevIVP.TCtail_apply` | R-ELAB | DELETE | — |
+| `ChebyshevIVP.banachField_apply` | R-ELAB | DELETE | — |
+| `ChebyshevIVP.chebyshevShiftDiv_add` | DELETE | DELETE | — |
+| `ChebyshevIVP.chebyshevShiftDiv_eq_neg_uIntegrate_chebyshevToU` | R-ELAB | STAGE | [staged/B5RecordChebShiftDiv.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordChebShiftDiv.lean) |
+| `ChebyshevIVP.chebyshevShiftDiv_norm_le` | DELETE | DELETE | — |
+| `ChebyshevIVP.chebyshevShiftDiv_norm_le'` | STAGE | STAGE | [staged/B5RecordChebShiftDiv.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordChebShiftDiv.lean) |
+| `ChebyshevIVP.chebyshevShiftDiv_smul` | DELETE | DELETE | — |
+| `ChebyshevIVP.chebyshevShiftDiv_tailTsum_le_div` | DELETE | DELETE | — |
+| `ChebyshevIVP.chebyshevShiftDiv_tailTsum_le_half` | DELETE | DELETE | — |
+| `ChebyshevIVP.chebyshev_Z₁_le` | DELETE | DELETE | — |
+| `ChebyshevIVP.composedApproxCheb_eq_id_sub` | DELETE | DELETE | — |
+| `ChebyshevIVP.composedApproxCheb_tail_toReal` | DELETE | DELETE | — |
+| `ChebyshevIVP.defectChebCLM` | DELETE | DELETE | — |
+| `ChebyshevIVP.embedWithPassThrough_natCast` | R-ELAB | DELETE | — |
+| `ChebyshevIVP.embedWithPassThrough_negSucc` | R-ELAB | DELETE | — |
+| `ChebyshevIVP.liftDefect_eq_defectCheb_apply` | R-ELAB | DELETE | — |
+| `ChebyshevIVP.norm_compPolyDerivative_le` | DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.affineConstant_reified` | R-ELAB | DELETE | — |
+| `ChebyshevPolynomialExample.algebraMapConstant_reified` | R-ELAB | DELETE | — |
+| `ChebyshevPolynomialExample.first_partial_coefficients` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.first_partial_coefficients._native.native_decide.ax_1_1` | NON-FACE | DELETE | — |
+| `ChebyshevPolynomialExample.highMode` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.high_mode_square` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.high_mode_square._native.native_decide.ax_1_1` | NON-FACE | DELETE | — |
+| `ChebyshevPolynomialExample.inputs_supported` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.inputs_supported_padded` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.logisticReal` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.logisticReal_eq_logisticReified` | R-ELAB | DELETE | — |
+| `ChebyshevPolynomialExample.logisticReal_lipschitzBound` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.logisticReified_derivativeBound` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.logisticReified_derivativeLipschitzBound` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.logisticReified_eq_literal` | R-ELAB | DELETE | — |
+| `ChebyshevPolynomialExample.minimalRadii` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.mixedReified` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.mixedReified_eq_literal` | R-ELAB | DELETE | — |
+| `ChebyshevPolynomialExample.mixed_coefficients_all` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.rationalConstant_reified` | R-ELAB | DELETE | — |
+| `ChebyshevPolynomialExample.second_partial_coefficients` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.second_partial_coefficients._native.native_decide.ax_1_1` | NON-FACE | DELETE | — |
+| `ChebyshevPolynomialExample.squarePolynomial` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.support_bound_independent` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.symmetricInputs` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.taylor_interpreter_misses_constant` | EXAMPLE-DELETE | DELETE | — |
+| `ChebyshevPolynomialExample.taylor_interpreter_misses_constant._native.native_decide.ax_1_1` | NON-FACE | DELETE | — |
+| `ContinuousLinearMap.precompR.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example1421.Cert.FQ` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Cert.FQ_eq_zero` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Cert.Z₁_le_semiMajor` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Cert.abar_0_size` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Cert.computed_residual_eq` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Cert.foldQ` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Cert.phiQ` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Cert.phiQ_eq_zero` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Cert.qbar` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Cert.qbar_eq_zero` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Dphi` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Dphi_eq_derivative` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.Z₁_semiMajor_bound` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.compPolyDerivative_apply_eq_Dphi` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.computed_DF_columns` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.computed_DF_columns._native.native_decide.ax_1_1` | NON-FACE | DELETE | — |
+| `Example1421.computed_DF_entries` | EXAMPLE-DELETE | DELETE | — |
+| `Example1421.f_cpoly_reified` | R-ELAB | DELETE | — |
+| `Example1421.instFactLtRealOfNatToRealν_val` | R-ELAB | DELETE | — |
+| `Example1421.rawDerivative_single_eq_dataDF` | EXAMPLE-DELETE | DELETE | — |
+| `Example245.Cert.A` | EXAMPLE-DELETE | DELETE | — |
+| `Example245.Cert.A_dag` | EXAMPLE-DELETE | DELETE | — |
+| `Example245.Cert.Y₀_bound` | EXAMPLE-DELETE | DELETE | — |
+| `Example245.Cert.Z₀_bound` | EXAMPLE-DELETE | DELETE | — |
+| `Example245.Cert.Z₂_bound` | EXAMPLE-DELETE | DELETE | — |
+| `Example245.Z₂_bound_sq_sub_const` | EXAMPLE-DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example245.differentiable_sq_sub_const` | EXAMPLE-DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example245.fderiv_sq_sub_const` | EXAMPLE-DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example245.id_eq_smulCLM_one` | EXAMPLE-DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example245.id_sub_smulCLM` | EXAMPLE-DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example245.norm_smulCLM` | EXAMPLE-DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example245.smulCLM` | EXAMPLE-DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example245.smulCLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `Example245.smulCLM._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `Example245.smulCLM.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `Example245.smulCLM_apply` | R-ELAB | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example245.smulCLM_comp` | EXAMPLE-DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example245.smulCLM_comp._simp_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `Example245.smulCLM_comp._simp_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `Example245.smulCLM_comp._simp_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `Example245.smulCLM_comp._simp_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `Example245.smulCLM_comp._simp_1_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `Example245.smulCLM_comp._simp_1_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `Example245.smulCLM_comp._simp_1_7` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `Example245.smulCLM_injective` | EXAMPLE-DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example245.smulCLM_sub` | EXAMPLE-DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `Example77.Cert.A_col0` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_col1` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_col2` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_colOf` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_dag` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_diag` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_injective` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_inv` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_mat` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_norm_le` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_norm_le._native.native_decide.ax_1_1` | NON-FACE | DELETE | — |
+| `Example77.Cert.A_sub1` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.A_sub2` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.Y₀_bound` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.Y₀_le` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.Y₀_le._native.native_decide.ax_1_1` | NON-FACE | DELETE | — |
+| `Example77.Cert.Z₀_bound` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.Z₀_le` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.Z₁_bound` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.Z₁_le` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.Z₂_bound` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.Z₂_le` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.radii_neg` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.r₀_pos` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.Cert.xTilde_ball` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.F_toSeq` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.approxInverse_tailDiag_ne_zero` | EXAMPLE-DELETE | DELETE | — |
+| `Example77.tailCancel` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.Cert.A_norm_le` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.Cert.A_norm_le._native.native_decide.ax_1_1` | NON-FACE | DELETE | — |
+| `Example81.Cert.Z₁_le_cert` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.Cert.analytic_unique` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.Cert.radii_neg` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.Df` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.Df_eq_fderiv` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.F_abar_mem` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.L2.Araw` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Araw._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.DFraw` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Data.A_col` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `Example81.L2.Data.A_col.match_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `Example81.L2.Data.DF_col` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `Example81.L2.Data.abar_0` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `Example81.L2.Data.abar_0.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Ddiag` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Differential.differentiable_quadraticMap` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.differentiable_residual` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.fderiv_quadraticMap` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.fderiv_quadraticMap_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.fderiv_residual` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.fderiv_residual_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.hasFDerivAt_quadraticMap` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.hasFDerivAt_residual` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.instPosWeightNatGeoWeight` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.norm_comp_fderiv_residual_sub_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.norm_comp_fderiv_residual_sub_le._abel_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.norm_comp_fderiv_residual_sub_le_of_norm_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.norm_fderiv_quadraticMap_sub_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.quadraticMap` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.quadraticMap._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.quadraticMap._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.quadraticMap._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.quadraticMap._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.quadraticMap._proof_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.quadraticMap._proof_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.quadraticMap.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Differential.residual` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.residual._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Differential.lean) |
+| `Example81.L2.Differential.residual.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.H` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.H._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.H._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.H.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.H_aStar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.H_apply` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.H_apply._abel_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.H_eq_logistic` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.H_eq_zero_iff` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.L` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.L.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.L_comp_P` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.L_eq_id_sub_Pi_S` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.L_eq_id_sub_Pi_S._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Lhead` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Lhead.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_10` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_100` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_101` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_102` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_103` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_104` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_105` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_106` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_107` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_108` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_109` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_11` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_110` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_111` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_112` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_113` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_114` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_115` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_116` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_117` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_118` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_119` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_12` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_120` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_121` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_13` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_14` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_15` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_16` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_17` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_18` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_19` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_20` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_21` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_22` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_23` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_24` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_25` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_26` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_27` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_28` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_29` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_30` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_31` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_32` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_33` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_34` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_35` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_36` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_37` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_38` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_39` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_40` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_41` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_42` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_43` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_44` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_45` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_46` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_47` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_48` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_49` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_50` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_51` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_52` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_53` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_54` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_55` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_56` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_57` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_58` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_59` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_60` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_61` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_62` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_63` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_64` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_65` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_66` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_67` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_68` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_69` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_7` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_70` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_71` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_72` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_73` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_74` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_75` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_76` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_77` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_78` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_79` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_8` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_80` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_81` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_82` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_83` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_84` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_85` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_86` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_87` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_88` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_89` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_9` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_90` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_91` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_92` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_93` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_94` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_95` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_96` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_97` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_98` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_entries._proof_1_99` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_mul_PheadQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.LheadQ_mul_PheadQ._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Lhead_entries` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Lhead_mul_Phead` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Logistic.H` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.H._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.H._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.H._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.H._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.H.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.H_eq_zero_iff` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.H_half_delta_half_ne_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.coeff_H_succ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.coeff_H_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.instPosWeightNatGeoWeight` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.Logistic.q.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Logistic.lean) |
+| `Example81.L2.N` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.P` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.P.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.P_H_abar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.P_H_abar._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.P_comp_L` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.P_comp_Q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.P_delta_eleven` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.P_delta_eleven._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.P_delta_zero_coeff_two` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.P_delta_zero_coeff_two._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.P_injective` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.P_injective._simp_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.P_injective_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.P_norm_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PcolSupport` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PcolSupport.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Phead` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Phead.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.PheadQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.PheadQ_col_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PheadQ_col_bound._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PheadQ_mul_LheadQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.PheadQ_mul_LheadQ._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.PheadQ_row_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PheadQ_row_bound._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Phead_col_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Phead_mul_Lhead` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Phead_row_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Pi` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Pi.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Pi_comp_S_comp_Q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Pi_comp_S_comp_Q._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Pkernel` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Pkernel.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PkernelQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PkernelQ.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PkernelQ_column_zero_sq` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PkernelQ_column_zero_sq._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Pkernel_col_support` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Pkernel_col_support._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Pkernel_fin` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Pkernel_row_support` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Pkernel_schur` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.ProwSupport` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.ProwSupport.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PschurCLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PschurCLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PschurCLM._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PschurCLM._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PschurCLM._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PschurCLM._proof_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PschurCLM._proof_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PschurCLM.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PschurCLM_eq_P` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.PschurCLM_eq_P._proof_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Q.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Q_comp_P` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.S` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.S._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.S._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.S._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.S._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.S.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.S_eq` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.T` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.T._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.T._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.T.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.T_eq_tailIntegratedProduct` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.T_eq_tailIntegratedProduct._abel_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.T_eq_tailKernelCLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean) |
+| `Example81.L2.X` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Y0_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.Z0_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Z0_identity` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.Z0_slot` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean) |
+| `Example81.L2.Z1_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean) |
+| `Example81.L2.Z2_ball_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Z2_ball_bound._simp_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Z2_difference_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.Z2_slot` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean) |
+| `Example81.L2.aStar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.aStar._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.aStar._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.aStar_mem` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.abar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.abar._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.abar._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.abar.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.abarQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.abarQ.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.abs_xStar_sub_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.beta` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.beta._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.beta._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.beta.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.betaQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.betaQ.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.betaQ_explicit` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.betaQ_explicit._proof_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.betaQ_explicit._proof_1_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.betaQ_explicit._proof_1_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.betaQ_explicit._proof_1_7` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.betaQ_explicit._proof_1_8` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.betaQ_explicit._proof_1_9` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_H_abar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar._proof_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar._proof_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar._proof_1_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar._proof_1_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar._proof_1_7` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_eleven_ne_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_head` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_head._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_head._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_head._proof_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_head._proof_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_head._proof_1_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_of_gt` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_of_gt._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_of_gt._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_of_gt._proof_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_H_abar_of_gt._proof_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.coeff_P_delta` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.coeff_Q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean) |
+| `Example81.L2.coeff_Q._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean) |
+| `Example81.L2.coeff_S` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_S_fin` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_T` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_T_range` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_T_range._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_abar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_abar._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_abar_fin` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_abar_of_gt` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_abar_of_gt._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_beta` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_beta_of_gt` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_beta_of_gt._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_beta_of_gt._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_beta_of_gt._proof_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_beta_of_gt._proof_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.coeff_beta_of_gt._proof_1_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.contraction_value` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean) |
+| `Example81.L2.delta` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.differentiable_H` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.embedXL1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.embedXL1._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.embedXL1._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.embedXL1._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.embedXL1._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.embedXL1._proof_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.eqOn_xStar_of_solution` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.eqOn_x_analytic_of_isBallSolution` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.eq_aStar_of_H_eq_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.eq_of_H_eq_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.example81_l2_coefficient_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean) |
+| `Example81.L2.example81_l2_coefficient_zero_nondegenerate` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean) |
+| `Example81.L2.example81_l2_solution` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.example81_l2_solution_existsUnique` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.example81_l2_solution_spec` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.fderiv_H_abar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.fderiv_H_abar._abel_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.hasDerivAt_sumSeries_of_H_eq_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.hasDerivAt_xStar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.hasFDerivAt_H` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.hasFDerivWithinAt_H` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean) |
+| `Example81.L2.instFactLtRealOfNat_radiiPolynomial` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.instFactLtRealOfNat_radiiPolynomial_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean) |
+| `Example81.L2.instFactLtRealOfNat_radiiPolynomial_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.instPosWeightNatGeoWeightOfNatReal` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.isBallSolution_aStar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.ivpCoeffs_embedXL1_eq_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.kernel` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.kernel.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.kernel_11_10` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.kernel_11_9` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.kernel_12_10` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.kernel_13_11` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.kernel_row_finite` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.kernel_row_summable` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.logistic_recurrence_unique` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.normFact` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.normPosWeight` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.norm_P_H_abar_pos` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.norm_T_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean) |
+| `Example81.L2.norm_T_le._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean) |
+| `Example81.L2.norm_comp_fderiv_H_sub_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.norm_comp_fderiv_H_sub_le_of_norm_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `Example81.L2.norm_embedXL1_aStar_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.norm_sq_P_H_abar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.norm_sq_P_H_abar._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.norm_sq_P_delta_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.norm_sq_P_delta_zero._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.not_P_norm_le_one` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.one_lt_norm_P_delta_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/NormBounds.lean) |
+| `Example81.L2.radii_neg` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean) |
+| `Example81.L2.radii_value` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Certificate.lean) |
+| `Example81.L2.residualCoeff` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.residualCoeff.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.residualFact` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.residualPosWeight` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `Example81.L2.sumSeries` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.sumSeries_eq_x_analytic` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.sumSeries_zero_of_H_eq_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.symbolMass_beta` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean) |
+| `Example81.L2.tailKernel_eq_kernel` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Z1.lean) |
+| `Example81.L2.toCoeff_embedXL1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.trajRadius` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.xStar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.L2.xStar_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `Example81.Z₁_bound` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.composedApprox_eq_fderiv_G_fin` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.differentiable_f_component` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.f_abar_support` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.f_cpoly_reified` | R-ELAB | DELETE | — |
+| `Example81.f_eq_spec` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.f_spec` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.fderiv_f` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.two_abar_sub_one_Q` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.two_abar_sub_one_support` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.two_abar_sub_one_toSeq` | EXAMPLE-DELETE | DELETE | — |
+| `Example81.two_abar_sub_one_toSeq._native.native_decide.ax_1_1` | NON-FACE | DELETE | — |
+| `Example83.Cert.A_norm_le` | EXAMPLE-DELETE | DELETE | — |
+| `Example83.Cert.A_norm_le._native.native_decide.ax_1_1` | NON-FACE | DELETE | — |
+| `Example83.Cert.analytic_unique` | EXAMPLE-DELETE | DELETE | — |
+| `Example83.F_abar_mem` | EXAMPLE-DELETE | DELETE | — |
+| `Example83.differentiable_f_component` | EXAMPLE-DELETE | DELETE | — |
+| `Example83.f_abar_support` | EXAMPLE-DELETE | DELETE | — |
+| `Example83.f_eq_spec` | EXAMPLE-DELETE | DELETE | — |
+| `Example83.f_spec` | EXAMPLE-DELETE | DELETE | — |
+| `ExampleDiblock.J_eq_Jσ` | EXAMPLE-DELETE | DELETE | — |
+| `ExampleDiblock.cube_centred_Q` | EXAMPLE-DELETE | DELETE | — |
+| `ExampleDiblock.cube_centred_lt_lipschitz_Q` | EXAMPLE-DELETE | DELETE | — |
+| `ExampleFisher.fisherQuad_centred_Q` | EXAMPLE-DELETE | DELETE | — |
+| `ExampleFisher.hAnorm_of_carrier` | EXAMPLE-DELETE | DELETE | — |
+| `ExampleFisher.norm_amb_symm_ν₁` | EXAMPLE-DELETE | DELETE | — |
+| `IVP.DfExactQ` | DELETE | DELETE | — |
+| `IVP.SplitBoundary` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary._sizeOf_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary._sizeOf_inst` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.anchoredPrimitive` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.anchoredPrimitive._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.anchoredPrimitive.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.casesOn` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.ctorIdx` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.equiv` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `IVP.SplitBoundary.equiv._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.equiv_fst` | R-ELAB | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `IVP.SplitBoundary.equiv_snd_coe` | R-ELAB | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `IVP.SplitBoundary.extension` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.extension_add_zeroPart` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.extension_add_zeroPart._abel_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.fiber_eq_translate_ker` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.fiber_eq_translate_ker._abel_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.mk` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.mk._flat_ctor` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.mk.inj` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.mk.injEq` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.mk.noConfusion` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.mk.sizeOf_spec` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.noConfusion` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.noConfusionType` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.rec` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.recOn` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.trace` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.trace_anchoredPrimitive` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.trace_extension` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.trace_extension_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.trace_zeroPart` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.zeroPart` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.SplitBoundary.zeroPart._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.SplitBoundary.zeroPart_coe` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP5.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean) |
+| `IVP.StdIVPData.Y₀_le_of_Q` | STAGE | STAGE | [staged/B5RecordTaylorY0P1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorY0P1.lean) |
+| `IVP.StdIVPData.Z₁_le_col_of_Q` | DELETE | DELETE | — |
+| `IVP.StdIVPData.Z₁_le_of_Q` | DELETE | DELETE | — |
+| `IVP.StdIVPData.analytic_unique` | DELETE | DELETE | — |
+| `IVP.StdIVPData.analytic_unique_of_compPoly` | DELETE | DELETE | — |
+| `IVP.StdIVPData.analytic_unique_of_compPoly_of_radii` | DELETE | DELETE | — |
+| `IVP.StdIVPData.ivpCoeffs_abar_mem_of_compPoly` | DELETE | DELETE | — |
+| `IVP.StdIVPData.norm_evalBanach_abar_eq` | DELETE | DELETE | — |
+| `IVP.StdIVPData.tail_evalBanach_mul_le` | DELETE | DELETE | — |
+| `IVP.StdIVPDataQ.A_finBlock_eq` | R-ELAB | DELETE | — |
+| `IVP.StdIVPDataQ.ChecksY₀` | STAGE | STAGE | [staged/B5RecordTaylorY0P1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorY0P1.lean) |
+| `IVP.StdIVPDataQ.ChecksZ₁` | DELETE | DELETE | — |
+| `IVP.StdIVPDataQ.ChecksZ₁col` | DELETE | DELETE | — |
+| `IVP.StdIVPDataQ.DF_finBlock_eq` | R-ELAB | DELETE | — |
+| `IVP.StdIVPDataQ.Y₀_sound` | STAGE | STAGE | [staged/B5RecordTaylorY0P1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorY0P1.lean) |
+| `IVP.StdIVPDataQ.Z₁_sound` | DELETE | DELETE | — |
+| `IVP.StdIVPDataQ.Z₁col_sound` | DELETE | DELETE | — |
+| `IVP.StdIVPDataQ.abar_toSeq` | DELETE | DELETE | — |
+| `IVP.StdIVPDataQ.composedApprox_eq_of_checksDF` | DELETE | DELETE | — |
+| `IVP.StdIVPDataQ.norm_abar` | DELETE | DELETE | — |
+| `IVP.StdIVPDataQ.toStdIVPData_A_col` | R-ELAB | DELETE | — |
+| `IVP.StdIVPDataQ.toStdIVPData_DF_col` | R-ELAB | DELETE | — |
+| `IVP.StdIVPDataQ.toStdIVPData_abar_Q` | R-ELAB | DELETE | — |
+| `IVP.StdIVPDataQ.toStdIVPData_ofStd` | R-ELAB | DELETE | — |
+| `IVP.StdIVPDataQ.toStdIVPData_ν_q` | R-ELAB | DELETE | — |
+| `IVP.Y₀Q` | STAGE | STAGE | [staged/B5RecordTaylorY0P1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorY0P1.lean) |
+| `IVP.Z₁colQ` | DELETE | DELETE | — |
+| `IVP.abs_chebyshevBoundary_le_norm_of_two_le` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `IVP.chebyshevAnchoredPrimitive` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.chebyshevAnchoredPrimitive.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.chebyshevAnchoredPrimitive_zero_boundary` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.chebyshevBoundary` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.chebyshevBoundary._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.chebyshevBoundary_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.chebyshevBoundary_factor_symmetric` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.chebyshevBoundary_not_multiplicative` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.chebyshevBoundary_not_multiplicative._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.chebyshevBoundary_not_multiplicative._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.chebyshevBoundary_one` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.chebyshevIntegrateCLM` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.chebyshevIntegrateCLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.chebyshevIntegrateCLM_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.chebyshevSplitBoundary` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.chebyshevSplitBoundary._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.chebyshevSplitBoundary._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.chebyshevSplitBoundary._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.chebyshevSplitBoundary._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.colSupQ` | DELETE | DELETE | — |
+| `IVP.contDiff_vectorField` | DELETE | DELETE | — |
+| `IVP.contDiff_vectorField_pi` | DELETE | DELETE | — |
+| `IVP.differentiable_vectorField` | DELETE | DELETE | — |
+| `IVP.differentiable_vectorField_pi` | DELETE | DELETE | — |
+| `IVP.eval_chebyshevAnchoredPrimitive` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.ivp_DF_of_Dφ_nat_eq` | R-ELAB | DELETE | — |
+| `IVP.ivp_system_theorem` | DELETE | DELETE | — |
+| `IVP.ivp_system_theorem_local` | DELETE | DELETE | — |
+| `IVP.norm_complexTrajectory_le` | DELETE | DELETE | — |
+| `IVP.norm_taylorReborderingDefect` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.norm_taylorReborderingDefect._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.norm_taylorReborderingDefect_apply_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.norm_taylorReborderingDefect_apply_le._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.norm_taylorReborderingDefect_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.seqNormQ` | DELETE | DELETE | — |
+| `IVP.symmetricEndpointCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP6.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP6.lean) |
+| `IVP.symmetricEndpointCharacter.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.symmetricEndpointCharacter_comp_joukowskiAevalSymm` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Applications/IVP/Chebyshev/Boundary.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Applications/IVP/Chebyshev/Boundary.lean) |
+| `IVP.taylorAnchoredPrimitive` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.taylorAnchoredPrimitive.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorAnchoredPrimitive_coe` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.taylorBoundaryCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.taylorBoundaryCharacter._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorBoundaryCharacter._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorBoundaryCharacter.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorBoundaryCharacter_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.taylorBoundary_shiftDivN` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.taylorEndpointCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.taylorEndpointCharacter._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorEndpointCharacter.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorEndpointCharacter_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.taylorReborderingDefect` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.taylorReborderingDefect._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorReborderingDefect._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorReborderingDefect.congr_simp` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorReborderingDefect.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorReborderingDefect_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.taylorSplitBoundary` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `IVP.taylorSplitBoundary._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorSplitBoundary._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `IVP.taylorSplitBoundary_trace` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordIVPBoundaryP7.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP7.lean) |
+| `MvPolyBridge.CompPoly.Chebyshev.differentiable_eval` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.Chebyshev.eval_isSymmetric` | STAGE | STAGE | [staged/B5RecordSymmetricStorageBordered.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordSymmetricStorageBordered.lean) |
+| `MvPolyBridge.CompPoly.Chebyshev.fderiv_eval` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.Chebyshev.norm_derivative_le` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.Chebyshev.norm_derivative_sub_le_max` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.Chebyshev.norm_eval_le` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.Chebyshev.norm_eval_sub_le` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.Chebyshev.norm_eval_sub_le_of_norm_sub` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.derivativeCentredBound_ratCast` | R-ELAB | DELETE | — |
+| `MvPolyBridge.CompPoly.evalLaurentCoeffSeq_eq_of_support` | STAGE | STAGE | [staged/B5RecordLaurentInterpreter.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordLaurentInterpreter.lean) |
+| `MvPolyBridge.CompPoly.evalQ_cast` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.lipschitzBound_add_op` | R-ELAB | DELETE | — |
+| `MvPolyBridge.CompPoly.lipschitzBound_mul_op` | R-ELAB | DELETE | — |
+| `MvPolyBridge.CompPoly.lipschitzBound_neg_op` | R-ELAB | DELETE | — |
+| `MvPolyBridge.CompPoly.lipschitzBound_sub_op` | R-ELAB | DELETE | — |
+| `MvPolyBridge.CompPoly.norm_evalBanach_sub_le_max` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.norm_fderiv_evalBanach_apply_le` | STAGE | STAGE | [staged/B5RecordTaylorDerivativeP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorDerivativeP1.lean) |
+| `MvPolyBridge.CompPoly.norm_fderiv_evalBanach_le` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.pderiv_pderiv_toMvPoly` | DELETE | DELETE | — |
+| `MvPolyBridge.CompPoly.toMvPoly_add_op` | R-ELAB | DELETE | — |
+| `MvPolyBridge.CompPoly.toMvPoly_mul_op` | R-ELAB | DELETE | — |
+| `MvPolyBridge.CompPoly.toMvPoly_neg_op` | R-ELAB | DELETE | — |
+| `MvPolyBridge.CompPoly.toMvPoly_sub_op` | R-ELAB | DELETE | — |
+| `MvPolyBridge.contDiff_evalBanach` | DELETE | DELETE | — |
+| `MvPolyBridge.differentiable_evalBanach` | DELETE | DELETE | — |
+| `MvPolyBridge.instDecidableEqCompPoly` | R-ELAB | fragment | — |
+| `MvPolyBridge.instDecidableEqCompPoly.decEq` | R-ELAB | fragment | — |
+| `MvPolyBridge.mvPolyCoeff_C_fun` | R-ELAB | DELETE | — |
+| `MvPolyBridge.mvPolyCoeff_one` | R-ELAB | DELETE | — |
+| `MvPolyBridge.mvPolyCoeff_zero` | R-ELAB | DELETE | — |
+| `MvPolyBridge.norm_aeval_sub_le` | DELETE | DELETE | — |
+| `MvPolyBridge.norm_fderiv_aeval_le` | STAGE | STAGE | [staged/B5RecordTaylorDerivativeP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorDerivativeP2.lean) |
+| `MvPolynomial.C_ofNat_eq` | R-ELAB | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `MvPolynomial.contDiff_aeval` | STAGE | STAGE | [staged/B5RecordMvPolynomialCalculus.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordMvPolynomialCalculus.lean) |
+| `MvPolynomial.totalDegree_pderiv_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordMvPolynomialCalculus.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordMvPolynomialCalculus.lean) |
+| `RadiiPolynomial.Certification.Rational.Z₀Slot.ofNat` | R-ELAB | fragment | — |
+| `RadiiPolynomial.Certification.Rational.Z₀Slot.ofNat_ctorIdx` | R-ELAB | fragment | — |
+| `RadiiPolynomial.Certification.Rational.axpyB_nil` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.Certification.Rational.instDecidableEqZ₀Slot` | R-ELAB | fragment | — |
+| `RadiiPolynomial.CrossGeometry.add_inv_le_add_inv_of_inv_le_of_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.aeval_of_norm_le_comp_chebyshevToTaylorAeval` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.bernsteinParameter` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.bernsteinParameter.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.bernsteinParameter_le_iff_le_semiMinor` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.chebPolyTaylor` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebPolyTaylor._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebPolyTaylor.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebPolyTaylor_norm_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebPolyTaylor_one` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebPolyTaylor_toSeq` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevDerivativeToTaylorCLM` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevDerivativeToUCLM` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevDerivativeToUCLM_toSeq` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevStorageFactor` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevStorageFactor._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevStorageFactor.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevStorageFactor_nonneg` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorAeval` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorAeval._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorAeval_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorAeval_comp_joukowskiAevalSymm` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorAeval_joukowskiGenSymm` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorBorderedCLM` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorBorderedCLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorBorderedCLM._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorBorderedCLM._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorBorderedCLM.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorBorderedCLM_norm_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorBorderedCLM_single` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorCLM` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorCLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorCLM._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorCLM._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorCLM._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.chebyshevToTaylorCLM.congr_simp` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.CrossGeometry.coe_joukowskiAevalSymm` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.comp_joukowskiAeval_eq_evalC` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.derivShift_CLM_comp_chebyshevToTaylorCLM` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.derivShift_chebPolyTaylor` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.endpointJoukowskiAevalSymm` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.endpointJoukowskiAevalSymm_gen` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.endpointJoukowskiGen` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.endpointJoukowskiGenSymm` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.endpointJoukowskiGen_isSymmetric` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.evalLaurentC_comp_joukowskiAeval` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.evalLaurentC_neg_one_comp_joukowskiAeval` | DELETE | DELETE | — |
+| `RadiiPolynomial.CrossGeometry.eval_chebyshevToTaylorCLM` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.eval_joukowskiGen` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.joukowskiAeval` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.joukowskiAevalSymm` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.joukowskiAevalSymm_gen` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.joukowskiAevalSymm_injective` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.joukowskiAeval_gen` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.joukowskiAeval_injective` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_chebyshevDerivativeToTaylorCLM_apply_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_chebyshevDerivativeToTaylorCLM_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_chebyshevDerivativeToUCLM_apply_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_chebyshevDerivativeToUCLM_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_chebyshevToTaylorAeval` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_chebyshevToTaylorAeval_apply_le` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.CrossGeometry.norm_chebyshevToTaylorAeval_le` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.CrossGeometry.norm_chebyshevToTaylorCLM_apply_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_chebyshevToTaylorCLM_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_endpointJoukowskiGen_pow_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_endpointJoukowskiGen_pow_le_of_gate` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_joukowskiGen_pow_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_joukowskiGen_pow_le_of_gate` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_joukowski_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_joukowski_le_semiMajor` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_uPolyOmegaSynthesisCLM_apply_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.norm_uPolyOmegaSynthesisCLM_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.one_le_of_semiMajor_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.one_le_semiMajor` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.one_lt_of_pos_le_semiMinor` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.roundtrip_radius_lt` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.roundtrip_radius_sq_le` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.semiMajor` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.semiMajor_pos` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.semiMajor_sq_sub_semiMinor_sq` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.semiMinor` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.semiMinor_nonneg` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.symmetricEndpointCharacter_comp_endpointJoukowskiAevalSymm` | DELETE | DELETE | — |
+| `RadiiPolynomial.CrossGeometry.symmetricEvalCharacter_comp_endpointJoukowskiAevalSymm` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.symmetricEvalCharacter_comp_joukowskiAevalSymm` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `RadiiPolynomial.CrossGeometry.uPolyOmega` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.uPolyOmegaSynthesisCLM` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.uPolyOmegaSynthesisCLM_apply` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.uPolyOmegaSynthesisCLM_comp_chebyshevDerivativeToUCLM` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.uPolyOmega_toSeq` | STAGE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `RadiiPolynomial.CrossGeometry.valA_comp_joukowskiAevalSymm` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.DiscreteConvolution.addDelta_eq_single` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.DiscreteConvolution.addRingConvolution_eq_finiteAddConvolution` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.DiscreteConvolution.delta_eq_single` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.DiscreteConvolution.ringConvolution_eq_finiteMulConvolution` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.FiberTrivialization.atom_def` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FiberTrivialization.coe_equivL` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FiberTrivialization.coe_equivL_symm` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FiberTrivialization.equiv_symm_add` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FiberTrivialization.equiv_symm_neg` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FiberTrivialization.weight_def` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FinWeighted.ofVec_add` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FinWeighted.ofVec_smul` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FinWeighted.ofVec_sub` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FinWeighted.stdBasis_apply_ne` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FinWeighted.stdBasis_apply_self` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FinWeighted.toVec_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FinWeightedMatrix.toVec_toWeightedCLM` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FinWeightedMatrix.toWeightedCLM_mul` | DELETE | DELETE | — |
+| `RadiiPolynomial.FinWeightedMatrix.toWeightedCLM_one` | DELETE | DELETE | — |
+| `RadiiPolynomial.FiniteBlockMatrix.toMatrix_blockId` | DELETE | DELETE | — |
+| `RadiiPolynomial.FiniteBlockMatrix.toMatrix_eq_comp` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.FiniteWeightedNorm.finWeightedMatrixNorm_le_of_dyadic` | STAGE | STAGE | [staged/B5RecordDyadicP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicP1.lean) |
+| `RadiiPolynomial.FiniteWeightedNorm.finWeightedMatrixNorm_le_of_matrixColNorm_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.FiniteWeightedNorm.finWeightedMatrixNorm_le_via_cols` | STAGE | STAGE | [staged/B5RecordDyadicP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicP1.lean) |
+| `RadiiPolynomial.FiniteWeightedNorm.matrixColNorm_le_of_arrayColNormIccSum` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.FνN.norm_mk_single` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.FνN.sub_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.Galerkin.FνN.wnorm_nonneg` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.Jσ` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.Jσ_apply_emb` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.Tσ` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.Tσ_Jσ` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.amb` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.ambL` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.coe_gradCLM` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.evenLift_neg` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.fderiv_galerkin` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.hasFDerivAt_galerkin` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.hasFDerivAt_galerkinFace` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.norm_Jσ` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.norm_Jσ_Tσ_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.norm_amb_symm` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.Galerkin.norm_fderiv_galerkinFace_sub_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.truncConv` | DELETE | DELETE | — |
+| `RadiiPolynomial.Galerkin.πN_mul_ιN` | DELETE | DELETE | — |
+| `RadiiPolynomial.Gelfand.continuous_character_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CharacterTopology.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CharacterTopology.lean) |
+| `RadiiPolynomial.Gelfand.continuous_of_continuous_apply` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.Gelfand.instTopologicalSpaceContinuousAlgHom_radiiPolynomial` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CharacterTopology.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CharacterTopology.lean) |
+| `RadiiPolynomial.Gelfand.pointwiseTopology` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CharacterTopology.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CharacterTopology.lean) |
+| `RadiiPolynomial.Icc_subset_ordConnectedComponent_of_neg` | DELETE | DELETE | — |
+| `RadiiPolynomial.LaurentSpectrum.Annulus` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.Character` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.Character._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.annulusCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.annulusCharacter._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.annulusCharacter_gen` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.annulusCharacter_single` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.annulus_norm_zpow_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.characterEquivAnnulus` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.characterEquivAnnulus._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.characterEquivAnnulus._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.characterEquivAnnulus._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.characterEquivAnnulus._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.characterHomeomorphAnnulus` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.characterHomeomorphAnnulus._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.characterHomeomorphAnnulus_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.continuous_annulusCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.continuous_annulusCharacter_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.continuous_character_apply` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.LaurentSpectrum.instTopologicalSpaceCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.norm_powerColumn_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.pointwiseTopology` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.powerColumn` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.powerColumn._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.powerColumn_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.synthesis` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.LaurentSpectrum.synthesis._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.synthesis._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.synthesis.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.LaurentSpectrum.synthesis_eq_character` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/LaurentSpectrum.lean) |
+| `RadiiPolynomial.MakeCompPoly.reifyBody` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyBody._sparseCasesOn_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyBody._unsafe_rec` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyBody.match_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyBody.match_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyBody.match_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyFinIdx` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyFinIdx.match_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyNat` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyNat._sparseCasesOn_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyNat._sparseCasesOn_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyNat._sparseCasesOn_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyNat._sparseCasesOn_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyNat._unsafe_rec` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyNat.match_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyNat.match_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyRatScalar` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyRatScalar._unsafe_rec` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyRatScalar.match_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.MakeCompPoly.reifyRatScalar.match_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.NewtonLikeMap.differentiable` | DELETE | DELETE | — |
+| `RadiiPolynomial.OmegaScaledReal.omegaWeight_nonneg` | DELETE | DELETE | — |
+| `RadiiPolynomial.PairEnclosure` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.PairEnclosure.Icc_subset_component` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.PairEnclosure.casesOn` | NON-FACE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.PairEnclosure.lower` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.PairEnclosure.mk` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.PairEnclosure.neg` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.PairEnclosure.rec` | NON-FACE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.PairEnclosure.recOn` | NON-FACE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.PairEnclosure.upper` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.analyticAt_eval_endpoints` | DELETE | DELETE | — |
+| `RadiiPolynomial.PhysicalSpectrum.characterEquivEllipse` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.characterEquivEllipse_apply` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.characterEquivEllipse_restriction` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.characterHomeomorphEllipse` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.characterHomeomorphEllipse._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.PhysicalSpectrum.characterHomeomorphEllipse_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.character_apply_eq_tsum` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.character_gen_mem_ellipse` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.chebyshevColumn` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.chebyshevColumn_apply` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.complexEval_eq_ellipseCharacter` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Holomorphic.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Holomorphic.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.continuous_character_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.continuous_ellipseCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.continuous_ellipseCharacter_apply` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.exists_character_iff` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.focal_sum_le_iff_le_two_mul_semiMajor` | DELETE | DELETE | — |
+| `RadiiPolynomial.PhysicalSpectrum.instTopologicalSpaceCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.joukowski_mem_ellipse` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.norm_chebyshevColumn_le` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.pointwiseTopology` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Topology.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.pointwiseTopology._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.PhysicalSpectrum.restriction_eq_iff` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Basic.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Basic.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.restriction_surjective` | DELETE | DELETE | — |
+| `RadiiPolynomial.PhysicalSpectrum.retract_coe` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.PhysicalSpectrum.summable_character_series` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.synthesis` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.synthesis_eq_character` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.synthesis_mode` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.synthesis_one` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.synthesis_single` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Series.lean) |
+| `RadiiPolynomial.PhysicalSpectrum.two_mul_semiMajor` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/Spectrum/Ellipse.lean) |
+| `RadiiPolynomial.PolyZeroData.existsUnique_ofArray` | DELETE | DELETE | — |
+| `RadiiPolynomial.Residual.continuous_residual` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.correction` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.correction.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.Residual.correction_identity` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.correction_identity._simp_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.Residual.correction_identity._simp_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.Residual.dense_lpOneAlg_finiteSupport` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP2.lean) |
+| `RadiiPolynomial.Residual.exists_bezout_iff_dense_certificate` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.exists_bezout_iff_finiteSupport_certificate` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP2.lean) |
+| `RadiiPolynomial.Residual.exists_bezout_of_perturbation` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.exists_bezout_of_residual_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.exists_dense_candidate_of_bezout` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.exists_finiteSupport_candidate_of_bezout` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP2.lean) |
+| `RadiiPolynomial.Residual.exists_left_inverse_of_residual_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.exists_right_inverse_of_residual_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.leftInverseCorrection` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.leftInverseCorrection.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.Residual.leftInverseCorrection_mul` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.mul_rightInverseCorrection` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.norm_correction_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.norm_correction_sub_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.norm_leftInverseCorrection_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.norm_leftInverseCorrection_le._simp_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.Residual.norm_leftInverseCorrection_sub_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.norm_leftInverseCorrection_sub_le._simp_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.Residual.norm_leftInverseCorrection_sub_le._simp_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.Residual.norm_mul_geomSeries_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.norm_mul_geomSeries_sub_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.norm_residual_add_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.norm_rightInverseCorrection_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.norm_rightInverseCorrection_sub_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.residual` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.residual.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.Residual.residual_add` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.residual_add._abel_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.Residual.rightInverseCorrection` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.rightInverseCorrection.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.Residual.sum_norm_correction_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.Residual.sum_norm_correction_sub_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `RadiiPolynomial.ScalarBlockDiagData.Z₀_norm_le_of_eq_defect` | DELETE | DELETE | — |
+| `RadiiPolynomial.ScalarBlockDiagData.finBlock0_ofParts` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.ScalarBlockDiagData.injective_toScalarCLM_of_parts` | DELETE | DELETE | — |
+| `RadiiPolynomial.ScalarBlockDiagData.norm_toCLM_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.ScalarBlockDiagData.norm_toScalarCLM_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.ScalarBlockDiagData.tailDiag0_ofParts` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.ScalarBlockDiagData.toScalarCLM_toSeq_eq_action` | DELETE | DELETE | — |
+| `RadiiPolynomial.StdFinDimData.existsUnique_of_bounds` | DELETE | DELETE | — |
+| `RadiiPolynomial.StdFinDimData.isUnit_fderivC` | DELETE | DELETE | — |
+| `RadiiPolynomial.SystemBlockDiagData.Z₀_norm_le_of_eq_defect` | DELETE | DELETE | — |
+| `RadiiPolynomial.SystemBlockDiagData.Z₁_le_of_fin_kill_tail_dom` | STAGE | STAGE | [staged/B5RecordFinKillP3.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFinKillP3.lean) |
+| `RadiiPolynomial.SystemBlockDiagData.actionFinite_eq_zero_of_coeff_fin_zero` | STAGE | STAGE | [staged/B5RecordFinKillP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFinKillP2.lean) |
+| `RadiiPolynomial.SystemBlockDiagData.action_comp_finite` | DELETE | DELETE | — |
+| `RadiiPolynomial.SystemBlockDiagData.comp_finBlock` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.SystemBlockDiagData.comp_tailDiag` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.SystemBlockDiagData.norm_comp_of_fin_kill` | STAGE | STAGE | [staged/B5RecordFinKillP3.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFinKillP3.lean) |
+| `RadiiPolynomial.SystemBlockDiagData.norm_toCLM_apply_le` | STAGE | STAGE | [staged/B5RecordTaylorY0P2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorY0P2.lean) |
+| `RadiiPolynomial.SystemBlockDiagData.norm_toCLM_component_eq_Icc_sum` | STAGE | STAGE | [staged/B5RecordTaylorY0P2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorY0P2.lean) |
+| `RadiiPolynomial.SystemBlockDiagData.toBlockDiagOp_finBlock` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.SystemBlockDiagData.toBlockDiagOp_tailDiag` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.SystemBlockDiagData.toCLM_support` | STAGE | STAGE | [staged/B5RecordTaylorY0P2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorY0P2.lean) |
+| `RadiiPolynomial.SystemBlockDiagData.toCoeff_comp_toCLM_eq_action` | DELETE | DELETE | — |
+| `RadiiPolynomial.SystemBlockDiagData.toCoeff_id_sub_comp_toCLM` | DELETE | DELETE | — |
+| `RadiiPolynomial.SystemBlockDiagData.toCoeff_id_sub_comp_toCLM_finite` | DELETE | DELETE | — |
+| `RadiiPolynomial.SystemBlockDiagData.toCoeff_id_sub_comp_toCLM_tail` | DELETE | DELETE | — |
+| `RadiiPolynomial.Tactic._aux_RadiiPolynomial_Tactic_FinMatrixBound___elabRules_RadiiPolynomial_Tactic_finMatrixDyadic_1` | NON-FACE | STAGE | [staged/B5RecordDyadicSyntax.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicSyntax.lean) |
+| `RadiiPolynomial.Tactic.finMatrixDyadic` | NON-FACE | STAGE | [staged/B5RecordDyadicSyntax.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicSyntax.lean) |
+| `RadiiPolynomial.TaylorSpectrum.Character` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.Character._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.Disc` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.characterEquivDisc` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.characterEquivDisc._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.characterEquivDisc._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.characterEquivDisc._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.characterEquivDisc._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.characterHomeomorphDisc` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.characterHomeomorphDisc._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.characterHomeomorphDisc_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.continuous_character_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.continuous_discCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.continuous_discCharacter_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.discCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.discCharacter._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.discCharacter_gen` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.discCharacter_single` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.instTopologicalSpaceCharacter` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.norm_powerColumn_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.pointwiseTopology` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.powerColumn` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.powerColumn._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.powerColumn._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.powerColumn_apply` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.synthesis` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.TaylorSpectrum.synthesis._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.synthesis._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.synthesis.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.TaylorSpectrum.synthesis_eq_character` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/Spectrum.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Spectrum.lean) |
+| `RadiiPolynomial.WeightedLp.ColSum.ofFinsets` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.KernelLiftBound.mono` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.KernelLiftBound.of_clm` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.RowSum.ofFinsets` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.TailCheck` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.Q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.Q.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.b` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.b._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.b.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.bddAbove_tailIndicator` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.check` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.check._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.check_half` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.check_half._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.coeff_Q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.coeff_Q._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.coeff_Q_integratedProduct_b_11` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.coeff_b` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.coeff_b._proof_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.coeff_b._simp_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.coeff_b_of_gt` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.colMass_mQ_10_lt_9` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.colMass_mQ_10_lt_9._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.colMass_mQ_9` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.colMass_mQ_9._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.colMass_mQ_le_9` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.colMass_mQ_le_9._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.colMax_mQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.instFactLtRealOfNat` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.instFactLtRealOfNatHDiv` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.mQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.mQ.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.mQhalf` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.mQhalf.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.norm_Q_comp_integratedProduct_b_half_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.norm_Q_comp_integratedProduct_b_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.norm_Q_comp_integratedProduct_b_le_of_check` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.norm_Q_comp_integratedProduct_b_le_row` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.not_check_21` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.not_check_21._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.not_check_col10` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.not_check_col10._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.remainder` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.rowConst_mQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.rowConst_mQ._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.rowConst_mul_colMax` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.rowMass_mQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.rowMass_mQ._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.symbolMass_b_half` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.symbolMass_b_one` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.tailKernelCLM_b` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.tailKernel_11_10` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.tailKernel_11_10._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.tailKernel_11_9` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.tailKernel_11_9._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.tailKernel_12_10` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.tailKernel_12_10._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.tailKernel_13_11` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.tailKernel_13_11._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.βQ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.βQ.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.βQ_of_gt` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.βQ_of_gt._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.βQ_of_gt._proof_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.βQ_of_gt._proof_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.βQ_of_gt._proof_1_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.TailKernelChecks.βQ_of_gt._proof_1_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/TailKernelChecks.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.X` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.X._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.X.congr_simp` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.coeff` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.coeff.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.coeff_integratedProduct_succ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.coeff_integratedProduct_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.coeff_integrationCLM_succ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.coeff_integrationCLM_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.delta` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.geoPos` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.geoWeight` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.geoWeight.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integratedProduct` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integratedProduct._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integratedProduct_delta_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integratedProduct_single_single` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integratedProduct_symm` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integrationCLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integrationCLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integrationCLM._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integrationCLM._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integrationCLM._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.integrationCLM.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.norm_delta` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.norm_integratedProduct_apply_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.norm_integratedProduct_eq` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.norm_integratedProduct_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.norm_integratedProduct_left_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.norm_integrationCLM_eq` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.norm_sq_eq_tsum` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.Taylor.not_bound_below_radius` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Pi` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Pi.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Pi_comp_Pi` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Pi_comp_Q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Q._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Q.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Q_comp_Pi` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Q_comp_Q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Q_comp_withHead` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.Xp` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_Pi` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_Pi._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_Pi._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_Pi_fin` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_Pi_of_gt` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_Q_fin` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_Q_of_gt` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_headCore_fin` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_headCore_of_gt` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_headCore_of_gt._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_withHead_fin` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.coeff_withHead_of_gt` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.headCore` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.headCore._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.headCore._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.headCore._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.headCore._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.headCore._proof_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.headCore._proof_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.headCore._proof_7` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.headCore.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.withHead` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.withHead.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.withHead_comp` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.withHead_comp_Q` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.withHead_one` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.WithHead.withHead_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `RadiiPolynomial.WeightedLp.abs_eval_embedCLM_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.cast_rowMass` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.coeff_embedCLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.coeff_injective` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.coeff_kernelCLM_single` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.coeff_kernelLiftCLM` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.coeff_neg` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedLp.coeff_single_of_ne` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.coeff_sum_smul_kcol` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.coeff_symbolAction₀_apply` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.coeff_tailKernelCLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.colMass_le_colMax` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.colMass_le_rowMass_div` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.colSum_tailKernel` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.conjL1_apply_toLp` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedLp.conjL1_eq_kernelLiftCLM` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP1.lean) |
+| `RadiiPolynomial.WeightedLp.embedCLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedCLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedCLM.congr_simp` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Solution.lean) |
+| `RadiiPolynomial.WeightedLp.embedConst` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedConst.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedConst_pos` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedConst_sq` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedLM._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedLM._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedLM._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedLM._proof_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedLM._proof_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedLM._proof_7` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.embedLM._proof_8` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.eq_kernelLiftCLM` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.eval_embedCLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.hasSum_coeff_kernelLiftCLM` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.hasSum_row_tailKernel` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.instDecidableTailCheck` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.instDecidableTailCheck._aux_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.invWeightSeq` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.kcol_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedLp.kernelLiftCLM` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.kernelLiftCLM_congr` | R-ELAB | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.kernelLiftCLM_eq_kernelCLM` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.kernelLiftCLM_single` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.liftCLM_congr` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedLp.mem_l1Weighted_coeff` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.norm_Q_comp_integratedProduct_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.norm_Q_comp_integratedProduct_le_of_check` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.norm_apply_eq_abs_coeff` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.norm_apply_invWeightSeq` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.norm_embedCLM_apply_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.norm_embedCLM_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.norm_equiv_inv_weight` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.norm_kernelCLM_two_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.norm_kernelLiftCLM_le` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.norm_sum_single` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.norm_sum_single_two_sq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedLp.norm_tailKernelCLM_le_of_sq` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.norm_tailKernelCLM_le_row` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.norm_tailKernelCLM_two_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.not_dense_finsupp_top` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.one_le_dist_invWeightSeq` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.one_le_norm_invWeightSeq_sub` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.opNorm_le_of_colSum` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.rawSymbol_single` | DELETE | DELETE | — |
+| `RadiiPolynomial.WeightedLp.rowMass` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.rowMass_mono` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.rowMass_nonneg` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.rowSum_tailKernel` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.schurBound_tailKernel` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.schurBound_tailKernel_of_le` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.schurBound_weightedScalar_iff` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.sq_ratio_lt_one` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.sum_abs_coeff_mul_pow_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.sum_abs_coeff_mul_pow_le._simp_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.sum_abs_coeff_mul_pow_le._simp_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.sum_abs_coeff_mul_pow_le._simp_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.sum_abs_coeff_mul_pow_le._simp_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.sum_abs_coeff_mul_pow_le._simp_1_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.sum_abs_coeff_mul_pow_le._simp_1_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.sum_abs_coeff_mul_pow_le._simp_1_7` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `RadiiPolynomial.WeightedLp.sum_range_symbolMass_le` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedLp.summable_norm_kernel` | STAGE | STAGE | [staged/B5RecordFiniteSynthesisP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteSynthesisP2.lean) |
+| `RadiiPolynomial.WeightedLp.tailKernelCLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.tailKernelCLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.tailKernelCLM.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.tailKernelCLM_eq_Q_comp_integratedProduct` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.tailKernelCLM_eq_Q_comp_integratedProduct._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/TailKernel.lean) |
+| `RadiiPolynomial.WeightedLp.tailKernel_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedLp.tsum_row_tailKernel` | STAGE | STAGE | [staged/B5RecordTailKernelSchur.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTailKernelSchur.lean) |
+| `RadiiPolynomial.WeightedScalar.equiv_toAddEquiv` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedScalar.fiberTrivialization_equiv` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedScalar.instCoeOut` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedScalar.norm_neg'` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedScalar.norm_zero'` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.WeightedScalar.toReal_ofReal` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.XL1.ext_iff` | R-ELAB | fragment | — |
+| `RadiiPolynomial.XL1.opNorm_le_of_fin_kill_tail_eq` | STAGE | STAGE | [staged/B5RecordFinKillP3.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFinKillP3.lean) |
+| `RadiiPolynomial.XL1_fin1_eq_const` | DELETE | DELETE | — |
+| `RadiiPolynomial.Z_bound` | DELETE | DELETE | — |
+| `RadiiPolynomial.Z₀_norm_le_of_defect_plus_tail_error` | DELETE | DELETE | — |
+| `RadiiPolynomial.Z₂_ball_bound_of_affine_leftMul_of_poly` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct._aux_RadiiPolynomial_Algebra_Convolution_CauchyProduct___unexpand_RadiiPolynomial_cauchyProduct_1` | NON-FACE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.assoc` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.coeff_toPowerSeriesLinearEquiv` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.comm` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.delta_left` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.delta_right` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.eq_coeff_mul` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.left_distrib` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.mul_one` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.mul_smul` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.mul_zero` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.one` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.one_eq_single` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.one_mul` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.one_succ` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.one_zero` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.right_distrib` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.single_mul_single` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv_symm_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.toPowerSeriesLinearEquiv_symm_apply_coeff` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.toPowerSeries_injective` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.toPowerSeries_mul` | STAGE | STAGE | [staged/B5RecordPowerSeriesBridge.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordPowerSeriesBridge.lean) |
+| `RadiiPolynomial.cauchyProduct.toPowerSeries_one` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.toPowerSeries_single` | STAGE | STAGE | [staged/B5RecordPowerSeriesBridge.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordPowerSeriesBridge.lean) |
+| `RadiiPolynomial.cauchyProduct.zero_mul` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.zero_of_support` | DELETE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.«_aux_RadiiPolynomial_Algebra_Convolution_CauchyProduct___macroRules_RadiiPolynomial_cauchyProduct_term_⋆__1»` | NON-FACE | DELETE | — |
+| `RadiiPolynomial.cauchyProduct.«term_⋆_»` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.chebyshevToU_CLM_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.chebyshevToU_norm_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.checkMatrixNormDyadic` | STAGE | STAGE | [staged/B5RecordDyadicP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicP1.lean) |
+| `RadiiPolynomial.colNormSumDyadic` | STAGE | STAGE | [staged/B5RecordDyadicP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicP1.lean) |
+| `RadiiPolynomial.colNormTermEval` | STAGE | STAGE | [staged/B5RecordDyadicP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicP1.lean) |
+| `RadiiPolynomial.colNormTermEval_correct` | STAGE | STAGE | [staged/B5RecordDyadicP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicP1.lean) |
+| `RadiiPolynomial.colTailQ` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.colTailQ_nonneg` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.colTailTermQ` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.convexOn_hornerEval_mul_pow` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.convexOn_radiiPolynomial_of_poly` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.defectOfBlockDiagOp_toCLM_eq` | DELETE | DELETE | — |
+| `RadiiPolynomial.derivShift_CLM` | STAGE | STAGE | [staged/B5RecordOmegaWeightFamily.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOmegaWeightFamily.lean) |
+| `RadiiPolynomial.derivShift_CLM_apply` | STAGE | STAGE | [staged/B5RecordOmegaWeightFamily.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOmegaWeightFamily.lean) |
+| `RadiiPolynomial.derivShift_linear_add` | STAGE | STAGE | [staged/B5RecordOmegaWeightFamily.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOmegaWeightFamily.lean) |
+| `RadiiPolynomial.derivShift_linear_smul` | STAGE | STAGE | [staged/B5RecordOmegaWeightFamily.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOmegaWeightFamily.lean) |
+| `RadiiPolynomial.derivShift_norm_le` | STAGE | STAGE | [staged/B5RecordOmegaWeightFamily.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOmegaWeightFamily.lean) |
+| `RadiiPolynomial.enclosure_Icc` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.enclosure_Icc_poly` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.enclosure_of_differentiable` | DELETE | DELETE | — |
+| `RadiiPolynomial.enclosure_of_differentiableOn` | DELETE | DELETE | — |
+| `RadiiPolynomial.enclosure_pair` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.enclosure_pair_poly` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.fderiv_diff_of_affine_leftMul` | DELETE | DELETE | — |
+| `RadiiPolynomial.finBlockAction_eq_zero_of_coeff_zero` | STAGE | STAGE | [staged/B5RecordFinKillP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFinKillP2.lean) |
+| `RadiiPolynomial.finiteAddConvolution.add_left` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.add_right` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.assoc` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.comm` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.single_single` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.single_zero_left` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.single_zero_left_apply` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.single_zero_right` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.single_zero_right_apply` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.smul_right` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.zero_left` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteAddConvolution.zero_right` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteBlockMatrixNorm_le_of_blockRowNorm_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.finiteMulConvolution.add_left` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.add_right` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.assoc` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.comm` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.single_one_left` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.single_one_left_apply` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.single_one_right` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.single_one_right_apply` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.single_single` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.smul_right` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.zero_left` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.finiteMulConvolution.zero_right` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.generalRadiiPolynomial_neg_of_Q` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.general_fixed_point_theorem` | DELETE | DELETE | — |
+| `RadiiPolynomial.hasFDerivWithinAt_fderiv_of_differentiable` | DELETE | DELETE | — |
+| `RadiiPolynomial.hasFDerivWithinAt_fderiv_of_differentiableOn` | DELETE | DELETE | — |
+| `RadiiPolynomial.hornerEval` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.hornerEval_cons` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.hornerEval_nil` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.l1Chebyshev.IsSymmetric.neg` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.IsSymmetric.sub` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.OneSided.C₂` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.C₂_le_C₃` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.C₂_le_three` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.C₂_nonneg` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.C₃` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.C₃_eq_left_iff` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.C₃_le_five` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.C₃_nonneg` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.borderedToWeighted_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.OneSided.borderedToWeighted_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul_apply` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul_assoc` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul_comm` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul_cosMul` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul_one_left` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul_one_right` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul_single_self` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul_single_single` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul_toSeq` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul₃` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul₃_apply` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul₃_eq` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.cosMul₃_single` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.isSymmetric_symExt` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.norm_borderedToWeighted_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.OneSided.norm_cosMul_le` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.norm_cosMul_single_self` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.norm_cosMul_single_single_le` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.norm_cosMul₃_le` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.norm_cosMul₃_single_le` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.norm_restr_single` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.norm_symExt_le` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.one_le_C₂` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.opNorm_cosMul_eq` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.opNorm_cosMul_le` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.opNorm_cosMul₃_eq` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.opNorm_cosMul₃_le` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.opNorm_restr_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.OneSided.opNorm_symExt_le` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.restr_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.OneSided.restr_single_int` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.restr_single_natCast` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.restr_single_negSucc` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.restr_symExt` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.symExt` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.symExt_apply` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.symExt_mem_symmetricSubalgebra` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.symExt_restr` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.symExt_single` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.symExt_single_zero` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.symExt_toSeq` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.t` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.t_le_half_iff` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.t_le_one` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.OneSided.t_pos` | STAGE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `RadiiPolynomial.l1Chebyshev.algHom_ext` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.coe_symmetricRetract` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.conj_evalLaurentC` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/UnitLift.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/UnitLift.lean) |
+| `RadiiPolynomial.l1Chebyshev.conj_evalLaurentC_of_isSymmetric` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/UnitLift.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/UnitLift.lean) |
+| `RadiiPolynomial.l1Chebyshev.eq_unitLift_gen` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.evalAtCLM_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.evalLaurentC_eq_re_of_isSymmetric` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/UnitLift.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/UnitLift.lean) |
+| `RadiiPolynomial.l1Chebyshev.evalLaurentC_gen` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.evalLaurentC_inv_of_isSymmetric` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/UnitLift.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/UnitLift.lean) |
+| `RadiiPolynomial.l1Chebyshev.evalLaurentC_symmetrize_eq_re` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/UnitLift.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/UnitLift.lean) |
+| `RadiiPolynomial.l1Chebyshev.eval_at_one` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.eval_neg` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.eval_sub` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.eval_symmetrize` | STAGE | STAGE | [staged/B5RecordIVPBoundaryP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP1.lean) |
+| `RadiiPolynomial.l1Chebyshev.finSum_le_norm` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.hasSum_single` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.hasSum_single_mapCLM` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.inv_le_norm_genUnit` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.isClosed_symmetricSubalgebra` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/SymmetricSubalgebra.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/SymmetricSubalgebra.lean) |
+| `RadiiPolynomial.l1Chebyshev.isSymmetric_zero` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.mem_symmetricSubalgebra` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.natEmbed_single` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.nonnegRestrictCLM_apply` | R-ELAB | STAGE | [staged/B5Records/Spectra/Chebyshev/SymmetricSubalgebra.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/SymmetricSubalgebra.lean) |
+| `RadiiPolynomial.l1Chebyshev.nonnegRestrictCLM_norm_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.nonnegRestrictCLM_norm_of_isSymmetric` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.nonnegRestrict_symmetrize` | STAGE | STAGE | [staged/B5RecordSymmetricStorageBordered.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordSymmetricStorageBordered.lean) |
+| `RadiiPolynomial.l1Chebyshev.norm_genUnit_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.norm_symmetricRetract_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.norm_unitLift_apply_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.opNorm_eq_iSup_cols₂` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.opNorm_eq_iSup_cols₃` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.physicalBorderedEquiv` | STAGE | STAGE | [staged/B5RecordSymmetricStorageBordered.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordSymmetricStorageBordered.lean) |
+| `RadiiPolynomial.l1Chebyshev.physicalBorderedEquiv_apply` | STAGE | STAGE | [staged/B5RecordSymmetricStorageBordered.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordSymmetricStorageBordered.lean) |
+| `RadiiPolynomial.l1Chebyshev.single_smul` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.symmetricEvalCharacter_apply` | R-ELAB | STAGE | [staged/B5Records/Spectra/Chebyshev/SymmetricSubalgebra.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/SymmetricSubalgebra.lean) |
+| `RadiiPolynomial.l1Chebyshev.symmetricRetract_coe` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.symmetricSubalgebra.instCompleteSpace` | R-ELAB | STAGE | [staged/B5RecordSymmetricStorageBordered.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordSymmetricStorageBordered.lean) |
+| `RadiiPolynomial.l1Chebyshev.symmetrize_CLM_norm_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.toSeq_eq_toRealSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.unitLift` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.unitLift_gen` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Chebyshev.unitLift_gen_inv` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1OfArrayQ` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1OfArrayQ_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Omega.add_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Omega.eval_add` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Omega.eval_at_zero` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Omega.eval_smul` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Omega.ext` | STAGE | STAGE | [staged/B5RecordOmegaWeightFamily.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOmegaWeightFamily.lean) |
+| `RadiiPolynomial.l1Omega.geom_to_omega_mem` | STAGE | STAGE | [staged/B5RecordOmegaWeightFamily.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOmegaWeightFamily.lean) |
+| `RadiiPolynomial.l1Omega.mem_sub` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Omega.mk_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Omega.neg_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Omega.norm_eq_tsum` | STAGE | STAGE | [staged/B5RecordOmegaWeightFamily.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOmegaWeightFamily.lean) |
+| `RadiiPolynomial.l1Omega.smul_toSeq` | R-ELAB | STAGE | [staged/B5Records/Spectra/Geometric/Omega.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Omega.lean) |
+| `RadiiPolynomial.l1Omega.sub_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Omega.toSeq_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Omega.zero_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.aeval` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.aeval_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.aeval_gen` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.aeval_of_norm_le'` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.aeval_of_norm_le'_gen` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.aeval_of_norm_le_comp_radiusRestrict` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/RadiusRestriction.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/RadiusRestriction.lean) |
+| `RadiiPolynomial.l1Weighted.aeval_single` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.character_classification_evalC` | STAGE | STAGE | [staged/B5Records/Spectra/Geometric/EvalC.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/EvalC.lean) |
+| `RadiiPolynomial.l1Weighted.coeff_trunc` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.continuous_eval` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.differentiable_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.eq_aeval_gen` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.eval_double_finset_sum` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.eval_finset_sum` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.eval_neg` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.eval_one` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.eval_single` | R-ELAB | STAGE | [staged/B5RecordIVPBoundaryP3.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP3.lean) |
+| `RadiiPolynomial.l1Weighted.eval_sub` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.eval_zero` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.exists_eval_eq_of_analyticAt` | STAGE | STAGE | [staged/B5RecordTaylorAnalytic.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorAnalytic.lean) |
+| `RadiiPolynomial.l1Weighted.ext_of_eventuallyEq_eval` | STAGE | STAGE | [staged/B5RecordTaylorAnalytic.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordTaylorAnalytic.lean) |
+| `RadiiPolynomial.l1Weighted.hasDerivAt_eval_single` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.hasFPowerSeriesAt_eval` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.leftMul_add` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.leftMul_sub` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.mk_val_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.norm_aeval_apply_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.norm_aeval_of_norm_le'_apply_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.norm_aeval_of_norm_le_apply_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.norm_evalC_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.norm_gen_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.norm_radiusRestrict` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/RadiusRestriction.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/RadiusRestriction.lean) |
+| `RadiiPolynomial.l1Weighted.norm_radiusRestrict_apply_le` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/RadiusRestriction.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/RadiusRestriction.lean) |
+| `RadiiPolynomial.l1Weighted.norm_radiusRestrict_le` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.l1Weighted.norm_tailProj_CLM_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.norm_trunc_CLM_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.one_toSeq_succ` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.one_toSeq_zero` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.opNorm_eq_iSup_cols₂` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.opNorm_eq_iSup_cols₃` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.radiusRestrict` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/RadiusRestriction.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/RadiusRestriction.lean) |
+| `RadiiPolynomial.l1Weighted.radiusRestrict._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.l1Weighted.radiusRestrict._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.l1Weighted.radiusRestrict.congr_simp` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.l1Weighted.radiusRestrict.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.l1Weighted.radiusRestrict_comp` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/RadiusRestriction.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/RadiusRestriction.lean) |
+| `RadiiPolynomial.l1Weighted.radiusRestrict_gen` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/RadiusRestriction.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/RadiusRestriction.lean) |
+| `RadiiPolynomial.l1Weighted.radiusRestrict_injective` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/RadiusRestriction.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/RadiusRestriction.lean) |
+| `RadiiPolynomial.l1Weighted.radiusRestrict_refl` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/RadiusRestriction.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/RadiusRestriction.lean) |
+| `RadiiPolynomial.l1Weighted.ratSmul_eq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.single_CLM_toSeq_of_ne` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.single_CLM_toSeq_same` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.single_mul` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.single_toSeq_of_ne` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.single_toSeq_same` | R-ELAB | STAGE | [staged/B5RecordIVPBoundaryP2.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP2.lean) |
+| `RadiiPolynomial.l1Weighted.smul_proj_eq_leftMul_comp_proj` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.tendsto_trunc` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.toSeq_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.toSeq_nsmul_sub_one` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.toSeq_radiusRestrict` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/RadiusRestriction.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/RadiusRestriction.lean) |
+| `RadiiPolynomial.l1Weighted.toSeq_smul_sub_one` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.trunc` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.trunc_CLM` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.trunc_CLM_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.l1Weighted.trunc_eq_sum` | DELETE | DELETE | — |
+| `RadiiPolynomial.l1Weighted.zero_toSeq` | R-ELAB | STAGE | [staged/B5RecordFinKillP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFinKillP1.lean) |
+| `RadiiPolynomial.lambdaN` | DELETE | DELETE | — |
+| `RadiiPolynomial.lambdaN_CLM` | DELETE | DELETE | — |
+| `RadiiPolynomial.lambdaN_CLM_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lambdaN_gt_mode` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lambdaN_le_mode` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lambdaN_linear_add` | DELETE | DELETE | — |
+| `RadiiPolynomial.lambdaN_linear_smul` | DELETE | DELETE | — |
+| `RadiiPolynomial.lambdaN_norm_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.le_of_forall_pow_le_mul_pow` | STAGE | STAGE | [staged/B5Records/Spectra/WeightedL1/UniversalProperty.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/WeightedL1/UniversalProperty.lean) |
+| `RadiiPolynomial.lpOneAlg.abs_mulToRealSeq_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.abs_toRealSeq_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.coe_fiberSingleₗᵢ` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.colRatio` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.colRatio_add_of_comp_split` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.colRatio_add_of_head_tail` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.colRatio_add_of_head_zero` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.colRatio_bddAbove` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.colRatio_eq_zero_of_comp_headProj` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.colRatio_eq_zero_of_comp_tailProj` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.colRatio_le_opNorm` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.colRatio_nonneg` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.cols_le_opNorm` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.cols_le_opNorm₂` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.cols_le_opNorm₃` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.continuousLinearMap_ext'` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.diagCLM_comp_headProj` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.evalCLM_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.evalLaurent` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.evalLaurent_apply` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.evalLaurent_gen` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.evalLaurent_single` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.exists_eq_geomAeval` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.exists_eq_geomUnitLift` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.fiberSingle_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.fiberSingle_zero` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.geomAeval_of_norm_le'` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.geomAeval_of_norm_le'_gen` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.geomAeval_toContinuousLinearMap` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.geomUnitLift_gen_inv` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.geomUnitLift_toContinuousLinearMap` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.hasSum_fiberSingle_mapCLM` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.headProj_add_tailProj` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.headProj_apply_eq_self_iff` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.headProj_apply_eq_self_iff_fiber` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.headProj_comp_diagCLM` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.headProj_comp_headProj` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.headProj_comp_tailProj` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.headProj_single` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.headSymbol_eq_indicator` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.head_comp_eq_zero_iff_tail_comp_eq_self` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.inv_le_norm_genUnit` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/UnitLift.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/UnitLift.lean) |
+| `RadiiPolynomial.lpOneAlg.isIdempotentElem_headProj` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.liftAlgHom_toContinuousLinearMap` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.mulMul_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.mul_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.norm_add_of_head_tail` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.norm_evalLaurent_apply_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.norm_genUnit_le` | STAGE | STAGE | [staged/B5Records/Spectra/Chebyshev/UnitLift.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Chebyshev/UnitLift.lean) |
+| `RadiiPolynomial.lpOneAlg.norm_gen_le` | STAGE | STAGE | [staged/B5Records/Spectra/Geometric/Aeval.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Aeval.lean) |
+| `RadiiPolynomial.lpOneAlg.norm_gen_pow` | STAGE | STAGE | [staged/B5Records/Spectra/Geometric/Aeval.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/Aeval.lean) |
+| `RadiiPolynomial.lpOneAlg.norm_geomAeval_apply_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.norm_geomAeval_of_norm_le'_apply_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.norm_headProj_apply_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.norm_le_of_cols₂` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.norm_le_of_cols₃` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.norm_mulLeftCLM_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.norm_mulRightCLM_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.norm_singleCLM` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.norm_single_geomFiberZ` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.opNorm_add_eq_iSup` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.opNorm_add_eq_iSup_of_head_zero` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.opNorm_eq_iSup_cols` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.opNorm_eq_iSup_cols₂` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.opNorm_eq_iSup_cols₃` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.opNorm_joint_eq_iSup` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.opNorm_le_iff_cols` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.opNorm_le_iff_cols₂` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.lpOneAlg.opNorm_le_iff_cols₃` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.opNorm_le_of_cols` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.lpOneAlg.opNorm_le_of_cols₂` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.opNorm_le_of_cols₃` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `RadiiPolynomial.lpOneAlg.pow_le_of_norm_le'` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.singleCLM` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.singleCLM_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.summable_abs_mulToRealSeq` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.summable_abs_toRealSeq` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.summable_norm_shift` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.tailProj_apply_eq_self_iff` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.tailProj_apply_eq_self_iff_fiber` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.tailProj_comp_diagCLM` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.tailProj_comp_headProj` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.tailProj_comp_tailProj` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.tailProj_single` | STAGE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `RadiiPolynomial.lpOneAlg.toLp_add` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.toLp_neg` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.toLp_single` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.toLp_sub` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.toLp_toLpₗᵢ_symm` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.toLp_zero` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.toLpₗᵢ_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.toLpₗᵢ_symm_single` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpOneAlg.toRealSeq_injective` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpWeighted.add_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpWeighted.ext` | DELETE | DELETE | — |
+| `RadiiPolynomial.lpWeighted.mk_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpWeighted.mk_val_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpWeighted.neg_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpWeighted.smul_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpWeighted.sub_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.lpWeighted.zero_toSeq` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.map_finiteAddConvolution` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.map_finiteMulConvolution` | STAGE | STAGE | [staged/B5RecordFiniteFiberConvolution.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordFiniteFiberConvolution.lean) |
+| `RadiiPolynomial.map_hornerEval` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.mem_colNormSumDyadic` | STAGE | STAGE | [staged/B5RecordDyadicP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicP1.lean) |
+| `RadiiPolynomial.minimalPeriod_eq_of_no_smaller` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordPeriodicPoint.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordPeriodicPoint.lean) |
+| `RadiiPolynomial.newton_operator_Y_bound` | DELETE | DELETE | — |
+| `RadiiPolynomial.newton_operator_derivative_bound_general` | DELETE | DELETE | — |
+| `RadiiPolynomial.newton_operator_derivative_bound_simple` | DELETE | DELETE | — |
+| `RadiiPolynomial.newton_operator_fderiv` | DELETE | DELETE | — |
+| `RadiiPolynomial.nonnegRestrict_norm_of_isSymmetric` | STAGE | STAGE | [staged/B5RecordSymmetricStorageBordered.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordSymmetricStorageBordered.lean) |
+| `RadiiPolynomial.norm_XL1_fin1` | DELETE | DELETE | — |
+| `RadiiPolynomial.norm_fderiv_diff_of_affine_leftMul` | DELETE | DELETE | — |
+| `RadiiPolynomial.norm_toCLM_le_of_Q` | DELETE | DELETE | — |
+| `RadiiPolynomial.ofCoeff_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.omegaWeight_le_nu_mul_pow` | STAGE | STAGE | [staged/B5RecordOmegaWeightFamily.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOmegaWeightFamily.lean) |
+| `RadiiPolynomial.periodicPoint_of_differentiableOn` | STAGE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordPeriodicPoint.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordPeriodicPoint.lean) |
+| `RadiiPolynomial.radiiPolyQ` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.radiiPolyQ_cast` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.radiiPoly_neg_on_Icc_of_convexOn` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.radiiPolynomial_alt_form` | DELETE | DELETE | — |
+| `RadiiPolynomial.radiiPolynomial_neg_of_Q` | STAGE | STAGE | [staged/B5RecordRadiiIntervals.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordRadiiIntervals.lean) |
+| `RadiiPolynomial.radii_poly_neg_implies_Z_bound_lt_one` | DELETE | DELETE | — |
+| `RadiiPolynomial.radii_polynomial_theorem_EtoF_local` | DELETE | DELETE | — |
+| `RadiiPolynomial.scalarBlockDiagAction` | DELETE | DELETE | — |
+| `RadiiPolynomial.scalarBlockDiagActionEval` | DELETE | DELETE | — |
+| `RadiiPolynomial.scalarBlockDiagActionEval_correct` | DELETE | DELETE | — |
+| `RadiiPolynomial.shift` | DELETE | DELETE | — |
+| `RadiiPolynomial.shiftDivN_leftMul_tail_col_antitone` | DELETE | DELETE | — |
+| `RadiiPolynomial.shiftDivN_leftMul_tail_cols_le_of_Q` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.shiftDivN_leftMul_tail_cols_le_of_Q._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.shiftDivN_leftMul_tail_cols_le_of_Q._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.shiftDivN_leftMul_tail_le_of_cols` | DELETE | DELETE | — |
+| `RadiiPolynomial.shiftDivN_single_tailTsum_eq_colTailQ` | DELETE | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `RadiiPolynomial.shiftDivN_single_tailTsum_eq_colTailQ._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.shiftDivN_single_tailTsum_eq_colTailQ._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.shiftDivN_single_tailTsum_eq_colTailQ._proof_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.shiftDivN_single_tailTsum_eq_colTailQ._proof_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `RadiiPolynomial.shiftDivN_zero_mode` | STAGE | STAGE | [staged/B5RecordIVPBoundaryP4.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP4.lean) |
+| `RadiiPolynomial.shift_CLM` | DELETE | DELETE | — |
+| `RadiiPolynomial.shift_CLM_apply` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.shift_linear_add` | DELETE | DELETE | — |
+| `RadiiPolynomial.shift_linear_smul` | DELETE | DELETE | — |
+| `RadiiPolynomial.shift_norm_le` | DELETE | DELETE | — |
+| `RadiiPolynomial.shift_succ_mode` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.shift_zero_mode` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.simple_maps_closedBall_to_itself` | DELETE | DELETE | — |
+| `RadiiPolynomial.simple_radii_polynomial_theorem_EtoF` | DELETE | DELETE | — |
+| `RadiiPolynomial.toCoeff_neg` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.toCoeff_sub` | R-ELAB | DELETE | — |
+| `RadiiPolynomial.uIntegrate_CLM_apply` | R-ELAB | DELETE | — |
+| `_aux_RadiiPolynomial_Tactic_AutoPolyFDeriv___macroRules_tacticAuto_hasFDerivAt_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_aux_RadiiPolynomial_Tactic_AutoPolyFDeriv___macroRules_tacticAuto_poly_fderiv_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Algebra.Polynomial.CompPoly.Chebyshev.Bounds.0.MvPolyBridge.CompPoly.Chebyshev.symmetrize_pi_sub` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Algebra.Polynomial.CompPoly.Laurent.0.MvPolyBridge.CompPoly.sum_laurentModes_eq_of_support` | NON-FACE | STAGE | [staged/B5RecordLaurentInterpreter.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordLaurentInterpreter.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.eight_terms_le` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.norm_cosMul_e1_e1` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.norm_cosMul₃_e1_e1_e1` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.norm_cosMul₃_e1_e1_e2` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.norm_eq_sum_of_support` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.norm_lpSingle` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.norm_restr_add_le_of` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.norm_restr_single_eq_posPow` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.posPow` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.posPow_le` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.posPow_le_t` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.posPow_le_t_sq` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.posPow_of_neg` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.pow_le_t_mul` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.pow_le_t_sq_mul` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided.0.RadiiPolynomial.l1Chebyshev.OneSided.toSeq_lpSingle` | NON-FACE | STAGE | [staged/B5RecordOneSidedCosine.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordOneSidedCosine.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.SymmetricSubalgebra.0.RadiiPolynomial.l1Chebyshev.borderedEmbed` | NON-FACE | STAGE | [staged/B5RecordSymmetricStorageBordered.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordSymmetricStorageBordered.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.SymmetricSubalgebra.0.RadiiPolynomial.l1Chebyshev.borderedEmbed_memℓp` | NON-FACE | STAGE | [staged/B5RecordSymmetricStorageBordered.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordSymmetricStorageBordered.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.SymmetricSubalgebra.0.RadiiPolynomial.l1Chebyshev.borderedEmbed_toSeq` | NON-FACE | STAGE | [staged/B5RecordSymmetricStorageBordered.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordSymmetricStorageBordered.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.SymmetricSubalgebra.0.RadiiPolynomial.l1Chebyshev.nonnegRestrict_borderedEmbed` | NON-FACE | STAGE | [staged/B5RecordSymmetricStorageBordered.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordSymmetricStorageBordered.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.T_cast_add_two` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.borderedEvalCLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.borderedEvalCLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.borderedEvalCLM.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.borderedEvalCLM_nonnegRestrict` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.borderedEvalCLM_nonnegRestrict._simp_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.borderedEvalColumn_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.chebColumn_le_borderedWeight` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.chebPolyTaylor_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.chebyshevToTaylorAlgHom` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.chebyshevToTaylorAlgHom._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.chebyshevToTaylorAlgHom._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.chebyshevToTaylorAlgHom._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.chebyshevToTaylorCLM_map_mul` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.chebyshevToTaylorCLM_map_one` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.evalCLM_comp_chebyshevToTaylorBorderedCLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.eval_chebPolyTaylor` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.eventually_abs_le_one_and_sigma` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.ChebyshevTaylor.0.RadiiPolynomial.CrossGeometry.toSeq_aeval_generator` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/ChebyshevTaylor.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.chebyshevDerivativeToTaylorBorderedCLM` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.chebyshevDerivativeToTaylorColumn` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.chebyshevDerivativeToTaylorColumn_le` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.chebyshevDerivativeToUBorderedCLM` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.chebyshevDerivativeToUBorderedCLM_toSeq` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.chebyshevDerivativeToUColumn` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.chebyshevDerivativeToUColumn_le` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.coeff_derivative_T` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.derivShift_comp_chebyshevToTaylorBorderedCLM` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.l1OmegaWrapped` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.norm_omegaSingle` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.norm_uPolyOmega_natCast_le` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.omegaSingle` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.omegaSingle_toSeq` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.omegaToSeqCLM` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.omegaToSeqCLM_apply` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.omegaWrapCLM` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.omegaWrapCLM_omegaSingle` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.uPolyOmegaSynthesisCLM_omegaSingle` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.uPolyOmegaSynthesisColumn_le` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.uPolyOmegaSynthesisWrappedCLM` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Derivative.0.RadiiPolynomial.CrossGeometry.uPolyOmegaSynthesis_comp_chebyshevDerivativeToUBorderedCLM` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Derivative.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Derivative.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Joukowski.0.RadiiPolynomial.CrossGeometry.abs_neg_one_le_one` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Joukowski.0.RadiiPolynomial.CrossGeometry.abs_one_add_le_two` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Joukowski.0.RadiiPolynomial.CrossGeometry.joukowskiGen_binomial_term` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry.Joukowski.0.RadiiPolynomial.CrossGeometry.pow_natAbs_diff_le` | NON-FACE | STAGE | [staged/B5Records/Spectra/CrossGeometry/Joukowski.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/CrossGeometry/Joukowski.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic.0.RadiiPolynomial.l1Weighted.trunc_add` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic.0.RadiiPolynomial.l1Weighted.trunc_norm_le` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic.0.RadiiPolynomial.l1Weighted.trunc_smul` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Omega.0.RadiiPolynomial.lambdaN_mem` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Omega.0.RadiiPolynomial.lambdaN_seq` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Omega.0.RadiiPolynomial.lambdaN_toSeq` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Omega.0.RadiiPolynomial.shift_mem` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Omega.0.RadiiPolynomial.shift_seq` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.Omega.0.RadiiPolynomial.shift_toSeq` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.Geometric.RadiusRestriction.0.RadiiPolynomial.l1Weighted.radiusRestrict_power_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5Records/Spectra/Geometric/RadiusRestriction.lean](../probes/records/B5_universal_api_retirement/staged/B5Records/Spectra/Geometric/RadiusRestriction.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Diagonal.0.RadiiPolynomial.lpOneAlg.apply_single_eq_zero_of_colRatio_eq_zero` | NON-FACE | STAGE | [staged/B5RecordL1HeadTail.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1HeadTail.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear.0.RadiiPolynomial.lpOneAlg.applyRight` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear.0.RadiiPolynomial.lpOneAlg.applyRight._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear.0.RadiiPolynomial.lpOneAlg.applyRight._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear.0.RadiiPolynomial.lpOneAlg.applyRight._proof_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear.0.RadiiPolynomial.lpOneAlg.applyRight._proof_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear.0.RadiiPolynomial.lpOneAlg.applyRight._proof_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear.0.RadiiPolynomial.lpOneAlg.applyRight_apply` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear.0.RadiiPolynomial.lpOneAlg.ringHomIsometric_id'` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordL1ColumnPrinciple.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordL1ColumnPrinciple.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Compatibility.EmbedL1.0.RadiiPolynomial.WeightedLp.sum_sq_norm_apply_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Compatibility.EmbedL1.0.RadiiPolynomial.WeightedLp.sum_sq_ratio_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Compatibility/EmbedL1.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.WithHead.0.RadiiPolynomial.WeightedLp.WithHead.coeff_sum` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.WithHead.0.RadiiPolynomial.WeightedLp.WithHead.ext_head_tail` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.WithHead.0.RadiiPolynomial.WeightedLp.WithHead.ext_head_tail._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.WithHead.0.RadiiPolynomial.WeightedLp.WithHead.ext_head_tail._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Operators/WithHead.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.atom_sum` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.atom_sum._proof_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.atom_sum._proof_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.coeff_product` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.norm_coord` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.norm_sq_tsum` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.product` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.product.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.productLM` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.productLM._proof_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.productLM._proof_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.product_add_left` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.product_add_right` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.product_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.product_smul_left` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.product_smul_left._simp_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.product_smul_right` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.product_smul_right._simp_1_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw.eq_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw.match_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw.match_1.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw.match_1.eq_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw.match_1.splitter` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.rawFiber` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.rawFiber.eq_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.rawFiber_norm_succ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.rawFiber_sq` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw_bound` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw_bound._simp_1_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw_bound._simp_1_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.raw_mem` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Taylor.Smoothing.0.RadiiPolynomial.WeightedLp.Taylor.summable_sq` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Analysis/SequenceSpace/WeightedLp/Taylor/Smoothing.lean) |
+| `_private.RadiiPolynomial.Certification.LeanCertAdapter.0.RadiiPolynomial.mem_foldl_colNorm` | NON-FACE | STAGE | [staged/B5RecordDyadicP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicP1.lean) |
+| `_private.RadiiPolynomial.Certification.LeanCertAdapter.0.RadiiPolynomial.mem_zeroDyadic` | NON-FACE | STAGE | [staged/B5RecordDyadicP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicP1.lean) |
+| `_private.RadiiPolynomial.Certification.LeanCertAdapter.0.RadiiPolynomial.zeroDyadic` | NON-FACE | STAGE | [staged/B5RecordDyadicP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordDyadicP1.lean) |
+| `_private.RadiiPolynomial.Certification.Residual.0.RadiiPolynomial.Residual.hasSummableGeomSeries_opposite` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `_private.RadiiPolynomial.Certification.Residual.0.RadiiPolynomial.Residual.norm_mul_pow_le` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `_private.RadiiPolynomial.Certification.Residual.0.RadiiPolynomial.Residual.op_leftInverseCorrection` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL/STAGE | [staged/B5RecordResidualP1.lean](../probes/records/B5_universal_api_retirement/staged/B5RecordResidualP1.lean) |
+| `_private.RadiiPolynomial.Certification.Residual.0.RadiiPolynomial.Residual.op_leftInverseCorrection._simp_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Certificate.0.Example1421.Cert.computed_phi_eq` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.IVP.Taylor.Example81.Algebra.0.Example81.abar_toSeq_zero` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.IVP.Taylor.Example81.Algebra.0.Example81.hDF_nat` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.IVP.Taylor.Example81.Algebra.0.Example81.proj_L` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.IVP.Taylor.Example81.Certificate.0.Example81.Cert.Df_norm_le` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.IVP.Taylor.Example81.Certificate.0.Example81.Cert.radii_neg_icc` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.AF_ā_support` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.A_colR` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.A_colR_eq` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.A_col_bridge` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.A_col_bridge_q` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.A_inv_tailBound_eq` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.A_tailDiag_eq` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.A_tail_R` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.A_tail_coeff` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.DF_colOf` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.DF_col_bridge` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.F_ā_R` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.F_ā_support` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.F_ā_toSeq_eq` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.F_ā_vec` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.Y₀_eval` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.defect_cols` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.defect_cols_bridge` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.defect_matrixNorm_le` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.radii_neg_icc` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.sol_toSeq_eq` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.PowerSeries.Example77.Certificate.0.Example77.Cert.ν_val_eq_q` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_0` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_10` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_7` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_8` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.A_col_9` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_0` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_10` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_4` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_5` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_6` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_7` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_8` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Data.0.Example81.L2.Data.DF_col_9` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Data.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Maps.0.Example81.L2.coeff_S_Q_fin` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Maps.0.Example81.L2.coeff_sum` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Maps.0.Example81.L2.sum_fin_restrict` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Maps.0.Example81.L2.sum_fin_restrict._proof_1_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Maps.0.Example81.L2.sum_fin_restrict._simp_1_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.Maps.0.Example81.L2.sum_fin_restrict._simp_1_2` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/Maps.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.ResidualBounds.0.Example81.L2.coeff_H_succ` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `_private.RadiiPolynomial.Examples.tests.WL.Example81L2.ResidualBounds.0.Example81.L2.coeff_H_zero` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | [staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean](../probes/records/B5_universal_api_retirement/staged/RadiiPolynomial/Examples/tests/WL/Example81L2/ResidualBounds.lean) |
+| `_private.RadiiPolynomial.Operators.BlockDiagonal.WeightedL1.0.RadiiPolynomial.defectOfBlockDiagOp_coeff_finite` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Operators.BlockDiagonal.WeightedL1.0.RadiiPolynomial.defectOfBlockDiagOp_coeff_tail` | NON-FACE | DELETE | — |
+| `_private.RadiiPolynomial.Tactic.AutoPolyFDeriv.0.proj₃` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `_private.RadiiPolynomial.Tactic.MakeCompPoly.0.RadiiPolynomial.MakeCompPoly.mkRatNatLit` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `fderiv_pi_apply` | R-ELAB | APPLIED_SOURCE_MODULE_REMOVAL/DELETE | — |
+| `tacticAuto_hasFDerivAt` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `tacticAuto_poly_fderiv` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `«_aux_RadiiPolynomial_Tactic_AutoPolyFDeriv___macroRules_tacticAuto_hasFDerivAt[_,,]_1»` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `«_aux_RadiiPolynomial_Tactic_AutoPolyFDeriv___macroRules_tacticAuto_poly_fderiv[_,,]_1»` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `«_aux_RadiiPolynomial_Tactic_MakeCompPoly___elabRules_termCompPolyOf%__1»` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `«_aux_RadiiPolynomial_Tactic_MakeCompPoly___elabRules_termCompPolyOf%__1»._sparseCasesOn_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `«_aux_RadiiPolynomial_Tactic_MakeCompPoly___elabRules_termCompPolyOf%__1».match_1` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `«_aux_RadiiPolynomial_Tactic_MakeCompPoly___elabRules_termCompPolyOf%__1».match_3` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `«tacticAuto_hasFDerivAt[_,,]»` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `«tacticAuto_poly_fderiv[_,,]»` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |
+| `«termCompPolyOf%_»` | NON-FACE | APPLIED_SOURCE_MODULE_REMOVAL | — |

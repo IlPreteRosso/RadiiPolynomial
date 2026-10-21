@@ -5,27 +5,16 @@ import Mathlib.LinearAlgebra.Matrix.Defs
 /-!
 # Derivatives of `CompPoly` evaluations on `R^L`
 
-For a normed commutative real algebra `R`, the Fréchet derivative of `u ↦ p.evalBanach u` on
-`R^L = Fin L → R` is the syntactic gradient row `gradCLM p x : h ↦ Σₖ (∂ₖp)(x) · hₖ`, and the
-derivative of a polynomial system `u ↦ (Pᵢ.evalBanach u)ᵢ` on `R^n` is the syntactic Jacobian
-`jacCLM P x`, the continuous linear map with rows `gradCLM (P i) x`. The proof goes through
-the library's `MvPolynomial` calculus (`MvPolynomial.hasFDerivAt_aeval`, `MvPolynomial/Calculus`) along
-`evalBanach_eq_aeval_map`, with the canonical `Algebra ℝ R` only.
+For a normed commutative real algebra `R`, the derivative of `x ↦ p.evalBanach x` is
+`gradCLM p x`, and a polynomial system has derivative `jacCLM P x`. The retained
+`hasFDerivAt_evalBanach` and `hasFDerivAt_system` use
+`MvPolynomial.hasFDerivAt_aeval` through `evalBanach_eq_aeval_map`.
 
-`gradCLM`, `jacobian` and `jacCLM` are transparent definitions: componentwise identities such as
-`(jacCLM P a - jacCLM P b) h i = (gradCLM (P i) a - gradCLM (P i) b) h` hold by `rfl`.
-
-## Main results
-
-- `gradCLM`, `gradCLM_apply`, `gradCLM_eq_polynomialDerivative`
-- `hasFDerivAt_evalBanach`: `D(p(·))(x) = gradCLM p x`
-- `jacobian`, `jacCLM`, `jacCLM_apply`
-- `hasFDerivAt_system`: `D(P(·))(x) = jacCLM P x`
-- `gradCLM_eq_mul_comp_proj`: at `L = 1`, the gradient row is multiplication by `p′(x)` after
-  the coordinate projection
-- `MvPolyBridge.contDiff_evalBanach`, `MvPolyBridge.differentiable_evalBanach`: on `ℝ^L` itself
-  the evaluation `x ↦ p.evalBanach x` is `C^ω` (through `MvPolynomial.contDiff_aeval`), hence
-  differentiable; the real vector field `IVP.vectorField` inherits both
+`gradCLM`, `jacobian` and `jacCLM` are transparent definitions. The computation faces
+`gradCLM_apply`, `jacCLM_apply`, `gradCLM_eq_polynomialDerivative` and
+`gradCLM_eq_mul_comp_proj` expose their coordinate and one-dimensional forms.
+Differentiability follows from the displayed `HasFDerivAt` witnesses; the former real
+`contDiff_evalBanach`/`differentiable_evalBanach` convenience wrappers are retired.
 -/
 
 open scoped BigOperators
@@ -103,20 +92,6 @@ end MvPolyBridge.CompPoly
 
 namespace MvPolyBridge
 
-/-- The pointwise interpretation of a `CompPoly` on `Fin L → ℝ` is `ContDiff ℝ ⊤`, i.e. of
-class `C^ω` (analytic), which in particular makes it smooth. -/
-theorem contDiff_evalBanach {L : ℕ} (p : CompPoly L) :
-    ContDiff ℝ ⊤ (fun x : Fin L → ℝ => p.evalBanach x) := by
-  have h : (fun x : Fin L → ℝ => p.evalBanach x) =
-           (fun x => MvPolynomial.aeval x p.toMvPoly) :=
-    funext fun x => (p.evalBanach_eq_evalAlg x).trans (p.evalAlg_eq_aeval x)
-  rw [h]
-  exact MvPolynomial.contDiff_aeval p.toMvPoly ⊤
 
-/-- The pointwise interpretation of a `CompPoly` on `Fin L → ℝ` is differentiable (from
-`contDiff_evalBanach`). -/
-theorem differentiable_evalBanach {L : ℕ} (p : CompPoly L) :
-    Differentiable ℝ (fun x : Fin L → ℝ => p.evalBanach x) :=
-  (contDiff_evalBanach p).differentiable (by decide)
 
 end MvPolyBridge

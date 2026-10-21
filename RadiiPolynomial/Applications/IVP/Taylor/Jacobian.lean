@@ -9,7 +9,7 @@ The Jacobian bridge for the IVP zero-finding map. Each IVP example needs to
 prove that the Fréchet derivative of `ivpCoeffs` agrees with the numerical
 Jacobian stored in `A_dag.finBlock`. This file combines the coefficient
 derivative formulas `fderiv_ivpCoeffs_zero_apply` / `fderiv_ivpCoeffs_succ_apply` of
-`Applications/IVP/Taylor/Operator.lean`, `toSeq_fderiv_evalInBanach`, and the
+`Applications/IVP/Taylor/Operator.lean`, `toSeq_fderiv_aeval`, and the
 Toeplitz row action into `ivp_hDF_block` and its array form `ivp_hDF_block_nat`.
 
 ## Solution
@@ -63,11 +63,6 @@ def ivp_DF_of_Dφ (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (j m : Fin L) (k p : Fin (N + 1)) : ℚ :=
   ivp_DF_of_Dφ_nat Dφ_Q j m (k : ℕ) (p : ℕ)
 
-/-- `ivp_DF_of_Dφ_nat` agrees with `ivp_DF_of_Dφ` on `Fin` indices. -/
-lemma ivp_DF_of_Dφ_nat_eq (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
-    (j m : Fin L) (k p : Fin (N + 1)) :
-    ivp_DF_of_Dφ_nat Dφ_Q j m (k : ℕ) (p : ℕ) = ivp_DF_of_Dφ (N := N) Dφ_Q j m k p := by
-  rfl
 
 /-- A rational Kronecker delta selects one matrix-vector coordinate after casting. -/
 private lemma sum_delta_cast_mul {M : ℕ}
@@ -88,21 +83,19 @@ private lemma sum_delta_cast_mul {M : ℕ}
 
 /-! ## 2. Bridge Lemma: Dφ_Q matches analytical pderiv -/
 
-/-- Internal bridge: if `Dφ_Q j m k` matches `toSeq(evalInBanach(pderiv m (spec j), ā)) k`,
-then the Toeplitz extension matches `toSeq_fderiv_evalInBanach`. -/
+/-- Internal bridge: if `Dφ_Q j m k` matches `toSeq(aeval ā (pderiv m (spec j))) k`,
+then the Toeplitz extension matches `toSeq_fderiv_aeval`. -/
 private lemma ivp_Dφ_jacobian_bridge
     (φ_spec : Fin L → MvPolynomial (Fin L) ℚ)
     (ā : XL1 ν L)
     (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (hDφ_Q : ∀ (j m : Fin L) (k : ℕ),
-      l1Weighted.toSeq (MvPolyBridge.evalInBanach
-        (MvPolynomial.pderiv (↑m) (φ_spec j)) ā) k =
+      l1Weighted.toSeq (MvPolynomial.aeval ā (MvPolynomial.pderiv (↑m) (φ_spec j))) k =
       ((Dφ_Q j m k : ℚ) : ℝ))
     (j : Fin L) (n : ℕ) (m : Fin L) (p : Fin (N + 1)) :
     ((if (p : ℕ) ≤ n then Dφ_Q j m (n - (p : ℕ)) else 0 : ℚ) : ℝ) =
       if (p : ℕ) ≤ n then
-        l1Weighted.toSeq (MvPolyBridge.evalInBanach
-          (MvPolynomial.pderiv (↑m) (φ_spec j)) ā) (n - (p : ℕ))
+        l1Weighted.toSeq (MvPolynomial.aeval ā (MvPolynomial.pderiv (↑m) (φ_spec j))) (n - (p : ℕ))
       else 0 := by
   split_ifs with hp
   · exact_mod_cast (hDφ_Q j m _).symm
@@ -144,13 +137,12 @@ theorem ivp_hDF_block
     (ā : XL1 ν L)
     -- Spec compatibility
     (hφ_eq : ∀ (a : XL1 ν L) (l : Fin L),
-      φ a l = MvPolyBridge.evalInBanach (φ_spec l) a)
+      φ a l = MvPolynomial.aeval a (φ_spec l))
     (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
     -- Computable pderiv mirror
     (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (hDφ_Q : ∀ (j m : Fin L) (k : ℕ),
-      l1Weighted.toSeq (MvPolyBridge.evalInBanach
-        (MvPolynomial.pderiv (↑m) (φ_spec j)) ā) k =
+      l1Weighted.toSeq (MvPolynomial.aeval ā (MvPolynomial.pderiv (↑m) (φ_spec j))) k =
       ((Dφ_Q j m k : ℚ) : ℝ))
     -- Numerical DF verification
     (hDF : ∀ (j m : Fin L) (k p : Fin (N + 1)),
@@ -176,8 +168,8 @@ theorem ivp_hDF_block
   | succ n =>
     rw [fderiv_ivpCoeffs_succ_apply φ x₀ ā h j n (hφ_diff j ā),
       show (fun a : XL1 ν L => φ a j) =
-        (fun a => evalInBanach (φ_spec j) a) from funext fun a => hφ_eq a j]
-    rw [toSeq_fderiv_evalInBanach _ ā h (show n ≤ N from by omega)]
+        (fun a => MvPolynomial.aeval a (φ_spec j)) from funext fun a => hφ_eq a j]
+    rw [toSeq_fderiv_aeval _ ā h (show n ≤ N from by omega)]
     simp_rw [← ivp_Dφ_jacobian_bridge φ_spec ā Dφ_Q hDφ_Q j n]
     symm
     simpa only [toCoeff] using
@@ -191,7 +183,7 @@ Given `φ_spec` and a per-component bound `K` on `Σ_m ‖pderiv_m(φ_spec l) at
 proves `‖(fderiv φ l ā) h‖ ≤ K * ‖h‖`.
 
 The user provides `hDφ_le`: for each `l`, the row sum
-`Σ_m ‖evalInBanach (pderiv m (φ_spec l)) ā‖ ≤ K`, proved directly (the lemma takes no
+`Σ_m ‖aeval ā (pderiv m (φ_spec l))‖ ≤ K`, proved directly (the lemma takes no
 separate table of per-entry bounds).
 
 `ivp_Dφ_norm_le_of_compPoly` discharges the sum from the polynomial syntax
@@ -202,19 +194,19 @@ lemma ivp_Dφ_norm_le
     (φ_spec : Fin L → MvPolynomial (Fin L) ℚ)
     (ā : XL1 ν L)
     (hφ_eq : ∀ (a : XL1 ν L) (l : Fin L),
-      φ a l = MvPolyBridge.evalInBanach (φ_spec l) a)
+      φ a l = MvPolynomial.aeval a (φ_spec l))
     {K : ℝ}
     (hDφ_le : ∀ (l : Fin L),
       ∑ m : Fin L,
-        ‖MvPolyBridge.evalInBanach (MvPolynomial.pderiv (↑m) (φ_spec l)) ā‖ ≤ K)
+        ‖MvPolynomial.aeval ā (MvPolynomial.pderiv (↑m) (φ_spec l))‖ ≤ K)
     (h : XL1 ν L) (l : Fin L) :
     ‖(fderiv ℝ (fun a => φ a l) ā) h‖ ≤ K * ‖h‖ := by
   rw [show (fun a : XL1 ν L => φ a l) =
-      (fun a => evalInBanach (φ_spec l) a) from funext fun a => hφ_eq a l,
-    fderiv_evalInBanach]
+      (fun a => MvPolynomial.aeval a (φ_spec l)) from funext fun a => hφ_eq a l,
+    fderiv_aeval]
   simp only [sum_apply, ContinuousLinearMap.comp_apply,
     ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply]
-  exact (norm_sum_mul_pi_le _ _).trans
+  exact (RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le _ _).trans
     (mul_le_mul_of_nonneg_right (hDφ_le l) (norm_nonneg _))
 
 /-- **Syntactic Dφ operator norm bound.** For a `CompPoly` system the per-component sum
@@ -230,8 +222,8 @@ lemma ivp_Dφ_norm_le_of_compPoly
     (h : XL1 ν L) (l : Fin L) :
     ‖(fderiv ℝ (fun a => φ a l) ā) h‖ ≤ K * ‖h‖ :=
   ivp_Dφ_norm_le φ (fun l => (f l).toMvPoly) ā
-    (fun a l => (hφ_eq a l).trans (MvPolyBridge.compPoly_evalBanach_eq_evalInBanach _ _))
-    (fun l => (MvPolyBridge.CompPoly.sum_norm_evalInBanach_pderiv_le (f l) ā R hā).trans (hK l))
+    (fun a l => (hφ_eq a l).trans (MvPolyBridge.compPoly_evalBanach_eq_aeval _ _))
+    (fun l => (MvPolyBridge.CompPoly.sum_norm_aeval_pderiv_le (f l) ā R hā).trans (hK l))
     h l
 
 /-! ## 5. Convenience: ivp_hDF_block_nat -/
@@ -252,12 +244,11 @@ theorem ivp_hDF_block_nat
     (x₀ : Fin L → ℝ)
     (ā : XL1 ν L)
     (hφ_eq : ∀ (a : XL1 ν L) (l : Fin L),
-      φ a l = MvPolyBridge.evalInBanach (φ_spec l) a)
+      φ a l = MvPolynomial.aeval a (φ_spec l))
     (hφ_diff : ∀ l, Differentiable ℝ (fun a : XL1 ν L => φ a l))
     (Dφ_Q : Fin L → Fin L → ℕ → ℚ)
     (hDφ_Q : ∀ (j m : Fin L) (k : ℕ),
-      l1Weighted.toSeq (MvPolyBridge.evalInBanach
-        (MvPolynomial.pderiv (↑m) (φ_spec j)) ā) k =
+      l1Weighted.toSeq (MvPolynomial.aeval ā (MvPolynomial.pderiv (↑m) (φ_spec j))) k =
       ((Dφ_Q j m k : ℚ) : ℝ))
     -- Fin-bounded DF verification (single native_decide)
     (DF_cols : Fin L → Fin L → ℕ → Array ℚ)

@@ -290,16 +290,19 @@ noncomputable def colWalkB (S : ℕ) (Acol : ℕ → Array ℚ) (n : ℕ) :
         (if Nat.beq b.num.natAbs 0 then acc
          else axpyB (Nat.mul b.num.natAbs S) b.den (isNeg b.num) acc (Acol k).toList))) n
 
-theorem axpyB_nil (bS bd : ℕ) (bneg : Bool) (cs : List ℚ) : axpyB bS bd bneg [] cs = [] := rfl
 theorem axpyB_cons_nil (bS bd : ℕ) (bneg : Bool) (a : PM) (as : List PM) :
     axpyB bS bd bneg (a :: as) [] = a :: as := rfl
+
 theorem axpyB_cons_cons (bS bd : ℕ) (bneg : Bool) (a : PM) (as : List PM) (c : ℚ)
     (cs : List ℚ) :
     axpyB bS bd bneg (a :: as) (c :: cs) = pmSub bS bd bneg a c :: axpyB bS bd bneg as cs := rfl
+
 theorem colWalkB_zero (S : ℕ) (Acol : ℕ → Array ℚ) (k : ℕ) (bs : List ℚ) (acc : List PM) :
     colWalkB S Acol 0 k bs acc = acc := rfl
+
 theorem colWalkB_succ_nil (S : ℕ) (Acol : ℕ → Array ℚ) (n k : ℕ) (acc : List PM) :
     colWalkB S Acol (n + 1) k [] acc = acc := rfl
+
 theorem colWalkB_succ_cons (S : ℕ) (Acol : ℕ → Array ℚ) (n k : ℕ) (b : ℚ) (bs : List ℚ)
     (acc : List PM) :
     colWalkB S Acol (n + 1) k (b :: bs) acc =
@@ -359,6 +362,7 @@ theorem natAbs_cast (z : ℤ) : ((z.natAbs : ℕ) : ℚ) = |(z : ℚ)| := by
   rw [Nat.cast_natAbs, Int.cast_abs]
 
 theorem ndiv_eq (a b : ℕ) : Nat.div a b = a / b := rfl
+
 
 /-- `⌊x / y⌋` brackets `x / y`. -/
 theorem floor_bounds (x y : ℕ) (hy : 0 < y) :
@@ -685,7 +689,6 @@ the end (exact zeros stay zero, so `Z₀ = 0` is certifiable); `grid`: the grid 
 inductive Z₀Slot
   | exactCols
   | grid
-  deriving DecidableEq
 
 section Clauses
 

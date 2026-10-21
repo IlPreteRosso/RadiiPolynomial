@@ -51,13 +51,6 @@ theorem analyticOnNhd_complexTrajectory (a : XL1 ν L) :
     AnalyticOnNhd ℂ (complexTrajectory a) (Metric.ball 0 (ν : ℝ)) :=
   AnalyticOnNhd.pi (fun l => l1Weighted.analyticOnNhd_complexEval (a l))
 
-/-- The same coefficient norm bounds the complex trajectory on the closed disc. -/
-theorem norm_complexTrajectory_le (a : XL1 ν L) {z : ℂ} (hz : ‖z‖ ≤ (ν : ℝ)) :
-    ‖complexTrajectory a z‖ ≤ ‖a‖ := by
-  apply (pi_norm_le_iff_of_nonneg (norm_nonneg a)).mpr
-  intro l
-  rw [complexTrajectory, l1Weighted.complexEval_eq_evalC _ _ hz]
-  exact (l1Weighted.norm_evalC_le ν z hz (a l)).trans (norm_le_pi_norm a l)
 
 /-- The complex trajectory restricts to the existing real trajectory. -/
 theorem complexTrajectory_ofReal (a : XL1 ν L) {t : ℝ} (ht : |t| ≤ (ν : ℝ)) :

@@ -152,6 +152,35 @@ review to a line range, compute the range with an exact section-name grep and ch
 prompt file is non-empty before launching — a name that prefixes another section returns
 two lines, breaks the arithmetic, and `agy` still launches on an empty prompt.
 
+### Effectiveness evidence per unit (2026-10-18; Codex R1 amendment A4 applied)
+Every API unit reports its intended mathematical service, precise assumptions, the applicable caller/implementation
+measurements, per-final-theorem axioms and status-labelled references (literature or inspiring source of each verified result).
+Nonapplicable numerical or comparison fields (bound constants, radius, margin, checker time) are reported as N/A. Use the
+project's agreed measurement definitions; for RadiiPolynomial these are the radii-poly-api-design section "Effective API —
+measured definition" and its evidence cards. A new layer records its prospective-guard answers and independently specified consumer, or is
+explicitly exploratory with no utility or promotion claim. Project-specific shipment and module-placement rules live in the
+project's API-design skill; for RadiiPolynomial, see the module rule in `radii-poly-api-design`. A replacement or savings claim requires a bounded same-endpoint trial and a capability inventory.
+Record consumption through named endpoint dependency trails, including actual instance use and simp lemmas that fire; import
+proximity alone is not evidence of use. Migrate affected consumers to a canonical replacement while preserving their intended
+mathematics and soundness; apply the project's retirement policy. An instructive/decorative status is a reviewed six-field card,
+never a score.
+
+### Mandatory brief and checker items (user 2026-10-19)
+- **EFFECTIVE or DECORATIVE? (brief).** Every brief for a unit that touches production code opens with a section of this title:
+  each declaration, instance and hypothesis the unit ships, with (a) the endpoints that reach it and (b) the hypotheses its proof
+  uses. Anything without both answers is PROBE: it keeps its probe record and does not ship.
+- **HYPOTHESIS MINIMALITY (critic, review, checker).** Every critic, review and checker brief carries this item, next to a check
+  of the brief's EFFECTIVE-or-DECORATIVE answers: does the proof use each hypothesis and class field the declaration carries?
+  Fidelity to the source does not answer it, since the source can ask for more than the proof uses. Mechanical tool: a field-use
+  census (per class, which fields each taker's proof reaches).
+These checks are relative to the fixed mathematical family and independently specified endpoint. A dependency or field-use
+count is diagnostic evidence, not a proof of necessity or usefulness: a reached wrapper may remove no work, and a zero
+projection count may miss recursor, opaque, or definitional use. Check public hypotheses by source and full types, then use
+a weakening trial or separating model where the answer is disputed. Keep coherent ambient structures required by the
+frame; do not split every class merely because one proof projects fewer fields.
+The ship gate and its evidence are project rules; for RadiiPolynomial, see `radii-poly-api-design` §The one goal and the
+production gate.
+
 ## Peer Harnesses
 
 A second general-purpose model joins this work as a **bounded worker**: one headless
@@ -330,7 +359,7 @@ thinness before specifying what the theorem means.
   computation try sharing, split proofs or supplied witnesses checked by a generic soundness
   theorem.
 - **Faces (12–23, E3)**: separate the bound-consuming theorem from computed recipes and keep
-  proved sharper alternatives (override slots where a generated majorant exists); sharpness is
+  proved sharper alternatives that an endpoint consumes (override slots where a generated majorant exists); sharpness is
   a gate; a one-point centre-anchored derivative-difference bound recovered a sharp Z₂ where
   centring alone did not (Taylor shifts can still help in general); local hypotheses where they
   suffice with global wrappers derived, and strict inclusion / nondegeneracy PROVED from their
@@ -388,7 +417,9 @@ authority source, and (for now) a process practice, not bus protocol.
 - Items have stable ids, a checkable completion criterion (a falsifiable target for claims and
   gates), explicit uncertainty, what they unblock, an estimated cost, and typed blockers (other
   items, the user, a pending peer request, budget/host, agent capacity, unknown). The
-  CLAIM / GATE / TOOL / DECISION taxonomy is a project convention, not exhaustive.
+  CLAIM / GATE / TOOL / DECISION taxonomy is a project convention, not exhaustive. An item that touches production also
+  names the end consumer that measures it; without one it is a PROBE item (project rule; RadiiPolynomial:
+  `radii-poly-api-design` §The one goal and the production gate).
 - Substantive work is tied to an item; supporting coordination is charged to it; receipts, control
   handling, recovery, validation and maintenance stay legal on their own. Repeated work needs a
   named evidential purpose (independent verification, changed conditions, nondeterminism,
@@ -409,6 +440,22 @@ authority source, and (for now) a process practice, not bus protocol.
   generation, evidence required for terminal transitions, drift refusal pending reconciliation,
   advisory stop-certification) is the intended next step, trialled in an isolated project
   prototype before any promotion.
+
+## Handoff and re-entry: recover the mathematical objective (user 2026-10-18; Claude proposal 29037e09 amended by Codex's bounded review e184184c / HANDOFF_CLAUSE_REVIEW.md eddb5dff; this is the bilateral text; the skill file is ONE inode shared by ~/.claude/skills and ~/.agents/skills, so an edit here is live for both harnesses — further changes stay staged pending the applicable authorization; the user commits)
+
+Why: on 2026-10-18 a successor session re-entered a research campaign from a handoff that carried the execution gates but not the research picture, and within an hour reopened a settled design, re-committed a correction the peer had already made, re-proved faces the record already had, and drifted on symbols and labels. RECOVERY A covers identity, inbox and locks; it does not cover the mathematics.
+
+For a research campaign, keep a short, prominent compass in the owned handoff or link its canonical current version: the authorized objective; distinct objects and maps; fixed notation; decisions and rejected or parked routes with reasons; the next mathematical uncertainty; and how the queued work serves the objective. Keep execution status separately identifiable. Use source pointers, adding exact versions or hashes where a decision or evidence gate needs them.
+
+Recover the user's governing statement first (user 2026-10-19): the one goal that every exploration serves, and the question every production decision answers, effective or decorative (RadiiPolynomial: verbatim in `radii-poly-api-design` §The one goal and the production gate).
+
+On re-entry, check that compass, the current user's instructions and relevant live changes before making a design decision or dispatching work that depends on them. Reuse a sufficient current brief; expand the reading only for missing context, drift or a material uncertainty. No separate reader cohort, grounding unit or memory update is required merely because compaction or time passed. Record substantive corrections in the owned campaign record; memory writes follow the active harness's authorization rules. Do not rewrite peer-owned files.
+
+Where shared research decisions are affected, give the peer a concise readback when messaging is authorized, and resolve material disagreements before the dependent effect. A readback is an understanding check, not an acknowledgment ritual or a blanket gate on unrelated authorized work.
+
+Check a new proposal against relevant recorded decisions and rejected routes. Mark unsettled claims PROPOSAL, state the evidence and any decision it would amend, and scale independent review to the claim's consequence. A recorded rejection may be reconsidered with a stated new reason.
+
+Preserve decision provenance; record objective changes from the user's current instructions. The compass and peer agreement grant no new authority and cannot override those instructions. When agents-bus RECOVERY A applies, preserve its merged order: mathematical reading supplements its read/plan phase; publication, cues, dispatch and resumed effects retain all existing gates. Alignment uncertainty defers only work whose validity or scope depends on resolving it.
 
 ## Escalation To Aristotle
 

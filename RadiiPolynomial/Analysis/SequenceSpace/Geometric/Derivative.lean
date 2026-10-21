@@ -6,7 +6,7 @@ import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
 # Differentiability of `l1Weighted` constructions
 
 This file contains differentiability and `fderiv` lemmas for `l1Weighted`:
-- `differentiable_toSeq`: coordinate evaluation is differentiable (it's a CLM)
+Coordinate evaluation uses the existing CLM calculus directly. The retained construction faces are:
 - `differentiable_mk_of_finSupp`: finitely-supported `l1Weighted.mk` is differentiable
 - `fderiv_mk_of_finSupp_toSeq_tail`: fderiv vanishes on tail modes
 
@@ -24,10 +24,6 @@ namespace l1Weighted
 
 variable {ν : PosReal}
 
-/-- `toSeq · n` is differentiable (it's a CLM). -/
-@[fun_prop]
-lemma differentiable_toSeq (n : ℕ) : Differentiable ℝ (fun a : l1Weighted ν => toSeq a n) :=
-  (toSeq_CLM n).differentiable
 
 /-- A finitely-supported function into `l1Weighted ν` is differentiable if each
 coefficient function is differentiable. Decomposes as `Σ_k single_CLM k (f_k(a))`.

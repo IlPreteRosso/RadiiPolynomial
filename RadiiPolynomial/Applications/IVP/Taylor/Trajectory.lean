@@ -227,12 +227,12 @@ theorem fderiv_banachField_apply' (f_cpoly : Fin L → CompPoly L) (a h : XL1 ν
     (fderiv ℝ (fun a => IVP.banachField f_cpoly a l) a) h =
       ∑ m : Fin L, ((f_cpoly l).pderiv m).evalBanach a * h m := by
   have hfun : (fun a : XL1 ν L => IVP.banachField f_cpoly a l) =
-      fun a => evalInBanach (f_cpoly l).toMvPoly a :=
-    funext fun a => compPoly_evalBanach_eq_evalInBanach (f_cpoly l) a
-  rw [hfun, fderiv_evalInBanach]
+      fun a => MvPolynomial.aeval a (f_cpoly l).toMvPoly :=
+    funext fun a => compPoly_evalBanach_eq_aeval (f_cpoly l) a
+  rw [hfun, fderiv_aeval]
   simp only [sum_apply, ContinuousLinearMap.comp_apply,
     ContinuousLinearMap.proj_apply, l1Weighted.leftMul_apply]
   refine Finset.sum_congr rfl fun m _ => ?_
-  rw [← CompPoly.pderiv_toMvPoly, ← compPoly_evalBanach_eq_evalInBanach]
+  rw [← CompPoly.pderiv_toMvPoly, ← compPoly_evalBanach_eq_aeval]
 
 end IVP

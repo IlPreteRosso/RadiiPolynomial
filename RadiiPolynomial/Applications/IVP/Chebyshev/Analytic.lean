@@ -17,19 +17,19 @@ into the function-level statement: the IVP `u̇ = f(u)`, `u(-1) = p` has a solut
   finite defect block has norm `< 1` (which the radii polynomial supplies when `Z₀` bounds
   the finite block: `StdChebIVPData.defect_finBlockNorm_lt_one_of_radii`).
   Mirrors `IVP.StdIVPData.ivpCoeffs_zero_of_G_zero`.
-- `ChebyshevIVP.StdChebIVPData.neg_modes_zero_of_G_zero` — the negative modes of a zero of
-  `G` vanish, straight from the pass-through identity `G(a)_k = a_k` for `k < 0`
-  (`embedWithPassThrough`); no injectivity argument is involved.
+- The additional negative-mode face for a zero of `G` belongs to the recovery module
+  `B5RecordChebNegativeModes`; it is not part of this shipped solution interface.
 - `ChebyshevIVP.IsSolution f p R g` (`structure`) — "`g` solves `u̇ = f(u)`, `u(-1) = p`
   on `[-1, 1]` with trajectory in `closedBall 0 R`". Four fields: `init`, `cont`, `in_R`,
   `solves` (the last is the one-sided `HasDerivWithinAt … (Ici t)` form on `[-1, 1)`, which
   is what Mathlib's endpoint uniqueness theorem consumes).
 - `ChebyshevIVP.x_sol xTilde` — the canonical solution `t ↦ (u_{xTilde l}(t))_l` read off a
   sequence-space zero through `l1Chebyshev.eval` (book (14.9)).
-- `StdChebIVPData.x_sol_isSolution` / `x_sol_hasDerivAt` / `solution_eq_canonical` /
-  `solution_existsUnique`.
-- The parallel declarations ending in `_of_two_le` use contractive evaluation at
-  weights `ν ≥ 2`, replacing the trajectory radius `2(‖ā‖ + r₀)` by `‖ā‖ + r₀`.
+- `StdChebIVPData.x_sol_isSolution_of_evalBound` / `x_sol_hasDerivAt` / `solution_eq_canonical_of_evalBound` /
+  `solution_existsUnique_of_evalBound`.
+- The declarations ending in `_of_evalBound` consume a proved uniform bound `C` on the
+  existing evaluator. Their radius condition is `C(‖ā‖ + r₀) ≤ R`; polynomial sockets
+  select `C = 2` or, at weights `ν ≥ 2`, `C = 1`.
 
 **No analyticity is claimed in this file.** The conclusions are continuity on `[-1, 1]`,
 the one-sided derivative on `[-1, 1)` (`IsSolution.solves`) and the two-sided derivative on
@@ -85,14 +85,6 @@ lemma G_toSeq_natCast (a : XCheb ν L) (l : Fin L) (n : ℕ) :
   show lpOneAlg.toRealSeq (d.G φ p a l) (↑n : ℤ) = _
   exact FiberTrivialization.equiv_symm_apply_equiv (E := ScaledRealZ ν) _ _
 
-/-- Negative modes of `G(a)` are those of `a` (`embedWithPassThrough`): the IVP equations
-do not constrain them. -/
-lemma G_toSeq_negSucc (a : XCheb ν L) (l : Fin L) (m : ℕ) :
-    l1Chebyshev.toSeq (d.G φ p a l) (Int.negSucc m)
-      = l1Chebyshev.toSeq (a l) (Int.negSucc m) := by
-  show lpOneAlg.toRealSeq (d.G φ p a l) (Int.negSucc m) = _
-  simp only [lpOneAlg.toRealSeq, G, chebyshevIvpMap, embedWithPassThrough]
-  rfl
 
 /-- **F-zero bridge** (Chebyshev mirror of `IVP.StdIVPData.ivpCoeffs_zero_of_G_zero`).
 `d.G φ p a = 0` forces the raw coefficient equations `chebyshevIvpCoeffs φ p a` to vanish,
@@ -115,61 +107,38 @@ lemma chebyshevIvpCoeffs_zero_of_G_zero
   have hn0 : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
   exact one_div_ne_zero (by simpa using hn0)
 
-/-- Negative modes of a zero of `G` vanish, directly from the pass-through identity. -/
-lemma neg_modes_zero_of_G_zero {a : XCheb ν L} (hG : d.G φ p a = 0) (l : Fin L) (m : ℕ) :
-    l1Chebyshev.toSeq (a l) (Int.negSucc m) = 0 := by
-  rw [← d.G_toSeq_negSucc φ p a l m, congrFun hG l]; simp
 
 /-! ### From a certified zero to a certified solution -/
 
 variable (f : (Fin L → ℝ) → Fin L → ℝ) (xTilde : XCheb ν L)
 
 /-- The trajectory of a point of the certificate ball stays in `closedBall 0 R` as soon as
-`R` dominates `2(‖ā‖ + r₀)`. The factor `2` is the storage convention of book (14.9). -/
-lemma x_sol_mem_closedBall {r₀ R : ℝ}
-    (hball : xTilde ∈ closedBall (abar d) r₀) (hR : 2 * (‖abar d‖ + r₀) ≤ R)
+`R` dominates `C(‖ā‖ + r₀)`, for a proved uniform evaluator bound `C`. -/
+lemma x_sol_mem_closedBall_of_evalBound (C : NNReal)
+    (h_eval : ∀ (t : ℝ) (ht : |t| ≤ 1),
+      ‖(l1Chebyshev.evalAtCLM t ht : l1Chebyshev ν →L[ℝ] ℝ)‖ ≤ (C : ℝ)) {r₀ R : ℝ}
+    (hball : xTilde ∈ closedBall (abar d) r₀) (hR : (C : ℝ) * (‖abar d‖ + r₀) ≤ R)
     {t : ℝ} (ht : t ∈ Icc (-1 : ℝ) 1) :
     x_sol xTilde t ∈ closedBall (0 : Fin L → ℝ) R :=
   closedBall_subset_closedBall
-    (by linarith [norm_le_of_mem_closedBall hball]) (eval_traj_in_closedBall xTilde ht)
-
-/-- At weights `ν ≥ 2`, the trajectory of a point of the certificate ball stays in
-`closedBall 0 R` as soon as `R` dominates `‖ā‖ + r₀`. -/
-lemma x_sol_mem_closedBall_of_two_le (hν : (2 : ℝ) ≤ (ν : ℝ)) {r₀ R : ℝ}
-    (hball : xTilde ∈ closedBall (abar d) r₀) (hR : ‖abar d‖ + r₀ ≤ R)
-    {t : ℝ} (ht : t ∈ Icc (-1 : ℝ) 1) :
-    x_sol xTilde t ∈ closedBall (0 : Fin L → ℝ) R :=
-  closedBall_subset_closedBall ((norm_le_of_mem_closedBall hball).trans hR)
-    (eval_traj_in_closedBall_of_two_le hν xTilde ht)
+    ((mul_le_mul_of_nonneg_left (norm_le_of_mem_closedBall hball) C.coe_nonneg).trans hR)
+    (eval_traj_in_closedBall_of_evalBound C h_eval xTilde ht)
 
 /-- **Existence**: the T-series of a certified zero solves the IVP on `[-1, 1]`. -/
-theorem x_sol_isSolution
+theorem x_sol_isSolution_of_evalBound (C : NNReal)
+    (h_eval : ∀ (t : ℝ) (ht : |t| ≤ 1),
+      ‖(l1Chebyshev.evalAtCLM t ht : l1Chebyshev ν →L[ℝ] ℝ)‖ ≤ (C : ℝ))
     (hφ : ∀ (a : XCheb ν L) (l : Fin L) (t : ℝ), t ∈ Icc (-1 : ℝ) 1 →
       l1Chebyshev.eval (φ a l) t = f (fun i => l1Chebyshev.eval (a i) t) l)
     (hZ₀_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1) {r₀ R : ℝ}
     (hball : xTilde ∈ closedBall (abar d) r₀) (hG : d.G φ p xTilde = 0)
-    (hR : 2 * (‖abar d‖ + r₀) ≤ R) :
-    IsSolution f p R (x_sol xTilde) := by
-  obtain ⟨hinit, hcont, hderiv, -⟩ :=
-    solves_ODE_of_F_zero φ p xTilde f (fun l t ht => hφ xTilde l t ht)
-      (d.chebyshevIvpCoeffs_zero_of_G_zero φ p hZ₀_lt_one hG)
-  exact ⟨funext hinit, hcont, fun t ht => d.x_sol_mem_closedBall xTilde hball hR ht, hderiv⟩
-
-/-- **Sharper existence at weights `ν ≥ 2`**: the T-series of a certified zero
-solves the IVP in any trajectory ball whose radius dominates `‖ā‖ + r₀`. -/
-theorem x_sol_isSolution_of_two_le
-    (hν : (2 : ℝ) ≤ (ν : ℝ))
-    (hφ : ∀ (a : XCheb ν L) (l : Fin L) (t : ℝ), t ∈ Icc (-1 : ℝ) 1 →
-      l1Chebyshev.eval (φ a l) t = f (fun i => l1Chebyshev.eval (a i) t) l)
-    (hZ₀_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1) {r₀ R : ℝ}
-    (hball : xTilde ∈ closedBall (abar d) r₀) (hG : d.G φ p xTilde = 0)
-    (hR : ‖abar d‖ + r₀ ≤ R) :
+    (hR : (C : ℝ) * (‖abar d‖ + r₀) ≤ R) :
     IsSolution f p R (x_sol xTilde) := by
   obtain ⟨hinit, hcont, hderiv, -⟩ :=
     solves_ODE_of_F_zero φ p xTilde f (fun l t ht => hφ xTilde l t ht)
       (d.chebyshevIvpCoeffs_zero_of_G_zero φ p hZ₀_lt_one hG)
   exact ⟨funext hinit, hcont,
-    fun t ht => d.x_sol_mem_closedBall_of_two_le xTilde hν hball hR ht, hderiv⟩
+    fun t ht => d.x_sol_mem_closedBall_of_evalBound xTilde C h_eval hball hR ht, hderiv⟩
 
 /-- The canonical solution is two-sided differentiable in the interior `(-1, 1)`; the
 `IsSolution` field only records the one-sided derivative that uniqueness consumes. -/
@@ -184,35 +153,20 @@ theorem x_sol_hasDerivAt
 
 /-- **Pinning**: any solution staying in the trajectory ball agrees with the canonical one
 on `[-1, 1]` (Picard–Lindelöf from the endpoint `t = -1`). -/
-theorem solution_eq_canonical
+theorem solution_eq_canonical_of_evalBound (C : NNReal)
+    (h_eval : ∀ (t : ℝ) (ht : |t| ≤ 1),
+      ‖(l1Chebyshev.evalAtCLM t ht : l1Chebyshev ν →L[ℝ] ℝ)‖ ≤ (C : ℝ))
     (hφ : ∀ (a : XCheb ν L) (l : Fin L) (t : ℝ), t ∈ Icc (-1 : ℝ) 1 →
       l1Chebyshev.eval (φ a l) t = f (fun i => l1Chebyshev.eval (a i) t) l)
     (hZ₀_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1) {K : NNReal} {r₀ R : ℝ}
     (hf_lip : LipschitzOnWith K f (closedBall (0 : Fin L → ℝ) R))
     (hball : xTilde ∈ closedBall (abar d) r₀) (hG : d.G φ p xTilde = 0)
-    (hR : 2 * (‖abar d‖ + r₀) ≤ R)
+    (hR : (C : ℝ) * (‖abar d‖ + r₀) ≤ R)
     (g : ℝ → Fin L → ℝ) (hg : IsSolution f p R g) :
     EqOn g (x_sol xTilde) (Icc (-1 : ℝ) 1) :=
   solution_unique φ p xTilde f (fun l t ht => hφ xTilde l t ht)
     (d.chebyshevIvpCoeffs_zero_of_G_zero φ p hZ₀_lt_one hG) hf_lip
-    (fun _ ht => d.x_sol_mem_closedBall xTilde hball hR ht)
-    g hg.cont (fun t ht => hg.in_R t (Ico_subset_Icc_self ht)) hg.solves hg.init
-
-/-- **Sharper pinning at weights `ν ≥ 2`**: uniqueness holds in any trajectory
-ball whose radius dominates `‖ā‖ + r₀`. -/
-theorem solution_eq_canonical_of_two_le
-    (hν : (2 : ℝ) ≤ (ν : ℝ))
-    (hφ : ∀ (a : XCheb ν L) (l : Fin L) (t : ℝ), t ∈ Icc (-1 : ℝ) 1 →
-      l1Chebyshev.eval (φ a l) t = f (fun i => l1Chebyshev.eval (a i) t) l)
-    (hZ₀_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1) {K : NNReal} {r₀ R : ℝ}
-    (hf_lip : LipschitzOnWith K f (closedBall (0 : Fin L → ℝ) R))
-    (hball : xTilde ∈ closedBall (abar d) r₀) (hG : d.G φ p xTilde = 0)
-    (hR : ‖abar d‖ + r₀ ≤ R)
-    (g : ℝ → Fin L → ℝ) (hg : IsSolution f p R g) :
-    EqOn g (x_sol xTilde) (Icc (-1 : ℝ) 1) :=
-  solution_unique φ p xTilde f (fun l t ht => hφ xTilde l t ht)
-    (d.chebyshevIvpCoeffs_zero_of_G_zero φ p hZ₀_lt_one hG) hf_lip
-    (fun _ ht => d.x_sol_mem_closedBall_of_two_le xTilde hν hball hR ht)
+    (fun _ ht => d.x_sol_mem_closedBall_of_evalBound xTilde C h_eval hball hR ht)
     g hg.cont (fun t ht => hg.in_R t (Ico_subset_Icc_self ht)) hg.solves hg.init
 
 end StdChebIVPData
@@ -224,8 +178,9 @@ variable [NeZero L] [Fact (1 ≤ (ν : ℝ))] (d : StdChebIVPData ν L N)
   (f : (Fin L → ℝ) → Fin L → ℝ)
 
 /-- **Existence + uniqueness on `[-1, 1]`**, from the four radii-polynomial bounds
-together with the hypotheses listed below. The `∃` paired with the universal clause is the "∃! modulo `Set.EqOn`" pattern of
-`IVP.StdIVPData.analytic_existsUnique`: candidates may differ outside `[-1, 1]`.
+together with a proved uniform evaluator bound. The coefficient witness exposes the
+canonical trajectory needed by the analyticity socket. Uniqueness is modulo `Set.EqOn`:
+competitors may differ outside `[-1, 1]`.
 
 `hφ` says that the coefficient nonlinearity `φ` evaluates to the ODE vector field `f`.
 When both interpret the same `CompPoly` system, `MvPolyBridge.CompPoly.Chebyshev.eval_eval`
@@ -234,7 +189,9 @@ also accepts any other nonlinearity with this identity. The radii-polynomial bou
 Lipschitz bound, and trajectory-radius bound remain separate hypotheses, as do the
 finite-defect condition `hZ₀_lt_one` and the differentiability `hG_diff` of `G`.
 No analyticity is asserted — see the module docstring. -/
-theorem solution_existsUnique
+theorem solution_existsUnique_of_evalBound (C : NNReal)
+    (h_eval : ∀ (t : ℝ) (ht : |t| ≤ 1),
+      ‖(l1Chebyshev.evalAtCLM t ht : l1Chebyshev ν →L[ℝ] ℝ)‖ ≤ (C : ℝ))
     (hφ : ∀ (a : XCheb ν L) (l : Fin L) (t : ℝ), t ∈ Icc (-1 : ℝ) 1 →
       l1Chebyshev.eval (φ a l) t = f (fun i => l1Chebyshev.eval (a i) t) l)
     (hZ₀_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
@@ -249,43 +206,16 @@ theorem solution_existsUnique
     (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ (fun _ => Z₂_val) r₀ < 0)
     {K : NNReal} {R : ℝ}
     (hf_lip : LipschitzOnWith K f (closedBall (0 : Fin L → ℝ) R))
-    (hR : 2 * (‖abar d‖ + r₀) ≤ R) :
-    ∃ g : ℝ → Fin L → ℝ, IsSolution f p R g ∧
-      ∀ g' : ℝ → Fin L → ℝ, IsSolution f p R g' → EqOn g' g (Icc (-1 : ℝ) 1) := by
+    (hR : (C : ℝ) * (‖abar d‖ + r₀) ≤ R) :
+    ∃ xTilde : XCheb ν L, IsSolution f p R (x_sol xTilde) ∧
+      ∀ g' : ℝ → Fin L → ℝ, IsSolution f p R g' →
+        EqOn g' (x_sol xTilde) (Icc (-1 : ℝ) 1) := by
   obtain ⟨xTilde, hball, hG⟩ :=
     (d.existsUnique φ p hG_diff hr₀ hY₀ hZ₀ hZ₁ hZ₂ h_radii).exists
-  exact ⟨x_sol xTilde,
-    d.x_sol_isSolution φ p f xTilde hφ hZ₀_lt_one hball hG hR,
-    fun g' hg' => d.solution_eq_canonical φ p f xTilde hφ hZ₀_lt_one hf_lip hball hG hR g' hg'⟩
-
-/-- **Sharper existence + uniqueness at weights `ν ≥ 2`.** This is
-`solution_existsUnique` with the contractive trajectory bound `‖ā‖ + r₀` in
-place of `2(‖ā‖ + r₀)`. -/
-theorem solution_existsUnique_of_two_le
-    (hν : (2 : ℝ) ≤ (ν : ℝ))
-    (hφ : ∀ (a : XCheb ν L) (l : Fin L) (t : ℝ), t ∈ Icc (-1 : ℝ) 1 →
-      l1Chebyshev.eval (φ a l) t = f (fun i => l1Chebyshev.eval (a i) t) l)
-    (hZ₀_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
-    (hG_diff : Differentiable ℝ (d.G φ p))
-    {Y₀ Z₀ Z₁ Z₂_val r₀ : ℝ}
-    (hr₀ : 0 < r₀)
-    (hY₀ : ‖d.G φ p (abar d)‖ ≤ Y₀)
-    (hZ₀ : ‖ContinuousLinearMap.id ℝ (XCheb ν L) - d.composedApproxCLM‖ ≤ Z₀)
-    (hZ₁ : ‖d.composedApproxCLM - fderiv ℝ (d.G φ p) (abar d)‖ ≤ Z₁)
-    (hZ₂ : ∀ c ∈ closedBall (abar d) r₀,
-      ‖fderiv ℝ (d.G φ p) c - fderiv ℝ (d.G φ p) (abar d)‖ ≤ Z₂_val * r₀)
-    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ (fun _ => Z₂_val) r₀ < 0)
-    {K : NNReal} {R : ℝ}
-    (hf_lip : LipschitzOnWith K f (closedBall (0 : Fin L → ℝ) R))
-    (hR : ‖abar d‖ + r₀ ≤ R) :
-    ∃ g : ℝ → Fin L → ℝ, IsSolution f p R g ∧
-      ∀ g' : ℝ → Fin L → ℝ, IsSolution f p R g' → EqOn g' g (Icc (-1 : ℝ) 1) := by
-  obtain ⟨xTilde, hball, hG⟩ :=
-    (d.existsUnique φ p hG_diff hr₀ hY₀ hZ₀ hZ₁ hZ₂ h_radii).exists
-  exact ⟨x_sol xTilde,
-    d.x_sol_isSolution_of_two_le φ p f xTilde hν hφ hZ₀_lt_one hball hG hR,
-    fun g' hg' => d.solution_eq_canonical_of_two_le φ p f xTilde hν hφ hZ₀_lt_one
-      hf_lip hball hG hR g' hg'⟩
+  exact ⟨xTilde,
+    d.x_sol_isSolution_of_evalBound φ p f xTilde C h_eval hφ hZ₀_lt_one hball hG hR,
+    fun g' hg' => d.solution_eq_canonical_of_evalBound φ p f xTilde C h_eval hφ
+      hZ₀_lt_one hf_lip hball hG hR g' hg'⟩
 
 end StdChebIVPData
 

@@ -38,10 +38,35 @@ namespace StdChebIVPData
 variable {ν : PosReal} {L N : ℕ} [NeZero L] [Fact (1 ≤ (ν : ℝ))]
   (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L) (p : Fin L → ℝ)
 
-/-- **Existence and uniqueness on `[-1, 1]` from one polynomial system.** The
-`CompPoly`-driven face of `StdChebIVPData.solution_existsUnique`: the evaluation identity,
-the differentiability witness, the operator form of `Z₀` and the strict contractivity of
-the finite defect are all derived from `f` and from the four bounds themselves. -/
+/-- Polynomial structural obligations for a proved uniform evaluator bound, exposing
+one canonical coefficient witness. The default, contractive and analytic sockets all
+consume this face; only the evaluator bound and trajectory radius vary. -/
+theorem exists_canonical_solution_of_compPoly_of_evalBound
+    (C : NNReal)
+    (h_eval : ∀ (t : ℝ) (ht : |t| ≤ 1),
+      ‖(l1Chebyshev.evalAtCLM t ht : l1Chebyshev ν →L[ℝ] ℝ)‖ ≤ (C : ℝ))
+    {Y₀ Z₀ Z₁ Z₂_val r₀ : ℝ}
+    (hr₀ : 0 < r₀)
+    (hY₀ : ‖d.G (banachField f) p d.abar‖ ≤ Y₀)
+    (hZ₀fin : finiteBlockMatrixNorm ν d.defect.finBlock ≤ Z₀)
+    (hZ₁ : ‖d.composedApproxCLM - fderiv ℝ (d.G (banachField f) p) d.abar‖ ≤ Z₁)
+    (hZ₂ : ∀ c ∈ closedBall d.abar r₀,
+      ‖fderiv ℝ (d.G (banachField f) p) c - fderiv ℝ (d.G (banachField f) p) d.abar‖
+        ≤ Z₂_val * r₀)
+    (h_radii : generalRadiiPolynomial Y₀ Z₀ Z₁ (fun _ => Z₂_val) r₀ < 0)
+    {R : ℝ} (hR : (C : ℝ) * (‖d.abar‖ + r₀) ≤ R) :
+    ∃ xTilde : XCheb ν L, IsSolution (IVP.vectorField f) p R (x_sol xTilde) ∧
+      ∀ g' : ℝ → Fin L → ℝ, IsSolution (IVP.vectorField f) p R g' →
+        EqOn g' (x_sol xTilde) (Icc (-1 : ℝ) 1) :=
+  d.solution_existsUnique_of_evalBound (banachField f) p (IVP.vectorField f) C h_eval
+    (fun a l _t ht => CompPoly.Chebyshev.eval_eval (f l) a (abs_le.mpr ht))
+    (d.defect_finBlockNorm_lt_one_of_radii (banachField f) p hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)
+    (d.differentiable_G_of_compPoly f p) hr₀ hY₀ (d.Z₀_le hZ₀fin) hZ₁ hZ₂ h_radii
+    (IVP.vectorField_lipschitzOnWith f
+      ((mul_nonneg C.coe_nonneg (add_nonneg (norm_nonneg _) hr₀.le)).trans hR)) hR
+
+/-- Existence and uniqueness with the default storage evaluation bound `2`.
+The socket chooses its evaluator witness internally. -/
 theorem solution_existsUnique_of_compPoly
     {Y₀ Z₀ Z₁ Z₂_val r₀ : ℝ}
     (hr₀ : 0 < r₀)
@@ -55,16 +80,15 @@ theorem solution_existsUnique_of_compPoly
     {R : ℝ} (hR : 2 * (‖d.abar‖ + r₀) ≤ R) :
     ∃ g : ℝ → Fin L → ℝ, IsSolution (IVP.vectorField f) p R g ∧
       ∀ g' : ℝ → Fin L → ℝ, IsSolution (IVP.vectorField f) p R g' →
-        EqOn g' g (Icc (-1 : ℝ) 1) :=
-  d.solution_existsUnique (banachField f) p (IVP.vectorField f)
-    (fun a l _t ht => CompPoly.Chebyshev.eval_eval (f l) a (abs_le.mpr ht))
-    (d.defect_finBlockNorm_lt_one_of_radii (banachField f) p hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)
-    (d.differentiable_G_of_compPoly f p) hr₀ hY₀ (d.Z₀_le hZ₀fin) hZ₁ hZ₂ h_radii
-    (IVP.vectorField_lipschitzOnWith f (by linarith [norm_nonneg d.abar])) hR
+        EqOn g' g (Icc (-1 : ℝ) 1) := by
+  obtain ⟨xTilde, hsol, huniq⟩ :=
+    d.exists_canonical_solution_of_compPoly_of_evalBound f p 2
+      (fun t ht => l1Chebyshev.norm_evalAtCLM_le t ht)
+      hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii (by simpa using hR)
+  exact ⟨x_sol xTilde, hsol, huniq⟩
 
-/-- **Sharper existence and uniqueness at weights `ν ≥ 2`**: the contractive trajectory
-radius `‖ā‖ + r₀` replaces `2(‖ā‖ + r₀)`. Same derived structural facts as
-`solution_existsUnique_of_compPoly`. -/
+/-- Existence and uniqueness with the contractive storage evaluation bound at `2 ≤ ν`.
+The socket chooses bound `1` and its proved evaluator witness internally. -/
 theorem solution_existsUnique_of_two_le_of_compPoly
     (hν : (2 : ℝ) ≤ (ν : ℝ))
     {Y₀ Z₀ Z₁ Z₂_val r₀ : ℝ}
@@ -79,17 +103,15 @@ theorem solution_existsUnique_of_two_le_of_compPoly
     {R : ℝ} (hR : ‖d.abar‖ + r₀ ≤ R) :
     ∃ g : ℝ → Fin L → ℝ, IsSolution (IVP.vectorField f) p R g ∧
       ∀ g' : ℝ → Fin L → ℝ, IsSolution (IVP.vectorField f) p R g' →
-        EqOn g' g (Icc (-1 : ℝ) 1) :=
-  d.solution_existsUnique_of_two_le (banachField f) p (IVP.vectorField f) hν
-    (fun a l _t ht => CompPoly.Chebyshev.eval_eval (f l) a (abs_le.mpr ht))
-    (d.defect_finBlockNorm_lt_one_of_radii (banachField f) p hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii)
-    (d.differentiable_G_of_compPoly f p) hr₀ hY₀ (d.Z₀_le hZ₀fin) hZ₁ hZ₂ h_radii
-    (IVP.vectorField_lipschitzOnWith f (by linarith [norm_nonneg d.abar])) hR
+        EqOn g' g (Icc (-1 : ℝ) 1) := by
+  obtain ⟨xTilde, hsol, huniq⟩ :=
+    d.exists_canonical_solution_of_compPoly_of_evalBound f p 1
+      (fun t ht => l1Chebyshev.norm_evalAtCLM_le_of_two_le hν t ht)
+      hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii (by simpa using hR)
+  exact ⟨x_sol xTilde, hsol, huniq⟩
 
-/-- **The produced solution is real analytic across the endpoints.** Same hypotheses as
-`solution_existsUnique_of_two_le_of_compPoly`; `2 ≤ ν` already gives the `1 < ν` that
-`analyticOnNhd_x_sol` needs. Uniqueness is still stated against the weaker `IsSolution`
-competitor class, so the statement strengthens the witness and not the uniqueness claim. -/
+/-- At `2 ≤ ν`, the canonical solution is analytic across the endpoints.
+Uniqueness retains the weaker `IsSolution` competitor class. -/
 theorem analytic_solution_existsUnique_of_two_le_of_compPoly
     (hν : (2 : ℝ) ≤ (ν : ℝ))
     {Y₀ Z₀ Z₁ Z₂_val r₀ : ℝ}
@@ -106,22 +128,12 @@ theorem analytic_solution_existsUnique_of_two_le_of_compPoly
       IsSolution (IVP.vectorField f) p R g ∧
       ∀ g' : ℝ → Fin L → ℝ, IsSolution (IVP.vectorField f) p R g' →
         EqOn g' g (Icc (-1 : ℝ) 1) := by
-  obtain ⟨xTilde, hball, hG⟩ :=
-    (d.existsUnique_of_compPoly f p hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii).exists
-  have hφ : ∀ (a : XCheb ν L) (l : Fin L) (t : ℝ), t ∈ Icc (-1 : ℝ) 1 →
-      l1Chebyshev.eval (banachField f a l) t =
-        IVP.vectorField f (fun i => l1Chebyshev.eval (a i) t) l :=
-    fun a l _t ht => CompPoly.Chebyshev.eval_eval (f l) a (abs_le.mpr ht)
-  have hZ₀_lt_one :=
-    d.defect_finBlockNorm_lt_one_of_radii (banachField f) p hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii
-  refine ⟨x_sol xTilde,
-    analyticOnNhd_x_sol (lt_of_lt_of_le one_lt_two hν) xTilde,
-    d.x_sol_isSolution_of_two_le (banachField f) p (IVP.vectorField f) xTilde hν hφ
-      hZ₀_lt_one hball hG hR,
-    fun g' hg' => d.solution_eq_canonical_of_two_le (banachField f) p (IVP.vectorField f)
-      xTilde hν hφ hZ₀_lt_one
-      (IVP.vectorField_lipschitzOnWith f (by linarith [norm_nonneg d.abar]))
-      hball hG hR g' hg'⟩
+  obtain ⟨xTilde, hsol, huniq⟩ :=
+    d.exists_canonical_solution_of_compPoly_of_evalBound f p 1
+      (fun t ht => l1Chebyshev.norm_evalAtCLM_le_of_two_le hν t ht)
+      hr₀ hY₀ hZ₀fin hZ₁ hZ₂ h_radii (by simpa using hR)
+  exact ⟨x_sol xTilde, analyticOnNhd_x_sol (lt_of_lt_of_le one_lt_two hν) xTilde,
+    hsol, huniq⟩
 
 end StdChebIVPData
 

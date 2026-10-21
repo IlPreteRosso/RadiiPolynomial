@@ -3,16 +3,16 @@ import Mathlib.Analysis.Normed.Operator.Mul
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Scalar
 import RadiiPolynomial.Algebra.Convolution.CauchyProduct
 import RadiiPolynomial.Analysis.Norm.FiniteSum
-import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.UniversalProperty
+import Mathlib.Analysis.Normed.Operator.Bilinear
 /-!
 # Weighted sequence-space infrastructure
 
 This file provides the concrete weighted spaces used by the system-level API:
 - `lpWeighted ν p`
-- `l1Weighted ν`
+- `l1Weighted ν`, using the canonical additive-index convolution instances on `ℕ`
 - norm/membership bridge lemmas (`norm_eq_tailTsum_of_fin_zero`, `tailTsum_le_norm_of_eq`, `norm_mk_le_of_pointwise`)
 - single-index embedding (`single`, `single_CLM`)
-- coefficient truncation (`trunc`, `trunc_CLM`)
 - the coefficients of a product with a monomial (`toSeq_mul_single`) and the norm of the
   tail projection (`norm_tailProj_eq_tailTsum`)
 
@@ -31,8 +31,8 @@ abbrev lpWeighted (ν : PosReal) (p : ℝ≥0∞) := lp (ScaledReal ν) p
 
 /-- Weighted `ℓ¹` Banach algebra via `lpOneAlg`. Ring structure from the submultiplicative
 weight base `SubMulWeightBase` (through `WeightedScalar.instLpOneAlgWeightMul` and the
-finite-antidiagonal convolution path `lpOneAlg.instConvCompatOfAntidiag`), for every `ν > 0`;
-the class `SubMulWeight` (weights `≥ 1`, i.e. `1 ≤ ν`) is not needed. -/
+finite-antidiagonal convolution path `lpOneAlg.instConvCompatOfAntidiag`), for every `ν > 0`.
+Extraction into unweighted ℓ¹ uses a separate explicit lower bound on the weights. -/
 abbrev l1Weighted (ν : PosReal) := lpOneAlg ℕ (ScaledReal ν)
 
 namespace lpWeighted
@@ -44,9 +44,6 @@ variable {ν : PosReal} {p : ℝ≥0∞}
 /-- Underlying real sequence. -/
 def toSeq (a : lpWeighted ν p) : ℕ → ℝ := fun n => ScaledReal.toReal (a n)
 
-/-- Extensionality through coefficients. -/
-lemma ext {a b : lpWeighted ν p} (h : ∀ n, toSeq a n = toSeq b n) : a = b :=
-  lp.ext (funext h)
 
 /-- Membership predicate for weighted `ℓᵖ`. -/
 def Mem (ν : PosReal) (p : ℝ≥0∞) (a : ℕ → ℝ) : Prop :=
@@ -57,17 +54,7 @@ def mk (a : ℕ → ℝ) (ha : Mem ν p a) : lpWeighted ν p :=
   ⟨fun n => ScaledReal.ofReal (a n), ha⟩
 
 lemma toSeq_apply (a : lpWeighted ν p) (n : ℕ) : toSeq a n = a n := rfl
-@[simp] lemma mk_apply (a : ℕ → ℝ) (ha : Mem ν p a) (n : ℕ) : toSeq (mk a ha) n = a n := rfl
 
-/-- Bridge: the `lp` coercion of `mk` gives `ScaledReal.ofReal ∘ f` at each index.
-Useful for `simp_rw` when the goal has `↑(mk f hf) n` instead of `toSeq`. -/
-@[simp] lemma mk_val_apply (a : ℕ → ℝ) (ha : Mem ν p a) (n : ℕ) :
-    (mk a ha).val n = ScaledReal.ofReal (a n) := rfl
-@[simp] lemma zero_toSeq (n : ℕ) : toSeq (0 : lpWeighted ν p) n = 0 := rfl
-@[simp] lemma neg_toSeq (a : lpWeighted ν p) (n : ℕ) : toSeq (-a) n = -toSeq a n := rfl
-@[simp] lemma add_toSeq (a b : lpWeighted ν p) (n : ℕ) : toSeq (a + b) n = toSeq a n + toSeq b n := rfl
-@[simp] lemma sub_toSeq (a b : lpWeighted ν p) (n : ℕ) : toSeq (a - b) n = toSeq a n - toSeq b n := rfl
-@[simp] lemma smul_toSeq (c : ℝ) (a : lpWeighted ν p) (n : ℕ) : toSeq (c • a) n = c * toSeq a n := rfl
 
 lemma norm_eq_tsum_rpow (hp : 0 < p.toReal) (a : lpWeighted ν p) :
     ‖a‖ = (∑' n, (|toSeq a n| * (ν : ℝ) ^ n) ^ p.toReal) ^ (1 / p.toReal) := by
@@ -100,16 +87,11 @@ def mk (a : ℕ → ℝ) (ha : Mem ν a) : l1Weighted ν := ⟨lpWeighted.mk a h
 lemma ext {a b : l1Weighted ν} (h : ∀ n, toSeq a n = toSeq b n) : a = b :=
   lpOneAlg.ext h
 
-lemma toSeq_apply (a : l1Weighted ν) (n : ℕ) : toSeq a n = a n := rfl
 
 /-- The geometric coefficient map is the generic `lpOneAlg.toRealSeq` (definitionally). -/
 lemma toSeq_eq_toRealSeq (a : l1Weighted ν) : toSeq a = lpOneAlg.toRealSeq a := rfl
 
 @[simp] lemma mk_apply (a : ℕ → ℝ) (ha : Mem ν a) (n : ℕ) : toSeq (mk a ha) n = a n := rfl
-
-@[simp] lemma mk_val_apply (a : ℕ → ℝ) (ha : Mem ν a) (n : ℕ) :
-    (mk a ha).toLp.val n = ScaledReal.ofReal (a n) := rfl
-@[simp] lemma zero_toSeq (n : ℕ) : toSeq (0 : l1Weighted ν) n = 0 := rfl
 @[simp] lemma neg_toSeq (a : l1Weighted ν) (n : ℕ) : toSeq (-a) n = -toSeq a n := rfl
 @[simp] lemma add_toSeq (a b : l1Weighted ν) (n : ℕ) :
     toSeq (a + b) n = toSeq a n + toSeq b n := rfl
@@ -302,13 +284,7 @@ def single (n : ℕ) (x : ℝ) : l1Weighted ν :=
     toSeq (single (ν := ν) idx x) n = if n = idx then x else 0 := by
   simp only [single, mk_apply]
 
-@[simp] lemma single_toSeq_same (n : ℕ) (x : ℝ) :
-    toSeq (single n x : l1Weighted ν) n = x := by
-  simp only [single_toSeq, ite_true]
 
-lemma single_toSeq_of_ne (n k : ℕ) (x : ℝ) (h : k ≠ n) :
-    toSeq (single n x : l1Weighted ν) k = 0 := by
-  simp only [single_toSeq, ite_eq_right h]
 
 /-- The geometric `l1Weighted.single` is the generic `lpOneAlg.single`. -/
 theorem single_eq_lpOneAlg_single (n : ℕ) (x : ℝ) :
@@ -345,125 +321,21 @@ noncomputable def single_CLM (n : ℕ) : ℝ →L[ℝ] l1Weighted ν :=
 @[simp] lemma single_CLM_apply (n : ℕ) (x : ℝ) :
     (single_CLM (ν := ν) n) x = single n x := rfl
 
-@[simp] lemma single_CLM_toSeq_same (n : ℕ) (x : ℝ) :
-    toSeq (single_CLM (ν := ν) n x) n = x := single_toSeq_same n x
 
-@[simp] lemma single_CLM_toSeq_of_ne (n k : ℕ) (x : ℝ) (h : k ≠ n) :
-    toSeq (single_CLM (ν := ν) n x) k = 0 := single_toSeq_of_ne n k x h
+
 
 end Single
 
 section Truncation
 
-/-- Coefficient truncation at order `N` in `ℓ¹_ν`. -/
-def trunc (N : ℕ) (a : l1Weighted ν) : l1Weighted ν :=
-  mk (fun n => if n ≤ N then toSeq a n else 0) (by
-    rw [mem_iff]
-    have h : (fun n => |(if n ≤ N then toSeq a n else 0 : ℝ)| * (ν : ℝ) ^ n) =
-        fun n => if n ≤ N then |toSeq a n| * (ν : ℝ) ^ n else 0 := by
-      ext n; split_ifs <;> simp
-    rw [h]
-    exact summable_of_ne_finset_zero (s := Finset.Icc 0 N) (fun n hn => by
-      have hnot : ¬ n ≤ N := fun hle => hn (by simp [Finset.mem_Icc, hle])
-      simp [hnot]))
 
-lemma coeff_trunc (N : ℕ) (a : l1Weighted ν) (n : ℕ) :
-    toSeq (trunc N a) n = if n ≤ N then toSeq a n else 0 := by
-  simp [trunc]
 
-private lemma trunc_add (N : ℕ) (a b : l1Weighted ν) :
-    trunc N (a + b) = trunc N a + trunc N b := by
-  apply ext; intro n; simp only [coeff_trunc, add_toSeq]; split_ifs <;> simp
 
-private lemma trunc_smul (N : ℕ) (c : ℝ) (a : l1Weighted ν) :
-    trunc N (c • a) = c • trunc N a := by
-  apply ext; intro n; simp only [coeff_trunc, smul_toSeq]; split_ifs <;> simp
 
-private lemma trunc_norm_le (N : ℕ) (a : l1Weighted ν) :
-    ‖trunc N a‖ ≤ 1 * ‖a‖ := by
-  rw [one_mul, norm_eq_tsum, norm_eq_tsum]
-  exact ((mem_iff _).mp (trunc N a).toLp.2).tsum_le_tsum (fun n => by
-    simp only [coeff_trunc]
-    split_ifs <;> simp [mul_nonneg (abs_nonneg _) (pow_nonneg (PosReal.coe_nonneg ν) _)])
-    ((mem_iff _).mp a.toLp.2)
 
-/-- Truncation as a continuous linear map on `ℓ¹_ν`. -/
-noncomputable def trunc_CLM (N : ℕ) : l1Weighted ν →L[ℝ] l1Weighted ν :=
-  LinearMap.mkContinuous
-    { toFun := trunc N
-      map_add' := trunc_add N
-      map_smul' := fun c a => by simp [trunc_smul] }
-    1
-    (trunc_norm_le N)
 
-@[simp] lemma trunc_CLM_apply (N : ℕ) (a : l1Weighted ν) :
-    trunc_CLM N a = trunc N a := rfl
 
-/-- Express `trunc N a` as a finite sum of `single`-monomials:
-`π_N a = ∑_{k ≤ N} δ_k · a_k`. This is the explicit "finite-support decomposition" —
-the sum is supported in `{0, …, N}` and each summand is a monomial.
 
-Combined with `tendsto_trunc`, this realizes `l1Weighted ν` as the topological
-closure of the ℝ-span of the monoid-algebra basis `{δ_n}_{n ∈ ℕ}`. (Classically this is
-the Banach completion of `AddMonoidAlgebra ℝ ℕ` with the weighted ℓ¹ norm; that
-completion statement is not proved here.) -/
-lemma trunc_eq_sum (N : ℕ) (a : l1Weighted ν) :
-    trunc N a = ∑ k ∈ Finset.range (N + 1), single k (toSeq a k) := by
-  apply ext; intro n
-  rw [coeff_trunc, toSeq_finset_sum]
-  by_cases hn : n ≤ N
-  · rw [ite_eq_left hn]
-    rw [Finset.sum_eq_single n
-      (fun m _ hne => single_toSeq_of_ne m n (toSeq a m) (Ne.symm hne))
-      (fun h => absurd (Finset.mem_range.mpr (Nat.lt_succ_iff.mpr hn)) h)]
-    exact (single_toSeq_same n (toSeq a n)).symm
-  · rw [ite_eq_right hn]
-    refine (Finset.sum_eq_zero ?_).symm
-    intro k hk
-    have hne : n ≠ k := fun h => hn (h ▸ Nat.lt_succ_iff.mp (Finset.mem_range.mp hk))
-    exact single_toSeq_of_ne k n (toSeq a k) hne
-
-/-- Truncations converge to the original element: `trunc N a → a` as `N → ∞` (in the
-ℓ¹_ν norm). This is the **density argument** for finite-support sequences: the closure
-of the ℝ-span of `{δ_n}_{n ∈ ℕ}` is all of `l1Weighted ν`. Reusable for any "extend by
-density" argument — pair with continuity of a function on `l1Weighted ν` to reduce
-proving an identity to its restriction on truncations.
-
-Proof: `‖trunc N a - a‖` is exactly the tail of the norm series `∑' n, |a_n|·ν^n`
-(via `norm_eq_finRangeSum_add_tailTsum`), which → 0 because the series converges. -/
-lemma tendsto_trunc (a : l1Weighted ν) :
-    Filter.Tendsto (fun N => trunc N a) Filter.atTop (𝓝 a) := by
-  rw [Metric.tendsto_atTop]
-  intro ε hε
-  have hsum := summable_weighted a
-  have htend : Filter.Tendsto
-      (fun K => ∑ n ∈ Finset.range K, |toSeq a n| * (ν : ℝ) ^ n)
-      Filter.atTop (𝓝 ‖a‖) := by
-    rw [norm_eq_tsum]; exact hsum.hasSum.tendsto_sum_nat
-  rw [Metric.tendsto_atTop] at htend
-  obtain ⟨K₀, hK₀⟩ := htend ε hε
-  refine ⟨K₀, fun N hN => ?_⟩
-  have hcoeff_zero : ∀ k, k < N + 1 → toSeq (trunc N a - a) k = 0 := fun k hk => by
-    simp only [sub_toSeq, coeff_trunc, show k ≤ N from by omega, ite_true, sub_self]
-  have hcoeff_abs : ∀ k, |toSeq (trunc N a - a) (k + (N+1))| = |toSeq a (k + (N+1))| := fun k => by
-    simp only [sub_toSeq, coeff_trunc, show ¬ (k + (N+1) ≤ N) from by omega, ite_false,
-      zero_sub, abs_neg]
-  have hnorm_eq : ‖trunc N a - a‖ =
-      ∑' k, |toSeq a (k + (N+1))| * (ν : ℝ) ^ (k + (N+1)) := by
-    rw [norm_eq_tailTsum_of_fin_zero (trunc N a - a) (N+1) hcoeff_zero]
-    exact tsum_congr fun k => by rw [hcoeff_abs]
-  have h_total : ‖a‖ = (∑ n ∈ Finset.range (N+1), |toSeq a n| * (ν : ℝ) ^ n) +
-      ∑' k, |toSeq a (k + (N+1))| * (ν : ℝ) ^ (k + (N+1)) :=
-    norm_eq_finRangeSum_add_tailTsum a (N+1)
-  have h_partial_le : ∑ n ∈ Finset.range (N+1), |toSeq a n| * (ν : ℝ) ^ n ≤ ‖a‖ := by
-    rw [norm_eq_tsum]
-    exact hsum.sum_le_tsum _ (fun n _ => mul_nonneg (abs_nonneg _) (pow_nonneg ν.coe_nonneg n))
-  have hdist := hK₀ (N+1) (by omega)
-  rw [Real.dist_eq, abs_sub_comm, abs_of_nonneg (by linarith)] at hdist
-  rw [dist_eq_norm, hnorm_eq,
-    show (∑' k, |toSeq a (k + (N+1))| * (ν : ℝ) ^ (k + (N+1))) =
-         ‖a‖ - ∑ n ∈ Finset.range (N+1), |toSeq a n| * (ν : ℝ) ^ n from by linarith]
-  exact hdist
 
 end Truncation
 
@@ -536,17 +408,6 @@ Bridge via `cauchyProduct.eq_addRingConvolution`. -/
   have h := congr_fun (cauchyProduct.eq_addRingConvolution (toSeq a) (toSeq b)) n
   rw [h]; rfl
 
-/-- Product of two `single`-monomials: the additive-monoid-algebra convolution identity
-`(δ_m · r) ★ (δ_n · s) = δ_{m+n} · (r · s)`. This is the core "monoid algebra" content of
-the Banach algebra structure on `l1Weighted ν` — it identifies the multiplication on
-`l1Weighted ν` (Cauchy product) with the convolution on `AddMonoidAlgebra ℝ ℕ` restricted
-to the basis `{δ_n}`. Combined with `eval_single` (`eval(δ_n · x) z = x · z^n`), it
-witnesses `eval` as the algebra hom lifting the monoid hom `n ↦ z^n` (universal property
-of the monoid algebra). -/
-lemma single_mul (m n : ℕ) (r s : ℝ) :
-    (single (ν := ν) m r) * single n s = single (m + n) (r * s) := by
-  simp only [single_eq_lpOneAlg_single]
-  exact lpOneAlg.single_mul_single m n r s
 
 /-- Coefficients of `b * single M 1`: the Cauchy product against a monomial is
 the `M`-fold right shift, `(b · δ_M)_k = b_{k-M}` for `M ≤ k`, else `0`. -/
@@ -570,49 +431,16 @@ lemma toSeq_mul_single (b : l1Weighted ν) (M k : ℕ) :
   rw [lpOneAlg.toRealSeq_one_fun]
   simp [RadiiPolynomial.DiscreteConvolution.addDelta, Pi.single_apply]
 
-@[simp] lemma one_toSeq_zero : toSeq (1 : l1Weighted ν) 0 = 1 := by
-  rw [one_toSeq_eq]; simp
-@[simp] lemma one_toSeq_succ (n : ℕ) : toSeq (1 : l1Weighted ν) (n + 1) = 0 := by
-  rw [one_toSeq_eq]; simp
 
-/-- `toSeq` of `c • a - 1` in terms of coefficient access. -/
-lemma toSeq_smul_sub_one (c : ℝ) (a : l1Weighted ν) (n : ℕ) :
-    toSeq (c • a - 1) n =
-      c * toSeq a n - if n = 0 then 1 else 0 := by
-  simp only [sub_toSeq, smul_toSeq, one_toSeq_eq]
 
-/-- `toSeq` of `(k : ℕ) • a - 1` — converts ℕ smul to ℝ smul. -/
-lemma toSeq_nsmul_sub_one (k : ℕ) (a : l1Weighted ν) (n : ℕ) :
-    toSeq ((k : ℕ) • a - 1) n =
-      (k : ℝ) * toSeq a n - if n = 0 then 1 else 0 := by
-  rw [show (k : ℕ) • a = (k : ℝ) • a from by norm_cast]
-  exact toSeq_smul_sub_one k a n
 
 @[simp] lemma algebraMap_apply (r : ℝ) : algebraMap ℝ (l1Weighted ν) r = r • 1 := rfl
-
-lemma norm_one_eq : ‖(1 : l1Weighted ν)‖ = 1 := by
-  rw [norm_eq_tsum]
-  have h : ∀ n, |toSeq (1 : l1Weighted ν) n| * (ν : ℝ) ^ n =
-      if n = 0 then 1 else 0 := by
-    intro n; rw [one_toSeq_eq]; split_ifs with hn <;> simp [hn]
-  simp_rw [h]; exact tsum_ite_eq 0 1
-
-lemma norm_algebraMap (r : ℝ) : ‖algebraMap ℝ (l1Weighted ν) r‖ = ‖r‖ := by
-  simp only [algebraMap_apply, norm_smul, Real.norm_eq_abs, norm_one_eq, mul_one]
 
 /-- Algebra ℚ instance via the chain ℚ →(algebraMap) ℝ →(algebraMap) l1Weighted.
 Needed for `MvPolynomial.aeval` to target `l1Weighted ν`. -/
 instance instAlgebraRat : Algebra ℚ (l1Weighted ν) :=
   RingHom.toAlgebra ((algebraMap ℝ (l1Weighted ν)).comp (algebraMap ℚ ℝ))
 
-/-- ℚ-scalar action on l1Weighted agrees with ℝ-scalar action via cast. -/
-@[simp] lemma ratSmul_eq (q : ℚ) (x : l1Weighted ν) :
-    (q • x : l1Weighted ν) = ((q : ℝ) • x : l1Weighted ν) := by
-  show algebraMap ℚ (l1Weighted ν) q * x = (q : ℝ) • x
-  have : algebraMap ℚ (l1Weighted ν) q = (q : ℝ) • 1 := by
-    show (algebraMap ℝ (l1Weighted ν)).comp (algebraMap ℚ ℝ) q = _
-    simp [algebraMap_apply]
-  rw [this, smul_mul_assoc]; simp
 
 /-! ### Left multiplication CLM -/
 
@@ -632,20 +460,14 @@ lemma norm_leftMul (a : l1Weighted ν) : ‖leftMul a‖ = ‖a‖ :=
 lemma norm_leftMul_le (a : l1Weighted ν) : ‖leftMul a‖ ≤ ‖a‖ :=
   (norm_leftMul a).le
 
-lemma leftMul_add (a b : l1Weighted ν) :
-    leftMul (a + b) = leftMul a + leftMul b :=
-  map_add (ContinuousLinearMap.mul ℝ (l1Weighted ν)) a b
 
-lemma leftMul_sub (a b : l1Weighted ν) :
-    leftMul (a - b) = leftMul a - leftMul b :=
-  map_sub (ContinuousLinearMap.mul ℝ (l1Weighted ν)) a b
 
 lemma leftMul_smul (c : ℝ) (a : l1Weighted ν) :
     leftMul (c • a) = c • leftMul a :=
   (ContinuousLinearMap.mul ℝ (l1Weighted ν)).map_smul c a
 
-/-- Bridge: `a • .id = leftMul a`. Used by the `auto_poly_fderiv` automation
-(`Tactic/AutoPolyFDeriv.lean`). -/
+/-- The scalar-multiple identity map is left multiplication: `a • .id = leftMul a`.
+This is a direct continuous-linear-map computation. -/
 lemma smul_id_eq_leftMul (a : l1Weighted ν) :
     a • ContinuousLinearMap.id ℝ (l1Weighted ν) = leftMul a := by
   ext h; simp [smul_eq_mul]
@@ -655,23 +477,10 @@ lemma leftMul_nsmul (n : ℕ) (a : l1Weighted ν) :
     leftMul (n • a) = (↑n : ℝ) • leftMul a := by
   rw [← Nat.cast_smul_eq_nsmul ℝ n a, leftMul_smul]
 
-/-- Bridge: `a • proj i = leftMul a ∘L proj i` on a finite product of `l1Weighted ν`.
-Used by the `auto_poly_fderiv` automation (`Tactic/AutoPolyFDeriv.lean`), which names it
-explicitly; it is not a simp lemma. -/
-lemma smul_proj_eq_leftMul_comp_proj {ι : Type*} [Fintype ι] (a : l1Weighted ν) (i : ι) :
-    a • (ContinuousLinearMap.proj (R := ℝ) i : (ι → l1Weighted ν) →L[ℝ] l1Weighted ν) =
-    (leftMul a).comp (ContinuousLinearMap.proj i) := by
-  ext h; simp
 
 /-! ### CLM Operator Norm Bounds -/
 
-/-- Operator norm bound: `‖π_N‖ ≤ 1`. -/
-lemma norm_trunc_CLM_le (N : ℕ) : ‖trunc_CLM (ν := ν) N‖ ≤ 1 :=
-  LinearMap.mkContinuous_norm_le _ zero_le_one _
 
-/-- Operator norm bound: `‖π_{N,∞}‖ ≤ 1`. -/
-lemma norm_tailProj_CLM_le (N : ℕ) : ‖tailProj_CLM (ν := ν) N‖ ≤ 1 :=
-  LinearMap.mkContinuous_norm_le _ zero_le_one _
 
 end BanachAlgebra
 
@@ -689,31 +498,6 @@ section OpNorm
 
 variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
 
-/-- **The bilinear operator norm on `l1Weighted ν` as an atom supremum.** For
-every `ν : PosReal` (no `1 ≤ ν`), `‖B‖` is the supremum of the ratios
-`‖B e_i e_j‖ / (νⁱ νʲ)`. The case `M = M' = ℕ` of
-`lpOneAlg.opNorm_eq_iSup_cols₂`. -/
-theorem opNorm_eq_iSup_cols₂ (B : l1Weighted ν →L[ℝ] l1Weighted ν →L[ℝ] F) :
-    ‖B‖ = ⨆ p : ℕ × ℕ, ‖B (lpOneAlg.single p.1 1) (lpOneAlg.single p.2 1)‖
-      / ((ν : ℝ) ^ p.1 * (ν : ℝ) ^ p.2) := by
-  rw [lpOneAlg.opNorm_eq_iSup_cols₂ B]
-  simp only [WeightedScalar.fiberTrivialization_weight]
-
-set_option maxSynthPendingDepth 2 in
-/-- **The trilinear operator norm on `l1Weighted ν` as an atom supremum.** For
-every `ν : PosReal`, `‖T‖` is the supremum of the ratios
-`‖T e_i e_j e_k‖ / (νⁱ νʲ νᵏ)`. The case `M = M' = M'' = ℕ` of
-`lpOneAlg.opNorm_eq_iSup_cols₃`. (Declared under `set_option maxSynthPendingDepth 2 in`:
-at the default depth the norm does not synthesize on the three-level type; a
-consumer who restates `‖T‖` for such a map needs the same local option; see
-`WeightedL1/Multilinear.lean`.) -/
-theorem opNorm_eq_iSup_cols₃
-    (T : l1Weighted ν →L[ℝ] l1Weighted ν →L[ℝ] l1Weighted ν →L[ℝ] F) :
-    ‖T‖ = ⨆ p : ℕ × ℕ × ℕ, ‖T (lpOneAlg.single p.1 1) (lpOneAlg.single p.2.1 1)
-        (lpOneAlg.single p.2.2 1)‖
-      / ((ν : ℝ) ^ p.1 * (ν : ℝ) ^ p.2.1 * (ν : ℝ) ^ p.2.2) := by
-  rw [lpOneAlg.opNorm_eq_iSup_cols₃ T]
-  simp only [WeightedScalar.fiberTrivialization_weight]
 
 end OpNorm
 

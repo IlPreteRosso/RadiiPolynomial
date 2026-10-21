@@ -9,11 +9,11 @@ Not part of the default build (imported by no module); build it with
 `x·x·x - x = 6 + t` on `ℓ¹_ν`, `ν = 1`, `N = 10`: the exact root of `a₀³ - a₀ = 6` is `a₀ = 2`
 with `P′(a₀) = 11`. The approximate zero `x̄`, the lower-triangular approximate inverse (the
 Cauchy matrix of the rationalised Taylor coefficients `bQ` of `1/P′(x̄)`) and the bounds are exact
-rationals; one `decide +kernel` checks them, and `existsUnique_ofArray` gives a unique
+rationals; one `decide +kernel` checks them, and `PolyZeroData.existsUnique` gives a unique
 power-series zero within `10⁻⁶` of `x̄`.
 -/
 
-open RadiiPolynomial
+open RadiiPolynomial MvPolyBridge
 
 namespace Tests.PS
 
@@ -45,10 +45,35 @@ theorem cub_checks : cub.Checks := by decide +kernel
 
 noncomputable def ν₁ : PosReal := ⟨1, one_pos⟩
 
+/-- The same stored candidate, constructed directly from its finite coefficients. -/
+noncomputable def candidate : l1Weighted ν₁ :=
+  l1Weighted.mk (fun n => ((cub.aQ.getD n 0 : ℚ) : ℝ)) (by
+    rw [l1Weighted.mem_iff]
+    refine summable_of_ne_finset_zero (s := Finset.range cub.aQ.size) fun n hn => ?_
+    rw [Finset.mem_range, not_lt] at hn
+    rw [Array.getD_eq_getD_getElem?, Array.getElem?_eq_none hn]
+    simp)
+
+/-- The same forcing coefficients `[6,1]`, with zero padding. -/
+noncomputable def forcing : l1Weighted ν₁ :=
+  l1Weighted.mk (fun n => (((#[6, 1] : Array ℚ).getD n 0 : ℚ) : ℝ)) (by
+    rw [l1Weighted.mem_iff]
+    refine summable_of_ne_finset_zero (s := Finset.range (#[6, 1] : Array ℚ).size) fun n hn => ?_
+    rw [Finset.mem_range, not_lt] at hn
+    rw [Array.getD_eq_getD_getElem?, Array.getElem?_eq_none hn]
+    simp)
+
+theorem candidate_coeff (n : ℕ) : l1Weighted.toSeq candidate n = (cub.a n : ℝ) := rfl
+theorem forcing_coeff (n : ℕ) : l1Weighted.toSeq forcing n = (cub.cq n : ℝ) := rfl
+
+
 /-- A unique power-series zero of `x³ - x - (6 + t)` within `10⁻⁶` of `x̄` in `ℓ¹_1`. -/
 theorem cub_existsUnique :
-    ∃! x ∈ Metric.closedBall (l1OfArrayQ (ν := ν₁) cub.aQ) ((1/1000000 : ℚ) : ℝ),
-      x * x * x - x - l1OfArrayQ #[6, 1] = 0 :=
-  cub.existsUnique_ofArray (by show (1 : ℝ) = ((1 : ℚ) : ℝ); norm_num) cub_checks
+    ∃! x ∈ Metric.closedBall candidate ((1/1000000 : ℚ) : ℝ),
+      x * x * x - x - forcing = 0 := by
+  have h := cub.existsUnique (ν := ν₁)
+    (by show (1 : ℝ) = ((1 : ℚ) : ℝ); norm_num) candidate forcing
+    candidate_coeff forcing_coeff cub_checks
+  simpa only [CompPoly.polyMap, cub, CompPoly.evalBanach] using h
 
 end Tests.PS

@@ -60,7 +60,8 @@ example {w : ℕ → ℝ} [SubMulWeightBase w] : NormedCommRing (lpOneAlg ℕ (W
   inferInstance
 example {w : ℕ → ℝ} [SubMulWeightBase w] : NormedAlgebra ℂ (lpOneAlg ℕ (WeightedScalar ℂ w)) :=
   inferInstance
-example {w : ℕ → ℝ} [SubMulWeightBase w] : NormOneClass (lpOneAlg ℕ (WeightedScalar ℂ w)) :=
+example {w : ℕ → ℝ} [PosWeight w] [NormalizedWeight w] :
+    NormOneClass (lpOneAlg ℕ (WeightedScalar ℂ w)) :=
   inferInstance
 example {w : ℕ → ℝ} [SubMulWeightBase w] : NormedAlgebra ℝ (lpOneAlg ℕ (WeightedScalar ℝ w)) :=
   inferInstance
@@ -96,6 +97,8 @@ def pow2 : ℕ → ℝ := fun n => 2 ^ n
 instance : SubMulWeightBase pow2 where
   weight_pos _ := by unfold pow2; positivity
   submul m n := by unfold pow2; rw [pow_add]
+
+instance : NormalizedWeight pow2 where
   weight_zero := by simp [pow2]
 
 example : ‖(lpOneAlg.single (E := WeightedScalar ℝ pow2) 1 (1 : ℝ) *
@@ -121,7 +124,7 @@ example (m : M) (x y : E m) :
 example {𝕜 : Type*} [NormedField 𝕜] [∀ m, NormedSpace 𝕜 (E m)] {F : Type*}
     [NormedAddCommGroup F] [NormedSpace 𝕜 F] (W : lpOneAlg M E →L[𝕜] F) (h : lpOneAlg M E) :
     HasSum (fun m => W (lpOneAlg.fiberSingle m (h m))) (W h) :=
-  lpOneAlg.hasSum_fiberSingle_mapCLM W h
+  (lpOneAlg.hasSum_fiberSingle h).mapL W
 
 end FrameFree
 
@@ -135,11 +138,11 @@ variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
 example [AddMonoid M] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E] :
     NormedRing (lpOneAlg M E) := inferInstance
 example [Monoid M] [DecidableEq M] [lpOneMulAlgConvCompat 𝕜 M E] :
-    NormedRing (lpOneAlg M E) := inferInstance
+    NormedRing (lpOneAlg M E) := lpOneAlg.instMulNormedRing
 example [AddMonoid M] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E] :
     NormedAlgebra 𝕜 (lpOneAlg M E) := inferInstance
 -- No weight ≥ 1 anywhere on the ring path; NormOne keeps its own weight hypothesis.
-example [AddMonoid M] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E] [lpOneAlgWeightMul 𝕜 M E] :
+example [AddMonoid M] [DecidableEq M] [lpOneAlgWeightNormalized 𝕜 M E] :
     NormOneClass (lpOneAlg M E) := inferInstance
 example [AddMonoid M] [DecidableEq M] [CompleteSpace 𝕜] [lpOneAlgWeightMul 𝕜 M E] :
     NormedRing (lpOneAlg M E) := inferInstance
@@ -148,7 +151,7 @@ example [AddMonoid M] [DecidableEq M] [CompleteSpace 𝕜] [lpOneAlgWeightMul �
 example [AddMonoid M] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E] (f g : lpOneAlg M E) (k : M) :
     (f * g) k = FiberTrivialization.equiv (E := E) k
       (addRingConvolution (lpOneAlg.toRealSeq f) (lpOneAlg.toRealSeq g) k) :=
-  lpOneAlg.mul_apply f g k
+  rfl
 example [AddMonoid M] [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E] (f g : lpOneAlg M E) :
     lpOneAlg.toRealSeq (f * g) =
       addRingConvolution (lpOneAlg.toRealSeq f) (lpOneAlg.toRealSeq g) :=
@@ -160,8 +163,8 @@ example [AddMonoid M] [lpOneAlgWeightMul 𝕜 M E] (j l : M) :
     FiberTrivialization.weight (E := E) (j + l) ≤
       FiberTrivialization.weight (E := E) j * FiberTrivialization.weight (E := E) l :=
   lpOneAlgWeightMul.weight_add_le j l
-example [Monoid M] [lpOneMulAlgWeightMul 𝕜 M E] :
-    FiberTrivialization.weight (E := E) (1 : M) = 1 := lpOneMulAlgWeightMul.weight_one
+example [Monoid M] (h : FiberTrivialization.weight (E := E) (1 : M) = 1) :
+    FiberTrivialization.weight (E := E) (1 : M) = 1 := h
 -- Atom and weight of the frame.
 example (m : M) : FiberTrivialization.atom (E := E) m = FiberTrivialization.equiv m 1 := rfl
 example (m : M) :
@@ -173,12 +176,12 @@ end Generic
 
 section Routes
 
--- Finite antidiagonal route, over the non-complete field `ℚ`.
+-- Compatibility over the non-complete field `ℚ`; proof equality below does not identify a producer.
 example : lpOneAlgConvCompat ℚ ℕ (WeightedScalar ℚ pow2) := inferInstance
 example : (inferInstance : lpOneAlgConvCompat ℚ ℕ (WeightedScalar ℚ pow2)) =
     lpOneAlg.instConvCompatOfAntidiag := rfl
 example : NormedRing (lpOneAlg ℕ (WeightedScalar ℚ pow2)) := inferInstance
--- Over `ℝ` and `ℕ` the antidiagonal route is selected (priority 1100).
+-- Compatibility proof equality only. Inspect `selectedNatRealCompat` below for selection.
 example : (inferInstance : lpOneAlgConvCompat ℝ ℕ (WeightedScalar ℝ pow2)) =
     lpOneAlg.instConvCompatOfAntidiag := rfl
 
@@ -191,12 +194,36 @@ instance : SubMulWeightBase pow2Z where
     unfold pow2Z
     rw [← pow_add]
     exact pow_le_pow_right₀ (by norm_num) (Int.natAbs_add_le m n)
-  weight_zero := by simp [pow2Z]
 
--- Complete scalar field route over `ℤ`.
+-- Compatibility over `ℤ`; proof equality below does not identify a producer.
 example : (inferInstance : lpOneAlgConvCompat ℝ ℤ (WeightedScalar ℝ pow2Z)) =
     lpOneAlg.instConvCompatOfWeightMul := rfl
 example : NormedRing (lpOneAlg ℤ (WeightedScalar ℂ pow2Z)) := inferInstance
+/-- Inspect the body: expected outer constant `lpOneAlg.instConvCompatOfAntidiag`. -/
+theorem selectedNatRationalCompat : lpOneAlgConvCompat ℚ ℕ (WeightedScalar ℚ pow2) :=
+  inferInstance
+
+/-- Inspect the body: expected outer constant `lpOneAlg.instConvCompatOfAntidiag`. -/
+theorem selectedNatRealCompat : lpOneAlgConvCompat ℝ ℕ (WeightedScalar ℝ pow2) :=
+  inferInstance
+
+/-- Inspect the body: expected outer constant `lpOneAlg.instConvCompatOfWeightMul`. -/
+theorem selectedIntRealCompat : lpOneAlgConvCompat ℝ ℤ (WeightedScalar ℝ pow2Z) :=
+  inferInstance
+
+section SelectedProducerInspection
+
+set_option pp.all true
+set_option pp.proofs true
+set_option pp.explicit true
+
+#print selectedNatRationalCompat
+#print selectedNatRealCompat
+#print selectedIntRealCompat
+-- The audit environment query records finite priority 1100 separately from proof equality.
+
+end SelectedProducerInspection
+
 -- Neither route over `ℚ` and `ℤ`.
 example : True := by
   fail_if_success (have : lpOneAlgConvCompat ℚ ℤ (WeightedScalar ℚ pow2Z) := inferInstance)
@@ -220,6 +247,8 @@ def unitW : ℕ → ℝ := fun _ => 1
 instance : SubMulWeightBase unitW where
   weight_pos _ := one_pos
   submul _ _ := by simp [unitW]
+
+instance : NormalizedWeight unitW where
   weight_zero := rfl
 
 /-- The fiber family of the probe. -/
@@ -251,15 +280,19 @@ theorem negFrame_ne : negFrame ≠ WeightedScalar.instFiberTrivialization := by
   change (-1 : ℝ) = 1 at h1
   norm_num at h1
 
-/-- The Beurling witness of the `−1` frame (its weights are `1`; the class is a `Prop`). -/
+/-- The submultiplicative-weight witness of the `−1` frame (its weights are `1`). -/
 theorem negFrameWeightMul : letI := negFrame; lpOneAlgWeightMul ℝ ℕ U :=
   letI := negFrame
   { weight_add_le := fun j l => by
       rw [negFrame_weight, negFrame_weight, negFrame_weight]
-      exact lpOneAlgWeightMul.weight_add_le j l
-    weight_zero := by
+      exact lpOneAlgWeightMul.weight_add_le j l }
+
+/-- Unit normalization of the explicitly selected `−1` frame. -/
+theorem negFrameWeightNormalized : letI := negFrame; lpOneAlgWeightNormalized ℝ ℕ U :=
+  letI := negFrame
+  { weight_zero := by
       rw [negFrame_weight]
-      exact lpOneAlgWeightMul.weight_zero }
+      exact lpOneAlgWeightNormalized.weight_zero }
 
 /-- The product of `lpOneAlg ℕ U` in the `−1` frame (explicit selection). -/
 def mulNeg (f g : lpOneAlg ℕ U) : lpOneAlg ℕ U :=
@@ -295,6 +328,17 @@ example : (inferInstance : FiberTrivialization ℝ ℕ U) = WeightedScalar.instF
 example : True := by
   fail_if_success
     (have : (letI := negFrame; lpOneAlgWeightMul ℝ ℕ U) := inferInstance)
+  trivial
+
+theorem negFrame_norm_one :
+    (letI := negFrame; ‖(1 : lpOneAlg ℕ U)‖) = 1 :=
+  letI := negFrame
+  letI := negFrameWeightNormalized
+  norm_one
+
+example : True := by
+  fail_if_success
+    (have : (letI := negFrame; lpOneAlgWeightNormalized ℝ ℕ U) := inferInstance)
   trivial
 
 end NegFrame

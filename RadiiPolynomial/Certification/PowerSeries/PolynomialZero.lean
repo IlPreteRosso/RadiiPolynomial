@@ -335,12 +335,6 @@ theorem existsUnique (d : PolyZeroData) {ν : PosReal} (hν : (ν : ℝ) = (d.ν
   let ⟨hr, hY, hZ0, hZ1, hZ2, hd, hp, hi⟩ := d.certified hν hx hc h
   general_radii_polynomial_theorem hr hY hZ0 hZ1 hZ2 hd hp hi
 
-/-- **Array face.** The same conclusion with `x̄` and `c` read off the data arrays. -/
-theorem existsUnique_ofArray (d : PolyZeroData) {ν : PosReal} (hν : (ν : ℝ) = (d.νq : ℝ))
-    (h : d.Checks) :
-    ∃! x ∈ Metric.closedBall (l1OfArrayQ (ν := ν) d.aQ) (d.r₀ : ℝ),
-      CompPoly.polyMap d.P (l1OfArrayQ d.cQ) x = 0 :=
-  d.existsUnique hν _ _ (fun _ => rfl) (fun _ => rfl) h
 
 end PolyZeroData
 

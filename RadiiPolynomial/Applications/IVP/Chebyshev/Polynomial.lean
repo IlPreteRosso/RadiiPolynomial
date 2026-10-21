@@ -59,9 +59,6 @@ noncomputable def banachField (f : Fin L → CompPoly L) (a : XCheb ν L) (l : F
     l1Chebyshev ν :=
   CompPoly.Chebyshev.eval (f l) a
 
-omit [NeZero L] in
-@[simp] lemma banachField_apply (f : Fin L → CompPoly L) (a : XCheb ν L) (l : Fin L) :
-    banachField f a l = CompPoly.Chebyshev.eval (f l) a := rfl
 
 /-- The infinite boundary row reduces to the finite rational array calculation. -/
 lemma StdChebIVPData.boundary_abar_eq_cast
@@ -252,21 +249,6 @@ These are the system (`Fin L`-valued) faces of the componentwise lemmas in
 `CompPoly/Chebyshev/Bounds.lean`; a certificate whose Z₁ theorem is componentwise
 (`chebyshev_Z₁_le_relaxed`) uses `norm_derivative_apply_le` directly. -/
 
-/-- Operator norm of the system derivative, from the per-component syntactic constants.
-System face for a system-level `Z₁` theorem. The certification layer bounds `Z₁`
-componentwise instead (`Z₁_le_of_Q` through `Z₁_hDφ`, i.e.
-`CompPoly.Chebyshev.norm_derivative_apply_le`), so this lemma has no consumer at present. -/
-theorem norm_compPolyDerivative_le (f : Fin L → CompPoly L) (a : XCheb ν L) (R : Fin L → ℝ)
-    (ha : ∀ i, ‖l1Chebyshev.symmetrize (a i)‖ ≤ R i) (B : ℝ)
-    (hB : ∀ l, CompPoly.Chebyshev.derivativeBound (f l) R ≤ B) :
-    ‖compPolyDerivative f a‖ ≤ B := by
-  have hB0 : 0 ≤ B := (CompPoly.Chebyshev.derivativeBound_nonneg (f 0) R
-    fun i => (norm_nonneg _).trans (ha i)).trans (hB 0)
-  refine ContinuousLinearMap.opNorm_le_bound _ hB0 fun h => ?_
-  refine (pi_norm_le_iff_of_nonneg (mul_nonneg hB0 (norm_nonneg _))).mpr fun l => ?_
-  rw [compPolyDerivative_apply]
-  exact (CompPoly.Chebyshev.norm_derivative_apply_le (f l) a R ha h).trans
-    (mul_le_mul_of_nonneg_right (hB l) (norm_nonneg _))
 
 /-- Lipschitz bound on the system derivative in the raw displacement `‖a - b‖`: `B` dominates
 every component's `2 · derivativeLipschitzBound` (the `2` is the symmetrization of the

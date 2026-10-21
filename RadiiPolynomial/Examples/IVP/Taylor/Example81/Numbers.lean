@@ -118,8 +118,6 @@ def Y₀_bound : ℚ := 3 / 1000000
 /-- Z₀ bound: ‖I - A·A†‖ = 0 (exact inverse). -/
 def Z₀_bound : ℚ := 0
 
-/-- Z₁ bound: ν/(N+1) · K where K = ‖2ā-1‖_{ℓ¹_ν}. -/
-def Z₁_bound : ℚ := 396482 / 7983360
 
 /-- Z₂ bound: 2·ν·(blockNorm + tailBound). -/
 def Z₂_bound : ℚ := 110916221 / 39916800

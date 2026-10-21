@@ -5,7 +5,8 @@ import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Carrier
 # Glue: WeightedScalar as a lpOneAlg Fiber
 
 Registers the standard frame of `WeightedScalar 𝕜 w` as a `FiberTrivialization` and the
-Beurling-weight classes `lpOneAlgWeightMul`, `lpOneAlgWeightSubMul` of that frame.
+submultiplicative-weight class `lpOneAlgWeightMul` and the independent
+unit normalization `lpOneAlgWeightNormalized` of that frame.
 
 Separating these instances from `WeightedL1/Scalar.lean` keeps `WeightedScalar` as a
 self-contained weighted-scalar module, independent of `lpOneAlg`. Files that build
@@ -29,8 +30,6 @@ namespace WeightedScalar
 
 variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {w : M → ℝ} [PosWeight w]
 
-@[simp] lemma fiberTrivialization_equiv (m : M) :
-    FiberTrivialization.equiv (E := WeightedScalar 𝕜 w) m = WeightedScalar.equiv := rfl
 
 /-- Lemma of record: the derived weight of the standard model is the weight function. -/
 @[simp] lemma fiberTrivialization_weight (m : M) :
@@ -49,19 +48,14 @@ instance WeightedScalar.instLpOneAlgWeightMul {𝕜 : Type*} [NormedField 𝕜]
   weight_add_le j l := by
     simp only [WeightedScalar.fiberTrivialization_weight]
     exact SubMulWeightBase.submul j l
+
+/-- Unit normalization of the standard frame from the independent weight normalization. -/
+instance WeightedScalar.instLpOneAlgWeightNormalized {𝕜 : Type*} [NormedField 𝕜]
+    {M : Type*} [Zero M] {w : M → ℝ} [PosWeight w] [NormalizedWeight w] :
+    lpOneAlgWeightNormalized 𝕜 M (WeightedScalar 𝕜 w) where
   weight_zero := by
     rw [WeightedScalar.fiberTrivialization_weight]
-    exact SubMulWeightBase.weight_zero
-
-/-- Generic `lpOneAlgWeightSubMul` of the standard frame from `SubMulWeight`.
-Adds weight ≥ 1 on top of `lpOneAlgWeightMul`. In the geometric specialization `w n = νⁿ`
-the `SubMulWeight` instance needs `[Fact (1 ≤ ν)]`. -/
-instance WeightedScalar.instLpOneAlgWeightSubMul {𝕜 : Type*} [NormedField 𝕜]
-    {M : Type*} [AddCommMonoid M]
-    {w : M → ℝ} [SubMulWeight w] : lpOneAlgWeightSubMul 𝕜 M (WeightedScalar 𝕜 w) where
-  one_le_weight m := by
-    rw [WeightedScalar.fiberTrivialization_weight]
-    exact SuperUnitWeight.one_le m
+    exact NormalizedWeight.weight_zero
 
 end RadiiPolynomial
 

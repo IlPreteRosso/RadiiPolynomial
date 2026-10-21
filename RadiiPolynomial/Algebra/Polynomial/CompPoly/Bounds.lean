@@ -77,6 +77,14 @@ the constant; the Lipschitz statement is `CompPoly.norm_fderiv_evalBanach_sub_le
 def derivativeLipschitzBound (p : CompPoly L) (R : Fin L → K) : K :=
   ∑ i, (p.pderiv i).lipschitzBound R
 
+
+
+
+
+
+
+
+
 @[simp] theorem normBound_add_op (p q : CompPoly L) (R : Fin L → K) :
     (p + q).normBound R = p.normBound R + q.normBound R := rfl
 
@@ -88,19 +96,6 @@ def derivativeLipschitzBound (p : CompPoly L) (R : Fin L → K) : K :=
 
 @[simp] theorem normBound_neg_op (p : CompPoly L) (R : Fin L → K) :
     (-p).normBound R = p.normBound R := rfl
-
-@[simp] theorem lipschitzBound_add_op (p q : CompPoly L) (R : Fin L → K) :
-    (p + q).lipschitzBound R = p.lipschitzBound R + q.lipschitzBound R := rfl
-
-@[simp] theorem lipschitzBound_sub_op (p q : CompPoly L) (R : Fin L → K) :
-    (p - q).lipschitzBound R = p.lipschitzBound R + q.lipschitzBound R := rfl
-
-@[simp] theorem lipschitzBound_mul_op (p q : CompPoly L) (R : Fin L → K) :
-    (p * q).lipschitzBound R =
-      p.lipschitzBound R * q.normBound R + p.normBound R * q.lipschitzBound R := rfl
-
-@[simp] theorem lipschitzBound_neg_op (p : CompPoly L) (R : Fin L → K) :
-    (-p).lipschitzBound R = p.lipschitzBound R := rfl
 
 end Defs
 
@@ -226,18 +221,6 @@ theorem derivativeLipschitzBound_mono (p : CompPoly L) {R S : Fin L → ℝ}
     p.derivativeLipschitzBound R ≤ p.derivativeLipschitzBound S :=
   Finset.sum_le_sum fun _ _ => lipschitzBound_mono _ hR hRS
 
-section SumMul
-
-variable {A ι : Type*} [NonUnitalSeminormedRing A] [Fintype ι]
-
-/-- `‖∑ᵢ fᵢ * hᵢ‖ ≤ (∑ᵢ ‖fᵢ‖) * ‖h‖` for a sup-normed direction `h : ι → A`; the
-consumer-compatibility face of `RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le`. -/
-theorem norm_sum_mul_pi_le (f h : ι → A) :
-    ‖∑ i, f i * h i‖ ≤ (∑ i, ‖f i‖) * ‖h‖ :=
-  RadiiPolynomial.NormHelpers.norm_sum_mul_pi_le f h
-
-end SumMul
-
 section Normed
 
 variable {A : Type*} [NormedCommRing A] [NormedAlgebra ℝ A] [NormOneClass A]
@@ -317,11 +300,6 @@ theorem norm_evalBanach_sub_le_of_forall_le (p : CompPoly L) (a b : Fin L → A)
     ((pi_norm_le_iff_of_nonneg hd0).mpr fun i => hd i)
     (lipschitzBound_nonneg p R fun i => (norm_nonneg _).trans (ha i)))
 
-/-- Ball-free face: the radii are the inputs' own norms. -/
-theorem norm_evalBanach_sub_le_max (p : CompPoly L) (a b : Fin L → A) :
-    ‖p.evalBanach a - p.evalBanach b‖ ≤
-      p.lipschitzBound (fun i => max ‖a i‖ ‖b i‖) * ‖a - b‖ :=
-  norm_evalBanach_sub_le p a b _ (fun _ => le_max_left _ _) (fun _ => le_max_right _ _)
 
 /-- Derivative-direction bound in sum form: for inputs in the ball `‖x i‖ ≤ R i` and a
 sup-normed direction `h`, `‖∑ i, (∂ᵢp)(x) * h i‖ ≤ derivativeBound p R * ‖h‖`.
@@ -364,16 +342,6 @@ syntactic absolute-value majorant of `∂ᵢ p`.  Any `DivisionRing` (`ℚ`: com
 def derivativeCentredBound {K : Type*} [DivisionRing K] (p : CompPoly L) (β δ : Fin L → K) : K :=
   ∑ i, ((p.pderiv i).normBound (β + δ) - (p.pderiv i).normBound β)
 
-/-- The exact rational centred majorant casts to the majorant computed over `K`. -/
-@[norm_cast] theorem derivativeCentredBound_ratCast {K : Type*} [DivisionRing K] [CharZero K]
-    (p : CompPoly L) (β δ : Fin L → ℚ) :
-    ((derivativeCentredBound p β δ : ℚ) : K) =
-      derivativeCentredBound p (fun i => (β i : K)) (fun i => (δ i : K)) := by
-  simp only [derivativeCentredBound, Rat.cast_sum, Rat.cast_sub, normBound_ratCast]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  congr 2
-  funext j
-  simp
 
 variable {A : Type*} [NormedCommRing A] [NormedAlgebra ℝ A] [NormOneClass A]
 

@@ -29,8 +29,8 @@ namespace Example83.Cert
 
 /-! ## Z₀ -/
 
-/-- The ν-free record of `data`; its realization at `ν_val` is `data`
-(`IVP.StdIVPDataQ.toStdIVPData_ofStd`). -/
+/-- The ν-free stored rational fields of `data`, packaged by `IVP.StdIVPDataQ.ofStd`.
+`IVP.StdIVPDataQ.toStdIVPData` realizes them at a specified weight. -/
 private def dataQ : IVP.StdIVPDataQ L N := IVP.StdIVPDataQ.ofStd data
 
 /-- The `Z₀` clause at the grid slot, grid denominator `10⁶⁰`. -/
@@ -45,15 +45,6 @@ lemma Z₀_finBlockNorm_le :
 private def ABlockCols (l j : Fin L) (k : Fin (N + 1)) : Array ℚ :=
   A_col l j (k : ℕ)
 
-lemma A_norm_le :
-    ‖data.approxInverse.toCLM (ν := ν_val)‖ ≤
-      (finiteBlockMatrixNormQ L N ABlockCols ν_q +
-        IVP.StdIVPData.approxInverse_tailBound_q (N := N) : ℚ) := by
-  finmatrix_bound
-    (norm_toCLM_le_of_Q data.approxInverse ABlockCols ν_q
-      (IVP.StdIVPData.approxInverse_tailBound_q (N := N))
-      (fun l j k i => data.A_finBlock_eq l j i k) ν_val_eq_q
-      data.approxInverse_tailBound_eq)
 
 /-! ## Y₀ bound -/
 

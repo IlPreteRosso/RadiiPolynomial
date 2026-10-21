@@ -7,8 +7,8 @@ import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Aeval
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.EvalC
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.AnalyticExt
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Analytic
-import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Spectrum
-import RadiiPolynomial.Analysis.SequenceSpace.Geometric.RadiusRestriction
+import Mathlib.Topology.Algebra.Algebra
+import Mathlib.Topology.ContinuousMap.Bounded.Normed
 
 /-! Public API for geometrically weighted sequence spaces and power-series evaluation,
 full-disc real and complex analyticity of realizations (`Geometric.Analytic`), and the

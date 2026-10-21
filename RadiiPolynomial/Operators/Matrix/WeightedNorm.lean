@@ -85,11 +85,6 @@ lemma finWeightedMatrixNorm_mulVec_le
         (pow_nonneg ν.coe_nonneg _))
       (abs_nonneg _)).trans_eq (mul_left_comm _ _ _)
 
-lemma finWeightedMatrixNorm_le_of_matrixColNorm_le
-    (A : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) (C : ℝ)
-    (hcol : ∀ j : Fin (N + 1), matrixColNorm ν A j ≤ C) :
-    finWeightedMatrixNorm ν A ≤ C := by
-  exact Finset.sup'_le _ _ fun j _ => hcol j
 
 lemma matrixColNorm_eq (A : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
     (j : Fin (N + 1)) :
@@ -124,15 +119,6 @@ lemma matrixColNorm_eq_arrayColNormIccSum
       (Nat.range_eq_Icc_zero_sub_one (n := N + 1) (Nat.succ_ne_zero N))
   rw [hRange]
 
-lemma matrixColNorm_le_of_arrayColNormIccSum
-    (ν : PosReal) (N : ℕ)
-    (M : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ)
-    (col : Array ℚ) (j : Fin (N + 1)) (C : ℝ)
-    (hM : ∀ i : Fin (N + 1), M i j = ((col).getD (i : ℕ) 0 : ℝ))
-    (hcol : arrayColNormIccSum ν N col j ≤ C) :
-    matrixColNorm ν M j ≤ C := by
-  rw [matrixColNorm_eq_arrayColNormIccSum ν N M col j hM]
-  exact hcol
 
 end RadiiPolynomial.FiniteWeightedNorm
 

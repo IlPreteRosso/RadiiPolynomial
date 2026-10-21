@@ -1,4 +1,6 @@
-import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Core
+import Mathlib.Algebra.MvPolynomial.PDeriv
+import Mathlib.Algebra.MvPolynomial.Degrees
+import Mathlib.Algebra.MvPolynomial.CommRing
 import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Calculus
 import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Coefficients
 import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.WeightedL1

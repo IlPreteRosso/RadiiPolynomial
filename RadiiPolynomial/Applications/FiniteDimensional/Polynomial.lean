@@ -180,15 +180,6 @@ theorem enclosure_of_bounds [NeZero n] (Y₀ Z₀ Z₂ : ℚ) (hr : 0 < d.r₀)
     (fun x _ => d.jacCLM_apply' R x) (by exact_mod_cast hr) (d.rowSumY_of_le R hY)
     (d.rowSumZ₀_of_le R hZ₀) hZ₂ (by simp only [radiiPolynomial]; exact_mod_cast hp)
 
-/-- **Override face**: the unique zero from user-supplied rational `Y₀ Z₀ Z₂` with proofs. -/
-theorem existsUnique_of_bounds [NeZero n] (Y₀ Z₀ Z₂ : ℚ) (hr : 0 < d.r₀)
-    (hY : ∀ i, |∑ j, d.A i j * evalQ (d.P j) d.xBar| ≤ Y₀)
-    (hZ₀ : ∀ i, ∑ k, |(1 - d.A * d.jacQ) i k| ≤ Z₀)
-    (hZ₂ : ∀ c ∈ closedBall (d.xBarR R) (d.r₀ : ℝ), ∀ i,
-      ∑ k, ‖(d.AR R * (d.JR R c - d.JR R (d.xBarR R))) i k‖ ≤ (Z₂ : ℝ) * d.r₀)
-    (hp : Z₂ * d.r₀ ^ 2 - (1 - Z₀) * d.r₀ + Y₀ < 0) :
-    ∃! x ∈ closedBall (d.xBarR R) (d.r₀ : ℝ), d.field R x = 0 :=
-  (d.enclosure_of_bounds R Y₀ Z₀ Z₂ hr hY hZ₀ hZ₂ hp).existsUnique
 
 /-- **Centred polynomial face**, enclosure form. -/
 theorem enclosureC [NeZero n] (h : d.ChecksC) :
@@ -201,10 +192,6 @@ theorem existsUniqueC [NeZero n] (h : d.ChecksC) :
     ∃! x ∈ closedBall (d.xBarR R) (d.r₀ : ℝ), d.field R x = 0 :=
   (d.enclosureC R h).existsUnique
 
-/-- **Centred face, nondegeneracy output**. -/
-theorem isUnit_fderivC [NeZero n] (h : d.ChecksC) :
-    ∀ c ∈ closedBall (d.xBarR R) (d.r₀ : ℝ), IsUnit (fderiv ℝ (d.field R) c) := fun c hc =>
-  (d.hasFDerivAt_field R c).fderiv ▸ (d.enclosureC R h).isUnit_Df c hc
 
 end Semantic
 

@@ -86,9 +86,6 @@ def approxInverse : SystemBlockDiagData L N where
     rw [ite_eq_right hne, abs_of_pos (div_pos one_pos hpos)]
     exact one_div_le_one_div_of_le (by positivity) hN1
 
-/-- Bridge: A_finBlock entries = ℚ cast of A_col data. -/
-lemma A_finBlock_eq (l j : Fin L) (i k : Fin (N + 1)) :
-    d.A_finBlock l j i k = ((d.A_col l j (k : ℕ)).getD (i : ℕ) 0 : ℝ) := rfl
 
 /-! ## 2. Approximate Derivative A† -/
 
@@ -103,13 +100,6 @@ def approxDeriv : BlockDiagOp L N where
 
 /-! ## 3. Structural Hypotheses -/
 
-/-- Tail cancellation: (1/(2k)) * (2k) = 1 for k > N. -/
-lemma tailCancel (l : Fin L) (n : ℕ) (hn : N < n) :
-    d.approxInverse.tailDiag l n * d.approxDeriv.tailDiag l n = 1 := by
-  simp only [approxInverse, approxDeriv]
-  rw [ite_eq_right (by omega : n ≠ 0)]
-  have hne : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
-  field_simp
 
 /-- A.tailDiag = 1/(2k) for k > N. -/
 lemma htail_diag_inv (l : Fin L) (n : ℕ) (hn : N < n) :
@@ -120,9 +110,6 @@ lemma htail_diag_inv (l : Fin L) (n : ℕ) (hn : N < n) :
 def defect : SystemBlockDiagData L N :=
   defectOfBlockDiagOp d.approxInverse d.approxDeriv
 
-/-- Composed approximate derivative A·A† (as SystemBlockDiagData for numerical bounds). -/
-def composedApprox : SystemBlockDiagData L N :=
-  d.approxInverse.composedApprox d.approxDeriv d.tailCancel
 
 /-! ## 4. Approximate Solution ābar -/
 

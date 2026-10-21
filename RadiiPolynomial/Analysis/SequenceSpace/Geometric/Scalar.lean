@@ -22,6 +22,7 @@ namespace PosReal
 /-- Coercion to real numbers. -/
 @[coe] def toReal (ν : PosReal) : ℝ := ν.1
 
+
 instance : Coe PosReal ℝ := ⟨PosReal.toReal⟩
 
 @[simp] lemma coe_pos (ν : PosReal) : (0 : ℝ) < ν := ν.2
@@ -31,9 +32,12 @@ instance : Coe PosReal ℝ := ⟨PosReal.toReal⟩
 /-- Coercion to nonnegative reals. -/
 @[coe] def toNNReal (ν : PosReal) : ℝ≥0 := ⟨ν.1, le_of_lt ν.2⟩
 
+
 instance : Coe PosReal ℝ≥0 := ⟨PosReal.toNNReal⟩
 
 @[simp, norm_cast] lemma coe_toNNReal (ν : PosReal) : ((ν : ℝ≥0) : ℝ) = (ν : ℝ) := rfl
+
+
 
 end PosReal
 
@@ -53,14 +57,11 @@ instance ScaledReal.instSubMulWeightBase (ν : PosReal) :
     SubMulWeightBase (fun n : ℕ => (ν : ℝ) ^ n) where
   weight_pos n := pow_pos ν.coe_pos n
   submul m n := le_of_eq (pow_add (ν : ℝ) m n)
-  weight_zero := pow_zero _
 
-/-- Full SubMulWeight (adds weight ≥ 1). Requires ν ≥ 1. -/
-instance ScaledReal.instSubMulWeight (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] :
-    SubMulWeight (fun n : ℕ => (ν : ℝ) ^ n) where
-  one_le n := by
-    have hν : (1 : ℝ) ≤ (ν : ℝ) := Fact.out
-    exact ((one_pow n).symm.le).trans (pow_le_pow_left₀ zero_le_one hν n)
+/-- The weight is normalized for every positive radius, independently of submultiplicativity. -/
+instance ScaledReal.instNormalizedWeight (ν : PosReal) :
+    NormalizedWeight (fun n : ℕ => (ν : ℝ) ^ n) where
+  weight_zero := pow_zero _
 
 /-! ### Compatibility aliases -/
 
@@ -76,8 +77,11 @@ abbrev ofReal : ℝ ≃+ ScaledReal ν n := WeightedScalar.ofReal
 
 lemma norm_def (x : ScaledReal ν n) : ‖x‖ = |toReal x| * (ν : ℝ) ^ n := rfl
 
+
 @[simp] lemma toReal_apply (x : ScaledReal ν n) : toReal x = x := rfl
+
 @[simp] lemma ofReal_apply (x : ℝ) : (ofReal x : ScaledReal ν n) = x := rfl
+
 
 end ScaledReal
 

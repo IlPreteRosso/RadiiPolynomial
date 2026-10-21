@@ -55,15 +55,6 @@ theorem analytic_eq_canonical
     Y₀_le Z₀_finBlockNorm_le Z₁_le_cert Z₂_le_cert radii_neg
     xTilde xTilde_ball xTilde_G_zero g hg
 
-/-- **Function-space uniqueness**: any two ball solutions agree. -/
-theorem analytic_unique
-    (g₁ g₂ : ℝ → Fin L → ℝ)
-    (h₁ : IVP.IsBallSolution (ν := ν_val) f_cpoly x₀ R_traj g₁)
-    (h₂ : IVP.IsBallSolution (ν := ν_val) f_cpoly x₀ R_traj g₂) :
-    Set.EqOn g₁ g₂ (Set.Ioo (-(ν_val : ℝ)) ν_val) :=
-  data.analytic_unique_of_compPoly_of_radii f_cpoly x₀ (by unfold r_minus; positivity)
-    Y₀_le Z₀_finBlockNorm_le Z₁_le_cert Z₂_le_cert radii_neg
-    g₁ g₂ h₁ h₂
 
 /-- **Existence + uniqueness for the Lorenz IVP** on `(-ν, ν)`. -/
 theorem analytic_existsUnique :

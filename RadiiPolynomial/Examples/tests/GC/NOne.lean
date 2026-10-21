@@ -25,7 +25,11 @@ open RadiiPolynomial RadiiPolynomial.Galerkin l1Chebyshev
 theorem norm_mk_single_one {ν : PosReal} :
     ‖(FνN.mk (Pi.single 1 1) : FνN ν 1)‖ = 2 * (ν : ℝ) ∧ ‖(Pi.single 1 1 : Fin 2 → ℝ)‖ = 1 := by
   refine ⟨?_, by rw [Pi.norm_single, norm_one]⟩
-  rw [FνN.norm_mk_single]
+  rw [FνN.norm_def]
+  change (∑ k : Fin 2, |((Pi.single 1 1 : Fin 2 → ℝ)) k| * wt ν k) = 2 * (ν : ℝ)
+  rw [Finset.sum_eq_single (1 : Fin 2)
+    (fun j _ hj => by rw [Pi.single_eq_of_ne hj, abs_zero, zero_mul])
+    (fun h => absurd (Finset.mem_univ (1 : Fin 2)) h), Pi.single_eq_same]
   simp [wt]
 
 variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
@@ -49,22 +53,22 @@ theorem πN_cube_zz :
   rw [toSeq_mul_eq_finsum _ _ _ (Finset.Icc (-((1 : ℕ) : ℤ)) ((1 : ℕ) : ℤ)) (fun i hi => by
     rw [ιN_toSeq]; exact evenLift_eq_zero_of_not_mem _ hi)]
   simp only [toSeq_mul_ιN, ιN_toSeq, Icc_one]
-  fin_cases k <;> norm_num [evenLift, zz, Finset.sum_insert, Finset.sum_singleton]
+  fin_cases k <;> norm_num [evenLift, zz, FνN.mk, Finset.sum_insert, Finset.sum_singleton]
 
 /-- `πN(u²) = (2, 0)`: the mode `2` of `u² = z² + 2 + z⁻²` is cut. -/
 theorem πN_sq_zz :
     (πN (ιN (zz (ν := ν)) * ιN zz : symmetricSubalgebra ν) : FνN ν 1) = FνN.mk ![2, 0] := by
   refine FνN.ext fun k => ?_
-  rw [πN_mul_ιN, truncConv, Icc_one]
-  fin_cases k <;> norm_num [evenLift, zz, Finset.sum_filter, Finset.sum_insert]
+  rw [πN_apply, toSeq_mul_ιN, Icc_one]
+  fin_cases k <;> norm_num [evenLift, zz, FνN.mk, Finset.sum_filter, Finset.sum_insert]
 
 theorem πN_truncated_zz :
     (πN (ιN (πN (N := 1) (ιN (zz (ν := ν)) * ιN zz : symmetricSubalgebra ν)) * ιN zz :
       symmetricSubalgebra ν) : FνN ν 1) = FνN.mk ![0, 2] := by
   rw [πN_sq_zz]
   refine FνN.ext fun k => ?_
-  rw [πN_mul_ιN, truncConv, Icc_one]
-  fin_cases k <;> norm_num [evenLift, zz, Finset.sum_filter, Finset.sum_insert]
+  rw [πN_apply, toSeq_mul_ιN, Icc_one]
+  fin_cases k <;> norm_num [evenLift, zz, FνN.mk, Finset.sum_filter, Finset.sum_insert]
 
 theorem πN_not_multiplicative :
     (πN (ιN (zz (ν := ν)) * ιN zz * ιN zz : symmetricSubalgebra ν) : FνN ν 1) ≠

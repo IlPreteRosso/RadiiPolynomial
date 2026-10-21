@@ -74,8 +74,6 @@ private lemma xTilde_spec :
     F lam0 xTilde = 0 :=
   main_theorem.exists.choose_spec
 
-lemma xTilde_ball : xTilde ∈ Metric.closedBall (sol.toL1 : l1Weighted ν_val) r₀ :=
-  xTilde_spec.1
 
 lemma xTilde_F_zero : F lam0 xTilde = 0 := xTilde_spec.2
 

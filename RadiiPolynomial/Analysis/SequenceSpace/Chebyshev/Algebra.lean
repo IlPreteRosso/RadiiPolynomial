@@ -1,5 +1,6 @@
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Scalar
-import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Multilinear
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.UniversalProperty
+import Mathlib.Analysis.Normed.Operator.Bilinear
 import Mathlib.Analysis.Normed.Operator.Mul
 
 /-!
@@ -33,8 +34,6 @@ variable {ν : PosReal}
 /-- Extract underlying ℝ-valued sequence. -/
 def toSeq (f : l1Chebyshev ν) : ℤ → ℝ := lpOneAlg.toRealSeq f
 
-/-- The Chebyshev coefficient map is the generic `lpOneAlg.toRealSeq` (definitionally). -/
-lemma toSeq_eq_toRealSeq (a : l1Chebyshev ν) : toSeq a = lpOneAlg.toRealSeq a := rfl
 
 @[simp] lemma toSeq_add (f g : l1Chebyshev ν) (m : ℤ) :
     toSeq (f + g) m = toSeq f m + toSeq g m :=
@@ -115,20 +114,8 @@ lemma norm_single (j : ℤ) (x : ℝ) :
     ‖(single (ν := ν) j x)‖ = |x| * (ν : ℝ) ^ j.natAbs := by
   rw [lpOneAlg.norm_single, WeightedScalar.fiberTrivialization_weight, Real.norm_eq_abs]
 
-lemma single_smul (j : ℤ) (x : ℝ) :
-    single (ν := ν) j x = x • single j 1 :=
-  lpOneAlg.single_smul j x
 
-/-- Every element is the norm-convergent sum of its modes. -/
-lemma hasSum_single (h : l1Chebyshev ν) :
-    HasSum (fun m : ℤ => single (ν := ν) m (toSeq h m)) h :=
-  lpOneAlg.hasSum_single h
 
-/-- Mode expansion pushed through a continuous linear map. -/
-lemma hasSum_single_mapCLM {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
-    (W : l1Chebyshev ν →L[ℝ] F) (h : l1Chebyshev ν) :
-    HasSum (fun m : ℤ => W (single m (toSeq h m))) (W h) :=
-  lpOneAlg.hasSum_single_mapCLM W h
 
 /-! ### Column-norm bounds (`ν^{|m|}` weights) -/
 
@@ -164,15 +151,6 @@ theorem toSeq_finset_sum {ι : Type*} (s : Finset ι) (x : ι → l1Chebyshev ν
     l1Chebyshev.toSeq (∑ i ∈ s, x i) k = ∑ i ∈ s, l1Chebyshev.toSeq (x i) k :=
   lpOneAlg.toRealSeq_finset_sum s x k
 
-/-- Nonnegative-mode subseries bound: `∑_{k ≤ N} |a_k| ν^k ≤ ‖a‖`, for every `ν`. -/
-theorem finSum_le_norm {N : ℕ} (f : l1Chebyshev ν) :
-    ∑ k : Fin (N + 1), |toSeq f (↑(k : ℕ) : ℤ)| * (ν : ℝ) ^ (k : ℕ) ≤ ‖f‖ := by
-  simp_rw [← norm_fiber_natCast]
-  calc ∑ k : Fin (N + 1), ‖f (↑(k : ℕ) : ℤ)‖
-      = ∑' k : Fin (N + 1), ‖f (↑(k : ℕ) : ℤ)‖ := (tsum_fintype _).symm
-    _ ≤ ∑' m : ℤ, ‖f m‖ := tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm f)
-        (fun _ => norm_nonneg _) fun a b h => Fin.ext (Nat.cast_injective h)
-    _ = ‖f‖ := (lpOneAlg.norm_eq_tsum f).symm
 
 /-- Fiberwise triangle inequality over a finite sum. -/
 theorem norm_fiber_sum_le {ι : Type*} (s : Finset ι) (x : ι → l1Chebyshev ν) (k : ℤ) :
@@ -212,31 +190,6 @@ section OpNorm
 
 variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
 
-/-- **The bilinear operator norm on `l1Chebyshev ν` as an atom supremum.** For
-every `ν : PosReal` (no `1 ≤ ν`), `‖B‖` is the supremum of the ratios
-`‖B e_i e_j‖ / (ν^{|i|} ν^{|j|})`. The case `M = M' = ℤ` of
-`lpOneAlg.opNorm_eq_iSup_cols₂`. -/
-theorem opNorm_eq_iSup_cols₂ (B : l1Chebyshev ν →L[ℝ] l1Chebyshev ν →L[ℝ] F) :
-    ‖B‖ = ⨆ p : ℤ × ℤ, ‖B (lpOneAlg.single p.1 1) (lpOneAlg.single p.2 1)‖
-      / ((ν : ℝ) ^ p.1.natAbs * (ν : ℝ) ^ p.2.natAbs) := by
-  rw [lpOneAlg.opNorm_eq_iSup_cols₂ B]
-  simp only [WeightedScalar.fiberTrivialization_weight]
-
-set_option maxSynthPendingDepth 2 in
-/-- **The trilinear operator norm on `l1Chebyshev ν` as an atom supremum.** For
-every `ν : PosReal`, `‖T‖` is the supremum of the ratios
-`‖T e_i e_j e_k‖ / (ν^{|i|} ν^{|j|} ν^{|k|})`. The case `M = M' = M'' = ℤ` of
-`lpOneAlg.opNorm_eq_iSup_cols₃`. (Declared under `set_option maxSynthPendingDepth 2 in`:
-at the default depth the norm does not synthesize on the three-level type; a
-consumer who restates `‖T‖` for such a map needs the same local option; see
-`WeightedL1/Multilinear.lean`.) -/
-theorem opNorm_eq_iSup_cols₃
-    (T : l1Chebyshev ν →L[ℝ] l1Chebyshev ν →L[ℝ] l1Chebyshev ν →L[ℝ] F) :
-    ‖T‖ = ⨆ p : ℤ × ℤ × ℤ, ‖T (lpOneAlg.single p.1 1) (lpOneAlg.single p.2.1 1)
-        (lpOneAlg.single p.2.2 1)‖
-      / ((ν : ℝ) ^ p.1.natAbs * (ν : ℝ) ^ p.2.1.natAbs * (ν : ℝ) ^ p.2.2.natAbs) := by
-  rw [lpOneAlg.opNorm_eq_iSup_cols₃ T]
-  simp only [WeightedScalar.fiberTrivialization_weight]
 
 end OpNorm
 

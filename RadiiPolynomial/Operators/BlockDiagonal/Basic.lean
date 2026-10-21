@@ -66,11 +66,6 @@ lemma finiteBlockMatrixNorm_nonneg [NeZero L] (A : FiniteBlockMatrix L N) :
   exact Finset.le_sup'_of_le (fun l : Fin L => blockRowNorm ν A l) (Finset.mem_univ 0)
     (blockRowNorm_nonneg (ν := ν) A 0)
 
-lemma finiteBlockMatrixNorm_le_of_blockRowNorm_le
-    [NeZero L] (A : FiniteBlockMatrix L N) (C : ℝ)
-    (hrow : ∀ l : Fin L, blockRowNorm ν A l ≤ C) :
-    finiteBlockMatrixNorm ν A ≤ C :=
-  Finset.sup'_le _ _ fun l _ => hrow l
 
 end FiniteBlockNorm
 
@@ -90,16 +85,8 @@ def FiniteBlockMatrix.toMatrix (A : FiniteBlockMatrix L N) :
     (l j : Fin L) (n k : Fin (N + 1)) :
     A.toMatrix (l, n) (j, k) = A l j n k := rfl
 
-/-- The flattening is Mathlib's `Matrix.comp` (definitionally). -/
-lemma FiniteBlockMatrix.toMatrix_eq_comp (A : FiniteBlockMatrix L N) :
-    A.toMatrix = Matrix.comp (Fin L) (Fin L) (Fin (N + 1)) (Fin (N + 1)) ℝ A := rfl
 
-/-- Block identity flattens to matrix identity (`Matrix.comp_one`). -/
-lemma FiniteBlockMatrix.toMatrix_blockId :
-    FiniteBlockMatrix.toMatrix
-      (fun l j => if l = j then (1 : Matrix (Fin (N+1)) (Fin (N+1)) ℝ) else 0 :
-        FiniteBlockMatrix L N) = 1 :=
-  Matrix.comp_one
+
 
 /-- Block-matrix product flattens to matrix product (`Matrix.compRingEquiv`). -/
 lemma FiniteBlockMatrix.toMatrix_blockMul (A B : FiniteBlockMatrix L N) :
@@ -153,14 +140,11 @@ structure SystemBlockDiagData (L N : ℕ) where
 def SystemBlockDiagData.toBlockDiagOp (A : SystemBlockDiagData L N) : BlockDiagOp L N :=
   ⟨A.finBlock, A.tailDiag⟩
 
+
+
+
 instance : Coe (SystemBlockDiagData L N) (BlockDiagOp L N) :=
   ⟨SystemBlockDiagData.toBlockDiagOp⟩
-
-@[simp] lemma SystemBlockDiagData.toBlockDiagOp_finBlock (A : SystemBlockDiagData L N) :
-    (A : BlockDiagOp L N).finBlock = A.finBlock := rfl
-
-@[simp] lemma SystemBlockDiagData.toBlockDiagOp_tailDiag (A : SystemBlockDiagData L N) :
-    (A : BlockDiagOp L N).tailDiag = A.tailDiag := rfl
 
 /-- Core finite block-matrix action at a single `Fin (N+1)` mode — no conditional.
 The double sum `∑_j ∑_k A_{l,j,n,k} · b_{j,k}` that `actionFinite` wraps with
@@ -198,11 +182,6 @@ lemma finBlockAction_smul (finBlock : FiniteBlockMatrix L N)
   simp only [finBlockAction]
   rw [Finset.mul_sum]; congr 1; ext j; rw [Finset.mul_sum]; congr 1; ext k; ring
 
-lemma finBlockAction_eq_zero_of_coeff_zero (finBlock : FiniteBlockMatrix L N)
-    (c : SystemCoeff L) (hc : ∀ j : Fin L, ∀ k : Fin (N + 1), c j k = 0)
-    (l : Fin L) (n : Fin (N + 1)) :
-    finBlockAction finBlock c l n = 0 :=
-  Finset.sum_eq_zero fun j _ => Finset.sum_eq_zero fun k _ => by rw [hc j k, mul_zero]
 
 /-- Full 8.2-style action `Ab = A_N π_N b + A_∞ π_{N,∞} b`. -/
 def SystemBlockDiagData.action
@@ -222,20 +201,13 @@ lemma SystemBlockDiagData.actionFinite_finite
     finBlockAction finBlock b l n = ∑ j : Fin L, ∑ k : Fin (N + 1), finBlock l j n k * b j k :=
   rfl
 
+
 @[simp]
 lemma SystemBlockDiagData.actionFinite_tail
     (A : SystemBlockDiagData L N) (b : SystemCoeff L)
     (l : Fin L) (n : ℕ) (hn : N < n) :
     A.actionFinite b l n = 0 := by
   simp [SystemBlockDiagData.actionFinite, Nat.not_le.mpr hn]
-
-lemma SystemBlockDiagData.actionFinite_eq_zero_of_coeff_fin_zero
-    (A : SystemBlockDiagData L N) (c : SystemCoeff L)
-    (hc : ∀ j : Fin L, ∀ k : Fin (N + 1), c j k = 0) :
-    ∀ l n, A.actionFinite c l n = 0 := by
-  intro l n; simp only [SystemBlockDiagData.actionFinite]; split
-  · exact finBlockAction_eq_zero_of_coeff_zero _ _ hc _ _
-  · rfl
 
 @[simp]
 lemma SystemBlockDiagData.actionTail_finite
@@ -392,15 +364,6 @@ def SystemBlockDiagData.comp
     exact mul_le_mul (A.tailBound_spec l n hn) (B.tailBound_spec l n hn)
       (abs_nonneg (B.tailDiag l n)) hA0
 
-@[simp]
-lemma SystemBlockDiagData.comp_finBlock
-    (A B : SystemBlockDiagData L N) (l i : Fin L) :
-    (A.comp B).finBlock l i = ∑ j : Fin L, A.finBlock l j * B.finBlock j i := rfl
-
-@[simp]
-lemma SystemBlockDiagData.comp_tailDiag
-    (A B : SystemBlockDiagData L N) (l : Fin L) (n : ℕ) :
-    (A.comp B).tailDiag l n = A.tailDiag l n * B.tailDiag l n := rfl
 
 /-- The flattened finite block of a composition is the product of the flattened finite
 blocks (`FiniteBlockMatrix.toMatrix_blockMul`). -/
@@ -413,14 +376,6 @@ lemma SystemBlockDiagData.comp_finBlock_toMatrix (A B : SystemBlockDiagData L N)
 /-! The next lemmas isolate finite-mode and tail-mode formulas for
 composition before assembling the global identity. -/
 
-/-- Finite-mode expansion of `A.action (B.action b)` for `n ≤ N`. -/
-lemma SystemBlockDiagData.action_comp_finite
-    (A B : SystemBlockDiagData L N) (b : SystemCoeff L)
-    (l : Fin L) (n : ℕ) (hn : n ≤ N) :
-    A.action (B.action b) l n =
-      ∑ j : Fin L, ∑ k : Fin (N + 1),
-        A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k * (B.action b j k) := by
-  rw [SystemBlockDiagData.action_finite (A := A) (b := B.action b) (l := l) (n := n) hn]
 
 /-- Tail-mode expansion of `A.action (B.action b)` for `N < n`. -/
 lemma SystemBlockDiagData.action_comp_tail

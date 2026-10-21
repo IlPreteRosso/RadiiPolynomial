@@ -12,7 +12,7 @@ import RadiiPolynomial.Examples.IVP.Taylor.Example83.Certificate
 import RadiiPolynomial.Examples.IVP.Taylor.Example83.Analytic
 import RadiiPolynomial.Examples.IVP.Taylor.Example83.Analyticity
 import RadiiPolynomial.Examples.IVP.Taylor.Example83.ComplexTime
-import RadiiPolynomial.Examples.FiniteDimensional.Example245.Algebra
+import RadiiPolynomial.Core
 import RadiiPolynomial.Examples.FiniteDimensional.Example245.Certificate
 import RadiiPolynomial.Examples.Polynomial.Chebyshev
 import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Numbers
@@ -20,9 +20,9 @@ import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Algebra
 import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Certificate
 import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Analytic
 import RadiiPolynomial.Examples.IVP.Chebyshev.Example1421.Analyticity
-import RadiiPolynomial.Examples.Transport.KappaToy
-import RadiiPolynomial.Examples.Transport.TwinTransport
 import RadiiPolynomial.Examples.Galerkin.Fisher
 import RadiiPolynomial.Examples.Galerkin.Diblock
+import RadiiPolynomial.Examples.Fourier.Duffing.Certificate
+
 
 /-! Production examples included in the default project build. -/

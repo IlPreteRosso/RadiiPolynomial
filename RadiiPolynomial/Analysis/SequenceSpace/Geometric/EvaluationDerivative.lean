@@ -7,8 +7,8 @@ import Mathlib.Analysis.Calculus.Deriv.Pow
 # Term-by-Term Differentiation of Weighted Sequence Evaluation
 
 Differentiates `l1Weighted.eval` strictly inside its disk of convergence. This analytic
-layer is separate from the continuous algebra-hom evaluation API (`evalContinuousAlgHom`,
-`Geometric/Evaluation.lean`).
+layer uses the coordinate presentation of the universal geometric evaluation;
+`Geometric/Evaluation.lean` identifies it with `aeval_of_norm_le` on its admissible disc.
 -/
 
 open scoped BigOperators NNReal ENNReal Topology
@@ -23,16 +23,6 @@ namespace l1Weighted
 
 private abbrev seq (a : l1Weighted ν) := l1Weighted.toSeq a
 
-/-- Derivative of a single evaluated monomial. -/
-lemma hasDerivAt_eval_single (n : ℕ) (x : ℝ) (t : ℝ) :
-    HasDerivAt (fun z => l1Weighted.eval (l1Weighted.single (ν := ν) n x) z)
-      ((n : ℝ) * x * t ^ (n - 1)) t := by
-  have h_eq : (fun z => l1Weighted.eval (l1Weighted.single (ν := ν) n x) z) =
-              fun z => x * z ^ n :=
-    funext fun z => eval_single n x z
-  rw [h_eq]
-  have h := (hasDerivAt_pow n t).const_mul x
-  simpa [mul_comm, mul_left_comm, mul_assoc] using h
 
 /-- Term-by-term differentiation of `eval` strictly inside the disk of convergence. -/
 theorem hasDerivAt_eval (a : l1Weighted ν) {t : ℝ} (ht : |t| < ν) :

@@ -51,9 +51,6 @@ variable {ν : PosReal}
 
 /-! ### The symmetric elements are closed under the algebra operations -/
 
-theorem isSymmetric_zero : (0 : l1Chebyshev ν).IsSymmetric := fun k => by
-  show toSeq 0 (-k) = toSeq 0 k
-  rw [toSeq_zero, toSeq_zero]
 
 theorem IsSymmetric.add {f g : l1Chebyshev ν} (hf : f.IsSymmetric) (hg : g.IsSymmetric) :
     (f + g).IsSymmetric := fun k => by
@@ -61,13 +58,7 @@ theorem IsSymmetric.add {f g : l1Chebyshev ν} (hf : f.IsSymmetric) (hg : g.IsSy
   rw [toSeq_add, toSeq_add, show toSeq f (-k) = toSeq f k from hf k,
     show toSeq g (-k) = toSeq g k from hg k]
 
-theorem IsSymmetric.neg {f : l1Chebyshev ν} (hf : f.IsSymmetric) : (-f).IsSymmetric := fun k => by
-  show toSeq (-f) (-k) = toSeq (-f) k
-  rw [toSeq_neg, toSeq_neg, show toSeq f (-k) = toSeq f k from hf k]
 
-theorem IsSymmetric.sub {f g : l1Chebyshev ν} (hf : f.IsSymmetric) (hg : g.IsSymmetric) :
-    (f - g).IsSymmetric := by
-  rw [sub_eq_add_neg]; exact hf.add hg.neg
 
 theorem IsSymmetric.smul (r : ℝ) {f : l1Chebyshev ν} (hf : f.IsSymmetric) :
     (r • f).IsSymmetric := fun k => by
@@ -108,16 +99,11 @@ private lemma summable_norm_succ (a : l1Chebyshev ν) :
     Summable (fun k : ℕ => ‖a ((k + 1 : ℕ) : ℤ)‖) :=
   (summable_norm_natCast a).comp_injective (add_left_injective 1)
 
-lemma eval_symmetrize (a : l1Chebyshev ν) (t : ℝ) : eval (symmetrize a) t = eval a t := by
-  simp only [eval, symmetrize_toSeq, Int.natAbs_natCast, Int.natAbs_zero, Nat.cast_zero]
 
 lemma eval_smul (r : ℝ) (a : l1Chebyshev ν) (t : ℝ) : eval (r • a) t = r * eval a t := by
   simp only [eval, toSeq_smul, mul_assoc]
   rw [tsum_mul_left]; ring
 
-lemma eval_neg (a : l1Chebyshev ν) (t : ℝ) : eval (-a) t = -eval a t := by
-  simp only [eval, toSeq_neg, neg_mul]
-  rw [tsum_neg]; ring
 
 lemma eval_one (t : ℝ) : eval (1 : l1Chebyshev ν) t = 1 := by
   unfold eval
@@ -125,9 +111,6 @@ lemma eval_one (t : ℝ) : eval (1 : l1Chebyshev ν) t = 1 := by
     rw [toSeq_one, ite_eq_right (by omega : ((k + 1 : ℕ) : ℤ) ≠ 0), zero_mul]), tsum_zero]
   ring
 
-lemma eval_at_one (a : l1Chebyshev ν) :
-    eval a 1 = toSeq a 0 + 2 * ∑' k : ℕ, toSeq a ((k + 1 : ℕ) : ℤ) := by
-  simp only [eval, T_eval_one, mul_one]
 
 /-- `T_k(-1) = (-1)^k` (book (14.2)): row 0 of `chebyshevIvpCoeffs`. -/
 lemma eval_at_neg_one (a : l1Chebyshev ν) :
@@ -169,9 +152,6 @@ lemma eval_add (a b : l1Chebyshev ν) {t : ℝ} (ht : |t| ≤ 1) :
   simp only [eval, toSeq_add, add_mul]
   rw [(summable_eval a ht).tsum_add (summable_eval b ht)]; ring
 
-lemma eval_sub (a b : l1Chebyshev ν) {t : ℝ} (ht : |t| ≤ 1) :
-    eval (a - b) t = eval a t - eval b t := by
-  rw [sub_eq_add_neg, eval_add a (-b) ht, eval_neg, sub_eq_add_neg]
 
 /-- The function `u_a` is continuous on `[-1, 1]` (uniform convergence under the
 constant dominant `‖a_{k+1}‖`). -/
@@ -264,9 +244,6 @@ def evalAtCLM (t : ℝ) (ht : |t| ≤ 1) : l1Chebyshev ν →L[ℝ] ℝ :=
       change |eval a t| ≤ 2 * ‖a‖
       exact abs_eval_le_two_mul_norm a ht)
 
-@[simp] theorem evalAtCLM_apply (t : ℝ) (ht : |t| ≤ 1) (a : l1Chebyshev ν) :
-    evalAtCLM t ht a = eval a t :=
-  rfl
 
 theorem norm_evalAtCLM_le (t : ℝ) (ht : |t| ≤ 1) :
     ‖(evalAtCLM t ht : l1Chebyshev ν →L[ℝ] ℝ)‖ ≤ 2 :=

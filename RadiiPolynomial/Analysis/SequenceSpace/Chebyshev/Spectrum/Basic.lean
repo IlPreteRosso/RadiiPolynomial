@@ -42,26 +42,6 @@ def restriction (z : ℂ) (hz : (ν : ℝ)⁻¹ ≤ ‖z‖ ∧ ‖z‖ ≤ (ν 
   norm_num
   ring
 
-/-- Restriction identifies exactly inversion pairs, including the branch
-points ±1, where the pair consists of a single point. -/
-theorem restriction_eq_iff (z w : ℂ)
-    (hz : (ν : ℝ)⁻¹ ≤ ‖z‖ ∧ ‖z‖ ≤ (ν : ℝ))
-    (hw : (ν : ℝ)⁻¹ ≤ ‖w‖ ∧ ‖w‖ ≤ (ν : ℝ)) :
-    restriction ν z hz = restriction ν w hw ↔ w = z ∨ w = z⁻¹ := by
-  constructor
-  · intro h
-    have hg := DFunLike.congr_fun h (joukowskiGenSymm ν)
-    rw [restriction_gen, restriction_gen, joukowski, joukowski] at hg
-    have hz0 := lpOneAlg.ne_zero_of_annulus ν hz
-    have hw0 := lpOneAlg.ne_zero_of_annulus ν hw
-    have hf : (w - z) * (w - z⁻¹) = 0 := by
-      field_simp at hg ⊢
-      linear_combination -hg
-    exact (mul_eq_zero.mp hf).imp sub_eq_zero.mp sub_eq_zero.mp
-  · rintro (rfl | rfl)
-    · rfl
-    · ext a
-      exact (l1Chebyshev.evalLaurentC_inv_of_isSymmetric ν z hz hw a.val a.property).symm
 
 /-- Symmetric Laurent modes in the physical carrier; mode zero is `2`. -/
 def mode (n : ℕ) : Physical ν :=
@@ -110,8 +90,6 @@ theorem norm_mode_le (n : ℕ) : ‖mode ν n‖ ≤ 2 * (ν : ℝ) ^ n := by
 def retract : l1Chebyshev ν →L[ℝ] Physical ν :=
   l1Chebyshev.symmetricRetract ν
 
-@[simp] theorem retract_coe (a : l1Chebyshev ν) :
-    (retract ν a : l1Chebyshev ν) = l1Chebyshev.symmetrize a := rfl
 
 @[simp] theorem retract_val (a : Physical ν) : retract ν a.val = a :=
   Subtype.ext (l1Chebyshev.symmetrize_eq_self_of_isSymmetric a.val a.property)

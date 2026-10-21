@@ -6,62 +6,53 @@
 
 -- Algebra and analysis
 import RadiiPolynomial.Algebra.Convolution
-import RadiiPolynomial.Algebra.Ring.HeadTailIdentities
-import RadiiPolynomial.Algebra.Rees.Laurent
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev
-import RadiiPolynomial.Analysis.SequenceSpace.Fourier
 import RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry
 import RadiiPolynomial.Analysis.Norm.FiniteSum
-
--- Core theory
 import RadiiPolynomial.Core
-
--- Algebraic polynomial bridge
 import RadiiPolynomial.Algebra.Polynomial
-
--- Finite and block-diagonal operators
 import RadiiPolynomial.Operators.Matrix
 import RadiiPolynomial.Operators.BlockDiagonal
-import RadiiPolynomial.Operators.HeadTail
-
--- Certification adapters
 import RadiiPolynomial.Certification
-
--- Tactics
-import RadiiPolynomial.Tactic.AutoPolyFDeriv
-import RadiiPolynomial.Tactic.PDerivSimp
-import RadiiPolynomial.Tactic.MakeCompPoly
 import RadiiPolynomial.Tactic.FinMatrixBound
-
--- Taylor IVP application
 import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Applications.IVP.Taylor.Analytic
 import RadiiPolynomial.Applications.IVP.Taylor.Analyticity
 import RadiiPolynomial.Applications.IVP.Taylor.ComplexTime
 import RadiiPolynomial.Certification.IVP.Taylor
-
--- Chebyshev IVP application
 import RadiiPolynomial.Applications.IVP.Chebyshev
 import RadiiPolynomial.Certification.IVP.Chebyshev
-
--- Galerkin application
 import RadiiPolynomial.Applications.Galerkin.Face
-
--- Fourier semilinear application
-import RadiiPolynomial.Applications.Fourier
-
--- Finite-dimensional application
 import RadiiPolynomial.Applications.FiniteDimensional.Face
 import RadiiPolynomial.Applications.FiniteDimensional.Polynomial
 import RadiiPolynomial.Applications.FiniteDimensional.Scalar
-import RadiiPolynomial.Applications.FiniteDimensional.Periodic
-
--- Power-series application
+import RadiiPolynomial.Core.Theorem
 import RadiiPolynomial.Applications.PowerSeries.AffineZ2
 import RadiiPolynomial.Applications.PowerSeries.PolynomialZero
 import RadiiPolynomial.Certification.PowerSeries.PolynomialZero
+import RadiiPolynomial.Examples
+
+-- Core theory
+
+-- Algebraic polynomial bridge
+
+-- Finite and block-diagonal operators
+
+-- Certification adapters
+
+-- Tactics
+
+-- Taylor IVP application
+
+-- Chebyshev IVP application
+
+-- Galerkin application
+
+-- Finite-dimensional application
+
+-- Power-series application
 
 -- Examples
-import RadiiPolynomial.Examples

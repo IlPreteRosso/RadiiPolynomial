@@ -1,39 +1,34 @@
 import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Certification.Rational.Matrix
 import RadiiPolynomial.Certification.Rational.Grid
-import RadiiPolynomial.Certification.ColumnTailBound
+import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Omega
 import RadiiPolynomial.Certification.Witness
 import RadiiPolynomial.Certification.RadiiPolynomialQ
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Compatibility.TaylorTailL1
 
 /-!
 # Taylor certification adapter
 
-Exact-ℚ clauses for the standard Taylor IVP bundle `IVP.StdIVPData` and a `CompPoly` vector
-field, with their soundness at every real realization. The module imports the Taylor
-discretization (`Applications/IVP/Taylor`) and the certification evaluators; no reusable module
-below `Certification` imports it.
+Exact rational clauses for `IVP.StdIVPData` and a `CompPoly` vector field, with soundness
+at each real realization. This module imports the Taylor discretization and certification
+evaluators; no reusable module below `Certification` imports it.
 
-## Contents
+Retained computations include `abarNormQ`, `DLipBoundQ`, `activeQ`, `evalArr`,
+`kerColMaxQ` and `supportM`. The kernel-column bound is assembled by
+`StdIVPData.Z₁_le_of_pairBound` and `Z₁_le_ker_of_Q`; `Z₂_le_of_Q` uses
+`activeBlockNormQ` at scale `ν_q · DLipBoundQ`.
 
-1. `IVP.abarNormQ`, `IVP.seqNormQ`, `IVP.DfExactQ`, `IVP.DLipBoundQ`, `IVP.activeQ`,
-   `IVP.evalArr`, `IVP.colSupQ`, `IVP.actionQ`, `IVP.supportM`, `IVP.Y₀Q`, `IVP.Z₁colQ` —
-   the computable ℚ quantities read off the stored data and the syntax.
-2. Bound faces on a bundle `d : IVP.StdIVPData ν L N`: the support and membership of `F(ā)`
-   (`d.ivpCoeffs_abar_eq_zero_of_compPoly`, `d.ivpCoeffs_abar_mem_of_compPoly`, any real `x₀`),
-   `d.Y₀_le_of_Q`, `d.Z₁_le_of_Q` (recipe `Z₁`), `d.Z₁_le_col_of_Q` (exact column `Z₁`),
-   `d.Z₂_le_of_Q` (`activeBlockNormQ` at the computed scale `ν_q · DLipBoundQ`), with their
-   helpers.
-3. `IVP.StdIVPDataQ` — the ν-free rational record, its realization `toStdIVPData`, and the
-   decidable clauses `ChecksDF`, `ChecksZ₀`, `ChecksZ₀By` (slot and grid denominator),
-   `ChecksY₀`, `ChecksZ₁`, `ChecksZ₁col`, `ChecksZ₁By` (slot), `ChecksZ₂`, each with its
-   soundness lemma.
-4. `IVP.TaylorCertQ` (the five certificate numbers), the override face
-   `StdIVPDataQ.certified_of_bounds` and the all-generated face
-   `StdIVPDataQ.certified_of_checksBy` (and their source-residual forms).
+`IVP.StdIVPDataQ` packages the stored rational data, `ofStd` extracts those rational data
+from a realized bundle, and `toStdIVPData` realizes them at a specified weight. `ChecksZ₀`,
+`ChecksZ₀By`, `ChecksZ₁ker`, `ChecksDF` and `ChecksZ₂` have their soundness bridges here.
+The shared rational block action and cast bridge are owned by `Rational.Matrix`.
+The older exact-derivative and alternate column wrappers are not this shipped surface.
 -/
 
 open scoped BigOperators Topology
 open RadiiPolynomial MvPolyBridge RadiiPolynomial.Certification.Rational
+open RadiiPolynomial.WeightedLp
+open Finset
 
 namespace IVP
 
@@ -47,17 +42,7 @@ variable {ν : PosReal} {L N : ℕ} [NeZero L]
 def abarNormQ (N : ℕ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (i : Fin L) : ℚ :=
   ∑ k ∈ Finset.Icc 0 N, |(abar_Q i).getD k 0| * ν_q ^ k
 
-/-- Exact ℚ weighted norm of `p` evaluated at the stored coefficients (finite support
-`CompPoly.supportBound N p`). -/
-def seqNormQ (N : ℕ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (p : CompPoly L) : ℚ :=
-  ∑ n ∈ Finset.Icc 0 (CompPoly.supportBound N p), |p.evalCoeff abar_Q n| * ν_q ^ n
 
-/-- Exact evaluated derivative constant `max_l Σ_m ‖∂_m f_l (ā)‖` (at the stored data,
-`norm_evalBanach_abar_eq`); intended to be no larger than the syntactic `derivativeBound` at
-the norms of `ā` (that comparison is not proved here). -/
-def DfExactQ (N : ℕ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (f_cpoly : Fin L → CompPoly L) : ℚ :=
-  Finset.univ.sup' Finset.univ_nonempty fun l =>
-    ∑ m : Fin L, seqNormQ N abar_Q ν_q ((f_cpoly l).pderiv m)
 
 /-- Syntactic derivative-Lipschitz constant `max_l derivativeLipschitzBound (f_l) S` at the
 radii `S`. -/
@@ -75,34 +60,17 @@ def activeQ (f_cpoly : Fin L → CompPoly L) (S : Fin L → ℚ) : Finset (Fin L
 def evalArr (N : ℕ) (abar_Q : Fin L → Array ℚ) (p : CompPoly L) : Array ℚ :=
   Array.mk ((List.range (CompPoly.supportBound N p + 1)).map fun k => p.evalCoeff abar_Q k)
 
-/-- Exact weighted column sup of `π_{>N} ∘ shiftDivN ∘ leftMul (p(ā))`, a finite ℚ maximum
-over the columns `M ≤ N`.  For a system, the tail operator of component `l` is bounded by
-`Σ_m colSupQ (∂_m f_l)` (the sum of per-pair column sups; the per-column sum of the pairs is
-not a bound when `L > 1`, and the two agree when `L = 1`). -/
-def colSupQ (N : ℕ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (p : CompPoly L) : ℚ :=
-  Finset.univ.sup' Finset.univ_nonempty fun M : Fin (N + 1) =>
-    colTailQ (evalArr N abar_Q p) ν_q N (M : ℕ) (CompPoly.supportBound N p) / ν_q ^ (M : ℕ)
+/-- The rational head-column maximum of the tail kernel of `p(ā)`: `colMax q N d` with
+`q k = |p(ā)_k| ν_q^(k+1)` and `d = CompPoly.supportBound N p`. -/
+def kerColMaxQ (N : ℕ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (p : CompPoly L) : ℚ :=
+  colMax (fun k => |(evalArr N abar_Q p).getD k 0| * ν_q ^ (k + 1)) N (CompPoly.supportBound N p)
 
-/-- Exact rational action of the stored preconditioner on a rational coefficient sequence. -/
-def actionQ (N : ℕ) (A_col : Fin L → Fin L → ℕ → Array ℚ) (c : Fin L → ℕ → ℚ) (l : Fin L)
-    (n : ℕ) : ℚ :=
-  if n ≤ N then ∑ j : Fin L, ∑ k : Fin (N + 1), (A_col l j (k : ℕ)).getD n 0 * c j k
-  else c l n / n
 
 /-- Support index of `F(ā)`: past `N` and past the syntactic support of every component. -/
 def supportM (f_cpoly : Fin L → CompPoly L) (N : ℕ) : ℕ :=
   max N (Finset.univ.sup fun l => CompPoly.supportBound N (f_cpoly l)) + 1
 
-/-- Exact ℚ value of `‖(A F(ā))_l‖` (the `Y₀` numerator). -/
-def Y₀Q (N : ℕ) (A_col : Fin L → Fin L → ℕ → Array ℚ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ)
-    (f_cpoly : Fin L → CompPoly L) (x₀_q : Fin L → ℚ) (l : Fin L) : ℚ :=
-  ∑ n ∈ Finset.Icc 0 (supportM f_cpoly N),
-    |actionQ N A_col (IVP.ivpCoeffsQ f_cpoly abar_Q x₀_q) l n| * ν_q ^ n
 
-/-- The computed column `Z₁`: `max_l Σ_m colSupQ (∂_m f_l)`. -/
-def Z₁colQ (N : ℕ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (f_cpoly : Fin L → CompPoly L) : ℚ :=
-  Finset.univ.sup' Finset.univ_nonempty fun l =>
-    ∑ m : Fin L, colSupQ N abar_Q ν_q ((f_cpoly l).pderiv m)
 
 /-! ### Column `Z₁` helpers
 
@@ -119,18 +87,6 @@ omit [NeZero L] in
 theorem evalArr_getD_eq_zero (p : CompPoly L) (abar_Q : Fin L → Array ℚ) (k : ℕ)
     (hk : CompPoly.supportBound N p < k) : (evalArr N abar_Q p).getD k 0 = 0 := by
   simp [evalArr, Array.getD, show ¬ k < CompPoly.supportBound N p + 1 by omega]
-
-omit [NeZero L] in
-/-- The exact column sup `colSupQ` is nonnegative at a positive rational weight `ν_q`. -/
-theorem colSupQ_nonneg (abar_Q : Fin L → Array ℚ) {ν_q : ℚ} (hν : 0 < ν_q) (p : CompPoly L) :
-    0 ≤ colSupQ N abar_Q ν_q p :=
-  (div_nonneg (colTailQ_nonneg _ hν.le N 0 _) (pow_nonneg hν.le 0)).trans
-    (Finset.le_sup' (fun M : Fin (N + 1) =>
-      colTailQ (evalArr N abar_Q p) ν_q N (M : ℕ) (CompPoly.supportBound N p) / ν_q ^ (M : ℕ))
-      (Finset.mem_univ 0))
-
-@[deprecated RadiiPolynomial.tail_shiftDivN_sum_le (since := "2026-10-05")]
-alias tail_shiftDivN_sum_le := RadiiPolynomial.tail_shiftDivN_sum_le
 
 end TaylorQ
 
@@ -221,18 +177,6 @@ theorem Z₂_le_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L
     exact_mod_cast Finset.le_sup' (fun l => (f_cpoly l).derivativeLipschitzBound S)
       (Finset.mem_univ l)
 
-/-- On a sequence with rational coefficients `cq`, the action of the stored preconditioner
-`approxInverse` is the cast of the exact rational action `actionQ` (finite block for `n ≤ N`,
-diagonal tail `c n / n` above). -/
-theorem action_eq_actionQ (d : IVP.StdIVPData ν L N) (c : SystemCoeff L)
-    (cq : Fin L → ℕ → ℚ) (hc : ∀ l n, c l n = (cq l n : ℝ)) (l : Fin L) (n : ℕ) :
-    d.approxInverse.action c l n = (actionQ N d.A_col cq l n : ℝ) := by
-  rw [d.approxInverse.action_eq_blockActionQ (fun l j k => d.A_col l j (k : ℕ))
-    (fun _ n => 1 / (n : ℚ)) (fun l j k i => d.A_finBlock_eq l j i k)
-    (fun l n hn => by rw [d.htail_diag_inv l n hn]; push_cast; rfl) c cq hc l n]
-  unfold blockActionQ actionQ
-  split_ifs <;> first | rfl | (push_cast; ring)
-
 /-- The rational IVP coefficients at `ā` vanish past `supportM f_cpoly N`, the support index
 read off the syntax. -/
 theorem ivpCoeffsQ_support (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
@@ -261,98 +205,9 @@ theorem ivpCoeffs_abar_eq_zero_of_compPoly (d : IVP.StdIVPData ν L N)
   rw [ivpCoeffsQ_support d f_cpoly 0 l (m + 1) hn, Rat.cast_zero] at h
   exact h
 
-/-- Each component of `F(ā)` lies in `ℓ¹_ν` (finite support `supportM f_cpoly N`), for every real
-initial value `x₀`. -/
-theorem ivpCoeffs_abar_mem_of_compPoly (d : IVP.StdIVPData ν L N)
-    (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) (l : Fin L) :
-    l1Weighted.Mem ν
-      (fun n => IVP.ivpCoeffs (fun a j => (f_cpoly j).evalBanach a) x₀ d.abar l n) := by
-  rw [l1Weighted.mem_iff]
-  exact summable_of_ne_finset_zero (s := Finset.Icc 0 (supportM f_cpoly N)) fun n hn => by
-    simp only [Finset.mem_Icc, not_and_or, not_le] at hn
-    simp [ivpCoeffs_abar_eq_zero_of_compPoly d f_cpoly x₀ l n (by omega)]
 
-/-- `Y₀` from one exact-ℚ check. -/
-theorem Y₀_le_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
-    (x₀ : Fin L → ℝ) (x₀_q : Fin L → ℚ) (hx₀ : ∀ l, x₀ l = (x₀_q l : ℝ)) {Y₀ : ℚ}
-    (hle : ∀ l, Y₀Q N d.A_col d.abar_Q d.ν_q f_cpoly x₀_q l ≤ Y₀) :
-    Y₀_norm (d.G (IVP.banachField f_cpoly) x₀) d.abar
-      (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ (Y₀ : ℝ) := by
-  set φ : XL1 ν L → Fin L → l1Weighted ν := IVP.banachField f_cpoly
-  set M := supportM f_cpoly N
-  have hF : ∀ l n, IVP.ivpCoeffs φ x₀ d.abar l n =
-      (IVP.ivpCoeffsQ f_cpoly d.abar_Q x₀_q l n : ℝ) :=
-    fun l n => d.ivpCoeffs_abar_eq_cast_of_compPoly f_cpoly x₀ x₀_q hx₀ l n
-  have hsupp : ∀ l n, M < n → IVP.ivpCoeffs φ x₀ d.abar l n = 0 := fun l n hn => by
-    rw [hF, ivpCoeffsQ_support d f_cpoly x₀_q l n hn, Rat.cast_zero]
-  have hmem : ∀ l, l1Weighted.Mem ν (IVP.ivpCoeffs φ x₀ d.abar l) := fun l => by
-    rw [l1Weighted.mem_iff]
-    exact summable_of_ne_finset_zero (s := Finset.Icc 0 M) fun n hn => by
-      simp only [Finset.mem_Icc, not_and_or, not_le] at hn
-      simp [hsupp l n (by omega)]
-  set v : XL1 ν L := ofCoeff (IVP.ivpCoeffs φ x₀ d.abar) hmem
-  have hG : d.G φ x₀ d.abar = d.approxInverse.toCLM (ν := ν) v := by
-    funext l; apply l1Weighted.ext; intro n
-    exact (d.G_coeff φ x₀ d.abar l n).trans (by
-      have := SystemBlockDiagData.toCoeff_toCLM (ν := ν) d.approxInverse v l n
-      simp only [toCoeff] at this; exact this.symm)
-  have hc : toCoeff (ν := ν) v = IVP.ivpCoeffs φ x₀ d.abar := by
-    ext l n; simp [v, toCoeff_ofCoeff]
-  have hY0 : (0 : ℝ) ≤ (Y₀ : ℝ) := by
-    have : 0 ≤ Y₀Q N d.A_col d.abar_Q d.ν_q f_cpoly x₀_q 0 := Finset.sum_nonneg fun n _ =>
-      mul_nonneg (abs_nonneg _) (pow_nonneg (ν_q_pos d).le n)
-    exact_mod_cast this.trans (hle 0)
-  show ‖d.G φ x₀ d.abar‖ ≤ _
-  rw [hG]
-  refine d.approxInverse.norm_toCLM_apply_le v M (by simp only [M, supportM]; omega)
-    (fun l n hn => by rw [hc]; exact hsupp l n hn) hY0 (fun l => ?_)
-  rw [hc]
-  refine le_of_eq_of_le ?_
-    (by exact_mod_cast hle l : ((Y₀Q N d.A_col d.abar_Q d.ν_q f_cpoly x₀_q l : ℚ) : ℝ) ≤ Y₀)
-  unfold Y₀Q
-  push_cast
-  refine Finset.sum_congr rfl fun n _ => ?_
-  rw [action_eq_actionQ d _ _ hF l n, d.hν]
 
-/-- The weighted norm of a `CompPoly` evaluated at `ā` equals the cast of the exact
-rational sum `seqNormQ` over its syntactic support window. -/
-theorem norm_evalBanach_abar_eq (d : IVP.StdIVPData ν L N) (p : CompPoly L) :
-    ‖p.evalBanach d.abar‖ = (seqNormQ N d.abar_Q d.ν_q p : ℝ) :=
-  l1Weighted.norm_eq_ratCast_sum_of_support _ _ _
-    (p.toSeq_evalBanach d.abar d.abar_Q d.abar_toSeq_eq) d.hν _ fun n hn => by
-      rw [CompPoly.evalCoeff, CompPoly.evalCoeffSeq_eq_zero_of_support N p _
-        (fun i k hk => abar_Q_getD_eq_zero d i k hk) n hn]
 
-/-- `Z₁` from the finite Jacobian check `hDF` and one ℚ inequality; the derivative
-constant is the exact evaluated one, computed from the bundle and the syntax. -/
-theorem Z₁_le_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
-    (x₀ : Fin L → ℝ)
-    (hDF : ∀ (j m : Fin L) (row col : Fin (N + 1)),
-      (d.DF_col j m (col : ℕ)).getD (row : ℕ) 0 =
-        IVP.ivp_DF_of_Dφ_nat
-          (fun j m k => ((f_cpoly j).pderiv m).evalCoeff d.abar_Q k)
-          j m (row : ℕ) (col : ℕ))
-    {Z₁ : ℚ} (hle : d.ν_q / ((N : ℚ) + 1) * DfExactQ N d.abar_Q d.ν_q f_cpoly ≤ Z₁) :
-    Z₁_norm (d.G (IVP.banachField f_cpoly) x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L))
-      ((IVP.StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ (Z₁ : ℝ) := by
-  set K := DfExactQ N d.abar_Q d.ν_q f_cpoly
-  have hK : ∀ l, ∑ m : Fin L, ‖evalInBanach (MvPolynomial.pderiv m (f_cpoly l).toMvPoly)
-      d.abar‖ ≤ (K : ℝ) := fun l => by
-    simp_rw [← CompPoly.pderiv_toMvPoly, ← compPoly_evalBanach_eq_evalInBanach,
-      norm_evalBanach_abar_eq d]
-    exact_mod_cast Finset.le_sup'
-      (fun l => ∑ m : Fin L, seqNormQ N d.abar_Q d.ν_q ((f_cpoly l).pderiv m))
-      (Finset.mem_univ l)
-  have hK0 : (0 : ℝ) ≤ (K : ℝ) :=
-    (Finset.sum_nonneg fun _ _ => norm_nonneg _).trans (hK 0)
-  refine d.Z₁_le_of_compPoly f_cpoly x₀
-    (d.composedApprox_eq_fderiv_G_fin_of_compPoly f_cpoly x₀ hDF)
-    (fun h l => (fderiv ℝ (fun a => IVP.banachField f_cpoly a l) d.abar) h)
-    (fun _ _ => rfl) hK0
-    (fun h l => IVP.ivp_Dφ_norm_le (IVP.banachField f_cpoly) (fun l => (f_cpoly l).toMvPoly)
-      d.abar (fun a l => compPoly_evalBanach_eq_evalInBanach (f_cpoly l) a) hK h l) ?_
-  rw [d.hν]
-  exact_mod_cast hle
 
 /-- Every entry of `evalArr N d.abar_Q p` (in or past the support window) is the exact
 coefficient `p.evalCoeff d.abar_Q k`. -/
@@ -364,21 +219,23 @@ theorem evalArr_getD (d : IVP.StdIVPData ν L N) (p : CompPoly L) (k : ℕ) :
       (fun i n hn => abar_Q_getD_eq_zero d i n hn) k (by omega)]
     simp [evalArr, Array.getD, hk]
 
-/-- Per-pair soundness: the tail of `shiftDivN (p(ā) · x)` is at most `colSupQ p · ‖x‖`. -/
-theorem tail_evalBanach_mul_le (d : IVP.StdIVPData ν L N) (p : CompPoly L)
+
+/-- **Per-pair soundness through the kernel test**: the tail of `shiftDivN (p(ā) · x)` is at most
+`kerColMaxQ p · ‖x‖`. -/
+theorem tail_evalBanach_mul_le_ker (d : IVP.StdIVPData ν L N) (p : CompPoly L)
     (x : l1Weighted ν) :
     ∑' n, |l1Weighted.toSeq (shiftDivN (p.evalBanach d.abar * x)) (n + (N + 1))| *
-        (ν : ℝ) ^ (n + (N + 1)) ≤ (colSupQ N d.abar_Q d.ν_q p : ℝ) * ‖x‖ := by
-  have hνq := ν_q_pos d
-  refine shiftDivN_leftMul_tail_le_of_cols _ N
-    (shiftDivN_leftMul_tail_cols_le_of_Q (p.evalBanach d.abar) (evalArr N d.abar_Q p) d.ν_q
-      (CompPoly.supportBound N p) N
-      (fun k => by rw [p.toSeq_evalBanach d.abar d.abar_Q d.abar_toSeq_eq k, evalArr_getD d])
-      (fun k hk => evalArr_getD_eq_zero p d.abar_Q k hk) d.hν
-      (fun M => (div_le_iff₀ (pow_pos hνq _)).mp
-        (Finset.le_sup' (fun M : Fin (N + 1) =>
-          colTailQ (evalArr N d.abar_Q p) d.ν_q N (M : ℕ) (CompPoly.supportBound N p) /
-            d.ν_q ^ (M : ℕ)) (Finset.mem_univ M)))) x
+        (ν : ℝ) ^ (n + (N + 1)) ≤ (kerColMaxQ N d.abar_Q d.ν_q p : ℝ) * ‖x‖ := by
+  have hb : ∀ k, l1Weighted.toSeq (p.evalBanach d.abar) k =
+      ((evalArr N d.abar_Q p).getD k 0 : ℝ) := fun k => by
+    rw [p.toSeq_evalBanach d.abar d.abar_Q d.abar_toSeq_eq k, evalArr_getD d]
+  refine tailTsum_shiftDivN_mul_le_of_check (d := CompPoly.supportBound N p) _
+    (fun k hk => by rw [hb, evalArr_getD_eq_zero p d.abar_Q k hk, Rat.cast_zero])
+    (fun k => |(evalArr N d.abar_Q p).getD k 0| * d.ν_q ^ (k + 1))
+    (fun k _ => le_of_eq ?_) (fun j hj => le_sup' _ (mem_range.2 (Nat.lt_succ_of_le hj))) x
+  rw [symbolMass, hb, Real.norm_eq_abs, d.hν]
+  push_cast
+  rfl
 
 /-- The derivative of a `CompPoly` component at `ā`, as a sum of left multiplications. -/
 theorem fderiv_banachField_apply (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
@@ -387,24 +244,42 @@ theorem fderiv_banachField_apply (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L �
       ∑ m : Fin L, ((f_cpoly l).pderiv m).evalBanach d.abar * h m :=
   fderiv_banachField_apply' f_cpoly d.abar h l
 
-/-- **Column `Z₁` face (generic in `L`)**: the finite Jacobian check `hDF` and one ℚ
-inequality `Σ_m colSupQ (∂_m f_l) ≤ Z₁` per component give the `Z₁` operator bound, through
-`StdIVPData.Z₁_le_exact_of_compPoly`. -/
-theorem Z₁_le_col_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
+omit [NeZero L] in
+/-- A tail bound `tail (shiftDivN (b · x)) ≤ c · ‖x‖` for every `x` forces `0 ≤ c`: test it at
+the atom `δ₀`, whose norm is its weight `ν⁰ > 0`. -/
+private theorem pairBound_nonneg (b : l1Weighted ν) {c : ℝ}
+    (hc : ∀ x : l1Weighted ν,
+      ∑' n, |l1Weighted.toSeq (shiftDivN (b * x)) (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) ≤
+        c * ‖x‖) : 0 ≤ c := by
+  have hx : 0 < ‖(l1Weighted.single 0 1 : l1Weighted ν)‖ := by
+    rw [l1Weighted.norm_single, abs_one, pow_zero, one_mul]
+    exact one_pos
+  exact nonneg_of_mul_nonneg_left
+    ((tsum_nonneg fun n => mul_nonneg (abs_nonneg _) (pow_nonneg ν.2.le _)).trans (hc _)) hx
+
+/-- **Generic-`L` `Z₁` face from per-pair tail bounds**: the finite Jacobian check `hDF`, per-pair
+constants `c l m` with `tail (shiftDivN ((∂_m f_l)(ā) · x)) ≤ c l m · ‖x‖`, and one ℚ inequality
+`Σ_m c l m ≤ Z₁` per component give the `Z₁` operator bound, through
+`StdIVPData.Z₁_le_exact_of_compPoly`. The per-pair producers are `colSupQ`
+(`tail_evalBanach_mul_le`) and `kerColMaxQ` (`tail_evalBanach_mul_le_ker`); the constants carry
+no sign hypothesis. -/
+theorem Z₁_le_of_pairBound (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
     (x₀ : Fin L → ℝ)
     (hDF : ∀ (j m : Fin L) (row col : Fin (N + 1)),
       (d.DF_col j m (col : ℕ)).getD (row : ℕ) 0 =
         IVP.ivp_DF_of_Dφ_nat
           (fun j m k => ((f_cpoly j).pderiv m).evalCoeff d.abar_Q k)
           j m (row : ℕ) (col : ℕ))
-    {Z₁ : ℚ} (hle : ∀ l, ∑ m : Fin L, colSupQ N d.abar_Q d.ν_q ((f_cpoly l).pderiv m) ≤ Z₁) :
+    (c : Fin L → Fin L → ℚ)
+    (hc : ∀ (l m : Fin L) (x : l1Weighted ν),
+      ∑' n, |l1Weighted.toSeq (shiftDivN (((f_cpoly l).pderiv m).evalBanach d.abar * x))
+          (n + (N + 1))| * (ν : ℝ) ^ (n + (N + 1)) ≤ (c l m : ℝ) * ‖x‖)
+    {Z₁ : ℚ} (hle : ∀ l, ∑ m : Fin L, c l m ≤ Z₁) :
     Z₁_norm (d.G (IVP.banachField f_cpoly) x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L))
       ((IVP.StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ (Z₁ : ℝ) := by
-  have hνq := ν_q_pos d
-  have hC : (0 : ℝ) ≤ (Z₁ : ℝ) := by
-    have := (Finset.sum_nonneg fun m _ =>
-      colSupQ_nonneg d.abar_Q hνq ((f_cpoly 0).pderiv m)).trans (hle 0)
-    exact_mod_cast this
+  have hc0 : ∀ l m, (0 : ℝ) ≤ c l m := fun l m => pairBound_nonneg _ (hc l m)
+  have hC : (0 : ℝ) ≤ (Z₁ : ℝ) :=
+    (Finset.sum_nonneg fun m _ => hc0 0 m).trans (by exact_mod_cast hle 0)
   refine d.Z₁_le_exact_of_compPoly f_cpoly x₀
     (d.composedApprox_eq_fderiv_G_fin_of_compPoly f_cpoly x₀ hDF)
     (fun h l => (fderiv ℝ (fun a => IVP.banachField f_cpoly a l) d.abar) h)
@@ -412,38 +287,31 @@ theorem Z₁_le_col_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPo
   rw [fderiv_banachField_apply d f_cpoly h l]
   refine (RadiiPolynomial.tail_shiftDivN_sum_le Finset.univ _).trans ?_
   refine (Finset.sum_le_sum fun m _ =>
-    (tail_evalBanach_mul_le d ((f_cpoly l).pderiv m) (h m)).trans
-      (mul_le_mul_of_nonneg_left (norm_le_pi_norm h m)
-        (by exact_mod_cast colSupQ_nonneg d.abar_Q hνq ((f_cpoly l).pderiv m)))).trans ?_
+    (hc l m (h m)).trans (mul_le_mul_of_nonneg_left (norm_le_pi_norm h m) (hc0 l m))).trans ?_
   rw [← Finset.sum_mul]
   refine mul_le_mul_of_nonneg_right ?_ (norm_nonneg _)
   exact_mod_cast hle l
 
+
+/-- **Column `Z₁` face through the kernel test (generic in `L`)**: the finite Jacobian check
+`hDF` and one ℚ inequality `Σ_m kerColMaxQ (∂_m f_l) ≤ Z₁` per component. -/
+theorem Z₁_le_ker_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
+    (x₀ : Fin L → ℝ)
+    (hDF : ∀ (j m : Fin L) (row col : Fin (N + 1)),
+      (d.DF_col j m (col : ℕ)).getD (row : ℕ) 0 =
+        IVP.ivp_DF_of_Dφ_nat
+          (fun j m k => ((f_cpoly j).pderiv m).evalCoeff d.abar_Q k)
+          j m (row : ℕ) (col : ℕ))
+    {Z₁ : ℚ} (hle : ∀ l, ∑ m : Fin L, kerColMaxQ N d.abar_Q d.ν_q ((f_cpoly l).pderiv m) ≤ Z₁) :
+    Z₁_norm (d.G (IVP.banachField f_cpoly) x₀) d.abar (ContinuousLinearMap.id ℝ (XL1 ν L))
+      ((IVP.StdIVPData.composedApprox d).toCLM (ν := ν)) ≤ (Z₁ : ℝ) :=
+  d.Z₁_le_of_pairBound f_cpoly x₀ hDF
+    (fun l m => kerColMaxQ N d.abar_Q d.ν_q ((f_cpoly l).pderiv m))
+    (fun _ _ => tail_evalBanach_mul_le_ker d _) hle
+
 end StdIVPData
 
-/-! ## The ν-free record, its clauses and the certificate faces -/
-
-/-- The five certificate numbers — the only data a certificate supplies beyond its record. -/
-structure TaylorCertQ where
-  Y₀ : ℚ
-  Z₀ : ℚ
-  Z₁ : ℚ
-  Z₂ : ℚ
-  r₀ : ℚ
-
-/-- Exact ℚ value of the radii polynomial `Z₂ r₀² − (1 − Z₀ − Z₁) r₀ + Y₀`. -/
-def TaylorCertQ.margin (C : TaylorCertQ) : ℚ :=
-  C.Z₂ * C.r₀ ^ 2 - (1 - C.Z₀ - C.Z₁) * C.r₀ + C.Y₀
-
-/-- The radii clause: positive radius and negative margin. -/
-abbrev TaylorCertQ.ChecksRadii (C : TaylorCertQ) : Prop := 0 < C.r₀ ∧ C.margin < 0
-
-/-- Which generated `Z₁` clause a certificate uses: the recipe majorant or the exact
-column sums. -/
-inductive Z₁Slot
-  | recipe
-  | column
-  deriving DecidableEq
+/-! ## The ν-free record and its per-bound clauses -/
 
 /-- **ν-free rational Taylor-IVP record**: the ℚ fields of `IVP.StdIVPData` and its stored
 shape invariant, without the real weight.
@@ -490,22 +358,11 @@ abbrev ChecksZ₂ (q : StdIVPDataQ L N) (f_cpoly : Fin L → CompPoly L) (r₀ Z
     (q.ν_q * DLipBoundQ f_cpoly (fun i => abarNormQ N q.abar_Q q.ν_q i + r₀))
     (activeQ f_cpoly (fun i => abarNormQ N q.abar_Q q.ν_q i + r₀)) ≤ Z₂
 
-/-- The weight read off a record with positive rational weight. -/
-def weight (q : StdIVPDataQ L N) (hpos : 0 < q.ν_q) : PosReal :=
-  ⟨(q.ν_q : ℝ), by exact_mod_cast hpos⟩
-
-/-- Default realization: `ν` chosen as the cast of `ν_q`, `hν := rfl`. -/
-def toStd (q : StdIVPDataQ L N) (hpos : 0 < q.ν_q) : IVP.StdIVPData (q.weight hpos) L N :=
-  q.toStdIVPData (q.weight hpos) rfl
-
 /-- Forgetful map from an existing bundle: its ℚ fields and size invariant, forgetting `hν`
 (`toStdIVPData_ofStd` is the definitional round trip). -/
 def ofStd {ν : PosReal} (d : IVP.StdIVPData ν L N) : StdIVPDataQ L N :=
   ⟨d.A_col, d.DF_col, d.abar_Q, d.ν_q, d.habar_size⟩
 
-/-- Round trip: every existing bundle is the realization of its ν-free record. -/
-theorem toStdIVPData_ofStd {ν : PosReal} (d : IVP.StdIVPData ν L N) :
-    (ofStd d).toStdIVPData ν d.hν = d := rfl
 
 /-! #### Soundness bridges for the exact stored data -/
 
@@ -513,38 +370,15 @@ section Bridges
 
 variable (q : StdIVPDataQ L N) {ν : PosReal} (hν : (ν : ℝ) = ((q.ν_q : ℚ) : ℝ))
 
-/-- The realization keeps the stored preconditioner columns `A_col`. -/
-@[simp] theorem toStdIVPData_A_col : (q.toStdIVPData ν hν).A_col = q.A_col := rfl
-/-- The realization keeps the stored Jacobian columns `DF_col`. -/
-@[simp] theorem toStdIVPData_DF_col : (q.toStdIVPData ν hν).DF_col = q.DF_col := rfl
-/-- The realization keeps the stored approximate solution `abar_Q`. -/
-@[simp] theorem toStdIVPData_abar_Q : (q.toStdIVPData ν hν).abar_Q = q.abar_Q := rfl
-/-- The realization keeps the stored rational weight `ν_q`. -/
-@[simp] theorem toStdIVPData_ν_q : (q.toStdIVPData ν hν).ν_q = q.ν_q := rfl
 
-/-- The coefficients of the realized `ā_i` are the casts of the stored rationals. -/
-theorem abar_toSeq (i : Fin L) (k : ℕ) :
-    l1Weighted.toSeq ((q.toStdIVPData ν hν).abar i) k = ((q.abar_Q i).getD k 0 : ℝ) :=
-  (q.toStdIVPData ν hν).abar_toSeq_eq i k
 
-/-- The realized `‖ā_i‖` is the cast of the ν-free rational norm `abarNormQ`. -/
-theorem norm_abar (i : Fin L) :
-    ‖(q.toStdIVPData ν hν).abar i‖ = (abarNormQ N q.abar_Q q.ν_q i : ℝ) :=
-  StdIVPData.norm_abar_eq (q.toStdIVPData ν hν) i
 
-/-- The finite block of the realized preconditioner reads the stored rational columns
-`A_col` (definitional). -/
-theorem A_finBlock_eq (l j : Fin L) (i k : Fin (N + 1)) :
-    (q.toStdIVPData ν hν).A_finBlock l j i k = ((q.A_col l j (k : ℕ)).getD (i : ℕ) 0 : ℝ) :=
-  rfl
-
-/-- The finite block of the realized Jacobian reads the stored rational columns `DF_col`
-(definitional). -/
-theorem DF_finBlock_eq (l j : Fin L) (i k : Fin (N + 1)) :
-    (q.toStdIVPData ν hν).DF_finBlock l j i k = ((q.DF_col l j (k : ℕ)).getD (i : ℕ) 0 : ℝ) :=
-  rfl
 
 end Bridges
+
+/-- Kernel `Z₁` clause: `Σ_m kerColMaxQ (∂_m f_l) ≤ Z₁` for every component (decidable). -/
+abbrev ChecksZ₁ker (q : StdIVPDataQ L N) (f_cpoly : Fin L → CompPoly L) (Z₁ : ℚ) : Prop :=
+  ∀ l, ∑ m : Fin L, kerColMaxQ N q.abar_Q q.ν_q ((f_cpoly l).pderiv m) ≤ Z₁
 
 /-! #### ν-free slot checks (each decidable, no `ν`) -/
 
@@ -559,38 +393,20 @@ abbrev ChecksDF : Prop :=
       IVP.ivp_DF_of_Dφ_nat (fun j m k => ((f_cpoly j).pderiv m).evalCoeff q.abar_Q k)
         j m (row : ℕ) (col : ℕ)
 
-/-- `Y₀` clause: exact ℚ norm of `A F(ā)`, per component. -/
-abbrev ChecksY₀ (x₀_q : Fin L → ℚ) (Y₀ : ℚ) : Prop :=
-  ∀ l, Y₀Q N q.A_col q.abar_Q q.ν_q f_cpoly x₀_q l ≤ Y₀
 
-/-- `Z₁` recipe clause: `ν/(N+1) · max_l Σ_m ‖∂_m f_l(ā)‖ ≤ Z₁` (generated majorant). -/
-abbrev ChecksZ₁ (Z₁ : ℚ) : Prop :=
-  q.ν_q / ((N : ℚ) + 1) * DfExactQ N q.abar_Q q.ν_q f_cpoly ≤ Z₁
 
-/-- Column `Z₁` clause: `Σ_m colSupQ (∂_m f_l) ≤ Z₁` for every component. -/
-abbrev ChecksZ₁col (Z₁ : ℚ) : Prop :=
-  ∀ l, ∑ m : Fin L, colSupQ N q.abar_Q q.ν_q ((f_cpoly l).pderiv m) ≤ Z₁
-
-/-- The `Z₁` slot at a chosen route: the recipe majorant or the exact column sums. -/
-def ChecksZ₁By : Z₁Slot → ℚ → Prop
-  | .recipe, Z₁ => q.ChecksZ₁ f_cpoly Z₁
-  | .column, Z₁ => q.ChecksZ₁col f_cpoly Z₁
-
-/-- The `Z₁` slot clause is decidable at either route, so `decide` can discharge it. -/
-instance instDecidableChecksZ₁By (s : Z₁Slot) (Z₁ : ℚ) :
-    Decidable (q.ChecksZ₁By f_cpoly s Z₁) :=
-  match s with
-  | .recipe => inferInstanceAs (Decidable (q.ChecksZ₁ f_cpoly Z₁))
-  | .column => inferInstanceAs (Decidable (q.ChecksZ₁col f_cpoly Z₁))
 
 end Checks
 
-/-- All generated clauses, with the `Z₀` clause at slot `s₀` and grid denominator `S` and the
-`Z₁` clause at slot `s₁`. -/
-abbrev _root_.IVP.TaylorCertQ.ChecksBy (s₀ : Z₀Slot) (S : ℕ) (s₁ : Z₁Slot) (C : TaylorCertQ)
-    (q : StdIVPDataQ L N) (f_cpoly : Fin L → CompPoly L) (x₀_q : Fin L → ℚ) : Prop :=
-  q.ChecksDF f_cpoly ∧ q.ChecksZ₀By s₀ S C.Z₀ ∧ q.ChecksY₀ f_cpoly x₀_q C.Y₀ ∧
-    q.ChecksZ₁By f_cpoly s₁ C.Z₁ ∧ q.ChecksZ₂ f_cpoly C.r₀ C.Z₂ ∧ C.ChecksRadii
+/-- The kernel `Z₁` clause, with the Jacobian clause `ChecksDF`, bounds the `Z₁` operator norm of
+the realization. -/
+theorem Z₁ker_sound (q : StdIVPDataQ L N) {ν : PosReal} (hν : (ν : ℝ) = ((q.ν_q : ℚ) : ℝ))
+    (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) {Z₁ : ℚ} (hDF : q.ChecksDF f_cpoly)
+    (h : q.ChecksZ₁ker f_cpoly Z₁) :
+    Z₁_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar
+      (ContinuousLinearMap.id ℝ (XL1 ν L))
+      ((IVP.StdIVPData.composedApprox (q.toStdIVPData ν hν)).toCLM (ν := ν)) ≤ (Z₁ : ℝ) :=
+  StdIVPData.Z₁_le_ker_of_Q (q.toStdIVPData ν hν) f_cpoly x₀ hDF h
 
 section Sound
 
@@ -624,133 +440,18 @@ theorem Z₂_sound (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) {r₀
 
 end Sound
 
-/-! #### Soundness of the remaining slots and the certificate faces -/
+/-! #### Soundness of the remaining per-bound clauses -/
 
 section Faces
 
 variable (q : StdIVPDataQ L N) {ν : PosReal} (hν : (ν : ℝ) = ((q.ν_q : ℚ) : ℝ))
   (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
 
-/-- The `Y₀` clause bounds `‖A F(ā)‖` for the realization, given that the initial value
-`x₀` is the cast of the rational `x₀_q`. -/
-theorem Y₀_sound (x₀_q : Fin L → ℚ) (hx₀ : ∀ l, x₀ l = (x₀_q l : ℝ)) {Y₀ : ℚ}
-    (h : q.ChecksY₀ f_cpoly x₀_q Y₀) :
-    Y₀_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar
-      (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ (Y₀ : ℝ) :=
-  StdIVPData.Y₀_le_of_Q (q.toStdIVPData ν hν) f_cpoly x₀ x₀_q hx₀ h
 
-/-- The Jacobian clause gives the finite-mode identification every `Z₁` route needs
-(recipe or override). -/
-theorem composedApprox_eq_of_checksDF (h : q.ChecksDF f_cpoly) :
-    ∀ (v : XL1 ν L) (l : Fin L) (n : ℕ), n ≤ N →
-      toCoeff (ν := ν) ((IVP.StdIVPData.composedApprox (q.toStdIVPData ν hν)).toCLM (ν := ν) v)
-          l n =
-        toCoeff (ν := ν) ((fderiv ℝ ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀)
-          (q.toStdIVPData ν hν).abar) v) l n :=
-  fun v l n hn =>
-    (q.toStdIVPData ν hν).composedApprox_eq_fderiv_G_fin_of_compPoly f_cpoly x₀ h v l n hn
 
-/-- The recipe `Z₁` clause, together with the Jacobian clause `ChecksDF`, bounds the
-`Z₁` operator norm of the realization. -/
-theorem Z₁_sound {Z₁ : ℚ} (hDF : q.ChecksDF f_cpoly) (h : q.ChecksZ₁ f_cpoly Z₁) :
-    Z₁_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar
-      (ContinuousLinearMap.id ℝ (XL1 ν L))
-      ((IVP.StdIVPData.composedApprox (q.toStdIVPData ν hν)).toCLM (ν := ν)) ≤ (Z₁ : ℝ) :=
-  StdIVPData.Z₁_le_of_Q (q.toStdIVPData ν hν) f_cpoly x₀ hDF h
 
-/-- The radii clause makes the general radii polynomial negative at the certificate's
-numbers `Y₀ Z₀ Z₁ Z₂ r₀`. -/
-theorem radii_sound (C : TaylorCertQ) (h : C.ChecksRadii) :
-    generalRadiiPolynomial (C.Y₀ : ℝ) (C.Z₀ : ℝ) (C.Z₁ : ℝ) (fun _ => (C.Z₂ : ℝ)) (C.r₀ : ℝ)
-      < 0 :=
-  generalRadiiPolynomial_neg_of_Q_const _ _ _ _ _ h.2
+/-! #### Soundness of the column clause -/
 
-/-! #### The override face (the `_of_le` pattern, slot by slot) -/
-
-/-- **Override face.** Each of `Y₀ Z₀ Z₁ Z₂` is a user-supplied rational with a PROOF
-that it bounds the true quantity of the realization; each proof may come from the matching
-slot check (`Y₀_sound`, `Z₀_sound`, `Z₁_sound`, `Z₂_sound`) or from a hand proof of a sharper
-bound. Only the radii clause is ℚ-decidable here. -/
-theorem certified_of_bounds (C : TaylorCertQ)
-    (hY₀ : Y₀_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀)
-      (q.toStdIVPData ν hν).abar (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ (C.Y₀ : ℝ))
-    (hZ₀ : finiteBlockMatrixNorm ν (q.toStdIVPData ν hν).defect.finBlock ≤ (C.Z₀ : ℝ))
-    (hZ₁ : Z₁_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀)
-      (q.toStdIVPData ν hν).abar (ContinuousLinearMap.id ℝ (XL1 ν L))
-      ((IVP.StdIVPData.composedApprox (q.toStdIVPData ν hν)).toCLM (ν := ν)) ≤ (C.Z₁ : ℝ))
-    (hZ₂ : ∀ c ∈ Metric.closedBall ((q.toStdIVPData ν hν).abar : XL1 ν L) (C.r₀ : ℝ),
-      Z₂_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar
-        (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤ (C.Z₂ : ℝ) * (C.r₀ : ℝ))
-    (hrad : C.ChecksRadii) :
-    ∃! xTilde ∈ Metric.closedBall ((q.toStdIVPData ν hν).abar : XL1 ν L) (C.r₀ : ℝ),
-      (q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀ xTilde = 0 :=
-  (q.toStdIVPData ν hν).existsUnique_of_compPoly f_cpoly x₀ (Z₂ := fun _ => (C.Z₂ : ℝ))
-    (by exact_mod_cast hrad.1) hY₀ hZ₀ hZ₁ hZ₂ (radii_sound C hrad)
-
-/-- Source-residual form of `certified_of_bounds` (same hypotheses). -/
-theorem certified_ivpCoeffs_of_bounds (C : TaylorCertQ)
-    (hY₀ : Y₀_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀)
-      (q.toStdIVPData ν hν).abar (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ (C.Y₀ : ℝ))
-    (hZ₀ : finiteBlockMatrixNorm ν (q.toStdIVPData ν hν).defect.finBlock ≤ (C.Z₀ : ℝ))
-    (hZ₁ : Z₁_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀)
-      (q.toStdIVPData ν hν).abar (ContinuousLinearMap.id ℝ (XL1 ν L))
-      ((IVP.StdIVPData.composedApprox (q.toStdIVPData ν hν)).toCLM (ν := ν)) ≤ (C.Z₁ : ℝ))
-    (hZ₂ : ∀ c ∈ Metric.closedBall ((q.toStdIVPData ν hν).abar : XL1 ν L) (C.r₀ : ℝ),
-      Z₂_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar
-        (ContinuousLinearMap.id ℝ (XL1 ν L)) c ≤ (C.Z₂ : ℝ) * (C.r₀ : ℝ))
-    (hrad : C.ChecksRadii) :
-    ∃! xTilde ∈ Metric.closedBall ((q.toStdIVPData ν hν).abar : XL1 ν L) (C.r₀ : ℝ),
-      ∀ l n, IVP.ivpCoeffs (IVP.banachField f_cpoly) x₀ xTilde l n = 0 :=
-  (q.toStdIVPData ν hν).existsUnique_ivpCoeffs_of_compPoly f_cpoly x₀
-    (Z₂ := fun _ => (C.Z₂ : ℝ))
-    (by exact_mod_cast hrad.1) hY₀ hZ₀ hZ₁ hZ₂ (radii_sound C hrad)
-
-/-! #### Soundness of the column slot and of the slot choice -/
-
-/-- The column `Z₁` clause, together with the Jacobian clause `ChecksDF`, bounds the
-`Z₁` operator norm of the realization. -/
-theorem Z₁col_sound {Z₁ : ℚ} (hDF : q.ChecksDF f_cpoly) (h : q.ChecksZ₁col f_cpoly Z₁) :
-    Z₁_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar
-      (ContinuousLinearMap.id ℝ (XL1 ν L))
-      ((IVP.StdIVPData.composedApprox (q.toStdIVPData ν hν)).toCLM (ν := ν)) ≤ (Z₁ : ℝ) :=
-  StdIVPData.Z₁_le_col_of_Q (q.toStdIVPData ν hν) f_cpoly x₀ hDF h
-
-/-- The `Z₁` clause at either slot (recipe or column), together with the Jacobian clause
-`ChecksDF`, bounds the `Z₁` operator norm of the realization. -/
-theorem Z₁By_sound (s : Z₁Slot) {Z₁ : ℚ} (hDF : q.ChecksDF f_cpoly)
-    (h : q.ChecksZ₁By f_cpoly s Z₁) :
-    Z₁_norm ((q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀) (q.toStdIVPData ν hν).abar
-      (ContinuousLinearMap.id ℝ (XL1 ν L))
-      ((IVP.StdIVPData.composedApprox (q.toStdIVPData ν hν)).toCLM (ν := ν)) ≤ (Z₁ : ℝ) :=
-  match s, h with
-  | .recipe, h => q.Z₁_sound hν f_cpoly x₀ hDF h
-  | .column, h => q.Z₁col_sound hν f_cpoly x₀ hDF h
-
-/-! #### The all-generated face: the override face with every slot from its check -/
-
-/-- **Taylor family face, slot-choice form**: one `decide +kernel` discharges
-`h : C.ChecksBy s₀ S s₁ q …` (no `ν`); the `Z₀` slot is the exact columns or the grid at
-denominator `S`, the `Z₁` slot is the recipe or the exact column sums. -/
-theorem certified_of_checksBy (s₀ : Z₀Slot) (S : ℕ) (s₁ : Z₁Slot) (x₀_q : Fin L → ℚ)
-    (hx₀ : ∀ l, x₀ l = (x₀_q l : ℝ)) (C : TaylorCertQ)
-    (h : C.ChecksBy s₀ S s₁ q f_cpoly x₀_q) :
-    ∃! xTilde ∈ Metric.closedBall ((q.toStdIVPData ν hν).abar : XL1 ν L) (C.r₀ : ℝ),
-      (q.toStdIVPData ν hν).G (IVP.banachField f_cpoly) x₀ xTilde = 0 :=
-  q.certified_of_bounds hν f_cpoly x₀ C
-    (q.Y₀_sound hν f_cpoly x₀ x₀_q hx₀ h.2.2.1) (q.defectZBy_sound hν s₀ S h.2.1)
-    (q.Z₁By_sound hν f_cpoly x₀ s₁ h.1 h.2.2.2.1)
-    (q.Z₂_sound hν f_cpoly x₀ h.2.2.2.2.2.1.le h.2.2.2.2.1) h.2.2.2.2.2
-
-/-- Slot-choice source-residual form. -/
-theorem certified_ivpCoeffs_of_checksBy (s₀ : Z₀Slot) (S : ℕ) (s₁ : Z₁Slot) (x₀_q : Fin L → ℚ)
-    (hx₀ : ∀ l, x₀ l = (x₀_q l : ℝ)) (C : TaylorCertQ)
-    (h : C.ChecksBy s₀ S s₁ q f_cpoly x₀_q) :
-    ∃! xTilde ∈ Metric.closedBall ((q.toStdIVPData ν hν).abar : XL1 ν L) (C.r₀ : ℝ),
-      ∀ l n, IVP.ivpCoeffs (IVP.banachField f_cpoly) x₀ xTilde l n = 0 :=
-  q.certified_ivpCoeffs_of_bounds hν f_cpoly x₀ C
-    (q.Y₀_sound hν f_cpoly x₀ x₀_q hx₀ h.2.2.1) (q.defectZBy_sound hν s₀ S h.2.1)
-    (q.Z₁By_sound hν f_cpoly x₀ s₁ h.1 h.2.2.2.1)
-    (q.Z₂_sound hν f_cpoly x₀ h.2.2.2.2.2.1.le h.2.2.2.2.1) h.2.2.2.2.2
 
 end Faces
 

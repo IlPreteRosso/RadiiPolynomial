@@ -1,14 +1,10 @@
-import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Scalar
 import RadiiPolynomial.Core.Theorem
 
 /-!
 # RadiiPolynomial Core API (Section 8.2 direction)
 
-Systems-level API for Taylor ODE validation with domain/range spaces,
-abstracted over a sequence-space family `Seq : PosReal → Type*`.
-
-- `X = (Seq ν)^L`, modeled as `Fin L → Seq ν`
-- `Y = (Seq ν')^L`, modeled as `Fin L → Seq ν'`
+Canonical norm quantities for radii-polynomial validation over general domain and range spaces.
+Finite systems use the ordinary Pi type `Fin L → E` at their concrete realization.
 
 Canonical norm quantities (`Y₀_norm`, `Z₀_norm`, `Z₁_norm`, `Z₂_norm`) are
 defined over general real normed spaces (`E F : Type*` with `NormedAddCommGroup` and
@@ -25,14 +21,6 @@ open Metric Set Filter ContinuousLinearMap
 noncomputable section
 
 namespace RadiiPolynomial
-
-/-- Domain space `X = (Seq ν)^L` for an `L`-component system.
-Ref: §8.2, p.195. -/
-abbrev X (Seq : PosReal → Type*) (ν : PosReal) (L : ℕ) := Fin L → Seq ν
-
-/-- Range space `Y = (Seq ν')^L` for an `L`-component system.
-Ref: §8.2, p.195 (after (8.15)). -/
-abbrev Y (Seq : PosReal → Type*) (ν' : PosReal) (L : ℕ) := Fin L → Seq ν'
 
 section CanonicalBounds
 

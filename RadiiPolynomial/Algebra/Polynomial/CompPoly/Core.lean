@@ -1,6 +1,7 @@
 import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Coefficients
-import RadiiPolynomial.Algebra.Polynomial.MvPolynomial.Core
 import Mathlib.Algebra.MvPolynomial.PDeriv
+import Mathlib.Algebra.MvPolynomial.Degrees
+import Mathlib.Algebra.MvPolynomial.CommRing
 import Mathlib.Analysis.Normed.Module.Basic
 
 /-!
@@ -43,7 +44,6 @@ inductive CompPoly (L : ℕ) where
   | mul : CompPoly L → CompPoly L → CompPoly L
   | neg : CompPoly L → CompPoly L
   | smul : ℚ → CompPoly L → CompPoly L
-  deriving DecidableEq
 
 namespace CompPoly
 
@@ -89,6 +89,14 @@ attribute [simp] pderiv.eq_1 pderiv.eq_2 pderiv.eq_3 pderiv.eq_4
   toMvPoly.eq_1 toMvPoly.eq_2 toMvPoly.eq_3 toMvPoly.eq_4
   toMvPoly.eq_5 toMvPoly.eq_6 toMvPoly.eq_7
 
+
+
+
+
+
+
+
+
 @[simp] theorem pderiv_add_op (m : Fin L) (p q : CompPoly L) :
     pderiv m (p + q) = pderiv m p + pderiv m q := rfl
 
@@ -100,18 +108,6 @@ attribute [simp] pderiv.eq_1 pderiv.eq_2 pderiv.eq_3 pderiv.eq_4
 
 @[simp] theorem pderiv_neg_op (m : Fin L) (p : CompPoly L) :
     pderiv m (-p) = -pderiv m p := rfl
-
-@[simp] theorem toMvPoly_add_op (p q : CompPoly L) :
-    (p + q).toMvPoly = p.toMvPoly + q.toMvPoly := rfl
-
-@[simp] theorem toMvPoly_sub_op (p q : CompPoly L) :
-    (p - q).toMvPoly = p.toMvPoly - q.toMvPoly := rfl
-
-@[simp] theorem toMvPoly_mul_op (p q : CompPoly L) :
-    (p * q).toMvPoly = p.toMvPoly * q.toMvPoly := rfl
-
-@[simp] theorem toMvPoly_neg_op (p : CompPoly L) :
-    (-p).toMvPoly = -p.toMvPoly := rfl
 
 theorem evalCoeffSeq_eq_mvPolyCoeff (p : CompPoly L) (seqs : Fin L → ℕ → ℚ) (n : ℕ) :
     p.evalCoeffSeq seqs n = mvPolyCoeff p.toMvPoly seqs n := by
@@ -154,11 +150,6 @@ theorem pderiv_toMvPoly (m : Fin L) (p : CompPoly L) :
   | smul r p ih =>
       simp only [CompPoly.pderiv, toMvPoly, MvPolynomial.pderiv_C_mul, ih]
 
-/-- Iterated computable partial derivatives commute with the `MvPolynomial` bridge. -/
-theorem pderiv_pderiv_toMvPoly (i j : Fin L) (p : CompPoly L) :
-    ((p.pderiv i).pderiv j).toMvPoly =
-      MvPolynomial.pderiv j (MvPolynomial.pderiv i p.toMvPoly) := by
-  rw [← pderiv_toMvPoly i p, ← pderiv_toMvPoly j (p.pderiv i)]
 
 noncomputable def evalAlg {R : Type*} [CommRing R] [Algebra ℚ R]
     (p : CompPoly L) (a : Fin L → R) : R :=
@@ -251,10 +242,6 @@ theorem evalBanach_ratMap {R : Type*} [CommRing R] [Algebra ℝ R] {L : ℕ} (p 
     simp only [CompPoly.evalBanach, evalQ, map_mul, ih, Algebra.smul_def]
     rfl
 
-/-- Over `ℝ`, `evalQ` is the rational shadow of `evalBanach`. -/
-theorem evalQ_cast {L : ℕ} (p : CompPoly L) (x : Fin L → ℚ) :
-    ((evalQ p x : ℚ) : ℝ) = p.evalBanach (fun i => (x i : ℝ)) :=
-  (evalBanach_ratMap (R := ℝ) p x).symm
 
 /-- The norm of an embedded rational in a normed real algebra whose unit has norm one. -/
 theorem norm_ratMap (R : Type*) [NormedCommRing R] [NormedAlgebra ℝ R] [NormOneClass R]

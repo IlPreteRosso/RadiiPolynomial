@@ -17,17 +17,14 @@ additive fibers `Finset.antidiagonal m` (pairs with `i + j = m`) of a type with
 `Finset.HasAntidiagonal`. In both versions the coefficients are MULTIPLIED; only the index
 operation changes. Every sum is finite, so the module needs no topology and no summability.
 
-This module owns the general algebraic laws of the operation: zero and distributivity in
-either input, associativity, the unit atom `Pi.single 1 1` on either side, commutativity,
-the product of two atoms, and compatibility with an external scalar action in either input.
-Each law carries only the index and coefficient structure its proof uses; a law that needs
-`0 * r = 0` or `r * 0 = 0` for the zero of the additive structure takes it as an explicit
-hypothesis. The Cauchy product of natural-index sequences (`RadiiPolynomial.cauchyProduct`)
-is the specialization of `finiteAddConvolution` to the index `ℕ`.
-The general-coefficient atom laws `finiteMulConvolution.single_one_left_apply` and
-`finiteMulConvolution.single_one_right_apply` apply to arbitrary functions and give the scalar
-faces of the wrapper `RadiiPolynomial.FiniteFiberConvolution`. The map law
-`map_finiteMulConvolution` commutes the convolution with an additive, multiplicative coefficient map.
+The shipped core provides the operation, its finite-sum application formula, and external
+scalar compatibility in the first input. The Cauchy product of natural-index sequences
+(`RadiiPolynomial.cauchyProduct`) is its additive-index specialization on `ℕ`.
+
+The other algebraic laws, coefficient-map law, and general-coefficient atom actions belong
+to the finite-fiber convolution recovery record. Their original hypotheses remain local to
+each law, including explicit left/right zero-multiplication hypotheses where needed; they
+do not impose topology, cancellation or commutativity on this operation.
 -/
 
 open Finset
@@ -58,190 +55,22 @@ variable [Mul M] [HasMulAntidiagonal M] [AddCommMonoid R] [Mul R]
 theorem apply (a b : M → R) (m : M) :
     finiteMulConvolution a b m = ∑ ij ∈ mulAntidiagonal m, a ij.1 * b ij.2 := rfl
 
-/-- The zero function is a left zero, given `0 * r = 0` for the additive zero. -/
-@[to_additive (dont_translate := R) (rename := hzero_mul → hzero_mul)
-  /-- The zero function is a left zero of the additive-index convolution, given `0 * r = 0` for the
-  additive zero. -/]
-theorem zero_left (hzero_mul : ∀ r : R, 0 * r = 0) (b : M → R) :
-    finiteMulConvolution 0 b = 0 :=
-  funext fun _ => sum_eq_zero fun ij _ => hzero_mul (b ij.2)
 
-/-- The zero function is a right zero, given `r * 0 = 0` for the additive zero. -/
-@[to_additive (dont_translate := R) (rename := hmul_zero → hmul_zero)
-  /-- The zero function is a right zero of the additive-index convolution, given `r * 0 = 0` for the
-  additive zero. -/]
-theorem zero_right (hmul_zero : ∀ r : R, r * 0 = 0) (a : M → R) :
-    finiteMulConvolution a 0 = 0 :=
-  funext fun _ => sum_eq_zero fun ij _ => hmul_zero (a ij.1)
 
-/-- Distributivity in the second input. -/
-@[to_additive (dont_translate := R)
-  /-- Distributivity in the second input of the additive-index convolution. -/]
-theorem add_right [LeftDistribClass R] (a b c : M → R) :
-    finiteMulConvolution a (b + c) = finiteMulConvolution a b + finiteMulConvolution a c :=
-  funext fun _ => by simp only [apply, Pi.add_apply, mul_add, sum_add_distrib]
-
-/-- Distributivity in the first input. -/
-@[to_additive (dont_translate := R)
-  /-- Distributivity in the first input of the additive-index convolution. -/]
-theorem add_left [RightDistribClass R] (a b c : M → R) :
-    finiteMulConvolution (a + b) c = finiteMulConvolution a c + finiteMulConvolution b c :=
-  funext fun _ => by simp only [apply, Pi.add_apply, add_mul, sum_add_distrib]
-
-/-- Two atoms: the convolution of `Pi.single i r` and `Pi.single j s` is the atom at `i * j`
-with the ordered product `r * s`. -/
-@[to_additive (dont_translate := R) (rename := hzero_mul → hzero_mul, hmul_zero → hmul_zero)
-  /-- Two atoms over an additive index: the convolution of `Pi.single i r` and `Pi.single j s` is
-  the atom at `i + j` with the ordered coefficient product `r * s`. -/]
-theorem single_single [DecidableEq M] (hzero_mul : ∀ r : R, 0 * r = 0)
-    (hmul_zero : ∀ r : R, r * 0 = 0) (i j : M) (r s : R) :
-    finiteMulConvolution (Pi.single i r) (Pi.single j s) = Pi.single (i * j) (r * s) := by
-  have h (ij : M × M) : (Pi.single i r : M → R) ij.1 * (Pi.single j s : M → R) ij.2 =
-      if ij = (i, j) then r * s else 0 := by
-    rcases ij with ⟨k, l⟩
-    by_cases hk : k = i <;> by_cases hl : l = j <;>
-      simp [hk, hl, hzero_mul, hmul_zero]
-  ext m
-  rw [apply, sum_congr rfl fun ij _ => h ij, sum_ite_eq', Pi.single_apply]
-  exact if_congr (mem_mulAntidiagonal.trans eq_comm) rfl rfl
-
-/-- External scalars in the first input. -/
 @[to_additive (dont_translate := S R) smul_left
   /-- External scalars in the first input of the additive-index convolution. -/]
 theorem smul_left [DistribSMul S R] [IsScalarTower S R R] (c : S) (a b : M → R) :
     finiteMulConvolution (c • a) b = c • finiteMulConvolution a b :=
   funext fun _ => by simp only [apply, Pi.smul_apply, smul_mul_assoc, smul_sum]
 
-/-- External scalars in the second input. -/
-@[to_additive (dont_translate := S R) smul_right
-  /-- External scalars in the second input of the additive-index convolution. -/]
-theorem smul_right [DistribSMul S R] [SMulCommClass S R R] (c : S) (a b : M → R) :
-    finiteMulConvolution a (c • b) = c • finiteMulConvolution a b :=
-  funext fun _ => by simp only [apply, Pi.smul_apply, mul_smul_comm, smul_sum]
+
 
 end Basic
 
-/-- Associativity. The two nested fibers over `m` correspond through
-`((u, k), (i, j)) ↦ ((i, j * k), (j, k))`, with inverse
-`((i, v), (j, k)) ↦ ((i * j, k), (i, j))`; index associativity proves the membership
-equations. No index unit or cancellation is used. -/
-@[to_additive (dont_translate := R)
-  /-- Associativity of the additive-index convolution over an additive semigroup index, with the
-  coefficients multiplied. -/]
-theorem assoc [Semigroup M] [HasMulAntidiagonal M] [NonUnitalSemiring R] (a b c : M → R) :
-    finiteMulConvolution (finiteMulConvolution a b) c =
-      finiteMulConvolution a (finiteMulConvolution b c) := by
-  ext m
-  simp only [apply, sum_mul, mul_sum]
-  rw [sum_sigma', sum_sigma']
-  refine sum_nbij' (fun p => ⟨(p.2.1, p.2.2 * p.1.2), (p.2.2, p.1.2)⟩)
-    (fun p => ⟨(p.1.1 * p.2.1, p.2.2), (p.1.1, p.2.1)⟩) ?_ ?_ ?_ ?_ ?_
-  · rintro ⟨⟨u, k⟩, ⟨i, j⟩⟩ hp
-    simp only [mem_sigma, mem_mulAntidiagonal] at hp ⊢
-    exact ⟨by rw [← mul_assoc, hp.2, hp.1], trivial⟩
-  · rintro ⟨⟨i, v⟩, ⟨j, k⟩⟩ hp
-    simp only [mem_sigma, mem_mulAntidiagonal] at hp ⊢
-    exact ⟨by rw [mul_assoc, hp.2, hp.1], trivial⟩
-  · rintro ⟨⟨u, k⟩, ⟨i, j⟩⟩ hp
-    simp only [mem_sigma, mem_mulAntidiagonal] at hp
-    simp [hp.2]
-  · rintro ⟨⟨i, v⟩, ⟨j, k⟩⟩ hp
-    simp only [mem_sigma, mem_mulAntidiagonal] at hp
-    simp [hp.2]
-  · rintro ⟨⟨u, k⟩, ⟨i, j⟩⟩ -
-    exact mul_assoc _ _ _
 
-/-- The atom `Pi.single 1 1` is a left unit, given `0 * r = 0` for the additive zero. -/
-@[to_additive (dont_translate := R) (rename := hzero_mul → hzero_mul)
-  /-- The atom `Pi.single 0 1` (index `0`, coefficient `1`) is a left unit of the additive-index
-  convolution, given `0 * r = 0` for the additive zero. -/]
-theorem single_one_left [MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M]
-    [AddCommMonoid R] [MulOneClass R] (hzero_mul : ∀ r : R, 0 * r = 0) (f : M → R) :
-    finiteMulConvolution (Pi.single 1 1) f = f := by
-  ext m
-  rw [apply, sum_eq_single (1, m)]
-  · simp
-  · rintro ⟨i, j⟩ hij hne
-    rw [mem_mulAntidiagonal] at hij
-    have hi : i ≠ 1 := by rintro rfl; exact hne (by simp_all)
-    simp [hi, hzero_mul]
-  · intro h
-    exact absurd (by simp) h
-
-/-- The atom `Pi.single 1 1` is a right unit, given `r * 0 = 0` for the additive zero. -/
-@[to_additive (dont_translate := R) (rename := hmul_zero → hmul_zero)
-  /-- The atom `Pi.single 0 1` (index `0`, coefficient `1`) is a right unit of the additive-index
-  convolution, given `r * 0 = 0` for the additive zero. -/]
-theorem single_one_right [MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M]
-    [AddCommMonoid R] [MulOneClass R] (hmul_zero : ∀ r : R, r * 0 = 0) (f : M → R) :
-    finiteMulConvolution f (Pi.single 1 1) = f := by
-  ext m
-  rw [apply, sum_eq_single (m, 1)]
-  · simp
-  · rintro ⟨i, j⟩ hij hne
-    rw [mem_mulAntidiagonal] at hij
-    have hj : j ≠ 1 := by rintro rfl; exact hne (by simp_all)
-    simp [hj, hmul_zero]
-  · intro h
-    exact absurd (by simp) h
-
-/-- Commutativity, for a commutative index operation and commutative coefficients. -/
-@[to_additive (dont_translate := R)
-  /-- Commutativity of the additive-index convolution, for a commutative index addition and
-  commutative coefficient multiplication. -/]
-theorem comm [CommMagma M] [HasMulAntidiagonal M] [AddCommMonoid R] [CommMagma R]
-    (a b : M → R) : finiteMulConvolution a b = finiteMulConvolution b a := by
-  ext m
-  conv_lhs => rw [apply, ← HasMulAntidiagonal.map_swap_mulAntidiagonal, sum_map]
-  exact sum_congr rfl fun _ _ => mul_comm _ _
-
-/-- An atom `Pi.single 1 r` at the index unit acts on the left of an arbitrary function by
-left multiplication of its values by `r`, given `0 * r = 0` for the additive zero. -/
-@[to_additive (dont_translate := R) (rename := hzero_mul → hzero_mul)
-  /-- An atom `Pi.single 0 r` at the index zero acts on the left of an arbitrary function by left
-  multiplication of its values by `r`, given `0 * r = 0` for the additive zero. -/]
-theorem single_one_left_apply [MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M]
-    [AddCommMonoid R] [Mul R] (hzero_mul : ∀ r : R, 0 * r = 0) (r : R) (f : M → R) (m : M) :
-    finiteMulConvolution (Pi.single 1 r) f m = r * f m := by
-  rw [apply, sum_eq_single (1, m)]
-  · simp
-  · rintro ⟨i, j⟩ hij hne
-    rw [mem_mulAntidiagonal] at hij
-    have hi : i ≠ 1 := by rintro rfl; exact hne (by simp_all)
-    simp [hi, hzero_mul]
-  · intro h
-    exact absurd (by simp) h
-
-/-- An atom `Pi.single 1 r` at the index unit acts on the right of an arbitrary function by
-right multiplication of its values by `r`, given `r * 0 = 0` for the additive zero. -/
-@[to_additive (dont_translate := R) (rename := hmul_zero → hmul_zero)
-  /-- An atom `Pi.single 0 r` at the index zero acts on the right of an arbitrary function by right
-  multiplication of its values by `r`, given `r * 0 = 0` for the additive zero. -/]
-theorem single_one_right_apply [MulOneClass M] [HasMulAntidiagonal M] [DecidableEq M]
-    [AddCommMonoid R] [Mul R] (hmul_zero : ∀ r : R, r * 0 = 0) (f : M → R) (r : R) (m : M) :
-    finiteMulConvolution f (Pi.single 1 r) m = f m * r := by
-  rw [apply, sum_eq_single (m, 1)]
-  · simp
-  · rintro ⟨i, j⟩ hij hne
-    rw [mem_mulAntidiagonal] at hij
-    have hj : j ≠ 1 := by rintro rfl; exact hne (by simp_all)
-    simp [hj, hmul_zero]
-  · intro h
-    exact absurd (by simp) h
 
 end finiteMulConvolution
 
-/-- A coefficient map that is additive and multiplicative commutes with the convolution. The map
-is a bundled additive monoid homomorphism `φ : R →+ R'` with an explicit multiplicativity
-hypothesis, so neither coefficient type needs a unit or distributivity. -/
-@[to_additive (dont_translate := R R')
-  /-- A coefficient map that is additive and multiplicative commutes with the additive-index
-  convolution. The map is a bundled additive monoid homomorphism `φ : R →+ R'` with an explicit
-  multiplicativity hypothesis, so neither coefficient type needs a unit or distributivity. -/]
-theorem map_finiteMulConvolution {R' : Type*} [Mul M] [HasMulAntidiagonal M] [AddCommMonoid R]
-    [Mul R] [AddCommMonoid R'] [Mul R'] (φ : R →+ R') (hφ : ∀ x y, φ (x * y) = φ x * φ y)
-    (a b : M → R) :
-    finiteMulConvolution (φ ∘ a) (φ ∘ b) = φ ∘ finiteMulConvolution a b :=
-  funext fun m => by simp only [finiteMulConvolution.apply, Function.comp_apply, map_sum, hφ]
+
 
 end RadiiPolynomial

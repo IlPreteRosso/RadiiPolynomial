@@ -41,11 +41,6 @@ private theorem coe_physical_eval (p : CompPoly L) (a : Fin L → l1Chebyshev ν
   map_evalBanach (l1Chebyshev.symmetricSubalgebra ν).val p
     (fun i => l1Chebyshev.symmetricRetract ν (a i))
 
-/-- Polynomial outputs lie in the physical, flip-fixed algebra. -/
-theorem eval_isSymmetric (p : CompPoly L) (a : Fin L → l1Chebyshev ν) :
-    (eval p a).IsSymmetric := by
-  rw [← coe_physical_eval]
-  exact (p.evalBanach (fun i => l1Chebyshev.symmetricRetract ν (a i))).property
 
 /-- Pointwise evaluation commutes with the stored-coefficient nonlinearity. -/
 theorem eval_eval (p : CompPoly L) (a : Fin L → l1Chebyshev ν)
@@ -90,14 +85,7 @@ theorem hasFDerivAt_eval (p : CompPoly L) (a : Fin L → l1Chebyshev ν) :
   rw [he]
   exact h
 
-/-- Every polynomial nonlinearity is differentiable on bilateral storage. -/
-theorem differentiable_eval (p : CompPoly L) : Differentiable ℝ (eval (ν := ν) p) :=
-  fun a => (hasFDerivAt_eval p a).differentiableAt
 
-/-- The Fréchet derivative agrees with the polynomial derivative after symmetrization. -/
-theorem fderiv_eval (p : CompPoly L) (a : Fin L → l1Chebyshev ν) :
-    fderiv ℝ (eval p) a = derivative p a :=
-  (hasFDerivAt_eval p a).fderiv
 
 /-- Apply the Fréchet derivative through the formal partial derivatives. -/
 theorem fderiv_eval_apply (p : CompPoly L) (a h : Fin L → l1Chebyshev ν) :

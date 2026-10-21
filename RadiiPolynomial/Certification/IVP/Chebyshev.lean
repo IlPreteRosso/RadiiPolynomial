@@ -13,7 +13,7 @@ the exact-rational certification layer; no reusable module below `Certification`
 
 ## Contents
 
-1. `ChebyshevIVP.actionQ`, `radiusF`, `MY`, `Y₀Q`, `SnormQ` — the computable ℚ quantities of
+1. `radiusF`, `MY`, `Y₀Q`, `SnormQ` — the computable ℚ quantities of
    the residual and of the symmetrized candidate.
 2. Bridges on a bundle `d : StdChebIVPData ν L N`: `d.defect_finBlockNorm_le_of_Q` (exact block
    norm of the family-neutral `defectCols`), `d.Z₀_sound` (any `DefectBy` slot),
@@ -45,17 +45,13 @@ namespace ChebyshevIVP
 The formulas take arbitrary rational data. The readings of `Y₀Q` and `SnormQ` as exact norms
 hold at the stored data of a bundle `d : StdChebIVPData ν L N` (`ν_q = d.ν_q`, `p` the cast of
 `p_q`): for `Y₀Q` inside the proof of `StdChebIVPData.Y₀_le_of_Q`, for `SnormQ` as
-`StdChebIVPData.norm_symmetrize_abar_eq`. -/
+`StdChebIVPData.norm_symmetrize_abar_eq`. `Y₀Q` uses the shared `blockActionQ` with tail
+multiplier `(2n)⁻¹`; its soundness proof invokes `SystemBlockDiagData.action_eq_blockActionQ`
+directly. The family residual, support window and weighted norm sum remain here. -/
 
 section QLayer
 
 variable {L : ℕ}
-
-/-- Exact action of the stored Chebyshev preconditioner (tail `1/(2n)`). -/
-def actionQ (N : ℕ) (A_col : Fin L → Fin L → ℕ → Array ℚ) (c : Fin L → ℕ → ℚ) (l : Fin L)
-    (n : ℕ) : ℚ :=
-  if n ≤ N then ∑ j : Fin L, ∑ k : Fin (N + 1), (A_col l j (k : ℕ)).getD n 0 * c j k
-  else c l n / (2 * n)
 
 /-- Laurent support radius of the nonlinearity on the stored arrays. -/
 def radiusF (f : Fin L → CompPoly L) (arrs : Fin L → Array ℚ) : ℕ :=
@@ -69,7 +65,8 @@ def MY (f : Fin L → CompPoly L) (arrs : Fin L → Array ℚ) (N : ℕ) : ℕ :
 def Y₀Q (N : ℕ) (A_col : Fin L → Fin L → ℕ → Array ℚ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ)
     (f : Fin L → CompPoly L) (p_q : Fin L → ℚ) (l : Fin L) : ℚ :=
   ∑ n : Fin (MY f abar_Q N + 1),
-    |actionQ N A_col (compPolyIvpCoeffsQ f abar_Q p_q) l n| * ν_q ^ (n : ℕ)
+    |blockActionQ (N := N) (fun l j k => A_col l j k.val)
+      (fun _ n => (2 * (n : ℚ))⁻¹) (compPolyIvpCoeffsQ f abar_Q p_q) l n| * ν_q ^ (n : ℕ)
 
 /-- Exact ℚ value of `‖S(ā_i)‖` (bilateral, support `|k| ≤ N`). -/
 def SnormQ (N : ℕ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (i : Fin L) : ℚ :=
@@ -115,15 +112,6 @@ theorem Z₀_sound (d : ChebyshevIVP.StdChebIVPData ν L N) (s : Z₀Slot) (S : 
     (fun _ _ _ _ => rfl) (fun _ _ _ _ => rfl) d.hν (defectBy_sound s S h)
 
 /-! #### Y₀ -/
-
-theorem action_eq_actionQ (d : StdChebIVPData ν L N) (c : SystemCoeff L)
-    (cq : Fin L → ℕ → ℚ) (hc : ∀ l n, c l n = (cq l n : ℝ)) (l : Fin L) (n : ℕ) :
-    d.approxInverse.action c l n = (actionQ N d.A_col cq l n : ℝ) := by
-  rw [d.approxInverse.action_eq_blockActionQ (fun l j k => d.A_col l j (k : ℕ))
-    (fun _ n => 1 / (2 * (n : ℚ))) (fun l j k i => rfl)
-    (fun l n hn => by rw [d.htail_diag_inv l n hn]; push_cast; ring) c cq hc l n]
-  unfold blockActionQ actionQ
-  split_ifs <;> first | rfl | (push_cast; ring)
 
 theorem ivpCoeffsQ_support (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L)
     (p_q : Fin L → ℚ) (l : Fin L) (n : ℕ) (hn : MY f d.abar_Q N < n) :
@@ -174,7 +162,11 @@ theorem Y₀_le_of_Q (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L)
   show ‖FiberTrivialization.equiv (E := ScaledRealZ ν) (↑(n : ℕ))
     (d.approxInverse.action
       (chebyshevIvpCoeffs (banachField f) (fun j => (p_q j : ℝ)) d.abar) l n)‖ = _
-  rw [ScaledRealZ.norm_equiv_apply, action_eq_actionQ d _ _ hF l n, d.hν]
+  rw [ScaledRealZ.norm_equiv_apply,
+    d.approxInverse.action_eq_blockActionQ (fun l j k => d.A_col l j k.val)
+      (fun _ n => (2 * (n : ℚ))⁻¹) (fun l j k i => rfl)
+      (fun l n hn => by rw [d.htail_diag_inv l n hn]; push_cast; simp only [one_div])
+      _ _ hF l n, d.hν]
   simp
 
 end Bridges
@@ -311,21 +303,6 @@ theorem FCseq_single_nat (mn k : ℕ) :
 
 end RowHelpers
 
-section BridgesTCOps
-
-/-- Componentwise block decomposition of a continuous linear map between finite products (the
-component form of Mathlib's `ContinuousLinearMap.sum_comp_single`); used on
-`XCheb ν L = Fin L → l1Chebyshev ν`. -/
-theorem clm_apply_eq_sum {R : Type*} [Semiring R] {ι : Type*} [Fintype ι] [DecidableEq ι]
-    {X Y : Type*} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
-    [TopologicalSpace Y] [AddCommMonoid Y] [Module R Y]
-    (T : (ι → X) →L[R] (ι → Y)) (w : ι → X) (l : ι) :
-    T w l = ∑ j, T (Pi.single j (w j)) l := by
-  rw [← Finset.sum_apply, ← ContinuousLinearMap.sum_comp_single R (fun _ => X) T w]
-  rfl
-
-end BridgesTCOps
-
 namespace StdChebIVPData
 
 section BridgesTC
@@ -440,7 +417,11 @@ theorem TC_norm_le_gen (d : StdChebIVPData ν L N) (w : XCheb ν L) :
   have hνq := ν_q_pos d
   refine (pi_norm_le_iff_of_nonneg (mul_nonneg (by exact_mod_cast TCnormGen_nonneg N d.A_col hνq)
     (norm_nonneg w))).mpr fun l => ?_
-  rw [clm_apply_eq_sum d.TC w l]
+  have hsplit : d.TC w l = ∑ j, d.TC (Pi.single j (w j)) l := by
+    rw [← Finset.sum_apply,
+      ← ContinuousLinearMap.sum_comp_single ℝ (fun _ => l1Chebyshev ν) d.TC w]
+    rfl
+  rw [hsplit]
   refine (norm_sum_le _ _).trans ?_
   have hc0 : ∀ j, (0 : ℝ) ≤ ((TCblockGen N d.A_col d.ν_q l j +
       if l = j then d.ν_q / ((N : ℚ) + 1) else 0 : ℚ) : ℝ) := fun j => by
@@ -893,7 +874,14 @@ theorem Z₁_hfin (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L) (p : Fi
         ‖(((d.composedApproxCLM - fderiv ℝ (d.G (banachField f) p) d.abar) h) l)
           (↑(k : ℕ) : ℤ)‖ ≤ (ε : ℝ) * ‖h‖ := by
   have hνq := ν_q_pos d
-  rw [clm_apply_eq_sum _ h l]
+  have hsplit : ((d.composedApproxCLM - fderiv ℝ (d.G (banachField f) p) d.abar) h) l =
+      ∑ j, (d.composedApproxCLM - fderiv ℝ (d.G (banachField f) p) d.abar)
+        (Pi.single j (h j)) l := by
+    rw [← Finset.sum_apply,
+      ← ContinuousLinearMap.sum_comp_single ℝ (fun _ => l1Chebyshev ν)
+        (d.composedApproxCLM - fderiv ℝ (d.G (banachField f) p) d.abar) h]
+    rfl
+  rw [hsplit]
   have hj : ∀ j, (∑ k : Fin (N + 1),
       ‖((d.composedApproxCLM - fderiv ℝ (d.G (banachField f) p) d.abar)
         (Pi.single j (h j)) l) (↑(k : ℕ) : ℤ)‖) ≤
@@ -940,32 +928,6 @@ theorem Z₁_le_of_Q (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L) (p :
   rw [d.hν]
   exact_mod_cast hZ₁
 
-/-- `Z₁` from ℚ checks with the semi-major tail factor `(ν⁻¹ + ν)/(2(N+1))` of
-`chebyshev_Z₁_le_semiMajor` in place of `ν/(N+1)`: the sharper sibling of `Z₁_le_of_Q`, with
-the same override slots `R` (≥ ‖S(ā)‖), `K`, `ε`. -/
-theorem Z₁_le_semiMajor_of_Q (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L)
-    (p : Fin L → ℝ) {R : Fin L → ℚ} (hR : ∀ i, SnormQ N d.abar_Q d.ν_q i ≤ R i) {K ε Z₁ : ℚ}
-    (hK : ∀ l, CompPoly.Chebyshev.derivativeBound (f l) R ≤ K)
-    (hε : epsGen N d.A_col d.DF_col d.abar_Q d.ν_q f ≤ ε)
-    (hZ₁ : ε + (d.ν_q⁻¹ + d.ν_q) / (2 * ((N : ℚ) + 1)) * K ≤ Z₁) :
-    ‖d.composedApproxCLM - fderiv ℝ (d.G (banachField f) p) d.abar‖ ≤ (Z₁ : ℝ) := by
-  have hνq := ν_q_pos d
-  have hR0 : ∀ i, 0 ≤ R i := fun i => (show 0 ≤ SnormQ N d.abar_Q d.ν_q i from
-    add_nonneg (Finset.sum_nonneg fun n _ => mul_nonneg (abs_nonneg _) (pow_nonneg hνq.le _))
-      (Finset.sum_nonneg fun n _ => mul_nonneg (abs_nonneg _) (pow_nonneg hνq.le _))).trans (hR i)
-  have hK0 : (0 : ℝ) ≤ (K : ℝ) := by
-    exact_mod_cast (CompPoly.Chebyshev.derivativeBound_nonneg (f 0) R hR0).trans (hK 0)
-  have hε0 : (0 : ℝ) ≤ (ε : ℝ) := by
-    have : 0 ≤ epsGen N d.A_col d.DF_col d.abar_Q d.ν_q f :=
-      (Finset.sum_nonneg fun j _ => epsBlockGen_nonneg N d.A_col d.DF_col d.abar_Q hνq f 0 j).trans
-        (Finset.le_sup' (fun l : Fin L =>
-          ∑ j : Fin L, epsBlockGen N d.A_col d.DF_col d.abar_Q d.ν_q f l j) (Finset.mem_univ 0))
-    exact_mod_cast this.trans hε
-  refine chebyshev_Z₁_le_semiMajor N d.composedApproxCLM (d.G (banachField f) p) d.abar
-    (fun h l => compPolyDerivative f d.abar h l) (Z₁_hneg d f p) hε0 (Z₁_hfin d f p hε)
-    (Z₁_htail d f p) hK0 (Z₁_hDφ d f hR hK) ?_
-  rw [d.hν]
-  exact_mod_cast hZ₁
 
 end BridgesZ1
 
@@ -1089,13 +1051,13 @@ section KernelQ
 variable {L : ℕ}
 
 /-- Integer maximum through the core `Int.decLe` instance (kernel-reducible). -/
-def zmax (a b : ℤ) : ℤ := @ite _ (a ≤ b) (Int.decLe a b) b a
+private def zmax (a b : ℤ) : ℤ := @ite _ (a ≤ b) (Int.decLe a b) b a
 
 /-- Integer minimum through the core `Int.decLe` instance (kernel-reducible). -/
-def zmin (a b : ℤ) : ℤ := @ite _ (a ≤ b) (Int.decLe a b) a b
+private def zmin (a b : ℤ) : ℤ := @ite _ (a ≤ b) (Int.decLe a b) a b
 
 /-- Sum of `g` over the integer interval `[lo, hi]`, as a list fold. -/
-def zsum (lo hi : ℤ) (g : ℤ → ℚ) : ℚ :=
+private def zsum (lo hi : ℤ) (g : ℤ → ℚ) : ℚ :=
   ((List.range (hi + 1 - lo).toNat).map fun i : ℕ => g (lo + i)).sum
 
 theorem list_range_map_sum (n : ℕ) (F : ℕ → ℚ) :
@@ -1104,7 +1066,7 @@ theorem list_range_map_sum (n : ℕ) (F : ℕ → ℚ) :
   | zero => simp
   | succ n ih => rw [List.sum_range_succ, Finset.sum_range_succ, ih]
 
-theorem zsum_eq (lo hi : ℤ) (g : ℤ → ℚ) : zsum lo hi g = ∑ k ∈ Finset.Icc lo hi, g k := by
+private theorem zsum_eq (lo hi : ℤ) (g : ℤ → ℚ) : zsum lo hi g = ∑ k ∈ Finset.Icc lo hi, g k := by
   rw [Int.Icc_eq_finset_map, Finset.sum_map, zsum, list_range_map_sum]
   rfl
 
@@ -1303,14 +1265,6 @@ theorem TCnormF_eq [NeZero L] (N : ℕ) (A_col : Fin L → Fin L → ℕ → Arr
   unfold TCnormF TCblockF TCcolNormF TCnormGen TCblockGen TCcolNormQ
   simp only [TCcolQ_eq_F]
 
-/-- Splitting a bounded `∀` into two ranges (per-range `decide +kernel` lemmas). -/
-theorem ball_lt_add {P : ℕ → Prop} {a b : ℕ} (h₁ : ∀ m < a, P m) (h₂ : ∀ t < b, P (a + t)) :
-    ∀ m < a + b, P m := fun m hm => by
-  rcases lt_or_ge m a with h | h
-  · exact h₁ m h
-  · obtain ⟨t, rfl⟩ := Nat.exists_eq_add_of_le h
-    exact h₂ t (by omega)
-
 end KernelQ
 
 section KernelFace
@@ -1372,17 +1326,6 @@ theorem Z₁_le_of_checksK (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L
   obtain ⟨-, -, hR, hK, hε, hZ₁, -⟩ := checks_of_checksK C E (ν_q_pos d) s S h
   exact Z₁_le_of_Q d f p hR hK hε hZ₁
 
-/-- The semi-major `Z₁` operator bound from the kernel-scale checks: the `R`, `K` and `ε`
-obligations of `ChecksK` fed to `Z₁_le_semiMajor_of_Q`, with the semi-major total `hZ₁` in place
-of the `ChecksK` conjunct. The derivative bound does not involve the boundary value, so no
-`p = p_q` cast is assumed. -/
-theorem Z₁_le_semiMajor_of_checksK (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L)
-    (p : Fin L → ℝ) (p_q : Fin L → ℚ) (C : ChebCertQ L) (E : Fin L → Fin L → ℚ)
-    (s : Z₀Slot) (S : ℕ) (h : C.ChecksK s S E N d.A_col d.DF_col d.abar_Q d.ν_q f p_q)
-    {Z₁ : ℚ} (hZ₁ : C.ε + (d.ν_q⁻¹ + d.ν_q) / (2 * ((N : ℚ) + 1)) * C.K ≤ Z₁) :
-    ‖d.composedApproxCLM - fderiv ℝ (d.G (banachField f) p) d.abar‖ ≤ (Z₁ : ℝ) := by
-  obtain ⟨-, -, hR, hK, hε, -⟩ := checks_of_checksK C E (ν_q_pos d) s S h
-  exact Z₁_le_semiMajor_of_Q d f p hR hK hε hZ₁
 
 /-- **Family face, kernel scale.** Existence and uniqueness from the kernel-scale obligations. -/
 theorem certified_of_checksK (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L)

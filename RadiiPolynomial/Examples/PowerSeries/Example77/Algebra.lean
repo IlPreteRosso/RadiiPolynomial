@@ -1,5 +1,5 @@
 import RadiiPolynomial.Operators.BlockDiagonal.Scalar
-import RadiiPolynomial.Tactic.AutoPolyFDeriv
+import Mathlib.Analysis.Calculus.FDeriv.Pow
 import RadiiPolynomial.Applications.PowerSeries.AffineZ2
 
 /-!
@@ -10,7 +10,7 @@ Uses the `Operators/BlockDiagonal/Scalar` API (`ScalarBlockDiagData`).
 
 ## Contents
 
-1. **Fréchet derivative**: `HasFDerivAt` via `auto_hasFDerivAt`, with `fderiv`/`Differentiable`
+1. **Fréchet derivative**: `HasFDerivAt` via Mathlib's `hasFDerivAt_pow`, with `fderiv`/`Differentiable`
    derived from it. Affine fderiv form (`fderiv_F_sub_const_affine`) for Z₂.
 2. **Problem data**: `paramSeq`, `ApproxSolution`, `F`, `F_toSeq`
 3. **Operator construction**: `approxDeriv`, `approxInverse` as `ScalarBlockDiagData`
@@ -26,7 +26,7 @@ Uses the `Operators/BlockDiagonal/Scalar` API (`ScalarBlockDiagData`).
 open scoped BigOperators Topology
 open Metric Set Filter ContinuousLinearMap RadiiPolynomial
 open RadiiPolynomial.l1Weighted (leftMul leftMul_apply norm_leftMul_le
-  leftMul_add leftMul_sub leftMul_smul smul_id_eq_leftMul)
+  leftMul_nsmul smul_id_eq_leftMul)
 
 noncomputable section
 
@@ -50,14 +50,17 @@ lemma sq_eq_fun : (sq : l1Weighted ν → l1Weighted ν) = fun x => x ^ 2 := fun
 
 def F_sub_const (c : l1Weighted ν) (a : l1Weighted ν) : l1Weighted ν := sq a - c
 
-/-! ### Fréchet derivative (via `auto_poly_fderiv`)
+/-! ### Fréchet derivative via Mathlib's power rule
 
-Pattern: `rw` unfolds the named def, then `auto_poly_fderiv` computes + normalizes
-(Banach algebra bridge lemmas are built into the main simp phase). -/
+Rewrite the square as a power and apply `hasFDerivAt_pow`; the retained multiplication
+identities express its derivative using `leftMul`. -/
 
 theorem hasFDerivAt_sq (a : l1Weighted ν) :
     HasFDerivAt sq ((2 : ℝ) • leftMul a) a := by
-  rw [sq_eq_fun]; auto_hasFDerivAt
+  rw [sq_eq_fun]
+  simpa! only [show (2 : ℕ) - 1 = 1 from rfl, pow_one,
+    smul_id_eq_leftMul, leftMul_nsmul, Nat.cast_ofNat] using
+    (hasFDerivAt_pow (𝕜 := ℝ) 2 (x := a))
 
 theorem hasFDerivAt_F_sub_const (c a : l1Weighted ν) :
     HasFDerivAt (F_sub_const c) ((2 : ℝ) • leftMul a) a :=
@@ -95,13 +98,6 @@ def c (lam0 : ℝ) : l1Weighted ν := l1Weighted.mk (paramSeq lam0) (paramSeq_me
 /-- The zero-finding map F(a) = a*a - c(lam0). -/
 def F (lam0 : ℝ) (a : l1Weighted ν) : l1Weighted ν := F_sub_const (c lam0) a
 
-/-- Sequence-level formula for F(a): cauchyProduct(a,a) - paramSeq(λ₀).
-Bridges the abstract `F` to computable form for certificates. -/
-lemma F_toSeq (lam0 : ℝ) (a : l1Weighted ν) (n : ℕ) :
-    l1Weighted.toSeq (F lam0 a) n =
-    cauchyProduct (l1Weighted.toSeq a) (l1Weighted.toSeq a) n - paramSeq lam0 n := by
-  simp only [F, F_sub_const, sq, l1Weighted.sub_toSeq, l1Weighted.toSeq_mul, c,
-    l1Weighted.mk_apply]
 
 theorem differentiable_F (lam0 : ℝ) : Differentiable ℝ (F lam0 : l1Weighted ν → l1Weighted ν) :=
   differentiable_F_sub_const _
@@ -166,24 +162,7 @@ def approxInverse {N : ℕ} (sol : ApproxSolution N)
     |1 / (2 * sol.aBar_fin 0)|
     (fun _ _ => le_refl _)
 
-/-- Tail diagonals of A and A† multiply to 1. -/
-lemma tailCancel {N : ℕ} (sol : ApproxSolution N)
-    (A_mat : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
-    ∀ n, N < n → (approxInverse sol A_mat).tailDiag0 n *
-      (approxDeriv sol).tailDiag0 n = 1 := by
-  intro n _
-  simp only [approxInverse, approxDeriv, ScalarBlockDiagData.ofParts,
-    ScalarBlockDiagData.tailDiag0]
-  field_simp [sol.aBar_zero_ne]
 
-/-- Tail diagonal of A is nonzero (for injectivity). -/
-lemma approxInverse_tailDiag_ne_zero {N : ℕ} (sol : ApproxSolution N)
-    (A_mat : Matrix (Fin (N + 1)) (Fin (N + 1)) ℝ) :
-    ∀ n, N < n → (approxInverse sol A_mat).tailDiag0 n ≠ 0 := by
-  intro n _
-  simp only [approxInverse, ScalarBlockDiagData.ofParts, ScalarBlockDiagData.tailDiag0,
-    ne_eq, one_div, inv_eq_zero, mul_eq_zero, OfNat.ofNat_ne_zero, sol.aBar_zero_ne,
-    or_self, not_false_eq_true]
 
 /-! ## 4. Structural Bound Reductions -/
 

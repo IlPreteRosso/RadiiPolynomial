@@ -60,17 +60,13 @@ def J : (Fin N → ℝ) →ₗ[ℝ] FνN ν N where
 @[simp] theorem J_succ (x : Fin N → ℝ) (k : Fin N) :
     (J (ν := ν) x : FνN ν N) k.succ = x k := rfl
 
+
 /-- `‖J x‖ = 2 Σ_k |x_k| ν^{k+1}`. -/
 theorem norm_J (x : Fin N → ℝ) :
     ‖(J (ν := ν) x : FνN ν N)‖ = 2 * ∑ k : Fin N, |x k| * (ν : ℝ) ^ ((k : ℕ) + 1) := by
   rw [FνN.norm_eq, J_zero, abs_zero, zero_add]
   simp only [J_succ]
 
-/-- The diblock inclusion is the kept-mode embedding along `Fin.succEmb N`. -/
-theorem J_eq_Jσ (x : Fin N → ℝ) : (J (ν := ν) x : FνN ν N) = Jσ (Fin.succEmb N) x := by
-  refine FνN.ext fun k => Fin.cases ?_ (fun i => ?_) k
-  · exact (Function.extend_apply' x (0 : Fin (N + 1) → ℝ) 0 fun ⟨a, ha⟩ => Fin.succ_ne_zero a ha).symm
-  · exact (Jσ_apply_emb (Fin.succEmb N) x i).symm
 
 end Diblock
 
@@ -87,18 +83,7 @@ theorem derivativeCentredBound_cube {K : Type*} [Field K] (β δ : Fin 1 → K) 
   simp [CompPoly.derivativeCentredBound, cubeQ]
   ring
 
-/-- The exact rational instance of `derivativeCentredBound_cube`, kernel-checked. -/
-theorem cube_centred_Q :
-    CompPoly.derivativeCentredBound cubeQ (fun _ => (3 / 2 : ℚ)) (fun _ => 1 / 10) =
-      3 * (2 * (3 / 2) + 1 / 10) * (1 / 10) := by
-  decide +kernel
 
-/-- At `β = 3/2`, `δ = 1/10` the centred majorant of `x³` (`0.93`) is strictly below the uncentred
-syntactic Lipschitz route `derivativeLipschitzBound x³ (β + δ) · δ` (`0.96`). -/
-theorem cube_centred_lt_lipschitz_Q :
-    CompPoly.derivativeCentredBound cubeQ (fun _ => (3 / 2 : ℚ)) (fun _ => 1 / 10) <
-      CompPoly.derivativeLipschitzBound cubeQ (fun _ => (3 / 2 + 1 / 10 : ℚ)) * (1 / 10) := by
-  decide +kernel
 
 end Constants
 
