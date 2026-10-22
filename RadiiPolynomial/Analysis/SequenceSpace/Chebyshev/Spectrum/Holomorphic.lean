@@ -24,8 +24,8 @@ open lpOneAlg CrossGeometry Polynomial
 
 variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 
-/-- The complex Chebyshev realization in the production normalization.
-Like production real evaluation, it reads the nonnegative modes only. -/
+/-- The complex Chebyshev realization in the normalization `a₀ + 2 Σ aₙ Tₙ`.
+Like the real evaluation `l1Chebyshev.eval`, it reads the nonnegative modes only. -/
 def complexEval (a : l1Chebyshev ν) (w : ℂ) : ℂ :=
   (l1Chebyshev.toSeq a 0 : ℂ) + 2 * ∑' n : ℕ,
     (l1Chebyshev.toSeq a ((n + 1 : ℕ) : ℤ) : ℂ) * (Chebyshev.T ℂ (n + 1)).eval w
@@ -81,8 +81,8 @@ theorem analyticOnNhd_complexEval (a : l1Chebyshev ν) :
   · intro n w hw
     exact complexEval_term_bound ν a n ⟨w, hw.le⟩
 
-/-- The power-series theorem is for the production real function itself,
-through scalar restriction of the complex analytic extension. -/
+/-- Real analyticity of the real evaluation `l1Chebyshev.eval a` at every real point of the
+open ellipse, through scalar restriction of the complex analytic extension. -/
 theorem analyticAt_eval_of_mem_openEllipse (a : l1Chebyshev ν) (t : ℝ)
     (ht : (t : ℂ) ∈ openEllipse ν) : AnalyticAt ℝ (l1Chebyshev.eval a) t := by
   have hcomplex := analyticOnNhd_complexEval ν a (t : ℂ) ht
@@ -110,8 +110,8 @@ theorem real_mem_openEllipse (hν : 1 < (ν : ℝ)) (t : ℝ) (ht : |t| ≤ 1) :
     abs_of_nonneg (by linarith : 0 ≤ t + 1)]
   linarith
 
-/-- Actual production Chebyshev evaluation is real analytic on a neighborhood
-of every point of `[-1,1]`, not merely on its relative interior. -/
+/-- For `1 < ν`, the Chebyshev evaluation `l1Chebyshev.eval a` is real analytic on a
+neighborhood of every point of `[-1,1]`, not merely on its relative interior. -/
 theorem analyticOnNhd_eval_Icc (hν : 1 < (ν : ℝ)) (a : l1Chebyshev ν) :
     AnalyticOnNhd ℝ (l1Chebyshev.eval a) (Set.Icc (-1) 1) := by
   intro t ht

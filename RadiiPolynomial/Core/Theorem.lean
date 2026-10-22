@@ -323,15 +323,6 @@ theorem norm_id_sub_comp_le_Z_bound
 
 end OperatorBounds
 
-
-
-section HelperLemmas
-
-
-end HelperLemmas
-
-
-
 section LocalTheorems
 /-!
 ## Local layers: derivative data on the closed ball only
@@ -474,17 +465,6 @@ theorem general_radii_polynomial_theorem_local
 
 end LocalTheorems
 
-
-
-section FixedPointTheorem
-
-variable [CompleteSpace E]
-
-
-end FixedPointTheorem
-
-
-
 section GeneralRadiiPolynomialTheorem
 /-!
 ## General Radii Polynomial Theorem (Theorem 7.6.2)
@@ -552,21 +532,6 @@ theorem general_radii_polynomial_theorem
 
 end GeneralRadiiPolynomialTheorem
 
-
-
-section SimpleRadiiPolynomialTheorem
-
-variable [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
-
-
-end SimpleRadiiPolynomialTheorem
-
-
-
-
-
-
-
 section FiniteDimensionalFace
 /-!
 ## Finite-dimensional face
@@ -580,14 +545,6 @@ Faces of the local theorems for `f : E → E` on a finite-dimensional real norme
   (`Y₀, Z₀, Z₁, Z₂` with `A†`) and `enclosure_of_radii` (`A† = Df x̄`);
 * `general_rp_findim_local`, the local general theorem without an injectivity hypothesis on `A`.
 -/
-
-section Adapters
-
-variable [NormedAddCommGroup F] [NormedSpace ℝ F]
-
-
-
-end Adapters
 
 /-- The output of the finite-dimensional face: `A` is invertible, `Df` is invertible on the whole
 closed ball, and `f` has exactly one zero in `B̄_{r₀}(x̄)`, which lies in the open ball. -/

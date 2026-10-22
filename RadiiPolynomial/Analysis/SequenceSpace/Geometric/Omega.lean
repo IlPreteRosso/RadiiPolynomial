@@ -138,23 +138,6 @@ lemma l1Omega.deriv_shift_mem (a : l1Weighted ν) :
 
 end Bridges
 
-section Shift
-
-variable {ν : PosReal}
-
-
-
-
-
-
-
-
-
-
-
-
-end Shift
-
 section ShiftDivN
 
 variable {ν : PosReal}
@@ -316,23 +299,6 @@ theorem tail_shiftDivN_sum_le {N : ℕ} {ι : Type*} (s : Finset ι) (x : ι →
 
 
 end ShiftDivN
-
-section LambdaN
-
-variable {ν : PosReal}
-
-
-
-
-
-
-
-
-
-
-
-
-end LambdaN
 
 section DerivShift
 

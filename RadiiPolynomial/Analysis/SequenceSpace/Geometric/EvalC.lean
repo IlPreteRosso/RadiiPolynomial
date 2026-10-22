@@ -59,13 +59,6 @@ theorem evalC_ofReal (x : ℝ) (hx : |x| ≤ ν) (a : l1Weighted ν) :
 
 end EvalC
 
-section Classification
-
-variable {ν : PosReal}
-
-
-end Classification
-
 end l1Weighted
 
 end RadiiPolynomial

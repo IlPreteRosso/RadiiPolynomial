@@ -365,14 +365,6 @@ theorem ringConvolution_assoc (f g h : M → R)
 
 end Associativity
 
-/-! ### Finite fibers -/
-
-section FiniteFibers
-
-
-
-end FiniteFibers
-
 end RadiiPolynomial.DiscreteConvolution
 
 /-! ### The Cauchy product as an additive-index ring convolution -/

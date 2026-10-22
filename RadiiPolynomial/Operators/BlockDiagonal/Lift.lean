@@ -83,8 +83,8 @@ private lemma composedApprox_bound (D : SystemBlockDiagData L N) (h : X) :
 
 /-- The composed approximate derivative as a CLM on X: `h ↦ h - liftDefect D h`.
 
-Built directly via `LinearMap.mkContinuous` (not `id - defectCLM`) to avoid
-elaboration timeouts on deeply-nested `lpOneAlg` types. -/
+Built directly via `LinearMap.mkContinuous` from the unbundled `liftDefect`, without a bundled
+defect CLM, to avoid elaboration timeouts on deeply-nested `lpOneAlg` types. -/
 def composedApproxCLM (D : SystemBlockDiagData L N) : X →L[ℝ] X :=
   LinearMap.mkContinuous (composedApprox_lm (ν := ν) D)
     (1 + finiteBlockMatrixNorm ν D.finBlock) (composedApprox_bound (ν := ν) D)

@@ -234,14 +234,6 @@ theorem toRealSeq_finset_sum {ι : Type*} (s : Finset ι) (a : ι → lpOneAlg M
 
 end Coordinates
 
-section WeightOneLe
-
-variable {𝕜 : Type*} [NormedField 𝕜] [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]
-
-
-
-end WeightOneLe
-
 end lpOneAlg
 
 /-! ### The sign split of the norm over `ℤ` (any fibers)

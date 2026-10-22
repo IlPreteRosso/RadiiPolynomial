@@ -58,8 +58,8 @@ section HeadReal
 variable {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal}
 variable (F : Finset ℤ)
 
-/-- **The finite-head realization** `H_F : Y 𝕜 ν → X₂ 𝕜 ν`: the face (b) instance with the
-complement head `(↑F)ᶜ` and the constant symbol `1` (the tail symbol is the indicator of `F`). -/
+/-- **The finite-head realization** `H_F : Y 𝕜 ν → X₂ 𝕜 ν`: `tailInf` with the complement
+head `(↑F)ᶜ` and the constant symbol `1` (the tail symbol is the indicator of `F`). -/
 def headReal : Y 𝕜 ν →L[𝕜] X₂ 𝕜 ν :=
   tailInf ((F : Set ℤ)ᶜ) (fun _ => (1 : 𝕜)) (summable_sq_tailSymbol_compl_one F)
 

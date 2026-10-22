@@ -108,21 +108,6 @@ def nonnegRestrictCLM (ν : PosReal) : l1Chebyshev ν →L[ℝ] l1Bordered ν :=
       change ‖nonnegRestrict a‖ ≤ 2 * ‖a‖
       exact nonnegRestrict_norm_le a)
 
-
-
-
-
-
-
-
-section PhysicalBordered
-
-variable [Fact (1 ≤ (ν : ℝ))]
-
-
-
-end PhysicalBordered
-
 end l1Chebyshev
 
 end RadiiPolynomial

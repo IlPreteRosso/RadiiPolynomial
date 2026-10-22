@@ -36,15 +36,6 @@ noncomputable section
 
 namespace RadiiPolynomial
 
-section GeneralL
-
-variable {ν : PosReal} {L N : ℕ}
-
-
-
-
-end GeneralL
-
 /-! ## 1. Support Bound and Norm Reduction (L = 1 Specialization) -/
 
 section ScalarSpecialization

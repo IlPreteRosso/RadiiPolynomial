@@ -361,17 +361,6 @@ abbrev ChecksZ₂ (q : StdIVPDataQ L N) (f_cpoly : Fin L → CompPoly L) (r₀ Z
 def ofStd {ν : PosReal} (d : IVP.StdIVPData ν L N) : StdIVPDataQ L N :=
   ⟨d.A_col, d.DF_col, d.abar_Q, d.ν_q, d.habar_size⟩
 
-
-section Bridges
-
-variable (q : StdIVPDataQ L N) {ν : PosReal} (hν : (ν : ℝ) = ((q.ν_q : ℚ) : ℝ))
-
-
-
-
-
-end Bridges
-
 /-- Kernel `Z₁` clause: `Σ_m kerColMaxQ (∂_m f_l) ≤ Z₁` for every component (decidable). -/
 abbrev ChecksZ₁ker (q : StdIVPDataQ L N) (f_cpoly : Fin L → CompPoly L) (Z₁ : ℚ) : Prop :=
   ∀ l, ∑ m : Fin L, kerColMaxQ N q.abar_Q q.ν_q ((f_cpoly l).pderiv m) ≤ Z₁
@@ -435,17 +424,6 @@ theorem Z₂_sound (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) {r₀
   StdIVPData.Z₂_le_of_Q (q.toStdIVPData ν hν) f_cpoly x₀ hr₀ h
 
 end Sound
-
-section Faces
-
-variable (q : StdIVPDataQ L N) {ν : PosReal} (hν : (ν : ℝ) = ((q.ν_q : ℚ) : ℝ))
-  (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ)
-
-
-
-
-
-end Faces
 
 end StdIVPDataQ
 

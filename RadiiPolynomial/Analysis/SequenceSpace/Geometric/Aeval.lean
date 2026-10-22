@@ -172,16 +172,6 @@ theorem eq_geomAeval_gen (φ : lpOneAlg ℕ (geomFiber 𝕜 ν) →A[𝕜] B) :
 
 end Complete
 
-/-! ### The gate: the generator value lies in the closed disc of radius `ν` -/
-
-section Gate
-
-variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] (ν : PosReal)
-variable {B : Type*} [NormedRing B] [NormOneClass B] [NormMulClass B] [NormedAlgebra 𝕜 B]
-
-
-end Gate
-
 end lpOneAlg
 
 /-! ### The real carrier instance `l1Weighted ν` -/
@@ -229,15 +219,6 @@ variable [CompleteSpace B]
 
 
 end Ext
-
-section Gate
-
-variable (ν : PosReal)
-variable {B : Type*} [NormedRing B] [NormOneClass B] [NormMulClass B] [NormedAlgebra ℝ B]
-
-
-end Gate
-
 
 end l1Weighted
 

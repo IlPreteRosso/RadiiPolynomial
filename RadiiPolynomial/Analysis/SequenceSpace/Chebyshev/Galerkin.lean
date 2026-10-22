@@ -330,29 +330,6 @@ protected theorem toSeq_mul_mul_ιN (x y z : FνN ν N) (k : ℤ) :
 
 end Conv
 
-/-! ### Kept-mode embedding -/
-
-section KeptModes
-
-variable {ν : PosReal} {N M : ℕ}
-
-
-
-
-
-
-
-end KeptModes
-
-/-! ### The identity equivalence `FνN ν N ≃L (Fin (N+1) → ℝ)` (two norms on one space) -/
-
-section Amb
-
-
-
-
-end Amb
-
 end Galerkin
 
 end RadiiPolynomial

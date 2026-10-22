@@ -319,35 +319,6 @@ variable [CompleteSpace 𝕜]
 
 end Complete
 
-/-! Operator norms require a nontrivially normed scalar field in the current Mathlib API. -/
-
-section KernelOpNorm
-
-variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] {I J : Type*} [DecidableEq J]
-  {E : J → Type*} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace 𝕜 (E j)]
-  [FiberTrivialization 𝕜 J E]
-  {F : I → Type*} [∀ i, NormedAddCommGroup (F i)] [∀ i, NormedSpace 𝕜 (F i)]
-  [FiberTrivialization 𝕜 I F] {p : ℝ≥0∞} [Fact (1 ≤ p)] {K : I → J → 𝕜} {C C' : ℝ}
-
-
-section Complete
-
-variable [CompleteSpace 𝕜]
-
-
-end Complete
-
-end KernelOpNorm
-
-/-! Comparison of the two generic realizations over complete normed-field scalars. -/
-
-section KernelComparison
-
-variable [CompleteSpace 𝕜]
-
-
-end KernelComparison
-
 section RCLikeFaces
 
 variable {𝕜 : Type*} [RCLike 𝕜]
@@ -360,17 +331,6 @@ variable {𝕜 : Type*} [RCLike 𝕜]
 end RCLikeFaces
 
 end KernelFace
-
-/-! ### Finite row and column faces (the halves of `SchurBound.ofFinsets`) -/
-
-section Finsets
-
-variable {𝕜 : Type*} [NormedField 𝕜] {I J : Type*} {v : I → ℝ} {w : J → ℝ} {K : I → J → 𝕜}
-  {R C : ℝ}
-
-
-
-end Finsets
 
 /-! ### `p = 1`: the exact kernel test -/
 
@@ -413,20 +373,5 @@ theorem kernelLiftBound_one_iff :
     exact (div_le_iff₀ (FiberTrivialization.weight_pos j)).1 hj
 
 end KernelEndpoints
-
-section InftyBoundary
-
-variable {𝕜 : Type*} [RCLike 𝕜] {M : Type*} {E : M → Type*}
-  [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]
-
-
-
-
-variable [Infinite M]
-
-
-
-end InftyBoundary
-
 
 end RadiiPolynomial.WeightedLp

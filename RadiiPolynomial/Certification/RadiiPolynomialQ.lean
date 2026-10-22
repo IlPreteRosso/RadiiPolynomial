@@ -13,10 +13,6 @@ casts to `ℝ`:
 
 namespace RadiiPolynomial
 
-
-
-
-
 /-- The general radii polynomial with a constant `Z₂` at rational data is the cast of a rational
 value. -/
 theorem generalRadiiPolynomial_ratCast (Y₀ Z₀ Z₁ Z₂ r : ℚ) :

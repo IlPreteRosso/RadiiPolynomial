@@ -30,31 +30,7 @@ namespace RadiiPolynomial
 
 open _root_.DiscreteConvolution RadiiPolynomial.DiscreteConvolution
 
-section PowerGrowthGate
-
-
-end PowerGrowthGate
-
 namespace lpOneAlg
-
-section AtomInclusion
-
-variable {𝕜 : Type*} [NormedField 𝕜]
-variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
-
-
-
-end AtomInclusion
-
-section AtomNorm
-
-variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
-variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
-
-
-end AtomNorm
 
 section Ext
 
@@ -290,17 +266,6 @@ def mulLeftCLM (f : lpOneAlg M E) : lpOneAlg M E →L[𝕜] lpOneAlg M E :=
     mulLeftCLM (𝕜 := 𝕜) f g = f * g := rfl
 
 end MulCLM
-
-section MulCLMNorm
-
-variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
-variable {M : Type*} [AddMonoid M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
-variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
-variable [lpOneAlgConvCompat 𝕜 M E]
-
-
-
-end MulCLMNorm
 
 /-! ### The lift is multiplicative
 

@@ -26,8 +26,10 @@ into the function-level statement: the IVP `u̇ = f(u)`, `u(-1) = p` has a solut
 - `StdChebIVPData.x_sol_isSolution_of_evalBound` / `x_sol_hasDerivAt` / `solution_eq_canonical_of_evalBound` /
   `solution_existsUnique_of_evalBound`.
 - The declarations ending in `_of_evalBound` consume a proved uniform bound `C` on the
-  existing evaluator. Their radius condition is `C(‖ā‖ + r₀) ≤ R`; the polynomial faces of
-  `Chebyshev/AnalyticPolynomial.lean` select `C = 2` or, at weights `ν ≥ 2`, `C = 1`.
+  existing evaluator. Their radius condition is `C(‖ā‖ + r₀) ≤ R`. In
+  `Chebyshev/AnalyticPolynomial.lean` the canonical-witness face
+  `exists_canonical_solution_of_compPoly_of_evalBound` takes any such `C`; its three consumers
+  select `C = 2` or, at weights `ν ≥ 2`, `C = 1`.
 
 **No analyticity is claimed in this file.** The conclusions are continuity on `[-1, 1]`,
 the one-sided derivative on `[-1, 1)` (`IsSolution.solves`) and the two-sided derivative on

@@ -3,7 +3,7 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Basic
 /-!
 # Classification of the complex characters of the physical Chebyshev algebra
 
-Gelfand layer. Every continuous `ℂ`-valued character of the production carrier
+Gelfand layer. Every continuous `ℂ`-valued character of the physical Chebyshev algebra
 `l1Chebyshev.symmetricSubalgebra ν` is a Laurent evaluation at a point of the closed
 annulus `ν⁻¹ ≤ ‖z‖ ≤ ν` (`character_eq_restriction`), the argument running through the
 Joukowski preimage and an exponential-growth bound on the symmetric power sums

@@ -85,7 +85,8 @@ elab_rules : tactic
       -- Apply bridge with the check mvar
       let proof := mkApp bridgeExpr checkMVar
 
-      -- Close with native_decide (+ converter fallback).
+      -- Close by the route that `leancert.trust` selects (`native_decide` by default), with
+      -- converter fallbacks.
       -- `closeBridgeWithVerificationTyped` reports
       -- outcomes as `Except BridgeFailure VerificationEvent` instead of throwing, so the
       -- failure branch has to be re-raised here to keep this tactic failing loudly.

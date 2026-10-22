@@ -29,8 +29,6 @@ namespace RadiiPolynomial
 
 /-! ## Per-term evaluators -/
 
-
-
 /-- Per-term evaluator for weighted l1 norm: computes `|arr[k]| * ν^k`. -/
 def weightedTermEval (arr : Array ℚ) (ν : ℚ) (k : ℕ)
     (cfg : DyadicConfig) : IntervalDyadic :=
@@ -43,17 +41,6 @@ theorem weightedTermEval_correct (arr : Array ℚ) (ν : ℚ) (k : ℕ)
     (|f k| * ν_r ^ k : ℝ) ∈ weightedTermEval arr ν k cfg := by
   simp only [weightedTermEval, hf, hν]
   exact_mod_cast IntervalDyadic.mem_ofIntervalRat (IntervalRat.mem_singleton _) cfg.precision hprec
-
-
-
-
-
-
-
-
-
-
-
 
 /-! ## System-level action evaluator (general L, for Y₀-type bounds)
 

@@ -5,7 +5,7 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 /-!
 # The physical Chebyshev algebra and its complex characters — basic layer
 
-Root of the Chebyshev spectrum branch. The carrier is the *production* symmetric
+Root of the Chebyshev spectrum branch. The carrier is the symmetric
 subalgebra `l1Chebyshev.symmetricSubalgebra ν` (`Physical ν`); no shadow carrier is
 introduced. `Character ν` is the type of continuous `ℂ`-valued characters of it,
 `restriction` produces one from an annulus point by Laurent evaluation, `mode`
@@ -23,7 +23,7 @@ open lpOneAlg CrossGeometry
 
 variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 
-/-- The physical Chebyshev algebra: the production flip-fixed subalgebra
+/-- The physical Chebyshev algebra: the flip-fixed subalgebra
 `l1Chebyshev.symmetricSubalgebra ν`. -/
 abbrev Physical := l1Chebyshev.symmetricSubalgebra ν
 /-- Continuous complex characters of the physical algebra. -/

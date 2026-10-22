@@ -8,11 +8,14 @@ import Mathlib.Analysis.Normed.Operator.NormedSpace
 /-!
 # Coordinates, completeness and the bounded symbol action on weighted ℓᵖ
 
-The frame reconstruction/completeness faces do not assume an operation on the index. Translation
-and the shift action use an additive commutative group; raw symbols use no such operation. The
-moderate-weight symbol series acts on the ℓᵖ state under a positive symbol weight. When that
-weight is submultiplicative, its symbols form the distinct weighted ℓ¹ algebra, and the
-series/lift comparison specifies its universal algebra action at every exponent. The lift
+The frame reconstruction/completeness faces, translation along a reindexing
+(`memℓp_norm_le_of_le_comp`) and the raw symbols assume no operation on the index. The shift
+`shift`, its coordinate faces and `shift_zero` are stated over an additive group; the
+composition law `shift_add`, the shift norm bounds, and the symbol series, action and lift are
+stated over an additive commutative group. The moderate-weight symbol series acts on the ℓᵖ
+state under a positive symbol weight. When that weight is submultiplicative, its symbols form
+the distinct weighted ℓ¹ algebra, and the series/lift comparison specifies its universal algebra
+action at every exponent. The lift
 `symbolAction` comes with its computation (`symbolAction_single`), algebra (`symbolAction₀_mul`,
 `symbolAction₀_one`), bound (`norm_symbolAction_le`) and identification (`symbolAction₀_eq`)
 statements.
@@ -130,7 +133,7 @@ end Symbols
 
 section Shift
 
-variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} [AddCommGroup M] {E : M → Type*}
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} [AddGroup M] {E : M → Type*}
   [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]
   {p : ℝ≥0∞} [Fact (1 ≤ p)] {v : M → ℝ} {C : ℝ}
 
@@ -177,13 +180,22 @@ theorem shift_zero : shift (p := p) hC 0 = 1 :=
   ContinuousLinearMap.ext fun y => ext_coeff <| funext fun n => by
     rw [coeff_shift, sub_zero, one_apply_eq_self]
 
+end Shift
+
+section ShiftAdd
+
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} [AddCommGroup M] {E : M → Type*}
+  [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]
+  {p : ℝ≥0∞} [Fact (1 ≤ p)] {v : M → ℝ} {C : ℝ}
+
+variable (hC : Moderate (FiberTrivialization.weight (E := E)) v C)
+
 /-- `S_{j + l} = S_j S_l` (composition). -/
 theorem shift_add (j l : M) : shift (p := p) hC (j + l) = shift hC j * shift hC l :=
   ContinuousLinearMap.ext fun y => ext_coeff <| funext fun n => by
     rw [coeff_shift, mul_apply_eq_comp, coeff_shift, coeff_shift, sub_add_eq_sub_sub]
 
-
-end Shift
+end ShiftAdd
 
 section ShiftNorm
 

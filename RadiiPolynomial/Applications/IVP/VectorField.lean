@@ -40,11 +40,7 @@ theorem vectorField_lipschitzOnWith (φ_cpoly : Fin L → CompPoly L) {R : ℝ} 
       (fun i _ => CompPoly.lipschitzBound_nonneg (φ_cpoly i) _ fun _ => hR)
       (Finset.mem_univ l))
 
-/-! ## Calculus of the vector field -/
-
-
-
-
+/-! ## Closed-ball Lipschitz faces: explicit and existence forms -/
 
 /-- Explicit form: on `closedBall 0 R` the vector field is Lipschitz with any constant `K`
 dominating every component's syntactic constant `CompPoly.lipschitzBound`, so a certificate can

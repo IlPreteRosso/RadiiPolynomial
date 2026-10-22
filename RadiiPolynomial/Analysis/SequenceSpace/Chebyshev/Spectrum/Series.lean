@@ -1,5 +1,4 @@
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Ellipse
-import Mathlib.Topology.ContinuousMap.Bounded.Normed
 
 /-!
 # Character values on the Chebyshev modes, and Bernstein's bound
@@ -15,7 +14,6 @@ noncomputable section
 namespace RadiiPolynomial.PhysicalSpectrum
 
 open lpOneAlg CrossGeometry Polynomial
-open scoped BoundedContinuousFunction
 
 variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
 

@@ -3,7 +3,7 @@ import RadiiPolynomial.Operators.BlockDiagonal.Lift
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided
 
 /-!
-# Block-Diagonal Defect CLM on XCheb (ℤ-Indexed Chebyshev Space)
+# Block-Diagonal Defect Lift on XCheb (ℤ-Indexed Chebyshev Space)
 
 Lifts the finite-block action `actionFinite` of a `SystemBlockDiagData` to a continuous
 linear map on `XCheb ν L` (ℤ-indexed Chebyshev space). The tail part of the data is not

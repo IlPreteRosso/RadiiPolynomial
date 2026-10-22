@@ -166,11 +166,6 @@ theorem nonnegRestrict_norm_le (a : l1Chebyshev ν) : ‖nonnegRestrict a‖ ≤
   exact mul_le_mul_of_nonneg_left (tsum_comp_le_tsum_of_inj (lpOneAlg.summable_norm a)
     (fun _ => norm_nonneg _) Nat.cast_injective) zero_le_two
 
-namespace l1Chebyshev
-
-
-end l1Chebyshev
-
 end SymmetricBridge
 
 
