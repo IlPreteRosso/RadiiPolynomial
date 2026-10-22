@@ -4,8 +4,8 @@ import RadiiPolynomial.Certification.IVP.Chebyshev
 # Chebyshev certification adapter — an `L = 2` end-to-end test
 
 A second, materially different data set run through the family faces of
-`Certification/IVP/Chebyshev.lean` (`certified_of_checks` and the kernel-scale
-`certified_of_checksK`):
+`Certification/IVP/Chebyshev/` (`certified_of_checks` in `Face.lean` and the kernel-scale
+`certified_of_checksK` in `Kernel/Face.lean`):
 
 | | Example 14.2.1 | this set |
 |---|---|---|

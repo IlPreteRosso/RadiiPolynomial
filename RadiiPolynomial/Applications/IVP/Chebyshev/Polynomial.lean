@@ -294,9 +294,10 @@ the certificate proves) and the radii-polynomial inequality. The function-level 
 (`solution_existsUnique_of_compPoly`, `solution_existsUnique_of_two_le_of_compPoly`,
 `analytic_solution_existsUnique_of_two_le_of_compPoly`) live in
 `Chebyshev/AnalyticPolynomial.lean`. The `Z₁` face lives in the certification layer:
-`StdChebIVPData.Z₁_le_of_Q` (and its kernel-scale form `Z₁_le_of_checksK`) in
-`Certification/IVP/Chebyshev.lean` applies `chebyshev_Z₁_le_relaxed` with the componentwise
-derivative bound `CompPoly.Chebyshev.norm_derivative_apply_le`. -/
+`StdChebIVPData.Z₁_le_of_Q` in `Certification/IVP/Chebyshev/Z1.lean` (and its kernel-scale
+form `Z₁_le_of_checksK` in `Certification/IVP/Chebyshev/Kernel/Face.lean`) applies
+`chebyshev_Z₁_le_relaxed` with the componentwise derivative bound
+`CompPoly.Chebyshev.norm_derivative_apply_le`. -/
 
 /-- `Z₂` from syntax: with `C` a bound for the linear-in-`c` operator `TC` and `B` a
 bound, over the certificate ball `closedBall ā r₀`, for twice the syntactic derivative

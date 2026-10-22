@@ -7,7 +7,8 @@ import RadiiPolynomial.Certification.IVP.Chebyshev
 
 Full machine-checked verification of the Chebyshev logistic twin at ν = 2,
 N = 40 (`main_theorem`), through the family face `StdChebIVPData.certified_of_checksK` of
-the Chebyshev certification adapter (`Certification/IVP/Chebyshev.lean`). Every
+the Chebyshev certification adapter (`Certification/IVP/Chebyshev/Kernel/Face.lean`, through
+the facade `Certification/IVP/Chebyshev.lean`). Every
 obligation is an exact-ℚ conjunct of `ChebCertQ.ChecksK`, closed by its own
 `decide +kernel` lemma on the stored data (`A_col`, `DF_col`, `abar_0`, `ν_q`); the
 certificate uses no compiled-code evaluation. The four bounds:

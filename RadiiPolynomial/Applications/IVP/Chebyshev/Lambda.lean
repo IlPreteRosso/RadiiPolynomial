@@ -25,7 +25,7 @@ numerical data lives in the `StdChebIVPData` namespace, parameterized by
 `d : StdChebIVPData ν L N`.
 
 The derivative witness is `StdChebIVPData.hasFDerivAt_G`, together with the pointwise
-`toSeq` bridges used by `Certification/IVP/Chebyshev.lean`. Consumers obtain
+`toSeq` bridges used by `Certification/IVP/Chebyshev/{TC,Z1}.lean`. Consumers obtain
 differentiability or the derivative value from this witness through Mathlib's
 `HasFDerivAt.differentiableAt` and `HasFDerivAt.fderiv` interfaces.
 -/

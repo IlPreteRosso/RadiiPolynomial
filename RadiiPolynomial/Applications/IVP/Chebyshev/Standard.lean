@@ -30,8 +30,8 @@ directly: it calls the faces of `Chebyshev/Polynomial.lean`
 `solution_existsUnique_of_two_le_of_compPoly`,
 `analytic_solution_existsUnique_of_two_le_of_compPoly`). `Z₁` is assembled at the
 certification layer by `StdChebIVPData.Z₁_le_of_Q` / `Z₁_le_of_checksK`
-(Certification/IVP/Chebyshev.lean) from `chebyshev_Z₁_le_relaxed`; Example 14.2.1 calls
-`Z₁_le_of_checksK`.
+(Certification/IVP/Chebyshev/Z1.lean, Certification/IVP/Chebyshev/Kernel/Face.lean) from
+`chebyshev_Z₁_le_relaxed`; Example 14.2.1 calls `Z₁_le_of_checksK`.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
