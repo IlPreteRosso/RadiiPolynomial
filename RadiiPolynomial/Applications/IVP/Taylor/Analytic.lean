@@ -177,7 +177,7 @@ theorem analytic_existsUnique
 
 /-! ## Certificate faces
 
-The four predicate-based theorems above accept any coefficient nonlinearity `φ` that
+The three predicate-based theorems above accept any coefficient nonlinearity `φ` that
 agrees with `banachField φ_cpoly`. When the certificate is written from the syntax alone,
 `φ` *is* `banachField φ_cpoly` and the bridge hypothesis is `rfl`; these specializations
 drop both from the call, which is what makes the per-example `Analytic.lean` files
@@ -237,7 +237,7 @@ theorem analytic_existsUnique_of_compPoly
 
 Same hypothesis list as `StdIVPData.existsUnique_of_compPoly`; the contraction `Z₀ < 1`
 is `defect_finBlockNorm_lt_one_of_radii`. The first two faces keep a named zero (a
-certificate that exhibits `x_analytic` as an object needs one); the last two choose it. -/
+certificate that exhibits `x_analytic` as an object needs one); the last one chooses it. -/
 
 /-- `x_analytic_isBallSolution_of_compPoly` with `Z₀ < 1` read off the bounds. -/
 theorem x_analytic_isBallSolution_of_compPoly_of_radii

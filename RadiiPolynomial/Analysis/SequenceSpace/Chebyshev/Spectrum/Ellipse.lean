@@ -8,9 +8,6 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Classification
 closed annulus. `existsUnique_character` gives the unique physical character at each
 ellipse point, and `ellipseCharacter`/`ellipseCharacter_gen` expose that construction.
 The degenerate-interval identification at `ν = 1` is not proved here.
-
-The additional set-level equivalence and its topological upgrade belong to the recovery
-module `B5RecordPhysicalSpectrum`; the removed `Spectrum/Topology.lean` is not a shipped owner.
 -/
 
 noncomputable section

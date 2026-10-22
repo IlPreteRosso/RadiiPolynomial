@@ -7,11 +7,6 @@ import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation
 An element of `l1Weighted ν` is determined by its analytic realization near the
 expansion centre.  This is the elementwise counterpart to the generator
 extensionality used for morphisms out of the Taylor coefficient algebra.
-
-The converse representation of a real function analytic at `0` is recovered in
-`B5RecordTaylorAnalytic`: such a function is,
-near `0`, the realization of a coefficient sequence at some positive radius. The radius is
-existential; no maximal radius is prescribed and no algorithm computes one.
 -/
 
 open Filter

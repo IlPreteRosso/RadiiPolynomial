@@ -3,22 +3,23 @@ import RadiiPolynomial.Core.Theorem
 import RadiiPolynomial.Operators.BlockDiagonal.Composition
 
 /-!
-# System-Level IVP Radii Polynomial Theorem (Theorem 8.2.2)
+# System-Level IVP Bounds (Section 8.2)
 
-Formalizes the system-level IVP theorem from Section 8.2: given a polynomial IVP system
-with approximate inverse `A`, approximate derivative `A†`, and approximate solution `ābar`,
-provides concrete computable bounds Y₀, Z₀, Z₁, Z₂ satisfying Theorem 7.6.2.
+Two generic ingredients of the system-level IVP theorem of Section 8.2 (Theorem 8.2.2), for a
+polynomial IVP system with approximate inverse `A`, approximate derivative `A†`, and approximate
+solution `ābar`: the `Z₀` bound and the finite-mode identity behind the `Z₁` bound.
 
 The shared block-diagonal composition and defect identities live in
 `Operators.BlockDiagonal.Composition`.
 
-## Main theorem
+## Main statements
 
-- `ivp_system_theorem_local` — Theorem 8.2.2, ball-local form: existence and uniqueness of a
-  zero of the composed IVP map in a ball around `ābar`, given the radii polynomial is negative,
-  with the derivative sparsity and the derivative Lipschitz bound required on the ball only.
-- `ivp_system_theorem` — Theorem 8.2.2 with those two hypotheses global; a corollary of the
-  ball-local form.
+- `ivp_Z₀_le` — `‖I - composedApprox.toCLM‖ ≤ Z₀` from the finite block norm of the defect.
+- `composedApprox_eq_fderiv_fin` — `composedApprox = fderiv(ivpMap)` on the modes `≤ N`, from
+  the Jacobian hypothesis `hDF_block`.
+
+The existence/uniqueness theorem for standard IVP data is `IVP.StdIVPData.existsUnique`
+(`Applications/IVP/Taylor/Standard.lean`).
 -/
 
 open scoped BigOperators Topology Matrix
@@ -101,9 +102,5 @@ lemma composedApprox_eq_fderiv_fin
     SystemBlockDiagData.action_fin_eq_toMatrix_mulVec A _ l n', hDF, Matrix.mulVec_mulVec,
     ← FiniteBlockMatrix.toMatrix_blockMul]
   rfl
-
-/-! ## 3. Main Theorem (Theorem 8.2.2) -/
-
-
 
 end IVP

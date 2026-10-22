@@ -13,9 +13,7 @@ obligation is an exact-ℚ conjunct of `ChebCertQ.ChecksK`, closed by its own
 certificate uses no compiled-code evaluation. The four bounds:
 
 - `Y₀_le` — ‖G(ā)‖ ≤ 10⁻²¹ from the exact ℚ value of the residual after the stored
-  preconditioner (`Y₀_le_of_Q`); the ℚ mirror `FQ` of F(ā) below is an audit cross-check, not
-  consumed by the certificate: it agrees with the adapter's residual coefficients
-  (`computed_residual_eq`);
+  preconditioner (`Y₀_le_of_Q`);
 - `Z₀_finBlockNorm_le` — the 41×41 block defect ‖I − A·DF‖ ≤ 10⁻¹⁶ from the grid clause
   of `DefectBy` at denominator `10 ^ 60` (`StdChebIVPData.Z₀_sound`); the function-space
   endpoints consume this finite-block bound. `main_theorem` supplies the same grid
@@ -26,8 +24,7 @@ certificate uses no compiled-code evaluation. The four bounds:
   Jacobian, the leaked Dφ couplings N < m ≤ 2N+2 peak at ≈ 0.0034, and beyond 2N+2 only
   row 0's alternating functional survives; K = 5.12 is the syntactic derivative constant
   at the certified radius `‖S(ā)‖ ≤ 39/50` (the kernel checks `k_R`, `k_K`; the same radius
-  is the public `Sabar_norm_le`); `Z₁_le_semiMajor` feeds the same obligations to
-  `chebyshev_Z₁_le_semiMajor` through the family face `Z₁_le_semiMajor_of_checksK`;
+  is the public `Sabar_norm_le`);
 - `Z₂_le` — 14·r₀ through `Z₂_le_of_Q`: the derivative's Lipschitz constant
   `8 = 2·derivativeLipschitzBound (X² − X)` read off the syntax, and the sharp full-column
   bound ‖TC‖ ≤ 7/4 (closed-form `TC` rows, tail ν/(N+1) = 2/41);
@@ -41,25 +38,6 @@ open Metric Set Filter ContinuousLinearMap RadiiPolynomial ChebyshevIVP Example1
 noncomputable section
 
 namespace Example1421.Cert
-
-/-! ## Audit cross-check (not consumed by the certificate): ℚ mirror of F(ā)
-
-The folded convolution of the stored dyadic coefficients, run in exact ℚ.
-`FQ` mirrors `chebyshevIvpCoeffs (banachField f_cpoly) p₀ ā` row by row (bridge:
-`computed_residual_eq`). `main_theorem` does not use this section: its `Y₀` goes through the
-adapter's `Y₀Q` (`k_Y₀`). -/
-
-
-
-
-
-
-
-
-
-/-! ### Bridge: the ℚ mirror is the adapter's residual -/
-
-
 
 /-! ## The certificate and its kernel checks
 

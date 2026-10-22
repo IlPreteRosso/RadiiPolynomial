@@ -4,13 +4,14 @@ import RadiiPolynomial.Core.Theorem
 /-!
 # Operator-Norm Theorems For Finite Weighted Blocks
 
-This file keeps the norm-level and invertibility-level results:
+This file proves the norm-level and invertibility-level results:
 - weighted matrix norm = induced operator norm (Ex. 2.7.2)
 - matrix invertibility transfer from `toWeightedCLM`
 - Neumann-style criterion via `‖I - M‖ < 1`
 
 The matrix-to-CLM construction API (`toWeightedCLM`, the algebra equivalence
-`toWeightedCLMAlgEquiv`, multiplication/subtraction transport, apply lemmas) lives in
+`toWeightedCLMAlgEquiv` with `toWeightedCLMAlgEquiv_apply`, and the transport lemmas
+`toWeightedCLM_one_sub` and `isUnit_toWeightedCLM_iff`) lives in
 `Operators/Matrix/Continuous.lean`.
 -/
 

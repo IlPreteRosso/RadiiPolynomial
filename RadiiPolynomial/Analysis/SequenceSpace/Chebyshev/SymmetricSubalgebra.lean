@@ -5,11 +5,9 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Bordered
 # The flip-fixed Chebyshev algebra
 
 `symmetricSubalgebra ν` is the subalgebra of symmetric bilateral sequences.
-This shipped module retains the continuous linear symmetrization `symmetricRetract`
-and the bundled nonnegative-mode restriction `nonnegRestrictCLM`.
-The retraction laws, symmetric-storage norm comparisons and physical/bordered linear
-isometry equivalence belong to `B5RecordSymmetricStorageBordered` and are not exports
-of this shipped owner.
+This module declares the continuous linear symmetrization `symmetricRetract`, the evaluation
+character `symmetricEvalCharacter` at a physical point `t ∈ [-1, 1]`, and the bundled
+nonnegative-mode restriction `nonnegRestrictCLM`.
 -/
 
 noncomputable section
@@ -48,8 +46,7 @@ instance symmetricSubalgebra.instNormOneClass :
     rw [OneMemClass.coe_one, norm_one]⟩
 
 /-- **Symmetrization onto the physical algebra**: `symmetrize_CLM` with codomain
-`symmetricSubalgebra ν`. This is a continuous linear map, not an algebra homomorphism.
-Its additional retraction and atom laws belong to `B5RecordSymmetricStorageBordered`. -/
+`symmetricSubalgebra ν`. This is a continuous linear map, not an algebra homomorphism. -/
 def symmetricRetract (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] :
     l1Chebyshev ν →L[ℝ] symmetricSubalgebra ν :=
   (symmetrize_CLM (ν := ν)).codRestrict (symmetricSubalgebra ν).toSubmodule
@@ -101,8 +98,7 @@ lemma nonnegRestrict_smul (r : ℝ) (a : l1Chebyshev ν) :
   simp only [nonnegRestrict_toSeq, lpOneAlg.toRealSeq_smul, Pi.smul_apply]
 
 /-- Restriction to the nonnegative modes is `2`-bounded on the full bilateral
-carrier (`nonnegRestrict_norm_le`). The additional symmetric-storage isometry
-comparison is recovered in `B5RecordSymmetricStorageBordered`. -/
+carrier (`nonnegRestrict_norm_le`). -/
 def nonnegRestrictCLM (ν : PosReal) : l1Chebyshev ν →L[ℝ] l1Bordered ν :=
   LinearMap.mkContinuous
     { toFun := nonnegRestrict
@@ -114,8 +110,6 @@ def nonnegRestrictCLM (ν : PosReal) : l1Chebyshev ν →L[ℝ] l1Bordered ν :=
 
 
 
-
-/-! ### The physical algebra is isometrically the bordered carrier -/
 
 
 

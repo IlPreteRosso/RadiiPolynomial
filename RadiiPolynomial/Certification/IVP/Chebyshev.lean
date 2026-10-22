@@ -23,16 +23,15 @@ the exact-rational certification layer; no reusable module below `Certification`
    `d.Z₂_le_of_Q`.
 4. `Z₁`: the leakage columns `jacColQ`, `DcolAux`, `colNormAux`, `chebColNormQ`, `Mfar`,
    `rowA0Q`, `epsBlockGen`, `epsGen`; the hypotheses `d.Z₁_hneg`, `d.Z₁_htail`, `d.Z₁_hDφ`,
-   `d.Z₁_hfin` of `chebyshev_Z₁_le_relaxed`, `d.Z₁_le_of_Q`, and its semi-major sibling
-   `d.Z₁_le_semiMajor_of_Q` (tail factor `(ν⁻¹ + ν)/(2(N+1))`, `chebyshev_Z₁_le_semiMajor`).
+   `d.Z₁_hfin` of `chebyshev_Z₁_le_relaxed`, and `d.Z₁_le_of_Q`.
 5. The family face: `ChebCertQ` (the certificate numbers and override slots),
    `ChebCertQ.Checks` (all obligations as one ℚ-decidable conjunction),
    `d.certified_of_Y₀Z₀` and `d.certified_of_checks`.
 6. The kernel-scale checker: the clipped Laurent interpreter `evalFast` (`evalFast_eq`), the
    sparse leakage columns `colNormS` (`colNormS_eq`), the closed-form `TC` rows `TCnormF`
    (`TCnormF_eq`), the obligations `ChebCertQ.ChecksK` (with a `DefectBy` slot for `Z₀` and
-   per-block leakage data `E`), `checks_of_checksK`, `d.Z₁_le_of_checksK`, its semi-major
-   sibling `d.Z₁_le_semiMajor_of_checksK` and the family face `d.certified_of_checksK`.
+   per-block leakage data `E`), `checks_of_checksK`, `d.Z₁_le_of_checksK` and the family face
+   `d.certified_of_checksK`.
 -/
 
 open scoped BigOperators Topology
@@ -47,7 +46,7 @@ hold at the stored data of a bundle `d : StdChebIVPData ν L N` (`ν_q = d.ν_q`
 `p_q`): for `Y₀Q` inside the proof of `StdChebIVPData.Y₀_le_of_Q`, for `SnormQ` as
 `StdChebIVPData.norm_symmetrize_abar_eq`. `Y₀Q` uses the shared `blockActionQ` with tail
 multiplier `(2n)⁻¹`; its soundness proof invokes `SystemBlockDiagData.action_eq_blockActionQ`
-directly. The family residual, support window and weighted norm sum remain here. -/
+directly. The family residual, support window and weighted norm sum are defined here. -/
 
 section QLayer
 

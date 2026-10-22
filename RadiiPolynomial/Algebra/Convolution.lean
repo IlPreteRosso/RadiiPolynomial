@@ -8,13 +8,10 @@ import RadiiPolynomial.Algebra.Convolution.CauchyProduct
 
 `Basic` re-exports Mathlib's discrete convolution. The library-owned finite-fiber core
 `Finite` gives `finiteMulConvolution` and `finiteAddConvolution` on raw coefficient functions,
-with their explicit finite-factorization hypotheses. `Ring` identifies the finite operation
-with Mathlib's ring convolution under its stated summability assumptions.
+with their explicit finite-factorization hypotheses. `Ring` adds point masses and
+associativity for Mathlib's ring convolution under explicit summability hypotheses.
 
-`CauchyProduct` is the natural-index specialization, retaining the coefficient view
-`toPowerSeries`. The bundled power-series bridge is recovered in `B5RecordPowerSeriesBridge`,
-not exported by this facade. The generic
-`map_cauchyProduct` is instantiated with `Rat.castHom ℝ` at the real consumer,
-while the generic Cauchy module remains real-free. The optional wrapper carrier, monoid
-algebra embedding and ring equivalences have a separate recoverable B2 record.
+`CauchyProduct` is the natural-index specialization, with the coefficient view
+`toPowerSeries`. The generic `map_cauchyProduct` is instantiated with `Rat.castHom ℝ` at the
+real consumer, so the generic Cauchy module is real-free.
 -/

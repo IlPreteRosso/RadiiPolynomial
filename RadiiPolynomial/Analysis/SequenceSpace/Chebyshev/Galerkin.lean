@@ -7,16 +7,14 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.SymmetricSubalgebra
 `FνN ν N` is the space of stored Chebyshev modes `0, …, N` with the weighted ℓ¹ norm
 `‖x‖ = |x₀| + 2 Σ_{k=1}^{N} |x_k| ν^k` (`FνN.norm_eq`); the weight is `wt ν k`. It is a
 distinct carrier (a `def`, not the Pi sup-norm space), finite dimensional
-(`instFiniteDimensionalFνN`). Its underlying coordinates are `Fin (N + 1) → ℝ`;
-the former named ambient equivalence wrapper is retired.
+(`instFiniteDimensionalFνN`). Its underlying coordinates are `Fin (N + 1) → ℝ`.
 
 The even zero padding `ιN : FνN ν N →ₗᵢ[ℝ] symmetricSubalgebra ν` is an isometry into the
 flip-fixed algebra, and the Galerkin projection `πN` onto modes `0, …, N` is a contraction on it
 (`norm_πN_le`), with `πN ∘ ιN = id` (`πN_ιN`). Products are taken in the algebra before
 projecting: the Galerkin coefficients of `ιN x * ιN y` are the truncated convolution of the even
 paddings, as exposed by `toSeq_mul_ιN`; a product of three paddings is the triple sum over
-`k₁ + k₂ + k₃ = k` with `kᵢ ∈ [-N, N]` (`toSeq_mul_mul_ιN`). The finite carrier and its padded product-coordinate formulas remain separate from the
-retired selected-mode embedding/projection wrappers.
+`k₁ + k₂ + k₃ = k` with `kᵢ ∈ [-N, N]` (`toSeq_mul_mul_ιN`).
 -/
 
 noncomputable section
@@ -253,7 +251,7 @@ that factor `2` is already paid in the source norm by the mirror mode `-k`
 (`‖a‖ = |a₀| + 2 Σ_{k ≥ 1} |a_k| ν^k`), so the truncation is a contraction, `‖πN‖ ≤ 1`.
 On the bilateral carrier a single `z^k` has norm `ν^k` but its truncation has norm
 `2 ν^k`, so the same coefficient map would only be `2`-bounded
-(compare the retained pointwise bound `l1Chebyshev.nonnegRestrict_norm_le`). -/
+(compare the pointwise bound `nonnegRestrict_norm_le`). -/
 def πN : symmetricSubalgebra ν →L[ℝ] FνN ν N :=
   LinearMap.mkContinuous
     { toFun a := FνN.mk fun k => toSeq (a : l1Chebyshev ν) ((k : ℕ) : ℤ)

@@ -6,13 +6,12 @@ import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.LiftBound
 
 `lpOneAlg.toLpₗᵢ` bundles the carrier wrapper as a linear isometry equivalence.
 `WeightedLp.conjL1` conjugates an existing operator between library ℓ¹ carriers to the
-framed `p = 1` carriers. Its atom coordinates are `coeff_conjL1_single`; the retained
-norm transfers are `norm_apply_le_conjL1` and `opNorm_le_conjL1`.
+framed `p = 1` carriers. Its atom coordinates are `coeff_conjL1_single`; the norm
+transfers are `norm_apply_le_conjL1` and `opNorm_le_conjL1`.
 
 `opNorm_le_of_kernelLiftBound_one` bounds an already supplied library operator using the
 finite synthesis test on its atom images. This bound does not require scalar completeness.
-The former wrapper/atom aliases, alternate column-sum wrapper and identification with a
-constructed kernel extension are retired. No instance identifying the carriers is added.
+No instance identifying the carriers is declared.
 -/
 
 open scoped ENNReal

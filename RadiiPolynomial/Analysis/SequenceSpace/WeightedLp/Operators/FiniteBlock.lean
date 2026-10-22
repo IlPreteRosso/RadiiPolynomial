@@ -342,7 +342,7 @@ theorem headLeakage_comp_block (hB : ∀ l ∉ B, rawSymbol β l = 0)
 
 /-- **The kernel of the composed head leakage on the band columns**: for `k ∈ leakCols S B`,
 `matrixOf (headOp P_S L_β Q_S) i k = K_M(i,k)` (the composition law at the finite middle
-`leakRows S B`, from CF-4's boundary face `headLeakage_eq_boundary`). -/
+`leakRows S B`, from the boundary face `headLeakage_eq_boundary`). -/
 theorem matrixOf_headOp_headLeakage (hB : ∀ l ∉ B, rawSymbol β l = 0) (i : M) {k : M}
     (hk : k ∈ leakCols S B) :
     matrixOf (headOp ∘L headProj (𝕜 := 𝕜) S ∘L symbolAction₀ hC β ∘L tailProj (𝕜 := 𝕜) S) i k =
@@ -368,7 +368,7 @@ variable (hC : Moderate (FiberTrivialization.weight (E := E)) v C)
   (β : lpOneAlg M (WeightedScalar 𝕜 v)) (S B : Finset M)
   (headOp : WeightedLp M E 2 →L[𝕜] WeightedLp M E 2)
 
-/-- **The composed head term** (UPPER; coordinator's (ii)): under the band and
+/-- **The composed head term** (UPPER): under the band and
 `P_S ∘ headOp = headOp`, `‖headOp P_S L_β Q_S‖ ≤ √(R_M C_M)` for any bounds `R_M`, `C_M` of the
 normalized row sums (over `leakCols S B`, on `S`) and column sums (over `S`, on `leakCols S B`)
 of `‖K_M‖`, the absolute values taken after the finite sum. -/

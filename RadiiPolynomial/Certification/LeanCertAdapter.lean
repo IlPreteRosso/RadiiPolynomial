@@ -6,7 +6,6 @@ import RadiiPolynomial.Certification.Rational.Matrix
 
 Equation-independent evaluators and their correctness proofs for weighted terms and system
 block-diagonal actions, bridging structural reductions to LeanCert's `finsum_bound`.
-The dyadic matrix-norm checker is owned by the dyadic recovery record.
 The exact ℚ matrices, norms and their real bridges are in `Certification/Rational/Matrix.lean`
 (imported here).
 
@@ -45,13 +44,6 @@ theorem weightedTermEval_correct (arr : Array ℚ) (ν : ℚ) (k : ℕ)
   simp only [weightedTermEval, hf, hν]
   exact_mod_cast IntervalDyadic.mem_ofIntervalRat (IntervalRat.mem_singleton _) cfg.precision hprec
 
-/-! ## Dyadic matrix norm checker (single native_decide, O(1) proof term)
-
-Computes `max_j (∑_i |col_j[i]| * ν^i / ν^j)` in dyadic interval arithmetic
-and checks `≤ target`. Unlike `finWeightedMatrixNormQ` (exact ℚ), this uses bounded-precision
-dyadic intervals, avoiding potential rational blowup for large N.
-
-Architecture: computable Bool checker + bridge theorem + `native_decide`. -/
 
 
 
@@ -65,12 +57,11 @@ Architecture: computable Bool checker + bridge theorem + `native_decide`. -/
 
 /-! ## System-level action evaluator (general L, for Y₀-type bounds)
 
-Generalizes `scalarBlockDiagActionEval` from L=1 to arbitrary L.
 Computes `|Σ_j Σ_k A[l,j][n,k] * c[j,k]| * ν^n` for n ≤ N,
 and `|tailCoeff * c[l,n]| * ν^n` for n > N. -/
 
-/-- Per-term evaluator for system block-diagonal action norm: `|action_l_n| * ν^n`.
-Generalizes `scalarBlockDiagActionEval` to L > 1. -/
+/-- Per-term evaluator for system block-diagonal action norm: `|action_l_n| * ν^n`,
+for any number `L` of components. -/
 def systemBlockDiagActionEval {L N : ℕ}
     (matCols : Fin L → Fin L → Fin (N + 1) → Array ℚ)
     (vec : Fin L → ℕ → ℚ) (tailCoeff : Fin L → ℕ → ℚ)

@@ -5,8 +5,8 @@ import RadiiPolynomial.Algebra.Polynomial.CompPoly.Core
 
 Finite support makes bilateral multiplication computable. `laurentRadius` propagates
 input support bounds through the unchanged `CompPoly` syntax, and `evalLaurentCoeffSeq`
-uses those bounds to evaluate each convolution as a finite sum. Its result is independent
-of the choice of valid support bounds.
+uses those bounds to evaluate each convolution as a finite sum; outside the propagated
+radius its value is zero (`evalLaurentCoeffSeq_eq_zero_of_radius_lt`).
 
 `evalChebCoeff` specializes this interpreter to zero-padded nonnegative arrays, read
 symmetrically at `|k|`. Correctness in the completed Chebyshev algebra is proved in

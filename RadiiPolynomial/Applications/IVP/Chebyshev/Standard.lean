@@ -16,7 +16,7 @@ all of these in its namespace. The user provides equation-specific data (φ, p, 
 
 Parallel to `IVP.StdIVPData` for Taylor IVP, with:
 - `tailDiag = 1/(2k)` instead of `1/n`
-- `tailCancel: 1/(2k) * 2k = 1`
+- `approxDeriv.tailDiag = 2k`, so the tails multiply to `1/(2k) · 2k = 1`
 - `abar` embedded into `XCheb ν L` (ℤ-indexed) via `ChebyshevIVP.embedNatToInt`
 
 ## Certificate faces
@@ -217,7 +217,8 @@ lemma defect_finBlockNorm_lt_one_of_radii
 
 /-- Main existence/uniqueness theorem for standard Chebyshev IVP systems.
 The user provides equation-specific bounds and the differentiability `hG_diff` of `G`; the
-structural hypotheses (tail cancellation, membership of `G(a)`) are auto-derived. -/
+membership of `G(a)` is discharged inside `G` (`chebyshevIvpMap_mem_of_tailDiag_half` at
+`htail_diag_inv`). -/
 theorem existsUnique
     (φ : XCheb ν L → Fin L → l1Chebyshev ν) (p : Fin L → ℝ)
     (hG_diff : Differentiable ℝ (d.G φ p))

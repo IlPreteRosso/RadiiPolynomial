@@ -1,8 +1,8 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.Schur
 
 /-! Generic causal tail matrix, column masses and column-sum bounds.
-The additional row/column Schur assembly is in `B5RecordTailKernelSchur`; the Taylor
-carrier return is in the staged R30 finite-tail-kernel record. -/
+The Taylor `Z₁` tail operator is identified with this kernel in
+`Compatibility/TaylorTailL1.lean`. -/
 
 open Finset
 
@@ -121,7 +121,8 @@ theorem schurEntry_tailKernel (i j : ℕ) :
 
 
 
-/-- **Columns**: column `j` of the tail kernel has normalized mass exactly `colMass m N d j`. -/
+/-- **Columns**: column `j` of the tail kernel has normalized mass exactly
+`colMass (symbolMass ν β) N d j`. -/
 theorem hasSum_col_tailKernel (hβ : ∀ k, d < k → β k = 0) (j : ℕ) :
     HasSum (fun i => schurEntry (fun n => ν ^ n) (fun n => ν ^ n) (tailKernel N β) i j)
       (colMass (symbolMass ν β) N d j) := by

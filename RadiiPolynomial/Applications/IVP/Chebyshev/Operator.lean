@@ -83,8 +83,8 @@ The operator is defined by its factorization through the U-basis,
 
 the coefficient-level statement of `∫ T'_k dt`-inversion via `T_m = (U_m - U_{m-2})/2` and
 `∫ U_{k-1} = T_k/k`. The `1/(2k)` in `tailDiag` is the product of the conversion's `1/2` and
-the U-integration's `1/k`. Linearity and the norm bounds come from the two bundled
-U-conversion maps (`chebyshevShiftDiv_CLM`, `chebyshevShiftDiv_norm_le'`).
+the U-integration's `1/k`. Linearity comes from the two bundled U-conversion maps
+(`chebyshevShiftDiv_CLM`); the tail bound is `chebyshevShiftDiv_tailTsum_le_semiMajor_div`.
 
 On tail modes `k > N`, when `A.tailDiag = 1/(2k)`, the composed map is
 `G(a)_k = a_k + chebyshevShiftDiv(φ(a))_k` (`chebyshevIvpMap_mem_of_tailDiag_half` below). -/
@@ -129,14 +129,6 @@ U-conversion maps. Analogue of `shiftDivN_CLM`; `chebyshevShiftDiv_CLM c = cheby
 holds by `rfl`. -/
 noncomputable def chebyshevShiftDiv_CLM : l1Chebyshev ν →L[ℝ] l1Chebyshev ν :=
   -((uIntegrate_CLM (ν := ν)).comp chebyshevToU_CLM)
-
-/-! ### Linearity of chebyshevShiftDiv -/
-
-
-
-/-! ### Norm bounds -/
-
-
 
 /-! ## ℕ → ℤ Embedding for Composed Map
 
@@ -409,12 +401,10 @@ private lemma chebyshevShiftDiv_elem_tight_le (c : l1Chebyshev ν) (k : ℕ) (hk
 /-- **Semi-major tail tsum bound**:
 `∑' n, ‖chebyshevShiftDiv(c)(n+N+1)‖ ≤ (ν⁻¹ + ν)/(2(N+1)) · ‖c‖`.
 
-The prefactor `(ν⁻¹ + ν)/2` is the semi-major axis of the Bernstein ellipse `E_ν`:
-the bound equals `CrossGeometry.semiMajor ν / (N + 1)`; the statement keeps the literal
-`((ν:ℝ)⁻¹ + ν)/2`.
-Needs only `0 < ν` beyond what `chebyshevShiftDiv` itself requires; the relaxations
-`chebyshevShiftDiv_tailTsum_le_half` ((1+ν)/(2(N+1))) and
-`chebyshevShiftDiv_tailTsum_le_div` (ν/(N+1)) are corollaries under `1 ≤ ν`.
+The prefactor `(ν⁻¹ + ν)/2` is the semi-major axis of the Bernstein ellipse `E_ν`; the
+statement keeps the literal `((ν:ℝ)⁻¹ + ν)/2`.
+Needs only `0 < ν` beyond what `chebyshevShiftDiv` itself requires; under `1 ≤ ν` the factor
+is at most `ν/(N+1)` (`semiMajor_div_le_div`).
 
 Proof chain: per-element tight (exact ν⁻¹/ν weights) → tighten 1/(2k) ≤ 1/(2(N+1))
 → sum → factor → subseries ≤ ‖c‖. -/
@@ -493,8 +483,8 @@ the private `Z₁_component_le_exact` behind `IVP.ivp_Z₁_le`,
 
 /-- **Semi-major** relaxed Chebyshev Z₁ per-component bound.
 Same hypotheses as `chebyshev_Z₁_component_le_relaxed`, with the sharper tail factor
-`(ν⁻¹ + ν)/(2(N+1))` from `chebyshevShiftDiv_tailTsum_le_semiMajor_div`
-(= `semiMajor ν / (N+1)`) in place of `ν/(N+1)`.
+`(ν⁻¹ + ν)/(2(N+1))` from `chebyshevShiftDiv_tailTsum_le_semiMajor_div` in place of
+`ν/(N+1)`.
 
 Result: `‖d‖ ≤ ε + (ν⁻¹ + ν)/(2(N+1)) · ‖w‖`. -/
 lemma chebyshev_Z₁_component_le_semiMajor (d w : l1Chebyshev ν) (N : ℕ)
@@ -557,7 +547,7 @@ Analogous to `ivp_Z₁_le` from `Applications/IVP/Taylor/Operator.lean`. -/
 
 omit [NeZero L] in
 /-- **Semi-major relaxed Chebyshev Z₁ bound**: `chebyshev_Z₁_le_relaxed` with the
-sharper tail factor `(ν⁻¹ + ν)/(2(N+1))` (= `semiMajor ν / (N+1)`) in place of `ν/(N+1)`.
+sharper tail factor `(ν⁻¹ + ν)/(2(N+1))` in place of `ν/(N+1)`.
 
 All hypotheses except the total bound `hZ₁` are identical to `chebyshev_Z₁_le_relaxed`,
 so existing certificate obligations can be reused verbatim.
@@ -601,7 +591,7 @@ lemma chebyshev_Z₁_le_semiMajor
 omit [NeZero L] in
 /-- **Relaxed Chebyshev Z₁ bound** for IVPs where mode-0 couples all modes.
 
-Unlike `chebyshev_Z₁_le`, does NOT require `hfin` (composedApprox = fderiv G on k ≤ N).
+Does NOT require `hfin` (composedApprox = fderiv G on k ≤ N).
 Instead, takes separate bounds for the finite-mode contribution (ε per component)
 and the tail contribution (via Dφ norm bound K).
 
@@ -642,8 +632,8 @@ lemma chebyshev_Z₁_le_relaxed
 Existence and uniqueness of a zero of the composed Chebyshev IVP map,
 via `general_radii_polynomial_theorem` with `A = identity`.
 
-The key bound `hZ₁` can be assembled using `chebyshev_Z₁_le` (finite modes cancel) or,
-when they do not, `chebyshev_Z₁_le_relaxed` / `chebyshev_Z₁_le_semiMajor`; all three rest on
+The key bound `hZ₁` can be assembled using `chebyshev_Z₁_le_relaxed` or
+`chebyshev_Z₁_le_semiMajor`, which allow a finite-mode contribution `ε`; both rest on
 `chebyshevShiftDiv_tailTsum_le_semiMajor_div` through `chebyshev_Z₁_component_le_semiMajor`.
 
 The user provides the composed map `G`, composed approximate derivative `composedApprox`,
@@ -654,8 +644,8 @@ omit [NeZero L] in
 in `closedBall ā r₀`, given the radii polynomial `Z₂·r₀² - (1 - Z₀ - Z₁)·r₀ + Y₀ < 0`.
 
 Instantiates `general_radii_polynomial_theorem` (Theorem 7.6.2) with `A = identity`.
-The Z₁ bound can be supplied by `chebyshev_Z₁_le`; the library's Chebyshev certificates,
-whose row 0 couples all modes, use `chebyshev_Z₁_le_relaxed`. -/
+The library's Chebyshev certificates, whose row 0 couples all modes, supply the Z₁ bound
+through `chebyshev_Z₁_le_relaxed`. -/
 theorem chebyshev_system_theorem
     (G : XCheb ν L → XCheb ν L) (ā : XCheb ν L)
     (hG_diff : Differentiable ℝ G)

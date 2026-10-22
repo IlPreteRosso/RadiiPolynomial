@@ -10,9 +10,6 @@ import Mathlib.Analysis.Calculus.ContDiff.Operations
 linear map. `hasFDerivAt_aeval` identifies it with the Fréchet derivative of
 polynomial evaluation in a normed commutative algebra. The proof uses
 `MvPolynomial.induction_on`, independently of any coefficient representation.
-
-`contDiff_aeval` states that scalar-valued multivariate polynomial evaluation on `σ → 𝕜` is
-`C^n` for every `n`, the multivariate analogue of `Polynomial.contDiff_aeval`.
 -/
 
 noncomputable section

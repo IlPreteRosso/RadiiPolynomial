@@ -6,14 +6,10 @@ import Mathlib.RingTheory.Polynomial.Chebyshev
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Omega
 
 /-!
-# Differentiation across the Chebyshev--Taylor realization
+# Polynomial coefficients in the omega-weighted space
 
-The Taylor realization of `Tₖ` differentiates to `k Uₖ₋₁`, coefficient for
-coefficient.  The zero mode is included by retaining Mathlib's integer-indexed
-`U₋₁ = 0`.  The intrinsic Chebyshev derivative lands in omega-weighted
-`U`-coefficients; a separate synthesis map realizes those polynomials on a
-Taylor disc.  Their composite is Taylor differentiation after restriction,
-giving the four-corner derivative naturality square.
+The coefficient sequence `p.coeff` of a real polynomial `p` is finitely supported, so it lies
+in the omega-weighted space `l1Omega σ` at every weight `σ` (a private membership lemma).
 -/
 
 open scoped BigOperators
@@ -37,36 +33,6 @@ private lemma polynomialOmega_mem (σ : PosReal) (p : ℝ[X]) :
 
 
 
-
-/-! ### The intrinsic Chebyshev derivative -/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/-! ### Synthesis of `U`-polynomials on a smaller Taylor radius -/
-
-
-
-
-
-
-
-
-
-/-! ### The physical derivative and its naturality square -/
 
 
 

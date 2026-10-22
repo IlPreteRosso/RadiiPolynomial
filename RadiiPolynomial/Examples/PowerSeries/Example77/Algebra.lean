@@ -52,7 +52,7 @@ def F_sub_const (c : l1Weighted ν) (a : l1Weighted ν) : l1Weighted ν := sq a 
 
 /-! ### Fréchet derivative via Mathlib's power rule
 
-Rewrite the square as a power and apply `hasFDerivAt_pow`; the retained multiplication
+Rewrite the square as a power and apply `hasFDerivAt_pow`; the multiplication
 identities express its derivative using `leftMul`. -/
 
 theorem hasFDerivAt_sq (a : l1Weighted ν) :

@@ -26,12 +26,10 @@ the scalar coordinates and the scalar atoms of this file:
 * the scalar atom `single m r = lp.single p m (θ_m r)`, with `coeff_single` and
   `norm_single : ‖single m r‖ = ‖r‖ * ω_m`.
 
-## Finite-synthesis boundary
+## Finite synthesis
 
-Finite-p atom-span density and the p = ∞ non-density boundary of the finite-synthesis contract
-are owned by `Operators/LiftBound.lean`, including its reciprocal-weight witness and norm support.
-The optional exact cross-exponent attainment cluster is recoverable in the frozen records,
-not part of this carrier API.
+Finite-p atom-span density (`dense_span_single`) and the bounded extension of finite atom sums
+(`liftCLM`, `liftBound_iff`) are in `Operators/LiftBound.lean`.
 -/
 
 open scoped ENNReal NNReal Topology

@@ -9,13 +9,9 @@ nonlinearity `x²` formed in the flip-fixed algebra `symmetricSubalgebra ν` bef
 
 * `fisherGalerkin` is the composite face `polyFace (diagL λ) (-λ ev0) Pi' (I ∘ δ) (x ↦ x²)`
   (`fisherGalerkin_eq_polyFace`), so its derivative is `DFisher` (`hasFDerivAt_fisherGalerkin`).
-* The centred majorant of `x²` is `2 δ` (`derivativeCentredBound_fisherQuad`, with the exact
-  rational instance `fisherQuad_centred_Q` checked by `decide +kernel`), which gives
+* The centred majorant of `x²` is `2 δ` (`derivativeCentredBound_fisherQuad`), which gives
   `‖DFisher c - DFisher x‖ ≤ 2 |λ| ‖c - x‖` at `ν = 1` (`norm_DFisher_sub_le`) and the carrier
   `Z₂` bound `norm_A_fderiv_fisherGalerkin_sub_le`.
-* `hAnorm_of_carrier`: read on the carrier through the identity equivalence `amb`, the operator-norm
-  hypothesis of Example 2.4.15 holds with the operator norm of `A` there as its constant;
-  `norm_amb_symm_ν₁` is the carrier form of the Fisher weight, `|x₀| + 2 Σ_{k ≥ 1} |x_k|`.
 -/
 
 noncomputable section

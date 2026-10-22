@@ -19,13 +19,11 @@ the map as the corresponding evaluation.
 When the target has `NormOneClass`, `‖x‖ ≤ ν` suffices at `C = 1`:
 `geomAeval_of_norm_le` and `norm_geomAeval_of_norm_le_apply_le` give this
 specialization. The real-coefficient faces are `l1Weighted.aeval_of_norm_le`
-and `l1Weighted.algHom_ext`. General targets remain covered by `geomAeval`;
-the tests in `Examples/tests/WL/GeneralTargetAeval` retain the
+and `l1Weighted.algHom_ext`. General targets are covered by `geomAeval`;
+the tests in `Examples/tests/WL/GeneralTargetAeval` exercise the
 `C = max 1 ‖1‖` construction without a norm-one hypothesis.
 
-Additional character-spectrum and norm-multiplicative gate results have their
-own staged recovery records. `Geometric/Evaluation` identifies the retained
-real evaluation arrow with the coordinate power series.
+`Geometric/Evaluation` identifies the real evaluation arrow with the coordinate power series.
 -/
 
 noncomputable section

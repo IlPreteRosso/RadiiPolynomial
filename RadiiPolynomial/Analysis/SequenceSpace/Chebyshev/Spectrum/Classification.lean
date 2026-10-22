@@ -7,9 +7,8 @@ Gelfand layer. Every continuous `ℂ`-valued character of the production carrier
 `l1Chebyshev.symmetricSubalgebra ν` is a Laurent evaluation at a point of the closed
 annulus `ν⁻¹ ≤ ‖z‖ ≤ ν` (`character_eq_restriction`), the argument running through the
 Joukowski preimage and an exponential-growth bound on the symmetric power sums
-(`norm_le_of_power_sum_bound`). Two consequences: every physical character is
-automatically contractive (`norm_character_apply_le`), and Laurent characters restrict
-onto physical characters surjectively over `ℂ` (`restriction_surjective`).
+(`norm_le_of_power_sum_bound`). Consequently every physical character is automatically
+contractive (`norm_character_apply_le`).
 -/
 
 noncomputable section

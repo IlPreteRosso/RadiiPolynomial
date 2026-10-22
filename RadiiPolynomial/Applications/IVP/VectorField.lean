@@ -7,14 +7,13 @@ import RadiiPolynomial.Algebra.Polynomial.CompPoly.Derivative
 
 `IVP.vectorField` reads the geometry-free ODE right-hand side from a `CompPoly` system.
 The Taylor and Chebyshev trajectory/solution modules use this same real field. Their
-coefficient-space `banachField` maps remain in their respective geometry modules.
+coefficient-space `banachField` maps are defined in their respective geometry modules.
 
-This shipped owner retains `vectorField_lipschitzOnWith`,
+The file proves `vectorField_lipschitzOnWith`,
 `lipschitzOnWith_vectorField_closedBall` and `exists_lipschitz_vectorField_closedBall`:
 the Lipschitz constants are read from `CompPoly.lipschitzBound`. The explicit closed-ball
-face accepts a constant dominating those component bounds. The old standalone smoothness
-and differentiability wrappers are retired; polynomial derivative witnesses remain in
-`CompPoly/Derivative.lean`.
+face accepts a constant dominating those component bounds. Polynomial derivative witnesses
+are in `CompPoly/Derivative.lean`.
 -/
 
 open RadiiPolynomial MvPolyBridge

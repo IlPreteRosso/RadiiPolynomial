@@ -17,8 +17,8 @@ proposition `Checks`, discharged by `decide +kernel`.
 
 `toReal` reads the record as a `PolyZeroReal`; the real operators `A` and `A†` of the
 application layer are the casts of the rational data. `certified` gives all hypotheses of the
-general radii polynomial theorem at `A = d.toReal.A`, `A† = d.toReal.Adag`; `existsUnique` and
-`existsUnique_ofArray` give the unique zero.
+general radii polynomial theorem at `A = d.toReal.A`, `A† = d.toReal.Adag`; `existsUnique`
+gives the unique zero.
 
 This module is a specialized adapter: it imports the application discretization
 (`Applications/PowerSeries/PolynomialZero`) to verify its concrete certificate data.

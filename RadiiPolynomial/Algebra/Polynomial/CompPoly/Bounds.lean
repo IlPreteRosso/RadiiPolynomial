@@ -64,9 +64,9 @@ the sup norm `‖a - b‖`. -/
 /-- Operator-norm constant of the derivative of `a ↦ p.evalBanach a` on the ball
 `‖a i‖ ≤ R i`, for a geometry whose inputs enter unsymmetrized (Taylor): the sum of the
 syntactic bounds of the formal partials. The Chebyshev constant is twice this
-(`CompPoly.Chebyshev.derivativeBound_eq_two_mul`). This file only defines the constant; the
-operator-norm bound is `CompPoly.norm_fderiv_evalBanach_le` (on `l1Weighted`, in
-`CompPoly/WeightedL1.lean`). -/
+(`CompPoly.Chebyshev.derivativeBound_eq_two_mul`). The direction bound in sum form is
+`norm_sum_pderiv_mul_le` below; on `l1Weighted` the partial-derivative sum is bounded by
+`CompPoly.sum_norm_aeval_pderiv_le` (`CompPoly/WeightedL1.lean`). -/
 def derivativeBound (p : CompPoly L) (R : Fin L → K) : K :=
   ∑ i, (p.pderiv i).normBound R
 

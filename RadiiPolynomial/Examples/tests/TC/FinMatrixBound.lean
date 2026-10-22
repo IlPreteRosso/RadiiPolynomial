@@ -7,7 +7,6 @@ A `2 × 2` matrix with stored rational columns at weight `ν = 2`.
 `finmatrix_bound` closes the exact rational bridge
 `FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le`. The numerical check uses
 `native_decide`; its auxiliary axiom belongs to this test, not to a library theorem.
-The separate dyadic route and its test are kept in the staged record.
 -/
 
 open RadiiPolynomial

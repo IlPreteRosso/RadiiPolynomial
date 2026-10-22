@@ -8,15 +8,13 @@ Book Exercise 2.7.13 (a): the diblock-copolymer projection keeps the positive Ch
 `1, …, N` of an even sequence whose zero mode vanishes. This file provides the carrier side of that
 exercise: the lift and projection, the centred constants of the cubic and the exercise's weighted norm.
 
-* `J : (Fin N → ℝ) → FνN ν N` puts `x_k` at mode `k + 1` and `0` at mode `0`; it is the kept-mode
-  embedding `Jσ (Fin.succEmb N)` (`J_eq_Jσ`), with left inverse `Tl`.
+* `J : (Fin N → ℝ) → FνN ν N` puts `x_k` at mode `k + 1` and `0` at mode `0`, with left inverse
+  `Tl`.
 * `ιD = ιN ∘ J` and `πD = Tl ∘ πN` lift into and project out of the flip-fixed algebra; the product of
   three padded elements is the full triple sum over `k₁ + k₂ + k₃ = k` with `kᵢ ∈ [-N, N]`
   (`toSeq_mul_mul_ιN`), and the even padding of `J x` is the even extension with zero mode `0`
   (`evenLift_J`).
-* The centred majorant of `x³` is `3 (2β + δ) δ` (`derivativeCentredBound_cube`); the exact rational
-  instances `cube_centred_Q` and `cube_centred_lt_lipschitz_Q` (the centred constant is strictly below
-  the uncentred Lipschitz route) are checked by `decide +kernel`.
+* The centred majorant of `x³` is `3 (2β + δ) δ` (`derivativeCentredBound_cube`).
 * At `ν = 1` the exercise's weighted norm `2 Σ_k |x_k|` is `‖J x‖` (`diblockNorm_eq`), `‖ιD x‖`
   (`norm_ιD_eq`) and the norm of the positive-mode carrier `FνP N` read through `FνP.amb`
   (`FνP.diblockNorm_eq_amb`).

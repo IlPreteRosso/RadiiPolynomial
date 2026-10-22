@@ -3,16 +3,12 @@ import RadiiPolynomial.Core.Theorem
 /-!
 # `ℚ` margin tools for the radii polynomial
 
-Kernel-decidable `ℚ` mirrors of the radii polynomial and their casts to `ℝ`:
-* `radiiPolyQ Y₀ Z₀ cs r` — the `ℚ` mirror of `radiiPolynomial` with `Z₂ = hornerEval cs`
-  (a coefficient list of any length), with the cast identity `radiiPolyQ_cast` and the soundness
-  lemma `radiiPolynomial_neg_of_Q` (one `decide +kernel` check on `radiiPolyQ … < 0` discharges
-  `radiiPolynomial … r < 0` at the cast data);
-* `generalRadiiPolynomial_neg_of_Q` — the same check for `generalRadiiPolynomial`, reusing
-  `radiiPolyQ` at `Z₀ + Z₁` (no separate evaluator; `Z₂` enters only through its value at `r`);
+Kernel-decidable `ℚ` mirrors of the general radii polynomial with a constant `Z₂` and their
+casts to `ℝ`:
 * `generalRadiiPolynomial_ratCast` — `generalRadiiPolynomial` with a constant `Z₂` at rational
-  data is the cast of a rational value, and `generalRadiiPolynomial_neg_of_Q_const` reduces its
-  negativity to one rational inequality.
+  data is the cast of the rational value `Z₂ r² - (1 - Z₀ - Z₁) r + Y₀`;
+* `generalRadiiPolynomial_neg_of_Q_const` — its negativity reduces to one rational inequality
+  (one decidable check on `ℚ` discharges `generalRadiiPolynomial … r < 0` at the cast data).
 -/
 
 namespace RadiiPolynomial

@@ -6,7 +6,7 @@ import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
 
 - `chebyshevToU : l1Chebyshev ν → l1Weighted ν`, `(chebyshevToU c)_m = (c_m - c_{m+2})/2`
   (DLMF 18.9.9), bound `(1 + ν⁻²)/2` for every `ν > 0` (`chebyshevToU_norm_le_sharp`; its
-  attainment is not proved), `≤ 1` for `ν ≥ 1` (`chebyshevToU_norm_le`).
+  attainment is not proved).
 - `uIntegrate : l1Weighted ν → l1Chebyshev ν`, `(uIntegrate b)_k = b_{k-1}/k` (`k ≥ 1`),
   `‖uIntegrate b‖ ≤ ν‖b‖`.
 
@@ -150,8 +150,7 @@ lemma chebyshevToU_norm_le_sharp (c : l1Chebyshev ν) :
   linarith
 
 
-/-- The T→U conversion as a CLM with operator-norm bound `(1 + ν⁻²)/2` (in particular
-≤ 1 for `ν ≥ 1`). -/
+/-- The T→U conversion as a CLM with operator-norm bound `(1 + ν⁻²)/2`. -/
 noncomputable def chebyshevToU_CLM : l1Chebyshev ν →L[ℝ] l1Weighted ν :=
   LinearMap.mkContinuous
     { toFun := chebyshevToU

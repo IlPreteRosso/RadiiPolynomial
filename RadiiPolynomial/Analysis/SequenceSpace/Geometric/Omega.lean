@@ -14,8 +14,9 @@ This file provides:
 - `OmegaScaledReal ν n`: `WeightedScalar (omegaWeight ν) n` with PosWeight
 - `l1Omega ν`: omega-weighted `ℓ¹` space
 - Key embedding/summability lemmas connecting `l1Weighted` and `l1Omega`
-- the operators `shift`, `shiftDivN`, `lambdaN` on `l1Weighted ν` and their tail and column
-  bounds, the derivative shift `derivShift : ℓ¹_ν → ℓ¹_ω`, and the evaluation `l1Omega.eval`
+- the shift-and-divide operator `shiftDivN` on `l1Weighted ν` (`shiftDivN_CLM`) with its norm
+  and tail bounds, the derivative shift `derivShift : ℓ¹_ν → ℓ¹_ω`, and the evaluation
+  `l1Omega.eval`
 - the absolute derivative series `l1Weighted.summable_abs_mul_pow_pred` (`0 ≤ r < ν`)
 -/
 
@@ -291,17 +292,13 @@ noncomputable def shiftDivN_CLM : l1Weighted ν →L[ℝ] l1Weighted ν :=
 @[simp] lemma shiftDivN_CLM_apply (b : l1Weighted ν) :
     shiftDivN_CLM b = shiftDivN b := rfl
 
-/-! ### Exact weighted column data of the Z₁ tail operator (tightening B)
+/-! ### Tail mass of the Z₁ tail operator
 
-The Z₁ tail operator `T_N(b) := π_{>N} ∘ shiftDivN ∘ leftMul b` is a continuous
-linear map out of `l1Weighted ν`, so by the lift API it is determined by its
-columns at the basis vectors `single M 1` (`lpOneAlg.eq_liftCLM_of_cols`), and its
-norm is controlled by their weighted size (`lpOneAlg.norm_liftCLM_apply_le`). The next
-lemmas package this: a per-column tail bound `C · ν^M` transports to the
-operator bound `C · ‖h‖` (`shiftDivN_leftMul_tail_le_of_cols`), and above the
-cutoff the columns are antitone (`shiftDivN_leftMul_tail_col_antitone`), so a
-certificate only has to check the finite range `M ≤ N`. Hygiene: `ν : PosReal`
-only. -/
+The Z₁ tail operator is `T_N(b) := π_{>N} ∘ shiftDivN ∘ leftMul b`. The tail mass of
+`shiftDivN` is subadditive over finite sums (`tail_shiftDivN_sum_le`), so a tail bound for
+`shiftDivN (Σ_m b_m · h_m)` splits into per-pair bounds; the head-column bound of each pair is
+`WeightedLp.tailTsum_shiftDivN_mul_le_of_colMass` (`WeightedLp/Compatibility/TaylorTailL1.lean`).
+Hygiene: `ν : PosReal` only. -/
 
 /-- The tail mass of `shiftDivN` is subadditive over finite sums. -/
 theorem tail_shiftDivN_sum_le {N : ℕ} {ι : Type*} (s : Finset ι) (x : ι → l1Weighted ν) :

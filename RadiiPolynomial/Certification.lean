@@ -12,11 +12,9 @@ import RadiiPolynomial.Certification.Rational.Grid
 /-!
 # Certification facade
 
-The shipped facade exposes witness reductions (`Witness`), exact rational matrix/action
+The facade exposes witness reductions (`Witness`), exact rational matrix/action
 bridges (`Rational.Matrix`), grid checkers (`Rational.Frac`, `Rational.Grid`), rational radii
-polynomial checks (`RadiiPolynomialQ`) and the retained LeanCert adapter.
-Residual/Neumann correction and finite-support completeness belong to the recovery modules
-`B5RecordResidualP1` and `B5RecordResidualP2`; dyadic evaluator families also have recovery ownership.
+polynomial checks (`RadiiPolynomialQ`) and the LeanCert evaluators (`LeanCertAdapter`).
 
 The family faces `Certification.IVP.Taylor`, `Certification.IVP.Chebyshev` and
 `Certification.PowerSeries.PolynomialZero` import their application discretizations and are

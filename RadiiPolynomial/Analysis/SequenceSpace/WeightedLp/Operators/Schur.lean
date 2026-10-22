@@ -21,8 +21,7 @@ only when `p ≠ 1`, and the column hypothesis only when `p ≠ ∞`.
 `coeff_kernelCLMOf`, `hasSum_coeff_kernelCLMOf` and `norm_kernelCLMOf_le` give its
 computation, convergent coordinate series and norm bound. `kernelCLM` takes both hypotheses,
 with its coefficient formula and general norm bound. `SchurBound.ofFinsets` supplies the
-finite-support sufficient conditions. The Taylor scalar-frame conversion and p = 2 specialization are recovered in the R30
-finite-tail-kernel record, including its staged `WeightedLp/Taylor/TailKernel.lean` owner.
+finite-support sufficient conditions.
 
 The proof uses `lp.holderL` on the factors `κ^(1/q)` and `κ^(1/p) * ‖x j‖`, then aggregates
 over finite sets of rows using the column hypothesis. No multiplication on the state carrier or

@@ -145,8 +145,8 @@ lemma finsum_norm_le_of_cols (W : l1Chebyshev ν →L[ℝ] l1Chebyshev ν) (N : 
 
 /-! ### Finite sums -/
 
-/-- `toSeq` commutes with finite sums: the generic `lpOneAlg.toRealSeq_finset_sum` read through
-`toSeq_eq_toRealSeq`. -/
+/-- `toSeq` commutes with finite sums: the generic `lpOneAlg.toRealSeq_finset_sum` (`toSeq` is
+`lpOneAlg.toRealSeq` by definition). -/
 theorem toSeq_finset_sum {ι : Type*} (s : Finset ι) (x : ι → l1Chebyshev ν) (k : ℤ) :
     l1Chebyshev.toSeq (∑ i ∈ s, x i) k = ∑ i ∈ s, l1Chebyshev.toSeq (x i) k :=
   lpOneAlg.toRealSeq_finset_sum s x k

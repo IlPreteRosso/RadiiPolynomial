@@ -2,16 +2,12 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum.Ellipse
 import Mathlib.Topology.ContinuousMap.Bounded.Normed
 
 /-!
-# The character as a uniformly convergent Chebyshev series
+# Character values on the Chebyshev modes, and Bernstein's bound
 
-Synthesis layer. The symmetric-mode recurrence is literally the Chebyshev recurrence
-(`character_mode_eq_chebyshev`), from which contractivity of characters yields
-Bernstein's bound `‖Tₙ(w)‖ ≤ νⁿ` on the *closed* ellipse (`norm_chebyshev_le`),
-boundary and `ν = 1` included. The production weighted-ℓ¹ universal lift
-`lpOneAlg.liftCLM` then builds all ellipse evaluations at once as
-`synthesis : l1Chebyshev ν →L[ℝ] (Ellipse ν →ᵇ ℂ)`, identified with the classified
-character (`synthesis_eq_character`) and giving continuity in the ellipse parameter
-plus the exact bilateral series formula `character_apply_eq_tsum`.
+The symmetric-mode recurrence is literally the Chebyshev recurrence
+(`character_mode_eq_chebyshev`: `χ (mode n) = 2 Tₙ(χ g)` for the Joukowski generator `g`),
+from which contractivity of characters yields Bernstein's bound `‖Tₙ(w)‖ ≤ νⁿ` on the
+*closed* ellipse (`norm_chebyshev_le`), boundary and `ν = 1` included.
 -/
 
 noncomputable section

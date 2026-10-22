@@ -10,18 +10,19 @@ The concrete certificate at our own rational centre for the data `c = (1/10, 4, 
 `ν = 6/5` of book §10.1 (`ch10.tex:155–158`), and the endpoint: the raw Fourier map
 `F_n(a) = (−n² + i n/10 + 4) aₙ − (a ⋆ a)ₙ − bₙ`, `b_{±1} = 1/2`, has a unique zero in the closed
 ball of radius `1/200000` around the candidate `ā` in `ℓ²_{6/5}`; the zero is unique in the ball of
-radius `1/25` and real (`conj ã₋ₙ = ãₙ`).
+radius `1/25` and conjugate-symmetric (`conj ã₋ₙ = ãₙ`).
 
 The candidate and the head matrix are the consumer-owned data of `Examples/Fourier/Duffing/Numbers.lean`
 (generated). This file supplies
-* the BRIDGES from the exact `ℚ` mirror to the complex objects of the frozen consumer
+* the BRIDGES from the exact `ℚ` mirror to the complex objects of the consumer
   `Examples/Fourier/Duffing/Algebra.lean` (`toC z = z.1 + z.2 i`; folds over `List.range` plus a shift, matched
   with the `Finset` heads by `List.sum_toFinset`);
 * the four bound lemmas: `Y₀` through the exact finite residual `norm_sq_G_abar`, `Z₀` through the
   block Schur producer `norm_le_sqrt_of_block`, the composed leakage `H` through
   `norm_head_term_le_composed`, and `U` through `norm_comp_headReal_le_urow`; entry moduli are
   bounded by the rational majorant `‖z‖ ≤ |Re z| + |Im z|` (all UPPER);
-* the certificate `cert`, the discharges of the endpoint's forcing and tail-sum sockets, the radii
+* the certificate `cert`, the discharges of the endpoint's forcing and tail-sum hypotheses, the
+  radii
   inequality at `r₀ = 1/200000` and `r₁ = 1/25`;
 * the endpoints, the concrete instances of `duffing_existsUnique` and `duffing_existsUnique_real`.
 -/
@@ -546,15 +547,15 @@ def cert : Cert (1 / 10) 4 10 ν₆₅ where
   hH := H_le
   hU := U_le
 
-/-- **The forcing socket** `supp (c₃ b) ⊆ headF 10` (`forcing_supp`, `1 ≤ 10`). -/
+/-- **The forcing hypothesis** `supp (c₃ b) ⊆ headF 10` (`forcing_supp`, `1 ≤ 10`). -/
 theorem hg_data : ∀ k ∉ headF 10, coeff (forcing (ν := ν₆₅) 1) k = 0 := forcing_supp (by norm_num)
 
-/-- **The tail-sum socket** `∑' ‖d‖² ≤ T2 = 484/287469` (the T2 producer at `0 ≤ 4 < 121`). -/
+/-- **The tail-sum hypothesis** `∑' ‖d‖² ≤ T2 = 484/287469` (the T2 producer at `0 ≤ 4 < 121`). -/
 theorem T2_le : ∑' k, ‖tailSymbol ((headF 10 : Finset ℤ) : Set ℤ) (duffing (1 / 10) 4) k‖ ^ 2 ≤
     ((484 / 287469 : ℚ) : ℝ) :=
   (tsum_sq_tailSymbol_duffing_le (c₁ := 1 / 10) control_hN (by norm_num)).trans (by norm_num)
 
-/-- **The `Z₁` socket** in the endpoint's squared form (`check_Z1`, `norm_beta_le`,
+/-- **The `Z₁` hypothesis** in the endpoint's squared form (`check_Z1`, `norm_beta_le`,
 `|μ₁₁|² = 1369021/100`). -/
 theorem Z1_ok : cert.H ^ 2 + (‖betaOf (headF 10) cert.abar cert.abar_supp‖ /
     ‖duffing (1 / 10) 4 (((10 : ℕ) : ℤ) + 1)‖) ^ 2 ≤ (Z1c : ℝ) ^ 2 := by
@@ -574,7 +575,7 @@ theorem Z1_ok : cert.H ^ 2 + (‖betaOf (headF 10) cert.abar cert.abar_supp‖ /
     exact mul_le_mul_of_nonneg_right hβ (by norm_num)
   linarith
 
-/-- **The `Z₂` socket** in the endpoint's squared form (`check_Z2`). -/
+/-- **The `Z₂` hypothesis** in the endpoint's squared form (`check_Z2`). -/
 theorem Z2_ok : 4 * (cert.U ^ 2 + ((484 / 287469 : ℚ) : ℝ)) ≤ (Z2c : ℝ) ^ 2 := by
   have hU : cert.U ^ 2 = ((UpartC 0 + UpartC 1 + UpartC 2 : ℚ) : ℝ) :=
     Real.sq_sqrt UpartC_sum_nonneg
@@ -626,7 +627,8 @@ theorem duffing_l2_enclosure :
   have hab : a = b := hub a ⟨Metric.closedBall_subset_closedBall (by norm_num) ha, hFa⟩
   exact ⟨a, ha, hFa, fun z hz hFz => (hub z ⟨hz, hFz⟩).trans hab.symm⟩
 
-/-- **The real endpoint**: the zero is real, `conj ã₋ₙ = ãₙ` (reality consumed from CF-5a.2). -/
+/-- **The conjugate-symmetric endpoint**: the zero satisfies `conj ã₋ₙ = ãₙ`
+(`duffing_existsUnique_real`). -/
 theorem duffing_l2_real :
     ∃ a ∈ Metric.closedBall abar (1 / 200000),
       (∀ n, rawF (duffing (1 / 10) 4) (forcing 1) a n = 0) ∧ conjRefl a = a ∧

@@ -5,14 +5,13 @@ import Mathlib.Analysis.Complex.LocallyUniformLimit
 # Holomorphy on the open Bernstein ellipse, and analyticity at the endpoints
 
 Analytic layer, and the consumer-visible end of the spectrum branch. `complexEval`
-is the complex Chebyshev realization in the production normalization
-`a₀ + 2 Σ aₙ Tₙ`; it agrees with production `l1Chebyshev.eval` on all of `ℝ`
-(`complexEval_ofReal`, no interior truncation), it is the classified character on the
-physical carrier, and Weierstrass on the uniformly convergent series makes it
-holomorphic on the whole open ellipse (`analyticOnNhd_complexEval`) with no loss of
-coefficient radius. Scalar restriction then gives real analyticity of the *production*
-evaluator on a neighbourhood of the closed interval, endpoints included, whenever
-`1 < ν` (`analyticOnNhd_eval_Icc`, `analyticAt_eval_endpoints`).
+is the complex Chebyshev realization in the normalization `a₀ + 2 Σ aₙ Tₙ`; it agrees
+with `l1Chebyshev.eval` on all of `ℝ` (`complexEval_ofReal`, no interior truncation),
+and Weierstrass on the uniformly convergent series makes it holomorphic on the whole open
+ellipse (`analyticOnNhd_complexEval`) with no loss of coefficient radius. Scalar
+restriction then gives real analyticity of `l1Chebyshev.eval` at every real point of the
+open ellipse (`analyticAt_eval_of_mem_openEllipse`) and, whenever `1 < ν`, on a
+neighbourhood of the closed interval, endpoints included (`analyticOnNhd_eval_Icc`).
 
 `Applications/IVP/Chebyshev/Analyticity.lean` consumes `analyticOnNhd_eval_Icc`.
 -/

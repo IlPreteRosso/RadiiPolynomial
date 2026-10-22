@@ -56,12 +56,12 @@ variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} [DecidableEq M] {E : M �
   {p : ℝ≥0∞} [Fact (1 ≤ p)]
 variable (F : Finset M)
 
-/-- **The head projection** `P_F = tailDiag (↑F)ᶜ 1`: the CF-2 face (a) instance with the
-complement head and the constant symbol `1`. -/
+/-- **The head projection** `P_F = tailDiag (↑F)ᶜ 1`: the tail diagonal with the complement
+head `(↑F)ᶜ` and the constant symbol `1`. -/
 def headProj : WeightedLp M E p →L[𝕜] WeightedLp M E p :=
   tailDiag ((F : Set M)ᶜ) (fun _ => (1 : 𝕜)) (bddAbove_tailSymbol_one _)
 
-/-- **The tail projection** `Q_F = tailDiag ↑F 1`: the CF-2 face (a) instance with the head `↑F`
+/-- **The tail projection** `Q_F = tailDiag ↑F 1`: the tail diagonal with the head `↑F`
 and the constant symbol `1`. -/
 def tailProj : WeightedLp M E p →L[𝕜] WeightedLp M E p :=
   tailDiag (F : Set M) (fun _ => (1 : 𝕜)) (bddAbove_tailSymbol_one _)

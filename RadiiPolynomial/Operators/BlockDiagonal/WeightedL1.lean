@@ -11,8 +11,8 @@ Concrete `l1Weighted` realization of `SystemBlockDiagData`:
 - linearity and summability helpers
 - `toLinearMap` / `toCLM` with explicit norm bound (`finiteBlockMatrixNorm + tailBound`)
 - residual and `Z₀` bridge lemmas (`defectOfTailCancel`, `Z₀_le_of_tailCancel`)
-- `defectOfBlockDiagOp`: defect from bounded A + unbounded B (for IVP case)
-- Z₁ infrastructure: `norm_comp_of_fin_kill`, `Z₁_le_of_fin_kill_tail_dom`
+- `defectOfBlockDiagOp`: defect from bounded A + unbounded B (for IVP case), with the
+  composed-derivative identity `defect_of_composed_toCLM_eq`
 - injectivity: `injective_toCLM_of_finite_part_injective`
 - system Neumann criterion: `isUnit_toMatrix_of_blockNorm_lt_one` (analogous to
   `FinWeightedMatrix.matrix_invertible_of_norm_lt_one` for the scalar case)
@@ -493,9 +493,7 @@ hypothesis enters the definition). Used for the IVP case where A† has unbounde
 diagonal `k·δ_{j,j'}`.
 
 The definition does not relate the defect to any operator: the caller proves separately
-that `I - A.toCLM ∘ DF_CLM = defect.toCLM` (`defectOfBlockDiagOp_toCLM_eq`, when the
-Fréchet derivative has the block-diagonal structure matching B) or that
-`I - G_CLM = defect.toCLM` for a composed derivative (`defect_of_composed_toCLM_eq`). -/
+that `I - G_CLM = defect.toCLM` for a composed derivative (`defect_of_composed_toCLM_eq`). -/
 def defectOfBlockDiagOp
     (A : SystemBlockDiagData L N) (B : BlockDiagOp L N) :
     SystemBlockDiagData L N where
@@ -506,26 +504,14 @@ def defectOfBlockDiagOp
   tailBound := 0
   tailBound_spec := by intro l n _; simp
 
-/-! ## 4. Z₀ Bridge For defectOfBlockDiagOp (IVP Case)
-
-When A is a bounded `SystemBlockDiagData` and B is an unbounded `BlockDiagOp`,
-the defect `I - A∘B` is constructed by `defectOfBlockDiagOp` with zero tail.
-The bridge below identifies `I - A.toCLM ∘ DF_CLM = defect.toCLM` when the caller
-provides a CLM (typically `fderiv ℝ f x̄`) that matches B on both finite and tail modes.
-
-This is the key lemma for IVP problems where A† has unbounded tail diagonal. -/
-
-
-
-
-/-! ## 4b. Z₀ Bridge For Composed CLM (IVP Case)
+/-! ## 4. Z₀ Bridge For Composed CLM (IVP Case)
 
 When `A†` has unbounded tail (e.g., tail diagonal = `n`), no `DF_CLM : XL1 →L[ℝ] XL1`
 with matching structure exists. Instead, the certificate provides the *composed*
 `G_CLM = fderiv ℝ (A ∘ F) x̄ : XL1 →L[ℝ] XL1` whose coefficients match `A·B`
 algebraically (finite block = `∑_m A_{l,m}*B_{m,j}`, tail = `A.tailDiag*B.tailDiag`).
 
-This variant avoids materializing the intermediate unbounded operator. -/
+This avoids materializing the intermediate unbounded operator. -/
 
 /-- CLM-level identity for the *composed* derivative (IVP pattern):
 `I - G_CLM = (defectOfBlockDiagOp A B).toCLM` when `G_CLM`'s coefficients match
@@ -619,23 +605,7 @@ lemma SystemBlockDiagData.Z₀_le_of_tailCancel [NeZero L]
   have htb : (A.defectOfTailCancel B htail).tailBound = 0 := rfl
   rwa [htb, add_zero] at h
 
-/-! ## 6. Z₁ Infrastructure (General L)
-
-Composition norm bounds when the inner operator kills finite modes.
-General-L versions of the scalar APIs in `Scalar.lean`.
--/
-
-
-
-
-/-! ## 7. Z₀ Triangle Combiner (IVP Case)
-
-When the true Fréchet derivative differs from the block-diagonal A† on tail modes,
-`‖I - A∘DF‖` decomposes as `‖D.toCLM + A.toCLM∘T‖ ≤ ‖D.toCLM‖ + ‖A.toCLM∘T‖`
-where D is the finite defect and T is the tail linearization error. -/
-
-
-/-! ## 8. Finite Block Injectivity From Defect Norm < 1
+/-! ## 6. Finite Block Injectivity From Defect Norm < 1
 
 If `‖I - A·B‖ < 1` as a block matrix norm, then the block product `A·B` is close to
 the identity, so `A` is injective on finite modes. This bridges the numerical defect
@@ -723,7 +693,7 @@ lemma finite_block_injective_of_defect_norm_lt_one [NeZero L]
 
 end SystemBlockDiagConcrete
 
-/-! ## 9. BlockDiagLift Instance for XL1 -/
+/-! ## 7. BlockDiagLift Instance for XL1 -/
 
 section BlockDiagLiftXL1
 

@@ -17,7 +17,7 @@ import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Diagonal
 `TA` and `TC` are CLMs (`constG p` is a constant vector). Crude norm constants
 suffice for differentiability of `TA` and `TCblock`. `TCtail` is the composite of bundled
 maps, the tail projection `lpOneAlg.tailProj` after `chebyshevShiftDiv_CLM`; its
-retained componentwise bound is `TCtailElem_norm_le_tail`, with constant `ν/(N+1)`.
+componentwise bound is `TCtailElem_norm_le_tail`, with constant `ν/(N+1)`.
 
 The equation-generic rows (`FAseq`, `FCseq`, `constFseq`) and the tail
 operator `TCtail` live at the `ChebyshevIVP` level; everything that needs the

@@ -8,7 +8,7 @@ A continuous linear map out of `lpOneAlg M E` is determined by its values on the
 singles (`continuousLinearMap_ext`). A weight-dominated family `v : M → F` induces
 `liftCLM v C hv`, with its atom computation (`liftCLM_single`), application bound and
 operator-norm bound. `eq_liftCLM_of_cols` and `exists_eq_liftCLM` recover a map from its
-column family. The exact column-supremum principle has separate staged record ownership.
+column family.
 
 `liftCLM` builds a map out of the sequence space; `Operators/BlockDiagonal/Lift` instead
 lifts defect data into a system sequence space.
@@ -18,8 +18,8 @@ give the monoid computation rules. `mulLeftCLM` and `mulRightCLM` bundle one-sid
 multiplication. A weight-dominated unital multiplicative family induces `liftAlgHom`,
 with `liftAlgHom_single` and `norm_liftAlgHom_apply_le`. `continuousAlgHom_ext`,
 `eq_liftAlgHom_of_atoms` and `exists_eq_liftAlgHom` give the corresponding determination
-and reconstruction contracts. Their original target-space and boundedness hypotheses
-remain explicit in the declarations.
+and reconstruction contracts. Their target-space and boundedness hypotheses are explicit
+in the declarations.
 -/
 
 open scoped BigOperators
@@ -29,11 +29,6 @@ noncomputable section
 namespace RadiiPolynomial
 
 open _root_.DiscreteConvolution RadiiPolynomial.DiscreteConvolution
-
-/-! ### An archimedean gate on the reals
-
-Pure real analysis, stated here because both carriers built on this file need
-it to convert power growth into a bound on the base. -/
 
 section PowerGrowthGate
 
@@ -388,8 +383,8 @@ theorem liftCLM_mul (hbmul : ∀ m n, b (m + n) = b m * b n) (f g : lpOneAlg M E
 /-- **The algebra lift** (introduction face). A weight-dominated monoid map
 `b : M → B` into a Banach algebra induces the continuous algebra
 homomorphism `h ↦ ∑' m, toRealSeq h m • b m` out of the weighted ℓ¹ algebra;
-its underlying continuous linear map is `liftCLM b C hb`
-(`liftAlgHom_toContinuousLinearMap`), so every bound on `liftCLM` transfers. -/
+it agrees pointwise with `liftCLM b C hb` (`liftAlgHom_apply`, by `rfl`), so every bound
+on `liftCLM` transfers. -/
 def liftAlgHom (hb0 : b 0 = 1) (hbmul : ∀ m n, b (m + n) = b m * b n) :
     lpOneAlg M E →A[𝕜] B where
   toAlgHom := AlgHom.ofLinearMap (liftCLM b C hb).toLinearMap

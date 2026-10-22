@@ -5,12 +5,7 @@ import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.TailDiagonal
 
 The symbol `ik k = I * k` supplies a square-summable reciprocal tail comparison.
 Its squared tail sum is `2 * psi1 N`, where `psi1 N = ∑_{k > N} k⁻²`.
-The Duffing symbol comparison in `Algebra.lean` consumes this service.
-
-Statements and proofs are selected from the accepted CF3 `FourierIkData.lean`,
-sha256 `fbbcfb2a5c941578809e855d11754364953e63cee976011b9946398596cf34e9`.
-The original source and header, obsolete first-order defect bridge, and unused
-head-membership controls are retained in the source-preparation archive.
+The Duffing symbol comparison in `Algebra.lean` uses these facts.
 -/
 
 open scoped ENNReal
@@ -18,7 +13,7 @@ open RadiiPolynomial RadiiPolynomial.WeightedLp
 
 namespace FourierDuffing.IkData
 
-/-! ### The symbol `μ = ik` and the head `|k| ≤ N` (CF-2 Probe lines 49–78) -/
+/-! ### The symbol `μ = ik` and the head `|k| ≤ N` -/
 
 section IK
 
@@ -35,7 +30,7 @@ theorem norm_ik (k : ℤ) : ‖ik k‖ = ((|k| : ℤ) : ℝ) := by
 
 
 
-/-! ### The squared tail entries and their sum `2 · psi1 N` (CF-2 Probe lines 117–168) -/
+/-! ### The squared tail entries and their sum `2 · psi1 N` -/
 
 /-- The squared tail entries of `ik` on `ℕ`: `0` on the head, `1/(n)²` on the tail. -/
 theorem sq_norm_tailSymbol_ik_nat (N n : ℕ) :

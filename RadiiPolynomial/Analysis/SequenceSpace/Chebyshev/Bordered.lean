@@ -12,9 +12,8 @@ storage as an honest one-sided weighted space:
   bilateral weight `ν^{|k|}` along the index cover `k ↦ |k|`, ramified at `0`.
 - `l1Bordered ν` — the physical one-sided T-coefficient space.
 - `nonnegRestrict : l1Chebyshev ν → l1Bordered ν` — restriction to the nonnegative modes,
-  `2`-bounded by `nonnegRestrict_norm_le`; its bundle `nonnegRestrictCLM` remains in
-  `Chebyshev/SymmetricSubalgebra.lean`. The symmetric-storage isometry and bundled
-  equivalence are recovered in `B5RecordSymmetricStorageBordered`.
+  `2`-bounded by `nonnegRestrict_norm_le`; its bundle `nonnegRestrictCLM` is in
+  `Chebyshev/SymmetricSubalgebra.lean`.
 
 
 `l1Chebyshev.IsSymmetric`, `symmetrize` and `natEmbed` live in `Chebyshev/Symmetrize.lean`.
@@ -30,11 +29,11 @@ namespace RadiiPolynomial
 
 `borderedWeight ν` is the pushforward of the bilateral weight `ν^{|k|}` along the
 quotient `k ↦ |k|`: each unramified fiber `{±m}` contributes `2ν^m`, the ramified
-fiber `{0}` contributes `1`. Restriction to the nonnegative modes maps the symmetric
-subspace of `l1Chebyshev ν` (physical T-series `a₀ + 2Σ_{k≥1} a_k T_k`) isometrically onto
-`l1Bordered ν`, an honest one-sided weighted space — the "bordering" datum as a weight.
-The corresponding isometry theorem and linear isometry equivalence belong to
-`B5RecordSymmetricStorageBordered`, outside the shipped interface.
+fiber `{0}` contributes `1`. On the symmetric subspace of `l1Chebyshev ν` (physical T-series
+`a₀ + 2Σ_{k≥1} a_k T_k`) restriction to the nonnegative modes preserves the norm, with values in
+`l1Bordered ν`, an honest one-sided weighted space — the "bordering" datum as a weight. This
+file does not state that isometry; it proves the bound `nonnegRestrict_norm_le` on all of
+`l1Chebyshev ν`.
 
  -/
 
@@ -143,8 +142,7 @@ private lemma nonnegRestrict_mem (a : l1Chebyshev ν) :
   exact nonnegRestrict_fiber_le a n
 
 /-- Restriction of a bilateral sequence to its nonnegative modes, viewed in the
-bordered carrier. Its symmetric-storage isometry is part of
-`B5RecordSymmetricStorageBordered`. -/
+bordered carrier. -/
 def nonnegRestrict (a : l1Chebyshev ν) : l1Bordered ν :=
   ⟨⟨fun n => FiberTrivialization.equiv (E := BorderedScaledReal ν) n
       (lpOneAlg.toRealSeq a (↑n : ℤ)),

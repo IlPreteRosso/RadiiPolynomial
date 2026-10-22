@@ -13,16 +13,17 @@ Exact rational clauses for `IVP.StdIVPData` and a `CompPoly` vector field, with 
 at each real realization. This module imports the Taylor discretization and certification
 evaluators; no reusable module below `Certification` imports it.
 
-Retained computations include `abarNormQ`, `DLipBoundQ`, `activeQ`, `evalArr`,
-`kerColMaxQ` and `supportM`. The kernel-column bound is assembled by
+The computations are `abarNormQ`, `DLipBoundQ`, `activeQ`, `evalArr`, `kerColMaxQ` and
+`supportM`. The kernel-column bound is assembled by
 `StdIVPData.Z₁_le_of_pairBound` and `Z₁_le_ker_of_Q`; `Z₂_le_of_Q` uses
 `activeBlockNormQ` at scale `ν_q · DLipBoundQ`.
 
 `IVP.StdIVPDataQ` packages the stored rational data, `ofStd` extracts those rational data
-from a realized bundle, and `toStdIVPData` realizes them at a specified weight. `ChecksZ₀`,
-`ChecksZ₀By`, `ChecksZ₁ker`, `ChecksDF` and `ChecksZ₂` have their soundness bridges here.
-The shared rational block action and cast bridge are owned by `Rational.Matrix`.
-The older exact-derivative and alternate column wrappers are not this shipped surface.
+from a realized bundle, and `toStdIVPData` realizes them at a specified weight. The clauses
+`ChecksZ₀`, `ChecksZ₀By`, `ChecksZ₁ker` and `ChecksZ₂` have their soundness bridges here
+(`Z₀_sound`, `ChecksZ₀By_sound`, `defectZBy_sound`, `Z₁ker_sound`, `Z₂_sound`); the Jacobian
+clause `ChecksDF` is a hypothesis of `Z₁ker_sound`.
+The shared rational block action and cast bridge are in `Rational.Matrix`.
 -/
 
 open scoped BigOperators Topology
@@ -75,12 +76,11 @@ def supportM (f_cpoly : Fin L → CompPoly L) (N : ℕ) : ℕ :=
 /-! ### Column `Z₁` helpers
 
 The tail operator of `Z₁` at component `l` is `h ↦ π_{>N} shiftDivN (Σ_m b_{lm} · h_m)` with
-`b_{lm} = ∂_m f_l(ā)`. Per pair `(l, m)` the exact weighted column sup of
-`π_{>N} ∘ shiftDivN ∘ leftMul b_{lm}` is the finite ℚ maximum `colSupQ` over `M ≤ N`
-(columns above `N` are antitone, `shiftDivN_leftMul_tail_cols_le_of_Q`). Since `‖h‖` is the
-sup over components, the operator bound is `Σ_m colSupQ_{lm}`; the per-`M` sum
-`sup_M Σ_m` would NOT be sound for `L > 1` (different components can peak at different `M`).
-For `L = 1` the two coincide. -/
+`b_{lm} = ∂_m f_l(ā)`. Per pair `(l, m)` a constant `c_{lm}` with
+`tail (shiftDivN (b_{lm} · x)) ≤ c_{lm} · ‖x‖` is the rational kernel-column maximum
+`kerColMaxQ` (`StdIVPData.tail_evalBanach_mul_le_ker`). Since `‖h‖` is the sup over
+components, the operator bound is `Σ_m c_{lm}` (`StdIVPData.Z₁_le_of_pairBound`). The array
+`evalArr N abar_Q p` vanishes past the syntactic support window (`evalArr_getD_eq_zero`). -/
 
 omit [NeZero L] in
 /-- `evalArr N abar_Q p` vanishes past the syntactic support window `CompPoly.supportBound N p`. -/
@@ -260,9 +260,8 @@ private theorem pairBound_nonneg (b : l1Weighted ν) {c : ℝ}
 /-- **Generic-`L` `Z₁` face from per-pair tail bounds**: the finite Jacobian check `hDF`, per-pair
 constants `c l m` with `tail (shiftDivN ((∂_m f_l)(ā) · x)) ≤ c l m · ‖x‖`, and one ℚ inequality
 `Σ_m c l m ≤ Z₁` per component give the `Z₁` operator bound, through
-`StdIVPData.Z₁_le_exact_of_compPoly`. The per-pair producers are `colSupQ`
-(`tail_evalBanach_mul_le`) and `kerColMaxQ` (`tail_evalBanach_mul_le_ker`); the constants carry
-no sign hypothesis. -/
+`StdIVPData.Z₁_le_exact_of_compPoly`. The per-pair producer is `kerColMaxQ`
+(`tail_evalBanach_mul_le_ker`); the constants carry no sign hypothesis. -/
 theorem Z₁_le_of_pairBound (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPoly L)
     (x₀ : Fin L → ℝ)
     (hDF : ∀ (j m : Fin L) (row col : Fin (N + 1)),
@@ -358,13 +357,10 @@ abbrev ChecksZ₂ (q : StdIVPDataQ L N) (f_cpoly : Fin L → CompPoly L) (r₀ Z
     (q.ν_q * DLipBoundQ f_cpoly (fun i => abarNormQ N q.abar_Q q.ν_q i + r₀))
     (activeQ f_cpoly (fun i => abarNormQ N q.abar_Q q.ν_q i + r₀)) ≤ Z₂
 
-/-- Forgetful map from an existing bundle: its ℚ fields and size invariant, forgetting `hν`
-(`toStdIVPData_ofStd` is the definitional round trip). -/
+/-- Forgetful map from an existing bundle: its ℚ fields and size invariant, forgetting `hν`. -/
 def ofStd {ν : PosReal} (d : IVP.StdIVPData ν L N) : StdIVPDataQ L N :=
   ⟨d.A_col, d.DF_col, d.abar_Q, d.ν_q, d.habar_size⟩
 
-
-/-! #### Soundness bridges for the exact stored data -/
 
 section Bridges
 
@@ -440,8 +436,6 @@ theorem Z₂_sound (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) {r₀
 
 end Sound
 
-/-! #### Soundness of the remaining per-bound clauses -/
-
 section Faces
 
 variable (q : StdIVPDataQ L N) {ν : PosReal} (hν : (ν : ℝ) = ((q.ν_q : ℚ) : ℝ))
@@ -449,8 +443,6 @@ variable (q : StdIVPDataQ L N) {ν : PosReal} (hν : (ν : ℝ) = ((q.ν_q : ℚ
 
 
 
-
-/-! #### Soundness of the column clause -/
 
 
 end Faces

@@ -10,7 +10,7 @@ import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Evaluation
 # Weighted l1 Semantics for CompPoly
 
 Specializes the generic computable polynomial AST to `l1Weighted`, connecting semantic
-evaluation, computable coefficients, smoothness, and pointwise power-series evaluation.
+evaluation, computable coefficients, differentiability, and pointwise power-series evaluation.
 -/
 
 open scoped BigOperators
@@ -46,8 +46,10 @@ theorem toSeq_evalBanach {ν : PosReal} {L : ℕ} (p : CompPoly L)
 
 /-! ## Certificate constants from syntax (Taylor face)
 
-On `l1Weighted ν` the inputs enter unsymmetrized, so the operator norm of the derivative
-is bounded by the geometry-free `CompPoly.derivativeBound` with no extra factor. -/
+On `l1Weighted ν` the inputs enter unsymmetrized, so the partial-derivative sum is bounded by
+the geometry-free `CompPoly.derivativeBound` (`sum_norm_aeval_pderiv_le`) and the derivative
+Lipschitz constant is `CompPoly.derivativeLipschitzBound` (`norm_fderiv_evalBanach_sub_le`), with
+no extra factor. -/
 
 theorem sum_norm_aeval_pderiv_le {ν : PosReal} {L : ℕ} (p : CompPoly L)
     (a : Fin L → l1Weighted ν) (R : Fin L → ℝ) (ha : ∀ i, ‖a i‖ ≤ R i) :

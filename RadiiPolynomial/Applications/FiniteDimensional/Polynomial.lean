@@ -18,10 +18,10 @@ data embed along `ratMap R`.
 
 ## Main results
 
-- `enclosureC`, `existsUniqueC`, `isUnit_fderivC`: `ChecksC` gives an `Enclosure` of the field
-  around `x̄` of radius `r₀`, hence a unique zero and an invertible derivative on the ball
-- `enclosure_of_bounds`, `existsUnique_of_bounds`: the same from user-supplied rational
-  `Y₀`, `Z₀`, `Z₂` with proofs (override slot)
+- `enclosureC`, `existsUniqueC`: `ChecksC` gives an `Enclosure` of the field around `x̄` of
+  radius `r₀`, hence a unique zero and an invertible derivative on the ball
+- `enclosure_of_bounds`: the same `Enclosure` from user-supplied rational `Y₀`, `Z₀`, `Z₂` with
+  proofs (override slot)
 -/
 
 open scoped BigOperators

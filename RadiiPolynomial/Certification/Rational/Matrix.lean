@@ -21,8 +21,8 @@ The module imports no `LeanCert` module; the dyadic evaluators are in
 3. `colNormQ`, `finWeightedMatrixNormQ` and the bridge
    `FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le`.
 4. `finiteBlockMatrixNormQ` and the bridges `finiteBlockMatrixNorm_le_of_Q_le`,
-   `finiteBlockMatrixNorm_defect_le_of_Q`; `norm_toCLM_le_of_Q` / `norm_toScalarCLM_le_of_Q` —
-   CLM norm bounds.
+   `finiteBlockMatrixNorm_defect_le_of_Q`; `norm_toScalarCLM_le_of_Q` — the scalar CLM norm
+   bound.
 5. `activeBlockNormQ` — active-block norm with a caller-computed scale
    (`activeBlockNorm_component_le`).
 6. `blockActionQ` — the exact ℚ action of a block-diagonal operator with stored columns and a
@@ -258,7 +258,7 @@ theorem finiteBlockMatrixNorm_defect_le_of_Q {L N : ℕ} [NeZero L] {ν : PosRea
 
 /-- Combined scalar CLM norm bound from ℚ columns + ℚ tail bound.
 `‖A.toScalarCLM‖ ≤ max(finWeightedMatrixNormQ, tailBound_q) ≤ C` — one decidable inequality.
-Scalar analogue of `norm_toCLM_le_of_Q`. Uses the tight `max` bound (Exercise 2.7.2). -/
+Uses the tight `max` bound `ScalarBlockDiagData.norm_toScalarCLM_le_max` (Exercise 2.7.2). -/
 lemma norm_toScalarCLM_le_of_Q {N : ℕ} {ν : PosReal}
     (A : ScalarBlockDiagData N)
     (cols : Fin (N + 1) → Array ℚ) (ν_q tailBound_q : ℚ) {C : ℚ}
@@ -273,15 +273,10 @@ lemma norm_toScalarCLM_le_of_Q {N : ℕ} {ν : PosReal}
         (le_refl _))
       (le_of_eq htail)).trans (by exact_mod_cast hle)
 
-/-! ## Block-diagonal action on coefficient data
+/-! ## System block-diagonal action in exact ℚ
 
-The retained exact rational action is `blockActionQ`, with cast bridge
-`SystemBlockDiagData.action_eq_blockActionQ` below. The scalar-specialized action/evaluator
-wrappers formerly documented here are retired. -/
-
-
-
-/-! ## System block-diagonal action in exact ℚ -/
+The exact rational action `blockActionQ` of a block-diagonal operator on coefficient data, with
+its cast bridge `SystemBlockDiagData.action_eq_blockActionQ`. -/
 
 /-- Exact ℚ action of a block-diagonal operator with stored finite columns `matCols` and a
 rational tail diagonal `tailQ` on rational coefficients `c`: the finite block for `n ≤ N`, the

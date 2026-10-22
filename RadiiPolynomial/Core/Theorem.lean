@@ -27,13 +27,13 @@ is declared section-locally where it is used. The codomain `F` is a real normed 
 
 ## Local layers and faces
 
-Beside the global theorems, the file carries their local forms, with derivative data on the
-closed ball of the certified radius only (section `LocalTheorems`); the global theorems are
-proved as one application of their local forms. It also carries the finite-dimensional
-Neumann rungs (section `NeumannSeries`), the Horner list evaluation `hornerEval` and the
-convexity of the radii polynomial with a polynomial `Z₂` (sections
-`RadiiPolynomialDefinitions` and `RadiiPolynomialImplications`), and the finite-dimensional
-face with its output record `Enclosure` (section `FiniteDimensionalFace`).
+Beside the global theorem, the file carries the local forms, with derivative data on the
+closed ball of the certified radius only (section `LocalTheorems`); the global theorem is
+proved as one application of its local form. It also carries the finite-dimensional
+Neumann rungs (section `NeumannSeries`), the radii polynomials and the implication
+`p(r₀) < 0 ⟹ Z(r₀) < 1` (sections `RadiiPolynomialDefinitions` and
+`RadiiPolynomialImplications`), and the finite-dimensional face with its output record
+`Enclosure` (section `FiniteDimensionalFace`).
 -/
 
 namespace RadiiPolynomial
@@ -297,11 +297,9 @@ section OperatorBounds
 /-!
 ## Operator Bounds for Newton-Like Map
 
-These lemmas establish the key bounds needed to apply the contraction mapping theorem:
-1. Y₀ bound: ‖T(x̄) - x̄‖ ≤ Y₀ (initial displacement)
-2. Z bound: ‖DT(c)‖ ≤ Z(r) for c ∈ B̄ᵣ(x̄) (derivative bound)
-
-In the general E to F setting, the derivative is DT(x) = I_E - A ∘ Df(x).
+In the general E to F setting, the derivative of the Newton-like map is DT(x) = I_E - A ∘ Df(x).
+The derivative-free three-term split `norm_id_sub_comp_le_Z_bound` bounds `‖I - A Q‖` by
+`Z₀ + Z₁ + W` from `‖I - A A†‖ ≤ Z₀`, `‖A (A† - P)‖ ≤ Z₁` and `‖A (Q - P)‖ ≤ W`.
 -/
 
 variable [NormedAddCommGroup F] [NormedSpace ℝ F]
@@ -328,9 +326,6 @@ end OperatorBounds
 
 
 section HelperLemmas
-/-!
-## Helper Lemmas for Fixed Point Theorems
--/
 
 
 end HelperLemmas
@@ -341,11 +336,11 @@ section LocalTheorems
 /-!
 ## Local layers: derivative data on the closed ball only
 
-The global theorems of the next sections (`general_fixed_point_theorem`,
-`general_radii_polynomial_theorem`, `simple_radii_polynomial_theorem_EtoF`) assume
-`Differentiable ℝ f` on the whole space. Their local forms below need derivative data
+The global theorem `general_radii_polynomial_theorem` of a later section assumes
+`Differentiable ℝ f` on the whole space. The local forms below need derivative data
 `HasFDerivWithinAt f (Df x) (closedBall x̄ r₀) x` on the closed ball of the certified radius only,
-and each global theorem is one application of its local form. The local forms
+and the global theorem is one application of `general_radii_polynomial_theorem_local`.
+The local forms
 `radii_polynomial_theorem_of_norm_id_sub_le_local` and
 `general_radii_polynomial_theorem_nondegenerate_local` also locate the zero in the open ball and
 return the invertibility of `Df x̃`.
@@ -482,19 +477,6 @@ end LocalTheorems
 
 
 section FixedPointTheorem
-/-!
-## General Fixed Point Theorem (Theorem 7.6.1)
-
-This is the fixed point theorem for differentiable maps T : E → E on Banach spaces,
-corresponding to Theorem 7.6.1 in the informal proof.
-
-Given:
-- T : E → E (differentiable map on same space)
-- Bounds on ‖T(x̄) - x̄‖ and ‖DT(x)‖
-- Radii polynomial p(r) = (Z(r) - 1)r + Y₀
-
-If p(r₀) < 0, then there exists a unique fixed point x̃ ∈ B̄ᵣ₀(x̄).
--/
 
 variable [CompleteSpace E]
 
@@ -573,17 +555,6 @@ end GeneralRadiiPolynomialTheorem
 
 
 section SimpleRadiiPolynomialTheorem
-/-!
-## Simplified Radii Polynomial Theorem
-
-This is the simpler version when we don't need an explicit A†, or when we can effectively
-set A† = Df(x̄). This generalizes Theorem 2.4.2 of the reference book (stated there on ℝⁿ).
-
-The key simplification: Z₁ = 0, so the polynomial becomes:
-  p(r) = Z₂(r)r² - (1 - Z₀)r + Y₀
-
-This still works for f : E → F with different spaces, but requires tighter bounds.
--/
 
 variable [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
 
@@ -605,12 +576,8 @@ Faces of the local theorems for `f : E → E` on a finite-dimensional real norme
 * the output record `Enclosure` (invertible `A`, invertible `Df` on the closed ball, a unique zero
   in the closed ball lying in the open ball) and its projection `Enclosure.existsUnique`;
 * the single-`Z` face `enclosure_of_Z` (no hypothesis on `A`: finite dimension turns
-  `‖I - A Df(x̄)‖ < 1` into invertibility of `A`), the derived faces `enclosure_of_general`
-  (`Y₀, Z₀, Z₁, Z₂` with `A†`), `enclosure_of_radii` (`A† = Df x̄`), and the global-derivative
-  faces `enclosure_of_differentiable` / `enclosure_of_differentiableOn`, with the adapters
-  `hasFDerivWithinAt_fderiv_of_differentiable(On)`;
-* the two-radius and per-radius faces (`PairEnclosure`, `enclosure_pair(_poly)`,
-  `enclosure_Icc(_poly)`), with a polynomial `Z₂ = hornerEval cs` of any degree;
+  `‖I - A Df(x̄)‖ < 1` into invertibility of `A`) and the derived faces `enclosure_of_general`
+  (`Y₀, Z₀, Z₁, Z₂` with `A†`) and `enclosure_of_radii` (`A† = Df x̄`);
 * `general_rp_findim_local`, the local general theorem without an injectivity hypothesis on `A`.
 -/
 

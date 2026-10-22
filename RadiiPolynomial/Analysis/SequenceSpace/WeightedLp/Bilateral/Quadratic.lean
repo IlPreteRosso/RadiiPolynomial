@@ -4,7 +4,7 @@ import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.HeadProj
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Fourier.ConvolutionAction
 import Mathlib.Analysis.Calculus.FDeriv.Bilinear
 
-/-! Quadratic smoothing T∘q with q:X₂×X₂→Y and T:Y→X₂. AY has a pointwise disjoint-output identity and an upper operator-norm bound. The Lipschitz bounds use norm(2) ≤ 2 over a complete NontriviallyNormedField. Exact reciprocal-weight attainment is specified by the generic tail-diagonal service. -/
+/-! Quadratic smoothing T∘q with q:X₂×X₂→Y and T:Y→X₂. AY has a pointwise disjoint-output identity and an upper operator-norm bound. The Lipschitz bounds use norm(2) ≤ 2 over a complete NontriviallyNormedField. -/
 
 open scoped ENNReal NNReal
 
@@ -17,7 +17,7 @@ section TailInf
 variable {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal}
 variable (S : Set ℤ) [DecidablePred (· ∈ S)] (μ : ℤ → 𝕜)
 
-/-- **The cross-exponent tail diagonal at the carrier** `T∞ : Y 𝕜 ν → X₂ 𝕜 ν`: CF-2's face (b)
+/-- **The cross-exponent tail diagonal at the carrier** `T∞ : Y 𝕜 ν → X₂ 𝕜 ν`:
 `tailDiagInf` at the carrier weight `m_k = ν ^ |k|`, under `Summable ‖d‖²`. -/
 def tailInf (hs : Summable fun k => ‖tailSymbol S μ k‖ ^ 2) : Y 𝕜 ν →L[𝕜] X₂ 𝕜 ν :=
   tailDiagInf (fun k : ℤ => (ν : ℝ) ^ k.natAbs) S μ hs
@@ -177,11 +177,11 @@ def quadCLM : X₂ 𝕜 ν →L[𝕜] X₂ 𝕜 ν →L[𝕜] X₂ 𝕜 ν :=
 
 theorem quadCLM_apply (a b : X₂ 𝕜 ν) : quadCLM T a b = T (prodCLM a b) := rfl
 
-/-- The composite is symmetric (CF-1's `prodCLM_comm`). -/
+/-- The composite is symmetric (`prodCLM_comm`). -/
 theorem quadCLM_comm (a b : X₂ 𝕜 ν) : quadCLM T a b = quadCLM T b a := by
   rw [quadCLM_apply, quadCLM_apply, prodCLM_comm]
 
-/-- `‖quadCLM T‖ ≤ ‖T‖` (`‖compL T‖ ≤ ‖T‖` and CF-1's `‖prodCLM‖ ≤ 1`). -/
+/-- `‖quadCLM T‖ ≤ ‖T‖` (`‖compL T‖ ≤ ‖T‖` and `‖prodCLM‖ ≤ 1`, `norm_prodCLM_le`). -/
 theorem norm_quadCLM_le : ‖quadCLM T‖ ≤ ‖T‖ := by
   have hT : ‖ContinuousLinearMap.compL 𝕜 (X₂ 𝕜 ν) (Y 𝕜 ν) (X₂ 𝕜 ν) T‖ ≤ ‖T‖ :=
     ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg T) fun g =>

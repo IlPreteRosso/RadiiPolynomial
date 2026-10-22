@@ -3,14 +3,11 @@ import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
 import Mathlib.Analysis.Complex.Basic
 
 /-!
-# FIBER-TRIVIALIZATION-U1 probes (G2 / G3), frame-only edition
+# Fiber-trivialization probes, frame-only edition
 
-Compile probes for the `FiberTrivialization` refactor (consensus
-`CONSENSUS_fiber_trivialization.md` §1–§5, gates G2/G3), migrated by unit E1
-(`CONSENSUS_ft_reindex.md`): the legacy ten-field data class and its scalar-compatibility class
-are deleted with their compatibility layer, so the old-view, round-trip and coexistence probes
-are retired; the frame-selection probes (two frames on one family, the `−1` frame) are in
-`FT/FrameReindexProbes.lean`. NOT imported by the root facade; build with
+Compile probes for the `FiberTrivialization` frame API; the frame-selection probes (two
+frames on one family, the `−1` frame) are in `FT/FrameReindexProbes.lean`. NOT imported by
+the root facade; build with
 `lake build RadiiPolynomial.Examples.tests.FT.FiberTrivializationProbes`.
 -/
 

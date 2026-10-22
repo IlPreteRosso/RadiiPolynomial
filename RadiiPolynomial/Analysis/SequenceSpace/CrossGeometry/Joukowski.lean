@@ -5,28 +5,17 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.UnitLift
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.SymmetricSubalgebra
 
 /-!
-# The forward Joukowski map between coefficient algebras
+# The Joukowski map and the symmetric Laurent generator
 
 The symmetric Laurent generator
 
 `g = (e₁ + e₋₁) / 2`
 
-has power growth `‖gⁿ‖ ≤ 2 a(ν)ⁿ`, where
-`a(ν) = (ν + ν⁻¹) / 2` is the semi-major axis of the Bernstein ellipse.
-Consequently, whenever `a(ν) ≤ r`, the universal property of the Taylor
-algebra produces a continuous algebra homomorphism into the physical,
-flip-fixed Chebyshev algebra.  Its composite with the inclusion into the
-bilateral carrier is
-
-`joukowskiAeval : l1Weighted r →A[ℝ] l1Chebyshev ν`.
-
-On characters this map is contravariantly the classical Joukowski map
-`z ↦ (z + z⁻¹) / 2`: Laurent evaluation at an annulus point after
-`joukowskiAeval` is Taylor evaluation at its Joukowski image.  A further
-theorem (`comp_joukowskiAeval_eq_evalC`) states the same naturality for an
-arbitrary complex-valued character.  The last section replaces `g` by `1 + g`
-under the stronger gate `1 + a(ν) ≤ r`, so that the Chebyshev left endpoint
-pulls back to the Taylor centre.
+(`joukowskiGen`) is fixed by reflection of the bilateral modes (`joukowskiGen_isSymmetric`),
+so it is an element of the physical, flip-fixed Chebyshev algebra (`joukowskiGenSymm`).
+`joukowski z = (z + z⁻¹) / 2` is the classical Joukowski map; Laurent evaluation at an
+annulus point `z` sends `g` to `joukowski z` (`PhysicalSpectrum.restriction_gen` in
+`Chebyshev/Spectrum/Basic.lean`).
 
 This module is independent of the concrete Taylor/Chebyshev IVP applications
 and is exposed by the `CrossGeometry` sequence-space facade.
@@ -92,8 +81,6 @@ def joukowskiGenSymm (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] :
 
 
 
-
-/-! ### Boundary-aligned substitution -/
 
 
 

@@ -13,8 +13,8 @@ import Mathlib.Topology.ContinuousMap.Bounded.Normed
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Spectrum
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.OneSided
 
-/-! Public API for the bilateral Chebyshev weighted sequence algebra, the Laurent character
-space as the closed annulus (`Chebyshev.LaurentSpectrum`), the physical spectrum branch
-(`Chebyshev.Spectrum`: classification, Bernstein ellipse, series, pointwise topology,
-holomorphy on the open ellipse), and the finite Galerkin carrier `FνN` with its even padding and
-truncation (`Chebyshev.Galerkin`). `Chebyshev/Spectrum/*` sits above `CrossGeometry/Joukowski`. -/
+/-! Public API for the bilateral Chebyshev weighted sequence algebra, its Laurent evaluation on
+the closed annulus (`Chebyshev.UnitLift`), the physical spectrum branch (`Chebyshev.Spectrum`:
+classification, Bernstein ellipse, Bernstein's bound, holomorphy on the open ellipse), and the
+finite Galerkin carrier `FνN` with its even padding and truncation (`Chebyshev.Galerkin`).
+`Chebyshev/Spectrum/*` sits above `CrossGeometry/Joukowski`. -/

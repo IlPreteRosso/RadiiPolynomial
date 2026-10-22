@@ -20,7 +20,7 @@ declared here. The MvPolynomial bridge automates:
 
 1. **ℚ↔ℝ bridge**: `toSeq(aeval a p) n = (mvPolyCoeff p coeffs n : ℝ)`
    — reduces to `cauchyProduct.map_cauchyProduct (Rat.castHom ℝ)` + ring hom properties
-2. **Differentiability**: `aeval · p` is differentiable (polynomial on Banach algebra)
+2. **Derivative**: `aeval · p` has the derivative of the generic `MvPolynomial.hasFDerivAt_aeval`
 3. **Fderiv via pderiv**: `fderiv(aeval · p)(a) = Σᵢ leftMul(aeval a (pderiv i p)) ∘ proj i`
 4. **DF verification**: Jacobian entries = coefficients of `pderiv m (φ_spec j)` evaluated at `a`
 5. **Z₂ bound**: derivative-difference bounds from explicit pointwise Lipschitz sums.
@@ -51,7 +51,7 @@ variable {L : ℕ}
 
 variable {ν : PosReal}
 
--- Algebra ℚ instance and ratSmul_eq are in Analysis/SequenceSpace/Geometric/Basic.lean
+-- The `Algebra ℚ` instance `instAlgebraRat` is in Analysis/SequenceSpace/Geometric/Basic.lean
 
 /-! ## Coefficient bridge: `toSeq_aeval_of_coeffs`
 
@@ -108,8 +108,8 @@ theorem toSeq_aeval_of_coeffs (p : MvPolynomial (Fin L) ℚ)
 
 /-! ## Fréchet derivative via pderiv
 
-`fun a => aeval a p` is differentiable (polynomial on Banach algebra), and its Fréchet derivative
-at `a` equals `Σᵢ leftMul(aeval a (pderiv i p)) ∘ proj i`.
+The Fréchet derivative of `fun a => aeval a p` (a polynomial on a Banach algebra) at `a` equals
+`Σᵢ leftMul(aeval a (pderiv i p)) ∘ proj i`.
 
 This formalizes the book's equation (8.27): `Dφ_j(a)b = Σ_{j'} D_{a_{j'}} φ_j(a) · b_{j'}`. -/
 

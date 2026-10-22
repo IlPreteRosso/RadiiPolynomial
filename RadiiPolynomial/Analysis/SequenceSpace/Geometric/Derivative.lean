@@ -6,7 +6,7 @@ import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
 # Differentiability of `l1Weighted` constructions
 
 This file contains differentiability and `fderiv` lemmas for `l1Weighted`:
-Coordinate evaluation uses the existing CLM calculus directly. The retained construction faces are:
+Coordinate evaluation uses the CLM calculus directly. The construction faces are:
 - `differentiable_mk_of_finSupp`: finitely-supported `l1Weighted.mk` is differentiable
 - `fderiv_mk_of_finSupp_toSeq_tail`: fderiv vanishes on tail modes
 

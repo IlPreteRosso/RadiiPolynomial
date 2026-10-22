@@ -11,10 +11,9 @@ chosen frame and no completeness hypothesis. Its coefficient and atom computatio
 are `toRealSeq_diagCLM` and `diagCLM_single`.
 
 The indicator of `H : Finset J` defines `headProj H`; `tailProj H` is its complement
-`1 - headProj H`. The retained coefficient formulas describe their support, and
-`norm_tailProj_apply_le` gives `‖tailProj H x‖ ≤ ‖x‖` over a `NormedField`.
-The exact head/tail norm-aggregation and projection-law families belong to the staged
-head/tail record, which imports these retained primitives and the staged column principle.
+`1 - headProj H`. The coefficient formulas `toRealSeq_headProj` and `toRealSeq_tailProj`
+describe their support, and `norm_tailProj_apply_le` gives `‖tailProj H x‖ ≤ ‖x‖` over a
+`NormedField`.
 -/
 
 noncomputable section
@@ -180,8 +179,6 @@ theorem norm_tailProj_apply_le {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G 
   split_ifs
   · rw [one_smul, sub_self, norm_zero]; exact norm_nonneg _
   · rw [zero_smul, sub_zero]
-
-/-! ### Head/tail aggregation of column ratios -/
 
 
 

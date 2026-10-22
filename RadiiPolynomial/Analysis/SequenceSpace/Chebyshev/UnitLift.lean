@@ -13,13 +13,11 @@ carrier. `geomUnitLift_apply`, `geomUnitLift_single`, `geomUnitLift_gen` and
 identifies every such homomorphism with the lift of its unit `genUnit`, using
 `norm_genUnit_zpow_le`.
 
-The shipped complex evaluation of the real carrier is `l1Chebyshev.evalLaurentC`, with
+The complex evaluation of the real carrier is `l1Chebyshev.evalLaurentC`, with
 `evalLaurentC_apply`, `evalLaurentC_single` and `norm_evalLaurentC_apply_le`.
 `evalLaurentC_circle` places the unit circle in the annulus when `1 ≤ ν`.
-The additional annulus classification inequalities, general Laurent evaluator and symmetry/
-reality laws belong to the recovery module `B5RecordLaurentSpectrum`. They are not the
-shipped universal-property surface. The retained domination lemmas `unit_zpow_le_weight`
-and `norm_unit_zpow_le` do not impose `Fact (1 ≤ ν)`.
+The domination lemmas `unit_zpow_le_weight` and `norm_unit_zpow_le` do not impose
+`Fact (1 ≤ ν)`.
 -/
 
 open scoped BigOperators
@@ -308,8 +306,7 @@ theorem norm_evalLaurentC_apply_le (a : l1Chebyshev ν) :
   have h := lpOneAlg.norm_geomUnitLift_apply_le ν _ _ (lpOneAlg.norm_annulus_zpow_le ν hz) a
   rwa [one_mul] at h
 
-/-- The unit circle lies in the closed annulus `[ν⁻¹, ν]`, using `1 ≤ ν`.
-The additional conjugation and symmetry laws are in `B5RecordLaurentSpectrum`. -/
+/-- The unit circle lies in the closed annulus `[ν⁻¹, ν]`, using `1 ≤ ν`. -/
 theorem evalLaurentC_circle (θ : ℝ) :
     (ν : ℝ)⁻¹ ≤ ‖exp (θ * I)‖ ∧ ‖exp (θ * I)‖ ≤ (ν : ℝ) := by
   rw [norm_exp_ofReal_mul_I]

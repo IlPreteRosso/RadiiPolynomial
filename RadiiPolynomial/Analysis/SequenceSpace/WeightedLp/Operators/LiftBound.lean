@@ -7,12 +7,11 @@ import Mathlib.Analysis.RCLike.Lemmas
 `LiftBound` is the bound on finite atom sums. For `p ≠ ∞`, its extension into a complete
 normed target is specified by `liftCLM`, computation on atoms, a norm bound, uniqueness and
 `liftBound_iff`. Uniqueness and the converse do not assume target completeness. Atom-span
-density is owned here, as is the independent infinite-index p = ∞ non-density boundary
-explaining the finite-exponent hypothesis. The reciprocal-weight witness and its norm support are owned here with that boundary.
+density for `p ≠ ∞` is `dense_span_single`.
 
 The construction and uniqueness laws use a normed scalar field; operator-norm faces separately
 require nontrivially normed scalars. The kernel construction uses complete scalars. Its coordinate series
-converges unconditionally. Comparison with the existing Schur realization uses the same complete
+converges unconditionally. Comparison with the Schur realization uses the same complete
 normed-field frame; absolute row summability is a separate `RCLike` result. At `p = 1`, the exact criteria are the column bound and
 `ColSum`. No specialized diagonal, top, Schur, Laurent or head/tail producer is exported here.
 -/
@@ -414,12 +413,6 @@ theorem kernelLiftBound_one_iff :
     exact (div_le_iff₀ (FiberTrivialization.weight_pos j)).1 hj
 
 end KernelEndpoints
-
-/-! ### The p = ∞ boundary of the finite-p contract
-
-These are independent boundary laws showing why finite-support density cannot be used at
-p = ∞ on an infinite index. They do not assert a p = ∞ production consumer.
--/
 
 section InftyBoundary
 

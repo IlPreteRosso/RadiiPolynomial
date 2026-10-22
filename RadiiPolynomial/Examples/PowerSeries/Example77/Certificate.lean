@@ -11,12 +11,7 @@ Computer-assisted proof for `x² - λ = 0` at `λ₀ = 1/3`.
 `main_theorem` goes through `data : PolyZeroData` (the member `P = X·X` of the
 polynomial-zero family) and `PolyZeroData.existsUnique`; `data_checks` checks every
 bound in `ℚ` with one `decide +kernel`. `data` refers to `ā₀ ā₁ ā₂`, `lam0`, `ν_q` and `r₀`
-by name and writes the `A` columns and the four bounds as literals (equal to `A_colOf` and
-`Y₀_bound` … `Z₂_bound`).
-
-The lemmas `Y₀_le`, `Z₀_le`, `Z₁_le`, `A_norm_le`, `Z₂_le`, `radii_neg` and `A_injective`
-are the hand route over `ScalarBlockDiagData` (`finsum_bound`, `finmatrix_bound`,
-`leancert`) for the same constants; `main_theorem` does not consume them.
+by name and writes the `A` columns and the four bounds as literals.
 
 All parameter defs are ℚ. Lean auto-coerces ℚ → ℝ wherever ℝ is expected.
 -/
@@ -55,61 +50,12 @@ noncomputable def sol : ApproxSolution 2 where
 
 
 
-/-! ## Bridge Lemmas -/
-
-
-
--- ℚ-cast bridge (for Z₀/matrix norm/defect pipelines)
-
--- Array.map bridge: A_colR getD = ℚ cast
-
--- ℝ-array bridge (for toScalarCLM_toSeq_eq_action / Y₀)
-
-
-
-
-
-
-/-! ## Hand route (not consumed by `main_theorem`)
-
-Bounds over `ScalarBlockDiagData`; `finsum_bound`, `finmatrix_bound` and `leancert`
-discharge the numerical steps. -/
-
-/-! ### Y₀ -/
-
-
-
-/-! ### Z₀ -/
-
 open RadiiPolynomial in
-
-
-
-
-
-
-/-! ### Z₁ -/
-
-
-/-! ### Z₂ -/
-
-
-
-
-/-! ### Radii polynomial negativity -/
-
-
-
-/-! ### Injectivity -/
-
-
 /-! ## Main Theorem
 
-The equation is the member `P = X·X` of the polynomial-zero family, with the same `x̄`, `A`
-columns, radius and bounds as above (the `A` columns and bounds written as literals in
-`data`); one `decide +kernel`
-checks every bound in `ℚ`. `main_theorem` goes through `data` and does not use the hand
-route above. -/
+The equation is the member `P = X·X` of the polynomial-zero family, with the centre
+`ā₀ ā₁ ā₂` and radius `r₀` above; the `A` columns and bounds are written as literals in
+`data`, and one `decide +kernel` checks every bound in `ℚ`. -/
 
 /-- The certificate data (`λ₀ = 1/3`) as a `PolyZeroData`. -/
 def data : PolyZeroData where

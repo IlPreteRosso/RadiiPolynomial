@@ -20,11 +20,10 @@ keeps the Z₁ bound finite (the composed approximation is the identity on negat
 modes, so unsymmetrized derivative couplings would leak unpreconditioned); zeros of
 `G` have vanishing negative modes, where φ agrees with the book's Eq. 14.11.
 
-## The explicit derivative
+## The derivative
 
-`Dphi a h l = 2·S(aₗ)·S(hₗ) − S(hₗ)` is the example's own closed form of the adapter's
-derivative (`Dphi_eq_derivative`, `compPolyDerivative_apply_eq_Dphi`); the certificate uses
-the family's `compPolyDerivative`.
+The certificate uses the family's derivative `compPolyDerivative`; for `f_cpoly` its value in
+the direction `h` is `2·S(aₗ)·S(hₗ) − S(hₗ)`, a closed form not stated in this file.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal

@@ -34,7 +34,7 @@ the Newton-like map for the radii polynomial theorem.
 ## What Stays Equation-Specific
 
 - `f` definition (the polynomial vector field, e.g. `f` in `Example83.Algebra`)
-- Fderiv structure of `f` (via `auto_poly_fderiv`)
+- Fderiv structure of `f` (for polynomial fields, `toSeq_fderiv_aeval` and `ivp_hDF_block_nat`)
 - ℚ mirrors and bridges
 -/
 
@@ -144,8 +144,8 @@ This section provides the generic Z₁ bounds (recipe and exact-column), paramet
 
 /-- Generic Z₁ per-component bound, exact-column variant (tightening B).
 Finite modes cancel and the tail difference is `shiftDivN(Dφ(h) l)`; the tail is bounded by
-a caller-supplied per-component tail-tsum estimate `hDtail` — e.g. the exact
-weighted column-sup certified through `shiftDivN_leftMul_tail_le_of_cols` —
+a caller-supplied per-component tail-tsum estimate `hDtail` — e.g. the head-column
+bound `WeightedLp.tailTsum_shiftDivN_mul_le_of_colMass` —
 in place of the `shiftDivN_tailTsum_le_div` recipe `ν/(N+1) · ‖Dφ h l‖`. -/
 private lemma Z₁_component_le_exact [NeZero L]
     (composedApprox : SystemBlockDiagData L N)
@@ -178,8 +178,8 @@ are replaced by:
 - `hC`: `0 ≤ C`;
 - `hDtail`: per-component tail sum
   `∑' n, |(shiftDivN (Dφ h l))_(n+N+1)| · ν^(n+N+1) ≤ C * ‖h‖`
-  (instances discharge it through `shiftDivN_leftMul_tail_le_of_cols` after a
-  structural rewrite of `Dφ` as a left multiplication);
+  (instances discharge it through `WeightedLp.tailTsum_shiftDivN_mul_le_of_check` after a
+  structural rewrite of `Dφ` as a sum of left multiplications);
 - `hZ₁`: `C ≤ Z₁`.
 `hfin`/`htail` are exactly as in `ivp_Z₁_le`. -/
 lemma ivp_Z₁_le_exact [NeZero L]
@@ -269,7 +269,7 @@ lemma ivp_Y₀_le
     ‖ivpMap A φ x₀ hmem ā‖ ≤ C := by
   -- Step 1: ‖G(ā)‖ = sup_l ‖G(ā) l‖ where G(ā) l = l1Weighted.mk(A.action(...))
   refine (pi_norm_le_iff_of_nonneg hC).mpr fun l => ?_
-  -- Step 2: ‖G(ā) l‖ = finite sum (support bound from A.toCLM_support)
+  -- Step 2: ‖G(ā) l‖ = finite sum (support bound from `SystemBlockDiagData.action_tail`)
   rw [l1Weighted.norm_eq_Icc_sum_of_support (ivpMap A φ x₀ hmem ā l) S
     (fun n hn => by
       rw [ivpMap_coeff, SystemBlockDiagData.action_tail _ _ _ _ (by omega : N < n),

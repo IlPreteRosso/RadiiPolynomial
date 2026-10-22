@@ -3,8 +3,8 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Evaluation
 /-!
 # Sharper bounds for Chebyshev evaluation
 
-For the production one-sided-in-bilateral storage convention, evaluation on
-`[-1, 1]` is contractive once the geometric weight is at least `2`.  No
+For the one-sided-in-bilateral storage convention of `l1Chebyshev.eval` (modes `k ≥ 0`),
+evaluation on `[-1, 1]` is contractive once the geometric weight is at least `2`.  No
 symmetry hypothesis is required.
 -/
 
@@ -21,7 +21,7 @@ open Polynomial.Chebyshev
 variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
 /-- At weights `ν ≥ 2`, evaluation on `[-1, 1]` is contractive on the
-production storage carrier. -/
+storage carrier `l1Chebyshev ν`. -/
 theorem abs_eval_le_norm_of_two_le (hν : (2 : ℝ) ≤ (ν : ℝ))
     (a : l1Chebyshev ν) {t : ℝ} (ht : |t| ≤ 1) :
     |eval a t| ≤ ‖a‖ := by
@@ -69,7 +69,7 @@ theorem abs_eval_le_norm_of_two_le (hν : (2 : ℝ) ≤ (ν : ℝ))
   rw [hzero] at hsplit
   linarith
 
-/-- At weights `ν ≥ 2`, the existing storage evaluator has operator norm at most `1`.
+/-- At weights `ν ≥ 2`, the storage evaluator `evalAtCLM t ht` has operator norm at most `1`.
 This bound on the linear evaluator supplies no multiplication law on raw storage. -/
 theorem norm_evalAtCLM_le_of_two_le (hν : (2 : ℝ) ≤ (ν : ℝ))
     (t : ℝ) (ht : |t| ≤ 1) :

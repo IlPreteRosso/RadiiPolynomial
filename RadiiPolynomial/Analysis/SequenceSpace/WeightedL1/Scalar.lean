@@ -22,9 +22,9 @@ positive weight function. This provides a single parameterized fiber type that u
   structure on lpOneAlg, through `WeightedScalar.instLpOneAlgWeightMul`)
 - `NormalizedWeight w`: independent normalization `w 0 = 1` (adds a norm-one unit)
 
-The lower bound `∀ m, 1 ≤ w m` remains independent of positivity and submultiplicativity.
-Pointwise coefficient estimates can use it with the retained weighted norm identity
-`lpOneAlg.norm_eq_abs_toReal_mul_weight`; the former extraction convenience wrappers are retired.
+The lower bound `∀ m, 1 ≤ w m` is independent of positivity and submultiplicativity.
+Pointwise coefficient estimates can use it with the weighted norm identity
+`lpOneAlg.norm_eq_abs_toReal_mul_weight`.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal
@@ -104,8 +104,7 @@ def ofReal : 𝕜 ≃+ WeightedScalar 𝕜 w m := AddEquiv.refl 𝕜
     (equiv : 𝕜 ≃ₗ[𝕜] WeightedScalar 𝕜 w m).symm x = toReal x := rfl
 
 
--- No coe_*/toReal_apply simp lemmas (retired at 35f292a);
--- use equiv_apply, equiv_symm_apply, toReal_ofReal, norm_def.
+-- No coe_*/toReal_apply simp lemmas; use equiv_apply, equiv_symm_apply and norm_def.
 
 /-! ### Weighted Norm -/
 

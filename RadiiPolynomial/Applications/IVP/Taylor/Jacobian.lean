@@ -128,7 +128,7 @@ Given:
 - `hDF` — numerical verification that A_dag.finBlock matches `ivp_DF_of_Dφ`
 
 Proves that the Fréchet derivative of `ivpCoeffs` matches the `A_dag.finBlock` action.
-This is the `hDF_block` hypothesis required by `ivp_system_theorem`. -/
+This is the `hDF_block` hypothesis of `composedApprox_eq_fderiv_fin`. -/
 theorem ivp_hDF_block
     (A_dag : BlockDiagOp L N)
     (φ : XL1 ν L → Fin L → l1Weighted ν)

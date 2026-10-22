@@ -107,6 +107,4 @@ end TaylorTail
 
 end RadiiPolynomial.WeightedLp
 
-/-! ### The Taylor adapter clause through the kernel test -/
-
 end

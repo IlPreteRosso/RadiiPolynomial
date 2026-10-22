@@ -6,15 +6,14 @@ import Mathlib.LinearAlgebra.Matrix.Defs
 # Derivatives of `CompPoly` evaluations on `R^L`
 
 For a normed commutative real algebra `R`, the derivative of `x ↦ p.evalBanach x` is
-`gradCLM p x`, and a polynomial system has derivative `jacCLM P x`. The retained
+`gradCLM p x`, and a polynomial system has derivative `jacCLM P x`. The witnesses
 `hasFDerivAt_evalBanach` and `hasFDerivAt_system` use
 `MvPolynomial.hasFDerivAt_aeval` through `evalBanach_eq_aeval_map`.
 
 `gradCLM`, `jacobian` and `jacCLM` are transparent definitions. The computation faces
 `gradCLM_apply`, `jacCLM_apply`, `gradCLM_eq_polynomialDerivative` and
 `gradCLM_eq_mul_comp_proj` expose their coordinate and one-dimensional forms.
-Differentiability follows from the displayed `HasFDerivAt` witnesses; the former real
-`contDiff_evalBanach`/`differentiable_evalBanach` convenience wrappers are retired.
+Differentiability follows from the displayed `HasFDerivAt` witnesses.
 -/
 
 open scoped BigOperators

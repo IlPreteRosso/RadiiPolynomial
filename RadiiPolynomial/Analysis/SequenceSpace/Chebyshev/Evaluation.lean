@@ -17,8 +17,7 @@ sequence-space representation:
 
 * `summable_eval` — absolute convergence on `|t| ≤ 1` from `|T_k(t)| ≤ 1` and
   `Σ|a_k| ≤ Σ|a_k| ν^k < ∞` (this is where `1 ≤ ν` enters);
-* `continuousOn_eval`, `eval_at_neg_one`, `eval_at_one`, `eval_symmetrize`,
-  linearity `eval_add / eval_sub / eval_smul / eval_neg`, `eval_one`;
+* `continuousOn_eval`, `eval_at_neg_one`, linearity `eval_add / eval_smul`, `eval_one`;
 * the bound `abs_eval_le_norm_symmetrize : |u_a(t)| ≤ ‖symmetrize a‖`, with the
   corollaries `abs_eval_le_two_mul_norm` and `abs_eval_le_norm_of_isSymmetric`;
 * the dictionary `evalLaurentC_circle_eq_eval`: for symmetric `a`
@@ -28,8 +27,8 @@ sequence-space representation:
   `map_mul` of the character transported by the dictionary, without expanding
   the Cauchy product in that proof.
 
-Also here: the symmetric elements are closed under `0`, `1`, `+`, `-`, `•`
-and `*` (`l1Chebyshev.IsSymmetric.mul` reindexes the convolution sum by `i ↦ -i`).
+Also here: the symmetric elements are closed under `1`, `+`, `•` and `*`
+(`l1Chebyshev.IsSymmetric.mul` reindexes the convolution sum by `i ↦ -i`).
 
 Every claim is machine-checked below; `[Fact (1 ≤ (ν : ℝ))]` is assumed where
 the ring structure or the domination `1 ≤ ν^k` needs it (section-wide in the

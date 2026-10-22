@@ -15,10 +15,10 @@ maps `l1Chebyshev.OneSided.restr : ℓ¹_ν(ℤ) →L ℓ¹_ν(ℕ)` (‖restr x
 nonnegative modes, apply `D.actionFinite`, re-embed with zero negative modes.
 
 The composed approximate derivative `composedApproxCheb D` is the generic
-`BlockDiagLift.composedApproxCLM`; it equals `id − defectChebCLM D`
-(`composedApproxCheb_eq_id_sub`).
+`BlockDiagLift.composedApproxCLM` at `instBlockDiagLiftXCheb`; it is `h ↦ h − defectCheb_apply D h`
+(`composedApproxCheb_apply`), with the `Z₀` bound `composedApproxCheb_Z₀`.
 Norm bound, pointwise form: `‖defectCheb_apply D h‖ ≤ finiteBlockMatrixNorm(D.finBlock) * ‖h‖`
-(`defectCheb_norm_le`), from which `defectChebCLM` is built; the operator-norm form is not
+(`defectCheb_norm_le`), the norm field of the instance; the operator-norm form is not
 stated separately.
 -/
 

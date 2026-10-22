@@ -35,8 +35,8 @@ series termwise, so its zeros are read back the same way — the **integral-equa
   ball (Mathlib's one-sided
   `ODE_solution_unique_of_mem_Icc_right`, the initial time being the endpoint `-1`);
 * `eval_traj_in_closedBall_of_evalBound` — a proved uniform bound `C` for the existing
-  evaluation CLM gives trajectory radius `C‖a‖`. The polynomial sockets select `2` or,
-  at weights `ν ≥ 2`, `1`.
+  evaluation CLM gives trajectory radius `C‖a‖`. The polynomial faces of
+  `Chebyshev/AnalyticPolynomial.lean` select `2` or, at weights `ν ≥ 2`, `1`.
 
 The nonlinearity enters only through the hypothesis `hφ : u_{φ(a)_l}(t) = f(u(t))_l` on
 `[-1, 1]`. For coefficient and function interpretations of the same `CompPoly` system,

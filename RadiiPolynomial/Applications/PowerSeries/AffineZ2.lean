@@ -2,22 +2,18 @@ import RadiiPolynomial.Core.AlgebraZ2
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
 
 /-!
-# Z₂ Bounds for Affine-Fderiv Maps on `l1Weighted ν` (transition module)
+# Z₂ Bounds for Affine-Fderiv Maps on `l1Weighted ν`
 
-`Z₂` infrastructure for maps on `l1Weighted ν` whose Fréchet derivative is affine in `leftMul`:
+`Z₂` bound for maps on `l1Weighted ν` whose Fréchet derivative is affine in `leftMul`:
   `fderiv ℝ f x = α • leftMul x + K`
-where `α : ℝ` is a scalar and `K` is a constant CLM. These are the power-series consumers of the
-degree-general `Z₂` engine `Z₂_ball_bound_of_mul_lipschitzOn` (`Core/AlgebraZ2`), kept beside
-their consumers; polynomial maps of any degree use `Z₂_ball_bound_of_polyMap` directly.
+where `α : ℝ` is a scalar and `K` is a constant CLM. It is the power-series case of the
+degree-general `Z₂` engine `Z₂_ball_bound_of_mul_lipschitzOn` (`Core/AlgebraZ2`); polynomial
+maps of any degree use `Z₂_ball_bound_of_polyMap` directly.
 
-## Main results
+## Main result
 
-- `fderiv_diff_of_affine_leftMul`: fderiv difference factors through `leftMul`
-- `norm_fderiv_diff_of_affine_leftMul`: norm bound `|α| * ‖c - a‖`
 - `Z₂_ball_bound_of_affine_leftMul`: Z₂ ball bound `|α| * ‖A‖ * r₀`, a corollary of the engine
   with `g x = α • x`
-- `Z₂_ball_bound_of_affine_leftMul_of_poly`: the rational-slope case through the `CompPoly`
-  face `Z₂_ball_bound_of_compPoly` with `Q = α·X`
 -/
 
 open scoped Topology

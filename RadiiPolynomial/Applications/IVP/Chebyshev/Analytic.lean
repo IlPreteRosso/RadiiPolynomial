@@ -17,8 +17,6 @@ into the function-level statement: the IVP `u̇ = f(u)`, `u(-1) = p` has a solut
   finite defect block has norm `< 1` (which the radii polynomial supplies when `Z₀` bounds
   the finite block: `StdChebIVPData.defect_finBlockNorm_lt_one_of_radii`).
   Mirrors `IVP.StdIVPData.ivpCoeffs_zero_of_G_zero`.
-- The additional negative-mode face for a zero of `G` belongs to the recovery module
-  `B5RecordChebNegativeModes`; it is not part of this shipped solution interface.
 - `ChebyshevIVP.IsSolution f p R g` (`structure`) — "`g` solves `u̇ = f(u)`, `u(-1) = p`
   on `[-1, 1]` with trajectory in `closedBall 0 R`". Four fields: `init`, `cont`, `in_R`,
   `solves` (the last is the one-sided `HasDerivWithinAt … (Ici t)` form on `[-1, 1)`, which
@@ -28,8 +26,8 @@ into the function-level statement: the IVP `u̇ = f(u)`, `u(-1) = p` has a solut
 - `StdChebIVPData.x_sol_isSolution_of_evalBound` / `x_sol_hasDerivAt` / `solution_eq_canonical_of_evalBound` /
   `solution_existsUnique_of_evalBound`.
 - The declarations ending in `_of_evalBound` consume a proved uniform bound `C` on the
-  existing evaluator. Their radius condition is `C(‖ā‖ + r₀) ≤ R`; polynomial sockets
-  select `C = 2` or, at weights `ν ≥ 2`, `C = 1`.
+  existing evaluator. Their radius condition is `C(‖ā‖ + r₀) ≤ R`; the polynomial faces of
+  `Chebyshev/AnalyticPolynomial.lean` select `C = 2` or, at weights `ν ≥ 2`, `C = 1`.
 
 **No analyticity is claimed in this file.** The conclusions are continuity on `[-1, 1]`,
 the one-sided derivative on `[-1, 1)` (`IsSolution.solves`) and the two-sided derivative on
@@ -179,8 +177,8 @@ variable [NeZero L] [Fact (1 ≤ (ν : ℝ))] (d : StdChebIVPData ν L N)
 
 /-- **Existence + uniqueness on `[-1, 1]`**, from the four radii-polynomial bounds
 together with a proved uniform evaluator bound. The coefficient witness exposes the
-canonical trajectory needed by the analyticity socket. Uniqueness is modulo `Set.EqOn`:
-competitors may differ outside `[-1, 1]`.
+canonical trajectory `x_sol xTilde`, the object of `analyticOnNhd_x_sol`. Uniqueness is
+modulo `Set.EqOn`: competitors may differ outside `[-1, 1]`.
 
 `hφ` says that the coefficient nonlinearity `φ` evaluates to the ODE vector field `f`.
 When both interpret the same `CompPoly` system, `MvPolyBridge.CompPoly.Chebyshev.eval_eval`

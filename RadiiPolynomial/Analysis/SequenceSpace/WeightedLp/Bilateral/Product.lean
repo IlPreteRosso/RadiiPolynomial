@@ -159,8 +159,7 @@ variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] {ν 
 variable [Fact (1 ≤ (ν : ℝ))]
 
 /-- **The bounded bilinear product** `X₂ 𝕜 ν →L[𝕜] X₂ 𝕜 ν →L[𝕜] Y 𝕜 ν` (`ν ≥ 1`), with raw
-coefficients `∑' j, coeff x j * coeff y (k - j)` and norm at most `1` (exactly `1`,
-`norm_prodCLM_eq`). -/
+coefficients `∑' j, coeff x j * coeff y (k - j)` and norm at most `1` (`norm_prodCLM_le`). -/
 def prodCLM : X₂ 𝕜 ν →L[𝕜] X₂ 𝕜 ν →L[𝕜] Y 𝕜 ν :=
   prodLM.mkContinuous₂ 1 fun x y => by
     rw [one_mul]

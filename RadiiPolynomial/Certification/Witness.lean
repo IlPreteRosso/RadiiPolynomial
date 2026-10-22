@@ -9,16 +9,17 @@ the abstract CLM norms (Y₀, Z₀, ‖A‖) and the `finsum_bound` computationa
 
 ## Architecture
 
-General-L lemmas first, then L=1 specializations, then the array element `l1OfArrayQ`, and a
-closing documentation section (no declarations) on the column norm pipeline.
+The L=1 support and norm reductions first, then the rational-array norm bridge
+`l1Weighted.norm_eq_ratCast_sum_of_support`, and a closing documentation section (no
+declarations) on the column norm pipeline.
 
 ## What belongs here (equation-independent)
 
-- **Y₀**: `‖A.toCLM(v)‖` for finitely-supported `v` → finite sum per component
+- **Y₀**: `‖A.toScalarCLM v‖` for finitely-supported `v` → finite sum (L = 1)
 - **Z₀**: `finiteBlockMatrixNorm` / `finWeightedMatrixNorm` of defect → column norm sums
 - **‖A‖**: `finiteBlockMatrixNorm + tailBound` → column norm sums
 
-(For Z₀ and ‖A‖ this file has no lemmas: §3 documents the column norm reduction, whose lemmas
+(For Z₀ and ‖A‖ this file has no lemmas: §2 documents the column norm reduction, whose lemmas
 are in `Operators/Matrix/WeightedNorm.lean`.)
 
 ## What stays elsewhere
@@ -35,12 +36,6 @@ noncomputable section
 
 namespace RadiiPolynomial
 
-/-! ## 1. Support Bound (General L)
-
-When `v : XL1 ν L` has componentwise support ≤ M with M ≥ N,
-`A.toCLM v` also has componentwise support ≤ M.
-On tail modes (n > M ≥ N), the action is `A.tailDiag l n * v_l_n = A.tailDiag l n * 0 = 0`. -/
-
 section GeneralL
 
 variable {ν : PosReal} {L N : ℕ}
@@ -50,7 +45,7 @@ variable {ν : PosReal} {L N : ℕ}
 
 end GeneralL
 
-/-! ## 2. Support Bound and Norm Reduction (L = 1 Specialization) -/
+/-! ## 1. Support Bound and Norm Reduction (L = 1 Specialization) -/
 
 section ScalarSpecialization
 
@@ -96,15 +91,13 @@ theorem l1Weighted.norm_eq_ratCast_sum_of_support {ν : PosReal}
 
 end ArrayElements
 
-/-! ## 3. Column Norm Pipeline (documentation)
+/-! ## 2. Column Norm Pipeline (documentation)
 
 The Z₀ and ‖A‖ bounds reduce to `finWeightedMatrixNorm` (for L=1) or
 `finiteBlockMatrixNorm` (for general L), computed via column norms.
 
-The shipped exact-rational bridge is
+The exact-rational bridge is
 `FiniteWeightedNorm.finWeightedMatrixNorm_le_of_Q_le` in `Certification/Rational/Matrix.lean`.
-The older array-to-column and column-to-matrix helper family is recovered in
-`B5RecordDyadicP2`; it is not re-exported by this file.
 
 For general L, `finiteBlockMatrixNorm` = `max_l Σ_j blockEntryNorm l j` where each
 `blockEntryNorm ν A.finBlock l j = finWeightedMatrixNorm ν (A.finBlock l j)`

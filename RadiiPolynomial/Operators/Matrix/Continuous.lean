@@ -22,9 +22,8 @@ maps on the finite weighted `ℓ¹` space:
 
 The algebra equivalence is purely algebraic: no norm on matrices enters it. The norm identity
 for the weighted matrix norm is the separate theorem `finWeightedMatrixNorm_eq_opNorm`
-(`Operators/Matrix/OperatorNorm.lean`). The transport lemmas (`toWeightedCLM_one`,
-`toWeightedCLM_mul`, `toWeightedCLM_one_sub`, `isUnit_toWeightedCLM_iff`) are its `map_*`
-corollaries.
+(`Operators/Matrix/OperatorNorm.lean`). The transport lemmas `toWeightedCLM_one_sub` and
+`isUnit_toWeightedCLM_iff` are its `map_*` corollaries.
 -/
 
 open scoped BigOperators Topology NNReal ENNReal Matrix

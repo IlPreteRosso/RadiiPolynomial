@@ -11,5 +11,5 @@ import Mathlib.Topology.Algebra.Algebra
 import Mathlib.Topology.ContinuousMap.Bounded.Normed
 
 /-! Public API for geometrically weighted sequence spaces and power-series evaluation,
-full-disc real and complex analyticity of realizations (`Geometric.Analytic`), and the
-character space as the closed disc (`Geometric.Spectrum`). -/
+real and complex evaluation arrows (`Geometric.Aeval`, `Geometric.EvalC`), and full-disc real
+and complex analyticity of realizations (`Geometric.Analytic`). -/

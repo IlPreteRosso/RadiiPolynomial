@@ -34,7 +34,7 @@ The tactic:
 1. Elaborates the bridge term (which has one remaining argument of type `_ ≤ _`)
 2. Creates a fresh mvar for the `hle` argument
 3. Applies the bridge proof with the mvar
-4. Calls `closeBridgeWithVerificationTyped` (the successor of `closeBridgeWithNativeDecide`)
+4. Calls `closeBridgeWithVerificationTyped`
    to close `hle` by the configured verification route (`native_decide` by default), with
    converter fallbacks
 -/
@@ -86,7 +86,7 @@ elab_rules : tactic
       let proof := mkApp bridgeExpr checkMVar
 
       -- Close with native_decide (+ converter fallback).
-      -- `closeBridgeWithVerificationTyped` (formerly `closeBridgeWithNativeDecide`) reports
+      -- `closeBridgeWithVerificationTyped` reports
       -- outcomes as `Except BridgeFailure VerificationEvent` instead of throwing, so the
       -- failure branch has to be re-raised here to keep this tactic failing loudly.
       let result ← closeBridgeWithVerificationTyped goal goalType proof checkMVar

@@ -6,9 +6,9 @@ import RadiiPolynomial.Algebra.Polynomial.CompPoly.Chebyshev
 
 The two norm constants a Chebyshev certificate needs from its nonlinearity — the operator
 norm of `derivative p a` (the Z₁ constant `K`) and the Lipschitz constant of
-`a ↦ derivative p a` (the Z₂ constant) — are read off the syntax tree; the size bound
-`norm_eval_le` is the building block for the first and the Lipschitz bound
-`norm_eval_sub_le` for the second. The input radii are stated on the
+`a ↦ derivative p a` (the Z₂ constant) — are read off the syntax tree:
+`norm_derivative_apply_le` for the first, `norm_derivative_sub_le` and
+`norm_derivative_sub_le_of_norm_sub` for the second. The input radii are stated on the
 symmetrized inputs `‖symmetrize (a i)‖ ≤ R i`, which is the quantity a certificate bounds
 in exact arithmetic (bilateral finite support), so no factor is lost on the way in; the
 only geometric constants are `‖symmetrize‖ ≤ 2` on the direction `h` (absorbed into

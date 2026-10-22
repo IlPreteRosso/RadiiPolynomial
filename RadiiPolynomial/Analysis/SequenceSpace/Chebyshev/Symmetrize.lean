@@ -124,7 +124,7 @@ lemma symmetrize_norm_le (a : l1Chebyshev ν) : ‖symmetrize a‖ ≤ 2 * ‖a�
     rw [h3]
   linarith [hnorm, hleg1, hleg2]
 
-/-- The symmetrization as a CLM (`symmetrize_CLM_norm_le : ‖·‖ ≤ 2`). -/
+/-- The symmetrization as a CLM, with bound `2` from `symmetrize_norm_le`. -/
 def symmetrize_CLM : l1Chebyshev ν →L[ℝ] l1Chebyshev ν :=
   LinearMap.mkContinuous
     { toFun := symmetrize

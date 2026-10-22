@@ -243,9 +243,10 @@ lemma StdChebIVPData.fderiv_G_single_fin_eq_cast_of_compPoly
 
 /-! ## Certificate constants from syntax
 
-The Z₁ operator constant and the Z₂ Lipschitz constant of the system derivative are
-read off the polynomial syntax, with the input radii stated on the symmetrized candidate.
-These are the system (`Fin L`-valued) faces of the componentwise lemmas in
+The Z₂ Lipschitz constant of the system derivative is read off the polynomial syntax, with
+the input radii stated on the symmetrized candidate (`norm_compPolyDerivative_sub_le`,
+`norm_compPolyDerivative_sub_le_max`). These are the system (`Fin L`-valued) faces of the
+componentwise lemmas in
 `CompPoly/Chebyshev/Bounds.lean`; a certificate whose Z₁ theorem is componentwise
 (`chebyshev_Z₁_le_relaxed`) uses `norm_derivative_apply_le` directly. -/
 

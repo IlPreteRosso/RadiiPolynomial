@@ -6,9 +6,9 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.SymmetricSubalgebra
 # Polynomial semantics for stored Chebyshev coefficients
 
 The stored nonnegative modes determine a symmetric Laurent sequence. `eval`
-interprets a `CompPoly` after this symmetrization, so its output belongs to the
-physical Chebyshev algebra. `eval_eval` commutes this interpretation with evaluation
-on the real interval through algebra-hom naturality.
+interprets a `CompPoly` after this symmetrization; inside the proof of `eval_eval` its value
+is read as an evaluation in the physical Chebyshev algebra. `eval_eval` commutes this
+interpretation with evaluation on the real interval through algebra-hom naturality.
 
 `derivative` composes the generic polynomial derivative with the linear
 symmetrization of directions. Its single-mode formulas expose both Laurent shifts

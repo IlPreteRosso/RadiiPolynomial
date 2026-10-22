@@ -39,8 +39,8 @@ variable {ν : PosReal} {L N : ℕ} [NeZero L] [Fact (1 ≤ (ν : ℝ))]
   (d : StdChebIVPData ν L N) (f : Fin L → CompPoly L) (p : Fin L → ℝ)
 
 /-- Polynomial structural obligations for a proved uniform evaluator bound, exposing
-one canonical coefficient witness. The default, contractive and analytic sockets all
-consume this face; only the evaluator bound and trajectory radius vary. -/
+one canonical coefficient witness. The default, contractive and analytic solution faces
+below all consume it; only the evaluator bound and trajectory radius vary. -/
 theorem exists_canonical_solution_of_compPoly_of_evalBound
     (C : NNReal)
     (h_eval : ∀ (t : ℝ) (ht : |t| ≤ 1),
@@ -66,7 +66,7 @@ theorem exists_canonical_solution_of_compPoly_of_evalBound
       ((mul_nonneg C.coe_nonneg (add_nonneg (norm_nonneg _) hr₀.le)).trans hR)) hR
 
 /-- Existence and uniqueness with the default storage evaluation bound `2`.
-The socket chooses its evaluator witness internally. -/
+The evaluator witness is chosen internally. -/
 theorem solution_existsUnique_of_compPoly
     {Y₀ Z₀ Z₁ Z₂_val r₀ : ℝ}
     (hr₀ : 0 < r₀)
@@ -88,7 +88,7 @@ theorem solution_existsUnique_of_compPoly
   exact ⟨x_sol xTilde, hsol, huniq⟩
 
 /-- Existence and uniqueness with the contractive storage evaluation bound at `2 ≤ ν`.
-The socket chooses bound `1` and its proved evaluator witness internally. -/
+The bound `1` and its proved evaluator witness are chosen internally. -/
 theorem solution_existsUnique_of_two_le_of_compPoly
     (hν : (2 : ℝ) ≤ (ν : ℝ))
     {Y₀ Z₀ Z₁ Z₂_val r₀ : ℝ}

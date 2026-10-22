@@ -21,8 +21,8 @@ The derivative difference is controlled by the centred majorant
 On the Galerkin space `E ν N L = Fin L → FνN ν N`, the componentwise lift `I` (the even padding
 `ιN`) and projection `Pi'` (the truncation `πN`) are contractions (`norm_I_le`, `norm_Pi'_le`; `I` is
 isometric, `norm_I_apply`) into and out of
-`(symmetricSubalgebra ν)^L`. Consumers instantiate the retained generic bound
-`norm_DpolyFace_sub_le` with these maps rather than a specialized Galerkin fderiv wrapper.
+`(symmetricSubalgebra ν)^L`. Consumers instantiate the generic bound
+`norm_DpolyFace_sub_le` with these maps.
 -/
 
 noncomputable section

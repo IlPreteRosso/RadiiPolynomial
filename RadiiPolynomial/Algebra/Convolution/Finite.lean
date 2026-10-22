@@ -17,14 +17,9 @@ additive fibers `Finset.antidiagonal m` (pairs with `i + j = m`) of a type with
 `Finset.HasAntidiagonal`. In both versions the coefficients are MULTIPLIED; only the index
 operation changes. Every sum is finite, so the module needs no topology and no summability.
 
-The shipped core provides the operation, its finite-sum application formula, and external
-scalar compatibility in the first input. The Cauchy product of natural-index sequences
-(`RadiiPolynomial.cauchyProduct`) is its additive-index specialization on `ℕ`.
-
-The other algebraic laws, coefficient-map law, and general-coefficient atom actions belong
-to the finite-fiber convolution recovery record. Their original hypotheses remain local to
-each law, including explicit left/right zero-multiplication hypotheses where needed; they
-do not impose topology, cancellation or commutativity on this operation.
+The module provides the operation, its finite-sum application formula (`apply`), and external
+scalar compatibility in the first input (`smul_left`). The Cauchy product of natural-index
+sequences (`RadiiPolynomial.cauchyProduct`) is its additive-index specialization on `ℕ`.
 -/
 
 open Finset

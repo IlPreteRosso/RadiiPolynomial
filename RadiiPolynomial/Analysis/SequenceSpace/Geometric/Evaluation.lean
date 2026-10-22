@@ -13,7 +13,7 @@ Bridges the coefficient space ℓ¹_ν to analytic functions via power series ev
 ## Main Results
 
 * `l1Weighted.eval`: Evaluation `∑' n, aₙ zⁿ` at a real point `z` (defined for every `z` by
-  `tsum`; summability and the algebra laws are proved for `|z| ≤ ν`)
+  `tsum`; summability, additivity and multiplicativity are proved for `|z| ≤ ν`)
 * `l1Weighted.aeval_of_norm_le_apply_real`: The universal arrow's real series formula
 * `l1Weighted.eval_mul`: Pointwise multiplicativity from the universal arrow's `map_mul`
 -/
@@ -110,7 +110,7 @@ private def evalCLM (z : ℝ) (hz : |z| ≤ ν) : l1Weighted ν →L[ℝ] ℝ :=
 
 
 /-- The pointwise evaluation bound: `|eval a z| ≤ ‖a‖_ν` on the disk of convergence.
-Repackages the pre-Mertens continuous-linear bound as a direct estimate, useful for
+Repackages the continuous-linear bound (operator norm `≤ 1`) as a direct estimate, useful for
 trajectory bounds (see `Applications/IVP/Taylor/Trajectory.lean`). -/
 lemma abs_eval_le (a : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
     |eval a z| ≤ ‖a‖ := by
@@ -122,7 +122,7 @@ lemma abs_eval_le (a : l1Weighted ν) {z : ℝ} (hz : |z| ≤ ν) :
   rw [show |eval a z| = ‖evalCLM z hz a‖ from rfl]
   exact this
 
-/-! ## Finite sums and multiplicativity -/
+/-! ## Multiplicativity -/
 
 
 

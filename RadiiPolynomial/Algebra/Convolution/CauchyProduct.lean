@@ -8,13 +8,13 @@ import RadiiPolynomial.Algebra.Convolution.Finite
 This module defines the finite-sum Cauchy product over a semiring and its coefficient
 formulas. `cauchyProduct_eq_finiteAddConvolution` identifies it with finite-fiber convolution
 on the additive index `ℕ`; the operation keeps coefficient multiplication in its original order.
-The retained API includes the range-sum formula, scalar multiplication in the first
-input, finite-support splitting, finite sums, and the coefficient-map law `map_cauchyProduct`.
+The API includes the range-sum formula `apply_range`, scalar multiplication in the first
+input (`smul_mul`), finite-support splitting (`apply_of_support_le_split`), the finite
+Toeplitz sum `eq_sum_fin`, and the coefficient-map law `map_cauchyProduct`.
 
 `toPowerSeries` is the coefficient view into formal power series, with
-`coeff_toPowerSeries`. The additional algebraic laws and power-series compatibility are
-owned by the finite-fiber and power-series recovery records. This module does not provide
-a bundled `toPowerSeriesLinearEquiv`. Raw sequence multiplication remains pointwise.
+`coeff_toPowerSeries`. Raw sequence multiplication is pointwise; the Cauchy product is a
+separate operation.
 -/
 
 open scoped BigOperators
@@ -97,8 +97,7 @@ variable [Semiring R]
 
 /-! ### Algebraic laws
 
-Specializations of the finite-fiber convolution laws (`finiteAddConvolution`), except the unit
-laws, which are transported along the power-series bridge. -/
+Specializations of the finite-fiber convolution laws (`finiteAddConvolution`). -/
 
 
 

@@ -6,14 +6,12 @@ import Mathlib.Analysis.Complex.Basic
 # Complex evaluation of the real Taylor carrier
 
 `l1Weighted.evalC ν z hz` evaluates the real geometric ℓ¹ algebra into `ℂ` for
-`‖z‖ ≤ ν`, using `aeval_of_norm_le` at `C = 1`. The shipped computation faces are
+`‖z‖ ≤ ν`, using `aeval_of_norm_le` at `C = 1`. The computation faces are
 `evalC_apply`, `evalC_gen` and `evalC_ofReal`, relating the series, generator and real
 coordinate evaluator. The generic bound is `lpOneAlg.norm_geomAeval_of_norm_le_apply_le`
 in `Geometric/Aeval.lean`.
 
-The classification of all continuous characters and its topological consequences belong
-to `B5RecordTaylorSpectrum`, not to this shipped evaluator module. The coefficient carrier
-stays real; only the evaluation target is complex.
+The coefficient carrier stays real; only the evaluation target is complex.
 -/
 
 noncomputable section

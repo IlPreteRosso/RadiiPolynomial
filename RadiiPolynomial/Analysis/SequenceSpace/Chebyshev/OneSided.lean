@@ -7,20 +7,16 @@ import Mathlib.Analysis.Normed.Operator.Mul
 /-!
 # Restriction from bilateral and bordered storage to one-sided coefficients
 
-For every `ν : PosReal`, this shipped module provides
+For every `ν : PosReal`, this module provides
 `OneSided.borderedToWeighted : l1Bordered ν →L[ℝ] l1Weighted ν` and
 `OneSided.restr : l1Chebyshev ν →L[ℝ] l1Weighted ν`, with coordinate face `restr_toSeq`,
 norm identity `norm_restr_eq_tsum` and the sharp bound `norm_restr_le`.
 The bordered weights are `1, 2ν, 2ν², …`; the target uses the unnormalized weights `νⁿ`.
 These linear restriction constructions require no hypothesis `1 ≤ ν`.
 
-The symmetric extension, reflected bilinear/trilinear products, their laws and exact
-constants `C₂ = 1 + 2ν⁻²` and `C₃ = max(1 + 3ν⁻², 1 + 2ν⁻² + 2ν⁻⁴)` belong to the
-recovery module `B5RecordOneSidedCosine`, with column bounds from
-`B5RecordL1ColumnPrinciple`. They are not exports of this shipped file. Their bilateral
-multiplication hypotheses remain in the recovery statements. The standard multiplication
-on `l1Weighted ν` remains the Taylor Cauchy product; the reflected product is separate data.
-The retained nonnegative-mode embedding `l1Chebyshev.natEmbed` is in `Chebyshev/Symmetrize.lean`.
+The multiplication on `l1Weighted ν` is the Taylor Cauchy product; no reflected product is
+defined here. The nonnegative-mode embedding `l1Chebyshev.natEmbed` is in
+`Chebyshev/Symmetrize.lean`.
 -/
 
 open scoped BigOperators Topology
@@ -34,14 +30,6 @@ namespace l1Chebyshev
 namespace OneSided
 
 variable {ν : PosReal}
-
-/-! ### One-sided atoms -/
-
-
-
-/-! ### The symmetric extension -/
-
-
 
 
 
@@ -101,9 +89,8 @@ library's `nonnegRestrictCLM` into the bordered carrier followed by `borderedToW
 composite's inherited bound is `2`; the sharp bound `‖restr x‖ ≤ ‖x‖` is `norm_restr_le`. -/
 def restr : l1Chebyshev ν →L[ℝ] l1Weighted ν := borderedToWeighted ∘L nonnegRestrictCLM ν
 
-/-- Coefficients of the restriction. This is the explicit-rewrite form in `l1Weighted.toSeq`;
-it is not a simp rule, because `l1Weighted.toSeq_apply` rewrites its left-hand side first. The
-simp rule is `restr_apply`. -/
+/-- Coefficients of the restriction, in `l1Weighted.toSeq` form: `(restr x)_n = x_n`. It is
+stated as an explicit rewrite, not as a simp rule. -/
 theorem restr_toSeq (x : l1Chebyshev ν) (n : ℕ) :
     l1Weighted.toSeq (restr x) n = toSeq x n := by
   show lpOneAlg.toRealSeq (nonnegRestrict x) n = _

@@ -12,7 +12,7 @@ The equation `u'' + c₁ u' + c₂ u − u² = c₃ cos t` (book (10.1)) with th
 This file proves, on the bilateral geometric carrier `X = X₂ ℂ ν = ℓ²_m(ℤ; ℂ)`
 (`m_k = ν ^ |k|`, `ν ≥ 1`), that every certificate whose four bounds satisfy the radii inequality
 yields a unique zero of the raw Fourier map in the closed ball of radius `r₀` around the
-candidate, and that this zero is real when the candidate is.
+candidate, and that this zero is conjugate-symmetric (`conj ã₋ₙ = ãₙ`) when the candidate is.
 
 ## The maps (generic finite head `F`, generic symbol `μ`)
 
@@ -31,13 +31,14 @@ identity `coeff (G a) = rawA (rawF a)` (`coeff_G`) is the statement; the typed c
 ## The centre and the four bounds
 
 At a finitely supported candidate `ā` the symbol `β = 2ā` lies in `ℓ¹_m` (`betaOf`), and with
-`K_H = Λ_H − P L_β P`, `B₀ = M K_H + Q` the defect is CF-4's tail defect:
+`K_H = Λ_H − P L_β P`, `B₀ = M K_H + Q` the defect is the tail defect of
+`Operators/TailDefect.lean`:
 `DG(ā) − B₀ = −(M P L_β Q + T₂ L_β)` (`DG_sub_B0`). The four bound faces are
 * `Y₀`: the exact finite residual `‖G ā‖² = ∑_{n ∈ F ∪ (F + F)} ‖coeff (G ā) n‖² ν^{2|n|}`
   (`norm_sq_G_abar`);
 * `Z₀`: `I − B₀ = P − M K_H` lives on the block `F × F` (`one_sub_B0`, `block_one_sub_B0`);
-* `Z₁`: CF-4's socket `norm_tailDefect_le` (UPPER; the two defect terms share the input);
-* `Z₂`: `‖DG c − DG a‖ ≤ 2 √(U² + T2) ‖c − a‖` through CF-3's `norm_Dquad_sub_le_AY` and the
+* `Z₁`: the tail-defect bound `norm_tailDefect_le` (UPPER; the two defect terms share the input);
+* `Z₂`: `‖DG c − DG a‖ ≤ 2 √(U² + T2) ‖c − a‖` through `norm_Dquad_sub_le_AY` and the
   `U_row` head certificate `norm_comp_headReal_le_urow` (both UPPER).
 
 ## Existence and the Fourier-map endpoint
@@ -47,7 +48,8 @@ real structure by restriction of scalars) gives a unique zero of `G` (`existsUni
 `Z₀ < 1`, `B₀` is a unit (the library's Neumann rung), so `M` maps the finite-dimensional head
 range onto itself and is injective there; with `μₙ ≠ 0` off `F` this transfers zeros of `G` to
 zeros of the raw Fourier map and back (`existsUnique_rawF`). The Duffing endpoint is
-`duffing_existsUnique`; reality is `duffing_existsUnique_real` (book Prop 10.1.2 route: raw
+`duffing_existsUnique`; conjugate symmetry is `duffing_existsUnique_real` (book Prop 10.1.2
+route: raw
 uniqueness, not `R`-equivariance of `M`).
 -/
 
@@ -108,7 +110,7 @@ def B0 (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) : X₂ ℂ ν →L[ℂ] X₂ ℂ 
 def G (a : X₂ ℂ ν) : X₂ ℂ ν :=
   M (LamH F μ a - headReal F (prodCLM a a) - g) + tailProj (𝕜 := ℂ) F a - tailInf (F : Set ℤ) μ hs (prodCLM a a)
 
-/-- `G` is affine minus the CF-3 quadratic at `A_Y = M H_F + T∞`. -/
+/-- `G` is affine minus the quadratic `quad` at `A_Y = M H_F + T∞`. -/
 theorem G_eq (a : X₂ ℂ ν) :
     G F μ hs M g a = (M ∘L LamH F μ + tailProj (𝕜 := ℂ) F : X₂ ℂ ν →L[ℂ] X₂ ℂ ν) a - M g -
       quad (AY F M (F : Set ℤ) μ hs) a := by
@@ -119,7 +121,7 @@ theorem G_eq (a : X₂ ℂ ν) :
 def DG (a : X₂ ℂ ν) : X₂ ℂ ν →L[ℂ] X₂ ℂ ν :=
   M ∘L LamH F μ + tailProj (𝕜 := ℂ) F - Dquad (AY F M (F : Set ℤ) μ hs) a
 
-/-- `HasFDerivAt G (DG a) a` (CF-3's `hasFDerivAt_quad`). -/
+/-- `HasFDerivAt G (DG a) a` (`hasFDerivAt_quad`). -/
 theorem hasFDerivAt_G (a : X₂ ℂ ν) : HasFDerivAt (G F μ hs M g) (DG F μ hs M a) a := by
   rw [show G F μ hs M g = fun a =>
       (M ∘L LamH F μ + tailProj (𝕜 := ℂ) F : X₂ ℂ ν →L[ℂ] X₂ ℂ ν) a - M g -
@@ -190,7 +192,7 @@ variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] (F : Finset ℤ) (μ : ℤ →
 
 
 /-- **The derivative of the quadratic at the centre**: for `supp ā ⊆ F` and `β = 2ā`,
-`Dquad A_Y ā = M P L_β + T₂ L_β` (CF-3's `β`-bridge and the bridges `H_F ι = P`, `T∞ ι = T₂`). -/
+`Dquad A_Y ā = M P L_β + T₂ L_β` (the `β`-bridge and the bridges `H_F ι = P`, `T∞ ι = T₂`). -/
 theorem Dquad_AY_abar {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) :
     Dquad (AY F M (F : Set ℤ) μ hs) ā =
       M ∘L headProj (𝕜 := ℂ) F ∘L symbolAction₀ (p := 2) hC (betaOf F ā hā) +
@@ -264,7 +266,7 @@ theorem Kh_comp_headProj (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) :
     ContinuousLinearMap.comp_assoc, headProj_comp_headProj]
 
 /-- **`I − B₀` lives on the block `F × F`** under `P M = M`: `P (P − M K_H) P = P − M K_H`, so
-CF-5a.1's `norm_le_sqrt_of_block` applies to the `Z₀` operator. -/
+`norm_le_sqrt_of_block` applies to the `Z₀` operator. -/
 theorem block_one_sub_B0 (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M)
     (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) :
     headProj (𝕜 := ℂ) F ∘L (headProj (𝕜 := ℂ) F - M ∘L Kh F μ β) ∘L headProj (𝕜 := ℂ) F = headProj (𝕜 := ℂ) F - M ∘L Kh F μ β := by
@@ -272,7 +274,8 @@ theorem block_one_sub_B0 (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) 
     Kh_comp_headProj, ContinuousLinearMap.comp_sub, headProj_comp_headProj,
     ← ContinuousLinearMap.comp_assoc, hPM]
 
-/-- **The `Z₁` face** (UPPER): CF-4's socket `norm_tailDefect_le` at the composed head bound `H`
+/-- **The `Z₁` face** (UPPER): the tail-defect bound `norm_tailDefect_le` at the composed head
+bound `H`
 and a tail bound `R` of the tail symbol (`C = 1`). The two defect terms share the input, so no
 exactness is claimed. -/
 theorem norm_DG_sub_B0_le {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0)
@@ -318,7 +321,7 @@ theorem norm_comp_headReal_le_urow (hPM : headProj (𝕜 := ℂ) (E := geomFiber
   exact (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 hsq
 
 /-- **The `Z₂` face** (UPPER): `‖DG c − DG a‖ ≤ 2 √(U² + T2) ‖c − a‖` from `‖M H_F‖ ≤ U` and
-`∑' ‖d‖² ≤ T2` (CF-3's `norm_Dquad_sub_le_AY`; no optimality claim). -/
+`∑' ‖d‖² ≤ T2` (`norm_Dquad_sub_le_AY`; no optimality claim). -/
 theorem norm_DG_sub_DG_le (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M) {U T2 : ℝ}
     (hU : ‖M ∘L headReal F‖ ≤ U) (hT2 : ∑' k, ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2 ≤ T2)
     (c a : X₂ ℂ ν) :
@@ -363,12 +366,9 @@ end Bounds
 
 section DuffingSymbol
 
-/-! The declarations `duffing` … the face-(b) example below are COPIED VERBATIM (statements and
-proofs) from the CF-2 Probe `exterior/tmp/lp_api_campaign_20261017/FOURIER_L2/CF2/Probe.lean`
-(sha256 `5b7431f13bd7290d3ab63fa37b85668be4bf308a91804f41a98f9d7ca5dc6137`), lines 198–311 of its
-Duffing block 194–313 (the block's header, `section Duffing` and `end Duffing` lines are replaced by
-this section); its `headZ` resolves to `FourierDuffing.IkData`
-(`Examples/Fourier/Duffing/IkData.lean`). -/
+/-! The Duffing symbol `duffing`, its norm identity, the tail witness inequality, the exact
+rational control at the certificate data and the square summability of its tail symbol, on the
+head `headZ` of `FourierDuffing.IkData` (`Examples/Fourier/Duffing/IkData.lean`). -/
 
 /-- The Duffing symbol `μ_n = -n² + i c₁ n + c₂` (real parameters, as complex). -/
 def duffing (c₁ c₂ : ℝ) (n : ℤ) : ℂ := -(n : ℂ) ^ 2 + Complex.I * c₁ * n + c₂
@@ -416,7 +416,7 @@ theorem sq_norm_duffing_control : ‖duffing (1 / 10) 4 11‖ ^ 2 = 13689 + 121 
 theorem control_hN : (4 : ℝ) < (((10 : ℕ) : ℝ) + 1) ^ 2 := by norm_num
 
 
-/-- **Face (b) hypothesis at the Duffing symbol**: `Summable ‖d‖²` (`|μ_n|⁻² ≲ n⁻⁴`); the sum is
+/-- **The summability hypothesis of `tailDiagInf` at the Duffing symbol**: `Summable ‖d‖²` (`|μ_n|⁻² ≲ n⁻⁴`); the sum is
 not computed. -/
 theorem summable_sq_tailSymbol_duffing {c₁ c₂ : ℝ} {N : ℕ} (hN : c₂ < ((N : ℝ) + 1) ^ 2) :
     Summable fun n : ℤ => ‖tailSymbol (headZ N) (duffing c₁ c₂) n‖ ^ 2 := by
@@ -460,9 +460,10 @@ theorem summable_sq_tailSymbol_duffing {c₁ c₂ : ℝ} {N : ℕ} (hN : c₂ < 
     exact inv_anti₀ (by positivity) (pow_le_pow_left₀ hεn.le hl 2)
 
 
-/-! End of the verbatim copy. The producers below are new. -/
+/-! The same facts on the `Finset` head `headF N`, and the producers of the certificate
+hypotheses. -/
 
-/-- The head `|k| ≤ N` as a `Finset` (restated from the CF-4 Probe). -/
+/-- The head `|k| ≤ N` as a `Finset`. -/
 abbrev headF (N : ℕ) : Finset ℤ := Finset.Icc (-(N : ℤ)) N
 
 theorem mem_headF {N : ℕ} {k : ℤ} : k ∈ headF N ↔ |k| ≤ (N : ℤ) := by
@@ -481,19 +482,19 @@ theorem tailSymbol_headF (N : ℕ) (μ : ℤ → ℂ) :
 
 variable {c₁ c₂ : ℝ} {N : ℕ}
 
-/-- The Duffing tail symbol on the `Finset` head is square summable (CF-2's face-(b) hypothesis
-through the head bridge). -/
+/-- The Duffing tail symbol on the `Finset` head is square summable (the summability hypothesis
+of `tailDiagInf`, through the head bridge). -/
 theorem summable_sq_tailSymbol_duffing_headF (hN : c₂ < ((N : ℝ) + 1) ^ 2) :
     Summable fun k => ‖tailSymbol ((headF N : Finset ℤ) : Set ℤ) (duffing c₁ c₂) k‖ ^ 2 := by
   rw [tailSymbol_headF]
   exact summable_sq_tailSymbol_duffing hN
 
-/-- The Duffing symbol does not vanish off the head (CF-2's witness). -/
+/-- The Duffing symbol does not vanish off the head. -/
 theorem duffing_ne_zero (hN : c₂ < ((N : ℝ) + 1) ^ 2) : ∀ k ∉ headF N, duffing c₁ c₂ k ≠ 0 :=
   fun k hk => norm_pos_iff.1 ((norm_pos_iff.2 (duffing_succ_ne_zero hN)).trans_le
     (duffing_min hN k fun h => hk (mem_headF.2 h)))
 
-/-- The Duffing tail symbol is bounded by `|μ_{N+1}|⁻¹` (CF-2's designated witness
+/-- The Duffing tail symbol is bounded by `|μ_{N+1}|⁻¹` (the witness bound
 `norm_tailSymbol_le_of_witness`). -/
 theorem norm_tailSymbol_duffing_le (hN : c₂ < ((N : ℝ) + 1) ^ 2) (k : ℤ) :
     ‖tailSymbol ((headF N : Finset ℤ) : Set ℤ) (duffing c₁ c₂) k‖ ≤
@@ -657,7 +658,7 @@ theorem existsUnique_G {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) {Y
 
 /-- **`M` is injective on the head range** when `‖P − M K_H‖ < 1` and `P M = M`: `B₀` is a unit
 (the library's Neumann rung `isUnit_of_norm_sub_id_lt_one` on the real restriction), so `M` maps
-the finite-dimensional range of `P` onto itself (CF-5a.1's `finiteDimensional_range_headProj`),
+the finite-dimensional range of `P` onto itself (`finiteDimensional_range_headProj`),
 hence injectively (`LinearMap.injective_iff_surjective`). -/
 theorem injOn_head_of_norm_lt_one (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M)
     (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) (h : ‖headProj (𝕜 := ℂ) F - M ∘L Kh F μ β‖ < 1) :
@@ -894,9 +895,9 @@ theorem rawF_duffing_conjRefl (a : X₂ ℂ ν) (n : ℤ) :
       map_intCast, map_zero, Int.cast_neg]
     ring
 
-/-- **THE REAL ENDPOINT** (book Prop 10.1.2 route): with the hypotheses of
-`duffing_existsUnique` and `R ā = ā`, the unique zero of the Fourier map in the ball is real,
-`R ã = ã` (uniqueness of the raw zero, not `R`-equivariance of `M`). -/
+/-- **THE CONJUGATE-SYMMETRIC ENDPOINT** (book Prop 10.1.2 route): with the hypotheses of
+`duffing_existsUnique` and `R ā = ā`, the unique zero of the Fourier map in the ball satisfies
+`R ã = ã`, i.e. `conj ã₋ₙ = ãₙ` (uniqueness of the raw zero, not `R`-equivariance of `M`). -/
 theorem duffing_existsUnique_real (hN : c₂ < ((N : ℝ) + 1) ^ 2) (cert : Cert c₁ c₂ N ν)
     (hg : ∀ k ∉ headF N, coeff (forcing (ν := ν) c₃) k = 0) {Y₀ Z₁ Z₂ T2 r₀ : ℝ}
     (hY₀ : ‖G (headF N) (duffing c₁ c₂) (summable_sq_tailSymbol_duffing_headF hN) cert.M
