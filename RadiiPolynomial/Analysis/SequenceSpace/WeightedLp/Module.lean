@@ -12,14 +12,15 @@ The frame reconstruction/completeness faces do not assume an operation on the in
 and the shift action use an additive commutative group; raw symbols use no such operation. The
 moderate-weight symbol series acts on the ℓᵖ state under a positive symbol weight. When that
 weight is submultiplicative, its symbols form the distinct weighted ℓ¹ algebra, and the
-series/lift comparison specifies its universal algebra action at every exponent. The lift and
-its complete computation, algebra, bound and identification contract are retained as the C1
-specification of the consumed operator-series arrow, not counted as a production proof edge.
+series/lift comparison specifies its universal algebra action at every exponent. The lift
+`symbolAction` comes with its computation (`symbolAction_single`), algebra (`symbolAction₀_mul`,
+`symbolAction₀_one`), bound (`norm_symbolAction_le`) and identification (`symbolAction₀_eq`)
+statements.
 
 Scalar assumptions are separated by service: pointwise construction and coordinates use NormedField;
 operator-norm/function-space packaging uses NontriviallyNormedField, with complete scalars for
 convergent operator series and the algebra lift. Unit normalization of the symbol weight is not
-required by these services. The existing generic completeness transfer is preserved.
+required by these services. Completeness transfers from the fibers (`completeSpace_carrier`).
 -/
 
 open scoped ENNReal NNReal DiscreteConvolution
@@ -96,20 +97,20 @@ variable {M : Type*}
 `w (j + l) ≤ C v_l w_j`. -/
 def Moderate [Add M] (w v : M → ℝ) (C : ℝ) : Prop := ∀ j l, w (j + l) ≤ C * v l * w j
 
-variable [AddZeroClass M] {w v : M → ℝ} {C : ℝ}
+variable [Add M] {w v : M → ℝ} {C : ℝ}
 
 /-- On a positive carrier weight, moderateness forces `C v_l > 0` (no sign hypothesis on `v`). -/
 theorem Moderate.mul_pos (hw : ∀ m, 0 < w m) (hC : Moderate w v C) (l : M) : 0 < C * v l :=
-  (mul_pos_iff_of_pos_right (hw 0)).1 ((hw (0 + l)).trans_le (hC 0 l))
+  (mul_pos_iff_of_pos_right (hw l)).1 ((hw (l + l)).trans_le (hC l l))
 
-/-- On positive weights, the moderateness constant is positive. -/
-theorem Moderate.const_pos (hw : ∀ m, 0 < w m) (hv : ∀ l, 0 < v l) (hC : Moderate w v C) :
-    0 < C :=
-  (mul_pos_iff_of_pos_right (hv 0)).1 (hC.mul_pos hw 0)
+/-- On positive weights over an inhabited index, the moderateness constant is positive (on the
+empty index every `C` is a moderateness constant). -/
+theorem Moderate.const_pos [Nonempty M] (hw : ∀ m, 0 < w m) (hv : ∀ l, 0 < v l)
+    (hC : Moderate w v C) : 0 < C :=
+  Nonempty.elim ‹Nonempty M› fun l => (mul_pos_iff_of_pos_right (hv l)).1 (hC.mul_pos hw l)
 
-/-- A submultiplicative weight on a commutative index is moderate with respect to itself, with
-constant `1`. -/
-theorem Moderate.of_submul {M : Type*} [AddCommMonoid M] {w : M → ℝ}
+/-- A submultiplicative weight is moderate with respect to itself, with constant `1`. -/
+theorem Moderate.of_submul {M : Type*} [Add M] {w : M → ℝ}
     (hs : ∀ i j, w (i + j) ≤ w i * w j) : Moderate w w 1 := fun j l =>
   (hs j l).trans_eq (by ring)
 
@@ -225,7 +226,7 @@ theorem summable_norm_smul_shift (ha : MemL1v v a)
       ((mul_le_mul_of_nonneg_left (norm_shift_le hC l) (norm_nonneg (a l))).trans_eq (by ring))
 
 /-- The symbol operator `∑' l, a l • S_l` (a tsum in `WeightedLp M E p →L[𝕜] WeightedLp M E p`;
-absolutely convergent by `summable_smul_shift`). -/
+absolutely convergent by `summable_norm_smul_shift`). -/
 def symbolSeries (a : M → 𝕜) (_ha : MemL1v v a)
     (hC : Moderate (FiberTrivialization.weight (E := E)) v C) :
     WeightedLp M E p →L[𝕜] WeightedLp M E p :=
