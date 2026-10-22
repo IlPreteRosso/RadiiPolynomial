@@ -2949,7 +2949,7 @@ The BEFORE original630 accounting was `586 direct + 1 existing private original5
 | `MvPolyBridge.norm_sum_mul_pi_le` | The same generic law at the existing weighted-ℓ¹/Pi types. |
 | `RadiiPolynomial.cauchyProduct.ratCast` | `cauchyProduct.map_cauchyProduct (Rat.castHom ℝ)` directly at the coefficient consumer. The Real-only module and its two import edges are removed. |
 | `IVP.StdIVPDataQ.weight` | Explicit positive-real subtype `⟨(q.ν_q : ℝ), by exact_mod_cast hpos⟩`; no new public helper. |
-| `IVP.StdIVPDataQ.toStd` | Existing `q.toStdIVPData ν hν`, with that explicit subtype and `rfl` for the old default. `ofStd` and `toStdIVPData_ofStd` remain. |
+| `IVP.StdIVPDataQ.toStd` | Existing `q.toStdIVPData ν hν`, with that explicit subtype and `rfl` for the old default. `ofStd` remains; the round trip `toStdIVPData_ofStd` was deleted at the merge (R-ELAB row below). |
 
 The [recovery record](../probes/records/B1_canonical_replacements/MANIFEST.json) is the typed/source recovery archive for the seven retired names and omitted copy-root bytes. Alias/forward spellings retire without compatibility aliases. The finite-sum consumers use the existing generic law directly; their norms and hypotheses are unchanged. B1's executed BEFORE joins identify the actual weight/default helpers with the preserved old-weight/default constructor bodies. The canonical inline realization was kernel-checked at the captured dependent type after the explicit old-weight substitution, with unchanged axioms; this is a verified transport, not literal preservation of the removed raw head. The original proof-recovery limitations are recorded below.
 
@@ -3129,8 +3129,12 @@ are recoverable as [`staged/U42bGeneratedContract.lean`](../probes/records/B4_we
 and [`staged/AllGenerated.lean`](../probes/records/B4_weight_and_generated_services/staged/AllGenerated.lean)
 under the same B4 record. The five rational certificate numbers, exact split conjunction,
 selected kernel-column predicate, override bounds and unique-zero/raw-residual conclusions
-are retained in that record. Production keeps `StdIVPDataQ`, `ofStd`, realization and its
-round trip, all per-bound checks/soundness, and the essential Example81 kernel-column route.
+are retained in that record. Production keeps `StdIVPDataQ`, `ofStd` and realization (the named
+round-trip lemma `toStdIVPData_ofStd` is deleted, R-ELAB row below, executed DELETE; realization recovers the data
+definitionally), the per-bound checks and soundness that the merge retained (`ChecksZ₀`, `ChecksZ₀By`,
+`ChecksZ₂` with `Z₀_sound`, `ChecksZ₀By_sound`, `Z₂_sound`; `ChecksZ₁ker` and `ChecksDF` with `Z₁ker_sound`;
+the `Y₀` clause and its soundness are staged and the column `Z₁` clauses are deleted, B5 ledger below), and
+the essential Example81 kernel-column route.
 The U31 rider above describes the earlier test-only reach and planned staging; B4 records
 that staging disposition without rewriting its historical evidence or the closed B3/U25 records.
 

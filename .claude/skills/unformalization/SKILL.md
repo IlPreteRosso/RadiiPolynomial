@@ -91,8 +91,9 @@ Stage 0 — set-up (once per campaign; coordinator):
 1. Scope: `(cd $UNF && python3 _tools/inventory.py)` → `API_FILES.txt`, `INVENTORY.md`, `UNITS.md`,
    `_tools/units.json` (directory-family units, ≤ 8 files, ≤ 3600 lines).
 2. Launch units: merge small UNITS into launch units by hand → `LAUNCH_UNITS.md` +
-   `_tools/launch_units.json` (`[{"unit","from","files"}]`). No tool writes this file (UNSETTLED: the
-   merge was done by the coordinator; the procedure is not recorded beyond "merged from UNITS.md").
+   `_tools/launch_units.json` (`[{"unit","from","files"}]`). No tool writes this file. The first merge
+   was done by the coordinator and is not recorded beyond "merged from UNITS.md" (UNSETTLED); the re-pin
+   edit after deleted or new files is recorded in §3, "Deleted and new API files".
 3. Sidecars: `(cd $UNF && python3 _tools/signatures.py)` (all launch units; needs CURRENT oleans; no
    build) → `_sidecar/<Dir>/<File>.sig.tsv` + `_sidecar/ALL_FQNS.txt`.
 4. Tool self-test: `(cd $UNF && python3 _tools/selftest.py)` → `SELFTEST PASS` (8 negative controls).
@@ -230,20 +231,41 @@ ruling made after their freeze (§7.52 note in C2 FINDINGS: "Already-frozen comp
 reopened"), and git history as a source (§7.57: "never write history"). Docstring Remarks are rewritten
 to describe the CURRENT docstring, or removed when only a fixed mismatch remains.
 
-Consequences of the tool code (derived, not yet exercised — UNSETTLED until a run needs them):
+Consequences of the tool code (derived; the 2026-10-21 re-pin exercised the items so marked, the others stay
+UNSETTLED until a run needs them):
 - A companion drafted during a re-pin must carry the OLD pin in its header: the `--plan` preflight refuses a header
   that does not carry the planned `swap_from` pin exactly once (and `--legacy <old7>` refuses with "header field not
-  found exactly once").
+  found exactly once"). Exercised 2026-10-21: re-drafted and new companions carried the old pin `6fe51ba` until the
+  finalization at `5b2bfd4` (0 fails).
 - A NEW API file: `inventory.py` adds it to API_FILES.txt, but it belongs to no launch unit until
   `launch_units.json` is edited by hand; `signatures.py`, `freeze.py` and `repin_finalize.py` read only
   launch units / API_FILES. A DELETED or RENAMED file: its stale sidecar stays in `_sidecar/` and its
-  FQNs stay in `ALL_FQNS.txt` (rebuilt from every sidecar present). No procedure is recorded.
+  FQNs stay in `ALL_FQNS.txt` (rebuilt from every sidecar present). Exercised 2026-10-21 for 15 new and
+  37 deleted files: procedure below. A RENAMED file has no recorded procedure.
 - `inventory.py` rewrites `units.json`/`UNITS.md` numbering from scratch; launch-unit ids are the
-  stable keys.
+  stable keys. Exercised 2026-10-21: its outputs were redirected (procedure below) and the launch-unit ids
+  stayed the keys.
 - `resolve_external.py` only adds or updates rows; after a Mathlib/LeanCert bump a removed external
   name keeps its row and G7 would still pass. Re-resolution from an empty registry is UNSETTLED.
 - CONTRACT.md §1/§2 and README.md still name pin 5d0fa4f after the re-pin; whether the contract text is
   re-pinned is UNSETTLED (the MANIFEST holds the real pin).
+
+Deleted and new API files (procedure of record: the phase-0 rulings of 2026-10-21, items 2–4 of "Coordinator rulings
+on the phase-0 decisions" in `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/unformalization_repin/PLAN.md`;
+records `_records/repin_20261021/`, `_records/retired_65ebb15/`). For every API module gone at the new commit C:
+- before R1 publishes, move its sidecar from `_sidecar/` to `_records/retired_<C7>/sidecar/<Dir>/<File>.sig.tsv` (bytes
+  equal to its frozen archive object): retired names must not resolve, or G7/G9 under-report;
+- copy its companion `.tex/.pdf/.log` to `_records/retired_<C7>/companions/<Dir>/`; record the moved and copied files in
+  `_records/retired_<C7>/SHA256SUMS` and `RETIRED.json`; remove the companion and its build artefacts from the mirror
+  only after `shasum -c SHA256SUMS` passes and each copy is byte-compared with the live file;
+- run `inventory.py` with its outputs redirected to the record and install only `API_FILES.txt` and `INVENTORY.md`;
+  its `UNITS.md`/`units.json` stay `*.proposed_by_inventory.*` until the launch-unit edit installs them;
+- edit `_tools/launch_units.json` by hand: the previous list minus the retired files, emptied units dropped, new files
+  in new launch units; keep the previous list as `_tools/launch_units.<old7>.json` and append the generation to
+  `LAUNCH_UNITS.md`. The launch units then cover `API_FILES.txt` exactly (2026-10-21: 27 units, 115 files).
+AS EXECUTED, R1 ran before that edit as `signatures.py --file <the API_FILES entries>`: the default form reads the stale
+`launch_units.json` and fails with `LEAN FAILED`. After the removal and the edit the planner reports `orphans: none`
+(`_records/finalize_5b2bfd4_plan/PLANNER.txt`; phase 0 reported 37 companion and 37 launch-unit-entry orphans).
 
 ## 4. Unit sizing, cohorts, model tiers
 
@@ -364,15 +386,18 @@ Out of scope here, mention only: `_tools/gen_reading_order.py` + `_tools/READING
 navigation page `READING_ORDER.md` (fail-closed on missing `.lean`/`.pdf`).
 
 ## UNSETTLED (open questions; do not guess)
-- How `launch_units.json` is produced (hand merge; no tool, no recorded procedure).
+- How the first `launch_units.json` was produced (hand merge; no tool, no recorded procedure); the re-pin edit is
+  recorded in §3, "Deleted and new API files".
 - Where the fixer's per-finding dispositions are stored (CONTRACT §5 requires them; the campaign kept
   them in hand-backs and PROGRESS "fixes", no per-unit file).
 - The exact commands used to snapshot `before/` and `ALL_FQNS.before.txt` (not recorded).
-- Handling of new, deleted or renamed API files; of a Mathlib/LeanCert bump (stale registry rows); of
-  re-pinning CONTRACT.md/README.md text.
+- Handling of renamed API files (new and deleted files: §3, "Deleted and new API files", 2026-10-21); of a
+  Mathlib/LeanCert bump (stale registry rows); of re-pinning CONTRACT.md/README.md text.
 - Whether the 15 companions outside the seven re-pin groups (no docstring mention) needed a content
   look in the 2026-10-11 re-pin; they were covered only by gates and the header swap.
 - Whether a re-pin needs a Codex read (the 2026-10-11 re-pin had none; HANDOFF §3 lists it as optional).
-- `_records/<unit>/probes/` (§8 P2) is prescribed but no unit has one yet.
+- `_records/<unit>/probes/` (§8 P2) is prescribed; no launch-unit record has one, while the 2026-10-21 re-pin kept
+  its probes in the drafting-unit records `_records/repin65ebb15_<unit>/probes/` (all 15 units). Which of the two is the
+  place of record is open.
 - `CHECKER_TEMPLATE.md` on disk still says "CONTRACT.md v1" and lacks the EVIDENCE severity (§7.5);
   the templates in `references/brief_templates.md` add it as an addendum.
