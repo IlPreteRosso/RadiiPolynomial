@@ -1,7 +1,7 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Bilateral.Quadratic
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.FiniteBlock
 import RadiiPolynomial.Examples.Fourier.Duffing.IkData
-import RadiiPolynomial.Core.Theorem
+import RadiiPolynomial.Core.Quadratic
 
 /-!
 # The Fourier consumer on `ℓ²`: book §10.1 Helmholtz–Duffing
@@ -22,7 +22,7 @@ For a finite head `F : Finset ℤ` with projections `P = headProj F`, `Q = tailP
 `G(a) = M (Λ_H a − H_F (a ⋆ a) − g) + Q a − T∞ (a ⋆ a)`,
 with the finite-head diagonal `Λ_H = LamH F μ`, the head realization `H_F = headReal F`, and the
 cross-exponent tail diagonal `T∞ = tailInf ↑F μ hs`. Its derivative is
-`DG(a) = M Λ_H + Q − Dquad A_Y a` with `A_Y = M H_F + T∞` (`hasFDerivAt_G`). The raw Fourier map is
+`DG(a) = M Λ_H + Q − 2 • quadCLM A_Y a` with `A_Y = M H_F + T∞`. The raw Fourier map is
 the raw coefficient family `rawF μ g a n = μₙ aₙ − (a ⋆ a)ₙ − gₙ` (no typed codomain), and the
 raw preconditioner is `rawA F μ M f n = coeff (M (headOfRaw F f)) n + dₙ fₙ`. The COEFFICIENT
 identity `coeff (G a) = rawA (rawF a)` (`coeff_G`) is the statement; the typed composition
@@ -38,13 +38,12 @@ At a finitely supported candidate `ā` the symbol `β = 2ā` lies in `ℓ¹_m` (
   (`norm_sq_G_abar`);
 * `Z₀`: `I − B₀ = P − M K_H` lives on the block `F × F` (`one_sub_B0`, `block_one_sub_B0`);
 * `Z₁`: the tail-defect bound `norm_tailDefect_le` (UPPER; the two defect terms share the input);
-* `Z₂`: `‖DG c − DG a‖ ≤ 2 √(U² + T2) ‖c − a‖` through `norm_Dquad_sub_le_AY` and the
+* `Z₂`: the symmetrized bilinear norm is at most `2 √(U² + T2)`, through `norm_AY_le_sqrt_tsum` and the
   `U_row` head certificate `norm_comp_headReal_le_urow` (both UPPER).
 
 ## Existence and the Fourier-map endpoint
 
-One application of the library's `general_radii_polynomial_theorem_local` (`A = id`, `A† = B₀`,
-real structure by restriction of scalars) gives a unique zero of `G` (`existsUnique_G`). From
+One application of the library's `quadratic_radii_theorem_local` (`A = id`, `A† = B₀`) gives a unique zero of `G` (`existsUnique_G`). From
 `Z₀ < 1`, `B₀` is a unit (the library's Neumann rung), so `M` maps the finite-dimensional head
 range onto itself and is injective there; with `μₙ ≠ 0` off `F` this transfers zeros of `G` to
 zeros of the raw Fourier map and back (`existsUnique_rawF`). The Duffing endpoint is
@@ -110,24 +109,28 @@ def B0 (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) : X₂ ℂ ν →L[ℂ] X₂ ℂ 
 def G (a : X₂ ℂ ν) : X₂ ℂ ν :=
   M (LamH F μ a - headReal F (prodCLM a a) - g) + tailProj (𝕜 := ℂ) F a - tailInf (F : Set ℤ) μ hs (prodCLM a a)
 
-/-- `G` is affine minus the quadratic `quad` at `A_Y = M H_F + T∞`. -/
+/-- `G` is the canonical quadratic map, with bilinear part `-quadCLM A_Y`. -/
 theorem G_eq (a : X₂ ℂ ν) :
-    G F μ hs M g a = (M ∘L LamH F μ + tailProj (𝕜 := ℂ) F : X₂ ℂ ν →L[ℂ] X₂ ℂ ν) a - M g -
-      quad (AY F M (F : Set ℤ) μ hs) a := by
-  simp only [G, quad, quadCLM_apply, AY, add_apply, ContinuousLinearMap.comp_apply, map_sub]
+    G F μ hs M g a = quadMap (-M g)
+      (M ∘L LamH F μ + tailProj (𝕜 := ℂ) F)
+      (-quadCLM (AY F M (F : Set ℤ) μ hs)) a := by
+  simp only [G, quadMap, quadCLM_apply, AY, add_apply, ContinuousLinearMap.comp_apply,
+    neg_apply, map_sub]
   abel
 
-/-- **The derivative** `DG(a) = M Λ_H + Q − Dquad A_Y a`. -/
+/-- The derivative in the symmetric product representation used by the head defect. -/
 def DG (a : X₂ ℂ ν) : X₂ ℂ ν →L[ℂ] X₂ ℂ ν :=
-  M ∘L LamH F μ + tailProj (𝕜 := ℂ) F - Dquad (AY F M (F : Set ℤ) μ hs) a
+  M ∘L LamH F μ + tailProj (𝕜 := ℂ) F - (2 : ℂ) • quadCLM (AY F M (F : Set ℤ) μ hs) a
 
-/-- `HasFDerivAt G (DG a) a` (`hasFDerivAt_quad`). -/
-theorem hasFDerivAt_G (a : X₂ ℂ ν) : HasFDerivAt (G F μ hs M g) (DG F μ hs M a) a := by
-  rw [show G F μ hs M g = fun a =>
-      (M ∘L LamH F μ + tailProj (𝕜 := ℂ) F : X₂ ℂ ν →L[ℂ] X₂ ℂ ν) a - M g -
-        quad (AY F M (F : Set ℤ) μ hs) a from funext (G_eq F μ hs M g)]
-  exact (((M ∘L LamH F μ + tailProj (𝕜 := ℂ) F : X₂ ℂ ν →L[ℂ] X₂ ℂ ν).hasFDerivAt).sub_const (M g)).sub
-    (hasFDerivAt_quad (AY F M (F : Set ℤ) μ hs) a)
+/-- The derivative expression agrees with the canonical quadratic derivative. -/
+theorem DG_eq (a : X₂ ℂ ν) : DG F μ hs M a =
+    quadDeriv (M ∘L LamH F μ + tailProj (𝕜 := ℂ) F)
+      (-quadCLM (AY F M (F : Set ℤ) μ hs)) a := by
+  ext h
+  simp only [DG, quadDeriv, sub_apply, smul_apply, two_smul, add_apply,
+    neg_apply, ContinuousLinearMap.flip_apply]
+  rw [quadCLM_comm _ h a]
+  abel_nf
 
 /-- **The raw Fourier map** `F_raw(a)ₙ = μₙ aₙ − (a ⋆ a)ₙ − gₙ` (raw codomain, no typed space). -/
 def rawF (a : X₂ ℂ ν) (n : ℤ) : ℂ := μ n * coeff a n - convCoeff a a n - coeff g n
@@ -192,9 +195,9 @@ variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] (F : Finset ℤ) (μ : ℤ →
 
 
 /-- **The derivative of the quadratic at the centre**: for `supp ā ⊆ F` and `β = 2ā`,
-`Dquad A_Y ā = M P L_β + T₂ L_β` (the `β`-bridge and the bridges `H_F ι = P`, `T∞ ι = T₂`). -/
-theorem Dquad_AY_abar {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) :
-    Dquad (AY F M (F : Set ℤ) μ hs) ā =
+`2 • quadCLM A_Y ā = M P L_β + T₂ L_β` (the `β`-bridge and the bridges `H_F ι = P`, `T∞ ι = T₂`). -/
+theorem two_smul_quadCLM_AY_abar {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) :
+    (2 : ℂ) • quadCLM (AY F M (F : Set ℤ) μ hs) ā =
       M ∘L headProj (𝕜 := ℂ) F ∘L symbolAction₀ (p := 2) hC (betaOf F ā hā) +
         tailDiag (E := geomFiberZ ℂ ν) (p := 2) (F : Set ℤ) μ (bddAbove_of_summable_sq hs) ∘L
           symbolAction₀ (p := 2) hC (betaOf F ā hā) := by
@@ -205,7 +208,7 @@ theorem Dquad_AY_abar {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) :
       tailInf_comp_incl]
   refine ContinuousLinearMap.ext fun h => ?_
   have e := DFunLike.congr_fun hAι (symbolAction₀ (p := 2) hC (betaOf F ā hā) h)
-  rw [Dquad, smul_apply, quadCLM_apply, ← map_smul,
+  rw [smul_apply, quadCLM_apply, ← map_smul,
     two_smul_prodCLM_eq_incl_symbolAction₀ F ā hā h]
   exact e
 
@@ -216,7 +219,7 @@ theorem DG_sub_B0 {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) :
       -tailDefect hC (betaOf F ā hā) F M (tailSymbol (F : Set ℤ) μ)
         (bddAbove_of_summable_sq hs) := by
   refine ContinuousLinearMap.ext fun h => ?_
-  simp only [DG, Dquad_AY_abar F μ hs M hā, B0, Kh, tailDefect, tailProj_eq_id_sub_headProj,
+  simp only [DG, two_smul_quadCLM_AY_abar F μ hs M hā, B0, Kh, tailDefect, tailProj_eq_id_sub_headProj,
     tailDiag, sub_apply, add_apply,
     ContinuousLinearMap.comp_apply, neg_apply, ContinuousLinearMap.id_apply, map_sub]
   abel
@@ -320,21 +323,22 @@ theorem norm_comp_headReal_le_urow (hPM : headProj (𝕜 := ℂ) (E := geomFiber
     exact pow_le_pow_left₀ (mul_nonneg (norm_nonneg _) (pow_pos ν.coe_pos _).le) (hterm i) 2
   exact (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 hsq
 
-/-- **The `Z₂` face** (UPPER): `‖DG c − DG a‖ ≤ 2 √(U² + T2) ‖c − a‖` from `‖M H_F‖ ≤ U` and
-`∑' ‖d‖² ≤ T2` (`norm_Dquad_sub_le_AY`; no optimality claim). -/
-theorem norm_DG_sub_DG_le (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M) {U T2 : ℝ}
-    (hU : ‖M ∘L headReal F‖ ≤ U) (hT2 : ∑' k, ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2 ≤ T2)
-    (c a : X₂ ℂ ν) :
-    ‖DG F μ hs M c - DG F μ hs M a‖ ≤ 2 * √(U ^ 2 + T2) * ‖c - a‖ := by
-  have h : DG F μ hs M c - DG F μ hs M a =
-      -(Dquad (AY F M (F : Set ℤ) μ hs) c - Dquad (AY F M (F : Set ℤ) μ hs) a) := by
-    simp only [DG]
-    abel
-  rw [h, norm_neg]
-  refine (norm_Dquad_sub_le_AY F M μ hs hPM c a).trans
-    (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left (Real.sqrt_le_sqrt ?_) zero_le_two)
-      (norm_nonneg _))
-  exact add_le_add (pow_le_pow_left₀ (norm_nonneg _) hU 2) hT2
+/-- The curvature socket for the canonical quadratic map, from the geometry bounds. -/
+theorem norm_quadComp_add_flip_le_of_bounds
+    (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M) {U T2 : ℝ}
+    (hU : ‖M ∘L headReal F‖ ≤ U) (hT2 : ∑' k, ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2 ≤ T2) :
+    ‖quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν)) (-quadCLM (AY F M (F : Set ℤ) μ hs)) +
+      (quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν))
+        (-quadCLM (AY F M (F : Set ℤ) μ hs))).flip‖ ≤ 2 * √(U ^ 2 + T2) := by
+  refine (norm_quadComp_add_flip_le _ _).trans
+    (mul_le_mul_of_nonneg_left ?_ zero_le_two)
+  have hid : quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν))
+      (-quadCLM (AY F M (F : Set ℤ) μ hs)) = -quadCLM (AY F M (F : Set ℤ) μ hs) := by
+    ext z h
+    rfl
+  rw [hid, ContinuousLinearMap.opNorm_neg]
+  exact (norm_quadCLM_le _).trans ((norm_AY_le_sqrt_tsum F M μ hs hPM).trans
+    (Real.sqrt_le_sqrt (add_le_add (pow_le_pow_left₀ (norm_nonneg _) hU 2) hT2)))
 
 /-- **Finite support of the residual**: `G ā` vanishes off `F ∪ (F + F)` (`P M = M`,
 `supp ā ⊆ F`). -/
@@ -615,49 +619,25 @@ variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] (F : Finset ℤ) (μ : ℤ →
   (hs : Summable fun k => ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2) (M : X₂ ℂ ν →L[ℂ] X₂ ℂ ν)
   (g : X₂ ℂ ν)
 
-/-- The real restriction of `I − B₀` has the norm of `P − M K_H`. -/
-theorem norm_I_E_sub_restrictScalars_B0 (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) :
-    ‖I_E (E := X₂ ℂ ν) - (B0 F μ M β).restrictScalars ℝ‖ = ‖headProj (𝕜 := ℂ) F - M ∘L Kh F μ β‖ := by
-  rw [show I_E (E := X₂ ℂ ν) - (B0 F μ M β).restrictScalars ℝ =
-      (ContinuousLinearMap.id ℂ (X₂ ℂ ν) - B0 F μ M β).restrictScalars ℝ from
-    ContinuousLinearMap.ext fun _ => rfl, ContinuousLinearMap.norm_restrictScalars, one_sub_B0]
-
-omit [Fact (1 ≤ (ν : ℝ))] in
-/-- The real restriction of a difference composed with `A = id` has the norm of the difference. -/
-theorem norm_id_comp_restrictScalars_sub (T₁ T₂ : X₂ ℂ ν →L[ℂ] X₂ ℂ ν) :
-    ‖(ContinuousLinearMap.id ℝ (X₂ ℂ ν)).comp (T₁.restrictScalars ℝ - T₂.restrictScalars ℝ)‖ =
-      ‖T₁ - T₂‖ := by
-  rw [ContinuousLinearMap.id_comp, show T₁.restrictScalars ℝ - T₂.restrictScalars ℝ =
-      (T₁ - T₂).restrictScalars ℝ from ContinuousLinearMap.ext fun _ => rfl,
-    ContinuousLinearMap.norm_restrictScalars]
-
-/-- **Existence and uniqueness of a zero of `G`**: ONE application of the library's
-`general_radii_polynomial_theorem_local` with `f = G`, `A = id`, `A† = B₀` on the real structure
-of `X₂ ℂ ν`. -/
+/-- A unique zero of `G` from the canonical quadratic radii theorem. -/
 theorem existsUnique_G {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) {Y₀ Z₀ Z₁ Z₂ r₀ : ℝ}
     (hr₀ : 0 < r₀) (hY₀ : ‖G F μ hs M g ā‖ ≤ Y₀)
     (hZ₀ : ‖headProj (𝕜 := ℂ) F - M ∘L Kh F μ (betaOf F ā hā)‖ ≤ Z₀)
     (hZ₁ : ‖DG F μ hs M ā - B0 F μ M (betaOf F ā hā)‖ ≤ Z₁)
-    (hZ₂ : ∀ c ∈ Metric.closedBall ā r₀, ‖DG F μ hs M c - DG F μ hs M ā‖ ≤ Z₂ * r₀)
+    (hZ₂ : ‖quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν)) (-quadCLM (AY F M (F : Set ℤ) μ hs)) +
+      (quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν))
+        (-quadCLM (AY F M (F : Set ℤ) μ hs))).flip‖ ≤ Z₂)
     (hrad : generalRadiiPolynomial Y₀ Z₀ Z₁ (fun _ => Z₂) r₀ < 0) :
     ∃! a ∈ Metric.closedBall ā r₀, G F μ hs M g a = 0 := by
-  refine general_radii_polynomial_theorem_local (f := G F μ hs M g)
-    (Df := fun x => (DG F μ hs M x).restrictScalars ℝ) (xBar := ā)
-    (A := ContinuousLinearMap.id ℝ (X₂ ℂ ν))
-    (A_dagger := (B0 F μ M (betaOf F ā hā)).restrictScalars ℝ) (Z₂ := fun _ => Z₂)
-    hr₀ hY₀ ?_ ?_ ?_ ?_ hrad fun _ _ h => h
-  · rw [ContinuousLinearMap.id_comp, norm_I_E_sub_restrictScalars_B0]
-    exact hZ₀
-  · rw [norm_id_comp_restrictScalars_sub, norm_sub_rev]
-    exact hZ₁
-  · intro c hc
-    rw [norm_id_comp_restrictScalars_sub]
-    exact hZ₂ c hc
-  · intro x _
-    exact ((hasFDerivAt_G F μ hs M g x).restrictScalars ℝ).hasFDerivWithinAt
+  simp_rw [G_eq F μ hs M g] at hY₀ ⊢
+  refine quadratic_radii_theorem_local
+    (A := ContinuousLinearMap.id ℂ (X₂ ℂ ν))
+    (A_dagger := B0 F μ M (betaOf F ā hā)) hr₀ hY₀ ?_ ?_ hZ₂ hrad fun _ _ h => h
+  · rwa [ContinuousLinearMap.id_comp, one_sub_B0]
+  · rwa [ContinuousLinearMap.id_comp, ← DG_eq, norm_sub_rev]
 
 /-- **`M` is injective on the head range** when `‖P − M K_H‖ < 1` and `P M = M`: `B₀` is a unit
-(the library's Neumann rung `isUnit_of_norm_sub_id_lt_one` on the real restriction), so `M` maps
+(Mathlib's complex Neumann series `isUnit_one_sub_of_norm_lt_one`), so `M` maps
 the finite-dimensional range of `P` onto itself (`finiteDimensional_range_headProj`),
 hence injectively (`LinearMap.injective_iff_surjective`). -/
 theorem injOn_head_of_norm_lt_one (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M)
@@ -667,10 +647,13 @@ theorem injOn_head_of_norm_lt_one (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ
       (LinearMap.range (headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F).toLinearMap) :=
     finiteDimensional_range_headProj (𝕜 := ℂ) F
   have hBsurj : Function.Surjective (B0 F μ M β) := by
-    obtain ⟨u, hu⟩ := isUnit_of_norm_sub_id_lt_one (E := X₂ ℂ ν)
-      (B := (B0 F μ M β).restrictScalars ℝ) (by rwa [norm_I_E_sub_restrictScalars_B0])
+    have hB : IsUnit (B0 F μ M β) := by
+      rw [← one_sub_B0] at h
+      simpa using isUnit_one_sub_of_norm_lt_one
+        (R := X₂ ℂ ν →L[ℂ] X₂ ℂ ν) (x := 1 - B0 F μ M β) h
+    obtain ⟨u, hu⟩ := hB
     intro y
-    refine ⟨(↑u⁻¹ : X₂ ℂ ν →L[ℝ] X₂ ℂ ν) y, ?_⟩
+    refine ⟨(↑u⁻¹ : X₂ ℂ ν →L[ℂ] X₂ ℂ ν) y, ?_⟩
     have e := DFunLike.congr_fun u.mul_inv y
     rw [hu] at e
     exact e
@@ -749,16 +732,15 @@ theorem existsUnique_rawF {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0)
     (hμ : ∀ k ∉ F, μ k ≠ 0) {Y₀ Z₀ Z₁ Z₂ r₀ : ℝ} (hr₀ : 0 < r₀) (hY₀ : ‖G F μ hs M g ā‖ ≤ Y₀)
     (hZ₀ : ‖headProj (𝕜 := ℂ) F - M ∘L Kh F μ (betaOf F ā hā)‖ ≤ Z₀)
     (hZ₁ : ‖DG F μ hs M ā - B0 F μ M (betaOf F ā hā)‖ ≤ Z₁)
-    (hZ₂ : ∀ c ∈ Metric.closedBall ā r₀, ‖DG F μ hs M c - DG F μ hs M ā‖ ≤ Z₂ * r₀)
+    (hZ₂ : ‖quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν)) (-quadCLM (AY F M (F : Set ℤ) μ hs)) +
+      (quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν))
+        (-quadCLM (AY F M (F : Set ℤ) μ hs))).flip‖ ≤ Z₂)
     (hrad : generalRadiiPolynomial Y₀ Z₀ Z₁ (fun _ => Z₂) r₀ < 0) :
     ∃! a ∈ Metric.closedBall ā r₀, rawF μ g a = 0 := by
   have hlt : ‖headProj (𝕜 := ℂ) F - M ∘L Kh F μ (betaOf F ā hā)‖ < 1 := by
     have hY0 : 0 ≤ Y₀ := (norm_nonneg _).trans hY₀
     have hZ10 : 0 ≤ Z₁ := (norm_nonneg _).trans hZ₁
-    have hZ20 : 0 ≤ Z₂ := by
-      have e := hZ₂ ā (Metric.mem_closedBall_self hr₀.le)
-      rw [sub_self, norm_zero] at e
-      exact le_of_mul_le_mul_right ((zero_mul r₀).trans_le e) hr₀
+    have hZ20 : 0 ≤ Z₂ := (ContinuousLinearMap.opNorm_nonneg _).trans hZ₂
     have h := general_radii_poly_neg_implies_Z_lt_one hY0 hr₀ hrad
     simp only [Z_bound_general] at h
     nlinarith [mul_nonneg hZ20 hr₀.le]
@@ -819,13 +801,8 @@ theorem duffing_existsUnique (hN : c₂ < ((N : ℝ) + 1) ^ 2) (cert : Cert c₁
     refine (pow_le_pow_iff_left₀ (by positivity) hZ₂0 two_ne_zero).1 ?_
     rw [mul_pow, Real.sq_sqrt (by positivity)]
     linarith
-  have hZ2' : ∀ c ∈ Metric.closedBall cert.abar r₀,
-      ‖DG (headF N) (duffing c₁ c₂) hs cert.M c - DG (headF N) (duffing c₁ c₂) hs cert.M cert.abar‖
-        ≤ Z₂ * r₀ := fun c hc => by
-    refine (norm_DG_sub_DG_le (headF N) (duffing c₁ c₂) hs cert.M cert.hPM cert.hU hT2 c
-      cert.abar).trans ?_
-    rw [Metric.mem_closedBall, dist_eq_norm] at hc
-    exact mul_le_mul h2 hc (norm_nonneg _) hZ₂0
+  have hZ2' := (norm_quadComp_add_flip_le_of_bounds (headF N) (duffing c₁ c₂) hs cert.M
+    cert.hPM cert.hU hT2).trans h2
   obtain ⟨a, ⟨ha, hFa⟩, hu⟩ := existsUnique_rawF (headF N) (duffing c₁ c₂) hs cert.M (forcing c₃)
     cert.abar_supp cert.hPM hg (duffing_ne_zero hN) hr₀ hY₀ cert.hZ₀ hZ1' hZ2' hrad
   exact ⟨a, ⟨ha, fun n => congrFun hFa n⟩, fun z ⟨hz, hz0⟩ => hu z ⟨hz, funext hz0⟩⟩

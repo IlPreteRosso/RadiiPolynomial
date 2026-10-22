@@ -5169,3 +5169,40 @@ and `Z₁_hDφ`) to `Y0Z0`.
 | `ChebyshevIVP.FCe` | unchanged FQN, type and binder order; `Certification/IVP/Chebyshev.lean` (section `QLayerTC`) → `Certification/IVP/Chebyshev/Common.lean` | moved | `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/chebyshev_split/REPORT.md` |
 | `ChebyshevIVP.StdChebIVPData.norm_symmetrize_abar_eq` | unchanged FQN, type and binder order; `Certification/IVP/Chebyshev.lean` (section `BridgesTC`) → `Certification/IVP/Chebyshev/Y0Z0.lean` | moved | `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/chebyshev_split/REPORT.md` |
 | `Certification/IVP/Chebyshev.lean` | facade: its four imports (`Applications.IVP.Chebyshev.Polynomial`, `Certification.Rational.Matrix`, `Certification.Rational.Grid`, `Certification.RadiiPolynomialQ`) replaced by the imports of the eight modules; the importers `RadiiPolynomial.lean`, `Example1421/Certificate.lean` and `tests/CH/L2.lean` keep their import line | import change | `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/chebyshev_split/REPORT.md` |
+
+
+## L2S-QUAD-1: canonical quadratic radii service (2026-10-22)
+
+`Core.Quadratic` owns `quadMap`, its derivative `quadDeriv`, completeness-free calculus,
+the preconditioned bilinear map `quadComp` and its symmetrized curvature bound, and the
+local radii faces `quadratic_radii_theorem_local` and
+`quadratic_radii_theorem_nondegenerate_local`. The radii faces retain the original scalar
+field in all four bounds and restrict scalars internally.
+
+The bilateral geometry keeps `quadCLM`, its symmetry and norm bound, the product,
+return maps and disjoint-output estimates. Its former `quad`, `Dquad`, `Dquad_apply`,
+`precompR_add_precompL_eq_Dquad`, `hasFDerivAt_quad`, `Dquad_sub`,
+`norm_Dquad_sub_le`, and `norm_Dquad_sub_le_AY` are deleted. The geometry norm estimate
+is exposed as `norm_AY_le_sqrt_tsum` without a calculus dependency.
+
+Duffing consumes the canonical quadratic radii face. `G_eq` now identifies `G` with
+`quadMap`; `DG_eq` identifies the symmetric derivative formula with `quadDeriv`.
+`Dquad_AY_abar` is replaced by `two_smul_quadCLM_AY_abar`. The duplicate
+`hasFDerivAt_G`, `norm_DG_sub_DG_le` and `norm_id_comp_restrictScalars_sub` are deleted;
+`norm_quadComp_add_flip_le_of_bounds` supplies the primary curvature socket.
+The raw-zero transfer uses the complex Neumann series directly; the former
+`norm_I_E_sub_restrictScalars_B0` is deleted (separate Q7 consumer edit).
+The four `FourierDuffing.Certificate.duffing_l2_*` endpoint types and numerical data are preserved.
+
+
+### L2S-QUAD-1 correction v2 (2026-10-22)
+
+The unused v1 candidate corollary `RadiiPolynomial.fderiv_quadMap` is removed before
+commit; it was never a shipped declaration. Staged consumers obtain its equality from
+`(hasFDerivAt_quadMap c L B x).fderiv` directly; no replacement wrapper is introduced.
+
+The separately attributed Q7 consumer edit changes
+`FourierDuffing.injOn_head_of_norm_lt_one` to Mathlib's complex Neumann series and a
+complex inverse. Its real-restriction helper
+`FourierDuffing.norm_I_E_sub_restrictScalars_B0` is deleted. The four Duffing certificate
+endpoint types and numerical data are preserved.

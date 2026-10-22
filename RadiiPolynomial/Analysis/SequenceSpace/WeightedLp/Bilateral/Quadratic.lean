@@ -2,9 +2,8 @@ import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Bilateral.Product
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.TailDiagonal
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.HeadProj
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Fourier.ConvolutionAction
-import Mathlib.Analysis.Calculus.FDeriv.Bilinear
 
-/-! Quadratic smoothing T∘q with q:X₂×X₂→Y and T:Y→X₂. AY has a pointwise disjoint-output identity and an upper operator-norm bound. The Lipschitz bounds use norm(2) ≤ 2 over a complete NontriviallyNormedField. -/
+/-! Quadratic smoothing T∘q with q:X₂×X₂→Y and T:Y→X₂. AY has a pointwise disjoint-output identity and an upper operator-norm bound. The geometry-specific product and smoothing bounds supply the quadratic theorem in Core. -/
 
 open scoped ENNReal NNReal
 
@@ -191,71 +190,18 @@ theorem norm_quadCLM_le : ‖quadCLM T‖ ≤ ‖T‖ := by
       (ContinuousLinearMap.opNorm_nonneg T)).trans_eq
       (mul_one _))
 
-/-- The quadratic map `quad T a = T (a ⋆ a)`. -/
-def quad (a : X₂ 𝕜 ν) : X₂ 𝕜 ν := quadCLM T a a
-
-/-- The derivative of `quad T` at `a`: `Dquad T a = 2 • quadCLM T a`, i.e. `h ↦ 2 T (a ⋆ h)`. -/
-def Dquad (a : X₂ 𝕜 ν) : X₂ 𝕜 ν →L[𝕜] X₂ 𝕜 ν := (2 : 𝕜) • quadCLM T a
-
-/-- `Dquad T a h = T (a ⋆ h) + T (h ⋆ a)`. -/
-theorem Dquad_apply (a h : X₂ 𝕜 ν) : Dquad T a h = quadCLM T a h + quadCLM T h a := by
-  rw [Dquad, smul_apply, two_smul, quadCLM_comm T h a]
-
-/-- The derivative identity behind `hasFDerivAt_quad` (a CLM equality, proved by `ext` on the
-CLM goal only): Mathlib's bilinear derivative at `f = g = id` is `Dquad T a`. -/
-theorem precompR_add_precompL_eq_Dquad (a : X₂ 𝕜 ν) :
-    (quadCLM T).precompR (X₂ 𝕜 ν) a (ContinuousLinearMap.id 𝕜 (X₂ 𝕜 ν)) +
-        (quadCLM T).precompL (X₂ 𝕜 ν) (ContinuousLinearMap.id 𝕜 (X₂ 𝕜 ν)) a = Dquad T a :=
-  ContinuousLinearMap.ext fun h => by
-    rw [add_apply, ContinuousLinearMap.precompR_apply, ContinuousLinearMap.compL_apply,
-      ContinuousLinearMap.comp_apply, ContinuousLinearMap.precompL_apply,
-      ContinuousLinearMap.id_apply, Dquad_apply]
-
-/-- **The derivative of the quadratic map**: `HasFDerivAt (quad T) (Dquad T a) a`. -/
-theorem hasFDerivAt_quad (a : X₂ 𝕜 ν) : HasFDerivAt (quad T) (Dquad T a) a :=
-  ((quadCLM T).hasFDerivAt_of_bilinear (hasFDerivAt_id a) (hasFDerivAt_id a)).congr_fderiv
-    (precompR_add_precompL_eq_Dquad T a)
-
-/-- The derivative difference is the composite at the difference:
-`Dquad T a - Dquad T b = 2 • quadCLM T (a - b)`. -/
-theorem Dquad_sub (a b : X₂ 𝕜 ν) : Dquad T a - Dquad T b = (2 : 𝕜) • quadCLM T (a - b) := by
-  rw [Dquad, Dquad, map_sub, smul_sub]
-
 end Quadratic
 
-section QuadraticLipschitz
+section AYNormTail
 
-variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] {ν : PosReal}
-variable [Fact (1 ≤ (ν : ℝ))] (T : Y 𝕜 ν →L[𝕜] X₂ 𝕜 ν)
+variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] {ν : PosReal}
+variable (F : Finset ℤ) (M : X₂ 𝕜 ν →L[𝕜] X₂ 𝕜 ν) (μ : ℤ → 𝕜)
 
-/-- **The derivative Lipschitz bound** `‖Dquad T a - Dquad T b‖ ≤ 2 ‖T‖ ‖a - b‖` (the `Z₂`
-ingredient; no optimality claim). -/
-theorem norm_Dquad_sub_le (a b : X₂ 𝕜 ν) : ‖Dquad T a - Dquad T b‖ ≤ 2 * ‖T‖ * ‖a - b‖ := by
-  rw [Dquad_sub, norm_smul]
-  have htwo : ‖(2 : 𝕜)‖ ≤ (2 : ℝ) := by
-    have h := norm_add_le (1 : 𝕜) 1
-    simpa only [one_add_one_eq_two, norm_one] using h
-  have hquad : ‖quadCLM T (a - b)‖ ≤ ‖T‖ * ‖a - b‖ :=
-    ((quadCLM T).le_opNorm (a - b)).trans
-      (mul_le_mul_of_nonneg_right (norm_quadCLM_le T) (norm_nonneg _))
-  exact (mul_le_mul htwo hquad (norm_nonneg _) zero_le_two).trans_eq (mul_assoc _ _ _).symm
-
-end QuadraticLipschitz
-
-section AYLipschitz
-
-variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] {ν : PosReal}
-variable [Fact (1 ≤ (ν : ℝ))] (F : Finset ℤ) (M : X₂ 𝕜 ν →L[𝕜] X₂ 𝕜 ν) (μ : ℤ → 𝕜)
-
-/-- **The derivative Lipschitz bound at `T = A_Y`** (`S = ↑F`, `P_F M = M`) with the explicit
-constant `2 √(‖M H_F‖² + ∑' ‖d‖²)` (through the UPPER bound `norm_AY_le`): the `Z₂ = 2 ‖A_Y‖`
-ingredient of the consumer. -/
-theorem norm_Dquad_sub_le_AY (hs : Summable fun k => ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2)
-    (hPM : headProj (E := geomFiberZ 𝕜 ν) (p := 2) F ∘L M = M) (a b : X₂ 𝕜 ν) :
-    ‖Dquad (AY F M (F : Set ℤ) μ hs) a - Dquad (AY F M (F : Set ℤ) μ hs) b‖ ≤
-      2 * √(‖M ∘L headReal F‖ ^ 2 + ∑' k, ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2) * ‖a - b‖ := by
-  refine (norm_Dquad_sub_le _ a b).trans
-    (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left ?_ zero_le_two) (norm_nonneg _))
+/-- The smoothing norm bound from the head norm and the square sum of the tail symbol. -/
+theorem norm_AY_le_sqrt_tsum (hs : Summable fun k => ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2)
+    (hPM : headProj (E := geomFiberZ 𝕜 ν) (p := 2) F ∘L M = M) :
+    ‖AY F M (F : Set ℤ) μ hs‖ ≤
+      √(‖M ∘L headReal F‖ ^ 2 + ∑' k, ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2) := by
   have ht : ‖tailInf (ν := ν) (F : Set ℤ) μ hs‖ ≤
       √(∑' k, ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2) :=
     norm_tailDiagInf_le (fun k : ℤ => (ν : ℝ) ^ k.natAbs) hs
@@ -264,7 +210,7 @@ theorem norm_Dquad_sub_le_AY (hs : Summable fun k => ‖tailSymbol (F : Set ℤ)
   exact (pow_le_pow_left₀ (norm_nonneg _) ht 2).trans_eq
     (Real.sq_sqrt (tsum_nonneg fun _ => sq_nonneg _))
 
-end AYLipschitz
+end AYNormTail
 
 section BetaBridge
 
