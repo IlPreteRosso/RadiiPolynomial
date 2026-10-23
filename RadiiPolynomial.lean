@@ -32,6 +32,8 @@ import RadiiPolynomial.Core.Theorem
 import RadiiPolynomial.Applications.PowerSeries.AffineZ2
 import RadiiPolynomial.Applications.PowerSeries.PolynomialZero
 import RadiiPolynomial.Certification.PowerSeries.PolynomialZero
+import RadiiPolynomial.Applications.Fourier.IkData
+import RadiiPolynomial.Applications.Fourier.Quadratic
 import RadiiPolynomial.Applications.Fourier.Realization
 import RadiiPolynomial.Examples
 

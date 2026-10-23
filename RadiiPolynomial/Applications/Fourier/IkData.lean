@@ -1,17 +1,20 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.TailDiagonal
 
 /-!
-# Reciprocal Fourier tail comparison for the Duffing certificate
+# Reciprocal Fourier tail comparison: the first-order symbol `i k`
 
-The symbol `ik k = I * k` supplies a square-summable reciprocal tail comparison.
-Its squared tail sum is `2 * psi1 N`, where `psi1 N = ∑_{k > N} k⁻²`.
-The Duffing symbol comparison in `Algebra.lean` uses these facts.
+The fixed complex symbol `ik k = I * k` on `ℤ` supplies a square-summable reciprocal tail
+comparison on the head `headZ N = {k : |k| ≤ N}`. Its squared tail sum is `2 * psi1 N`, where
+`psi1 N = ∑_{k > N} k⁻²`. This is symbol data of the Fourier family (no state carrier, weight,
+candidate or certificate), shared by the Duffing symbol comparison
+(`Examples/Fourier/Duffing/Algebra.lean`) and the Riccati certificate
+(`Examples/Fourier/Riccati/Certificate.lean`).
 -/
 
 open scoped ENNReal
 open RadiiPolynomial RadiiPolynomial.WeightedLp
 
-namespace FourierDuffing.IkData
+namespace RadiiPolynomial.Fourier.IkData
 
 /-! ### The symbol `μ = ik` and the head `|k| ≤ N` -/
 
@@ -87,5 +90,5 @@ theorem summable_sq_tailSymbol_ik (N : ℕ) :
 
 end IK
 
-end FourierDuffing.IkData
+end RadiiPolynomial.Fourier.IkData
 

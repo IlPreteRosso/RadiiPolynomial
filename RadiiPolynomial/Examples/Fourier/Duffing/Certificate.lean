@@ -14,9 +14,10 @@ radius `1/25` and conjugate-symmetric (`conj ã₋ₙ = ãₙ`).
 
 The candidate and the head matrix are the consumer-owned data of `Examples/Fourier/Duffing/Numbers.lean`
 (generated). This file supplies
-* the BRIDGES from the exact `ℚ` mirror to the complex objects of the consumer
-  `Examples/Fourier/Duffing/Algebra.lean` (`toC z = z.1 + z.2 i`; folds over `List.range` plus a shift, matched
-  with the `Finset` heads by `List.sum_toFinset`);
+* the BRIDGES from the exact `ℚ` mirror to the complex objects of the quadratic Fourier family
+  `Applications/Fourier/Quadratic.lean` at the Duffing data of
+  `Examples/Fourier/Duffing/Algebra.lean` (`toC z = z.1 + z.2 i`; folds over `List.range` plus a
+  shift, matched with the `Finset` heads by `List.sum_toFinset`);
 * the four bound lemmas: `Y₀` through the exact finite residual `norm_sq_G_abar`, `Z₀` through the
   block Schur producer `norm_le_sqrt_of_block`, the composed leakage `H` through
   `norm_head_term_le_composed`, and `U` through `norm_comp_headReal_le_urow`; entry moduli are
@@ -34,7 +35,7 @@ noncomputable section
 namespace FourierDuffing.Certificate
 
 open RadiiPolynomial RadiiPolynomial.WeightedLp RadiiPolynomial.WeightedLp.Bilateral
-  FourierDuffing FourierDuffing.Numbers
+  RadiiPolynomial.Fourier.Quadratic FourierDuffing FourierDuffing.Numbers
 
 /-! ### A. Objects and bridges -/
 

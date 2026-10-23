@@ -457,8 +457,8 @@ lemma existsUnique_G : ∃! x ∈ Metric.closedBall abar (Numbers.radiusQ : ℝ)
     (by simpa [one_sub_B0] using Z0_le)
     (by simpa only [ContinuousLinearMap.id_comp] using Z1_le) Z2_le radii_neg (fun _ _ h => h)
 
-/-! Finite-head injectivity and raw zero transfer: the generic argument of
-FourierDuffing.Algebra, applied to the actual polynomial-weight carrier. -/
+/-! Finite-head injectivity and raw zero transfer: the generic argument of the quadratic Fourier
+family (`Applications/Fourier/Quadratic.lean`), applied to the actual polynomial-weight carrier. -/
 lemma M_inj_head : ∀ x : X, P x = x → M x = 0 → x = 0 := by
   have hlt : ‖P - M ∘L Kh‖ < 1 := Z0_le.trans_lt (by norm_num [Numbers.Z0Q])
   have : FiniteDimensional ℂ (LinearMap.range P.toLinearMap) := finiteDimensional_range_headProj (𝕜 := ℂ) S

@@ -31,6 +31,7 @@ noncomputable section
 namespace FourierDuffing.Polynomial
 
 open RadiiPolynomial RadiiPolynomial.WeightedLp RadiiPolynomial.WeightedLp.Bilateral
+open RadiiPolynomial.Fourier.Quadratic (rawF)
 open FourierDuffing.Certificate (ν₆₅ coe_ν₆₅ aTilde duffing_analytic_solution coeff_forcing_eq)
 
 /-! ### The weight comparison and the embedding -/
@@ -71,8 +72,8 @@ private theorem raw_embed (x : X₂ ℂ ν₆₅) (n : ℤ) :
     Certificate.rawF (embed x) n = rawF (duffing (1 / 10) 4) (forcing 1) x n := by
   have hconv : (coeff (embed x) ⋆ᵣ₊ coeff (embed x)) n = convCoeff x x n := by
     simp only [conv_apply, convCoeff, coeff_embed]
-  rw [Certificate.rawF, FourierDuffing.rawF, coeff_embed, hconv, Certificate.coeff_g,
-    coeff_forcing_eq]
+  rw [Certificate.rawF, RadiiPolynomial.Fourier.Quadratic.rawF, coeff_embed, hconv,
+    Certificate.coeff_g, coeff_forcing_eq]
 
 private theorem embed_aTilde_ball :
     embed aTilde ∈ Metric.closedBall Certificate.abar (Numbers.radiusQ : ℝ) := by
