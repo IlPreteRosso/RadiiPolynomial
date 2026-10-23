@@ -234,7 +234,8 @@ compass, proportional re-entry check, scoped readback, PROPOSAL labels): `lean-a
   and operator assembly from those declared choices and hypotheses. Production certificates and book chapters demonstrate the abstraction. Record local instances, `haveI`/`letI`,
   `inferInstanceAs` and named-argument pins (`(p := …)`, `(𝕜 := …)`, `(E := …)`, `(ν := …)`) as source signals; classify each as
   mathematical input, representation/coherence work, or avoidable inference scaffolding, and reduce the latter two at fixed
-  endpoints without hiding meaningful choices (measured by the campaign tool `measure.py` v1.1). Use typeclasses for coherent
+  endpoints without hiding meaningful choices (source-signal counts, e.g. `measure.py` v1.1, are a comparison column; the
+  consumer burden of record is h, §The effective-abstraction loop). Use typeclasses for coherent
   structural facts; keep varying bounds, radii and certificates explicit (the skill's explicit-data rule). A `Fact` whose parameter
   is absent from the conclusion is legal; recovering that parameter is the inference problem. Select `Fact`, `outParam` or
   `semiOutParam` only after checking which parameters are determined, how synthesis finds them, and whether competing instances
@@ -243,7 +244,8 @@ compass, proportional re-entry check, scoped readback, PROPOSAL labels): `lean-a
   consumer cost in separate columns; a matched problem in another norm is an analogue, labelled as such. Report per final theorem: the obligations the caller discharges
   (interface arity, not "effort"), bound quality (constants, radius, margin, checker time) and the axiom set (a file's union is not the theorem's).
 - **Instructive vs decorative abstraction is a reviewed card, not a score.** Six fields: pinned scope; observed reach from endpoint families with witness paths (unreached in
-  scope ≠ useless as mathematics, but an unreached face does not ship and keeps a probe record); the exact mathematical service checked against types; caller evidence, including a bounded same-endpoint
+  scope ≠ useless as mathematics, but an unreached face does not ship and keeps a probe record); the exact mathematical service checked
+  against types; caller evidence (h before/after, §The effective-abstraction loop), including a bounded same-endpoint
   replacement trial when claiming savings or resolving disputed replacement value; explanation evidence as a
   separate claim; cost and one disposition (for a reached face: retain / retain provisionally with a named check / simplify or merge after a
   replacement review / investigate; for an unreached face: to probe, not shipped). One concrete
@@ -330,3 +332,21 @@ The user's governing statement, which followed them (2026-10-19), verbatim: "Thi
   (2026-10-19): the library class `lpOneAlgWeightMul` bundled v(0) = 1 with submultiplicativity although only its `NormOneClass`
   instance used v(0) = 1; four review passes missed it: all checked fidelity to the source, none asked whether the source asks
   for more than the proof uses.
+
+## The effective-abstraction loop (user framing 2026-10-19, A5; the landing protocol of the ℓ^p merge, wave 2)
+
+- **FRAME → END → PATH → MEASURE → EXTRACT → SHIP.** FRAME: fix the family of questions and what is OUT (§Generality and
+  placement). END: name the independently specified end consumer that measures the API. PATH: assemble its proof from API faces;
+  routes are compared at that same endpoint (§Effective API). MEASURE: the consumer's burden is the artifact-level hint count h of
+  the skill `lean-hint-count` (definition v1.9, frozen; normative there, not restated here): one fixed-definition observation of
+  burden, never a ranking; classify each measured object by kind (§Effective API, first bullet). EXTRACT: the API face that absorbs
+  those objects, through the prospective guard and the six-field card. SHIP: the ship gate (§The one goal and the production gate),
+  landed by the protocol below.
+- **h replaces reading counts.** A comparison reports h before/after at the same endpoint; a new endpoint has before = N/A.
+  Reading counts and source-signal counts are a comparison column, never the number. Access: Claude reads `~/.claude/skills/lean-hint-count/`; a
+  harness without that skill (Codex `~/.agents/skills` and Antigravity have no copy) asks the coordinator for the h row.
+- **Landing protocol, per batch.** Freeze (a MANIFEST of every pin) → ONE bounded readback against a CLONED generation (an APFS
+  clone, `cp -c -R`, of the sources and the build tree, with a manifest of pins and olean hashes; never the live tree) → every
+  preserved endpoint's full type and axioms identical BEFORE/AFTER → the endpoint census preserved (no root lost; a rename has
+  its `RENAMES.md` row). For an explicitly authorized new or changed endpoint, record the intended delta and verify its full type
+  and axioms; a new endpoint has before = N/A.
