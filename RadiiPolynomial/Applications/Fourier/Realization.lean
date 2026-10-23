@@ -40,6 +40,14 @@ in complex time and as `realRealization c t = Re (realization c t)`.
   is real-analytic on `ℝ` (`analyticOnNhd_realRealization`).
 * **Reality.** Conjugate symmetry `c₋ₙ = conj cₙ` makes `realization c` real-valued
   (`ofReal_realRealization`).
+* **The quadratic family.** For `a ∈ X₂ ℂ ν`, `ν > 1`, real `c₀, c₁, c₂` and any `b : ℤ → ℂ`, the
+  coefficient equation `(c₀ + i c₁ n − c₂ n²) aₙ − (a ⋆ a)ₙ − bₙ = 0` gives
+  `c₂ u'' + c₁ u' + c₀ u − u² = u_b` on `ℝ` for `u = realization (coeff a)`, `u_b = realization b`
+  (`realization_secondOrder`) and, under conjugate symmetry of `a`, for the real realizations
+  (`realRealization_secondOrder`, right side `realRealization b`). At `c₂ = 0` this is the
+  first-order family `c₁ u' + c₀ u − u² = u_b` (`realization_firstOrder`,
+  `realRealization_firstOrder`). The forcing carries no hypothesis: the equation makes `b`
+  absolutely summable, and the real part of `u_b` is `realRealization b` by definition.
 * **The Duffing family.** For `a ∈ X₂ ℂ ν`, `ν > 1`, the coefficient equation
   `(−n² + i c₁ n + c₂) aₙ − (a ⋆ a)ₙ − c₃ bₙ = 0` with `b = cosCoeff` (`b_{±1} = 1/2`) gives
   `u'' + c₁ u' + c₂ u − u² = c₃ cos t` on `ℝ` for `u = realization (coeff a)`
@@ -379,7 +387,8 @@ theorem analyticOnNhd_realRealization (a : Y ℂ ν) (hν : 1 < (ν : ℝ)) :
 
 end Strip
 
-/-! ### F. The Duffing family `u'' + c₁ u' + c₂ u − u² = c₃ cos t` -/
+/-! ### F. The quadratic family `c₂ u'' + c₁ u' + c₀ u − u² = u_b` and the Duffing family
+`u'' + c₁ u' + c₂ u − u² = c₃ cos t` -/
 
 section Duffing
 
@@ -414,13 +423,15 @@ private theorem summable_norm_derivCoeff_X₂ (hν : 1 < (ν : ℝ)) (a : X₂ �
     (hm 1).congr fun n => by rw [norm_derivCoeff, pow_one],
     (hm 2).congr fun n => by rw [norm_derivCoeff, norm_derivCoeff, ← mul_assoc, ← sq]⟩
 
-/-- The coefficient form of the equation transfer: the realizations of the coefficient families
-satisfy the Duffing identity. -/
-private theorem realization_duffing_coeff (hν : 1 < (ν : ℝ)) (a : X₂ ℂ ν) {c₁ c₂ c₃ : ℝ}
-    (h : ∀ n : ℤ, (-(n : ℂ) ^ 2 + I * c₁ * n + c₂) * coeff a n - convCoeff a a n -
-      c₃ * cosCoeff n = 0) (t : ℝ) :
-    realization (derivCoeff (derivCoeff (coeff a))) t + c₁ * realization (derivCoeff (coeff a)) t +
-      c₂ * realization (coeff a) t - realization (coeff a) t ^ 2 = c₃ * Real.cos t := by
+/-- The coefficient form of the equation transfer for the quadratic family: the realizations of
+the coefficient families satisfy `c₂ u'' + c₁ u' + c₀ u − u² = u_b`. -/
+private theorem realization_secondOrder_coeff (hν : 1 < (ν : ℝ)) (a : X₂ ℂ ν) {c₀ c₁ c₂ : ℝ}
+    {b : ℤ → ℂ}
+    (h : ∀ n : ℤ, (c₀ + I * c₁ * n - c₂ * (n : ℂ) ^ 2) * coeff a n - convCoeff a a n - b n = 0)
+    (t : ℝ) :
+    c₂ * realization (derivCoeff (derivCoeff (coeff a))) t +
+      c₁ * realization (derivCoeff (coeff a)) t + c₀ * realization (coeff a) t -
+        realization (coeff a) t ^ 2 = realization b t := by
   obtain ⟨h0, h1, h2⟩ := summable_norm_derivCoeff_X₂ hν a
   -- the product through the circle lift at an intermediate weight `1 < ν' < ν`
   let ν' : PosReal := ⟨(1 + ν) / 2, by have := ν.coe_pos; positivity⟩
@@ -433,15 +444,81 @@ private theorem realization_duffing_coeff (hν : 1 < (ν : ℝ)) (a : X₂ ℂ �
   have hsq : realization (convCoeff a a) t = realization (coeff a) t ^ 2 := by
     rw [← hLL, realization_mul, sq]
     rfl
-  have H := ((((hasSum_realization h2 t).add ((hasSum_realization h1 t).mul_left (c₁ : ℂ))).add
-    ((hasSum_realization h0 t).mul_left (c₂ : ℂ))).sub (hasSum_realization hq t)).sub
-    ((hasSum_realization summable_norm_cosCoeff t).mul_left (c₃ : ℂ))
-  have key := H.unique (hasSum_zero.congr_fun fun n => by
+  -- the series of `b` is the combination of the four absolutely convergent series
+  have H := ((((hasSum_realization h2 t).mul_left (c₂ : ℂ)).add
+    ((hasSum_realization h1 t).mul_left (c₁ : ℂ))).add
+    ((hasSum_realization h0 t).mul_left (c₀ : ℂ))).sub (hasSum_realization hq t)
+  rw [← hsq]
+  exact (H.congr_fun fun n => by
     simp only [derivCoeff]
-    linear_combination Complex.exp (n * t * I) * h n +
-      (n : ℂ) ^ 2 * coeff a n * Complex.exp (n * t * I) * Complex.I_sq)
-  rw [hsq, realization_cosCoeff] at key
-  linear_combination key
+    linear_combination (-Complex.exp (n * t * I)) * h n -
+      c₂ * (n : ℂ) ^ 2 * coeff a n * Complex.exp (n * t * I) * Complex.I_sq).tsum_eq.symm
+
+/-- **Equation transfer for the quadratic family** (`ν > 1`): a coefficient zero `a ∈ X₂ ℂ ν` of
+`(c₀ + i c₁ n − c₂ n²) aₙ − (a ⋆ a)ₙ − bₙ` realizes a solution of
+`c₂ u'' + c₁ u' + c₀ u − u² = u_b` on `ℝ`, `u_b = realization b`. -/
+theorem realization_secondOrder (hν : 1 < (ν : ℝ)) (a : X₂ ℂ ν) {c₀ c₁ c₂ : ℝ} {b : ℤ → ℂ}
+    (h : ∀ n : ℤ, (c₀ + I * c₁ * n - c₂ * (n : ℂ) ^ 2) * coeff a n - convCoeff a a n - b n = 0)
+    (t : ℝ) :
+    c₂ * deriv (deriv (realization (coeff a))) t + c₁ * deriv (realization (coeff a)) t +
+      c₀ * realization (coeff a) t - realization (coeff a) t ^ 2 = realization b t := by
+  obtain ⟨-, h1, h2⟩ := summable_norm_derivCoeff_X₂ hν a
+  rw [funext fun s => (hasDerivAt_realization h1 s).deriv, (hasDerivAt_realization h2 t).deriv]
+  exact realization_secondOrder_coeff hν a h t
+
+/-- **The real solution of the quadratic family** (`ν > 1`, conjugate symmetry
+`a₋ₙ = conj aₙ`): the real realization solves `c₂ u'' + c₁ u' + c₀ u − u² = Re u_b` on `ℝ`. -/
+theorem realRealization_secondOrder (hν : 1 < (ν : ℝ)) (a : X₂ ℂ ν)
+    (hsym : ∀ n, coeff a (-n) = conj (coeff a n)) {c₀ c₁ c₂ : ℝ} {b : ℤ → ℂ}
+    (h : ∀ n : ℤ, (c₀ + I * c₁ * n - c₂ * (n : ℂ) ^ 2) * coeff a n - convCoeff a a n - b n = 0)
+    (t : ℝ) :
+    c₂ * deriv (deriv (realRealization (coeff a))) t + c₁ * deriv (realRealization (coeff a)) t +
+      c₀ * realRealization (coeff a) t - realRealization (coeff a) t ^ 2 =
+        realRealization b t := by
+  obtain ⟨-, h1, h2⟩ := summable_norm_derivCoeff_X₂ hν a
+  rw [funext fun s => (hasDerivAt_realRealization h1 s).deriv,
+    (hasDerivAt_realRealization h2 t).deriv]
+  have key := realization_secondOrder_coeff hν a h t
+  rw [← ofReal_realRealization hsym t, ← Complex.ofReal_pow] at key
+  have hre := congrArg Complex.re key
+  simp only [Complex.add_re, Complex.sub_re, Complex.re_ofReal_mul, Complex.ofReal_re] at hre
+  exact hre
+
+/-- **Equation transfer for the first-order quadratic family** (`ν > 1`): a coefficient zero
+`a ∈ X₂ ℂ ν` of `(c₀ + i c₁ n) aₙ − (a ⋆ a)ₙ − bₙ` realizes a solution of
+`c₁ u' + c₀ u − u² = u_b` on `ℝ` (`realization_secondOrder` at `c₂ = 0`). -/
+theorem realization_firstOrder (hν : 1 < (ν : ℝ)) (a : X₂ ℂ ν) {c₀ c₁ : ℝ} {b : ℤ → ℂ}
+    (h : ∀ n : ℤ, (c₀ + I * c₁ * n) * coeff a n - convCoeff a a n - b n = 0) (t : ℝ) :
+    c₁ * deriv (realization (coeff a)) t + c₀ * realization (coeff a) t -
+      realization (coeff a) t ^ 2 = realization b t := by
+  have key := realization_secondOrder hν a (c₀ := c₀) (c₁ := c₁) (c₂ := 0) (b := b)
+    (fun n => by rw [Complex.ofReal_zero, zero_mul, sub_zero]; exact h n) t
+  rwa [Complex.ofReal_zero, zero_mul, zero_add] at key
+
+/-- **The real solution of the first-order quadratic family** (`ν > 1`, conjugate symmetry
+`a₋ₙ = conj aₙ`): the real realization solves `c₁ u' + c₀ u − u² = Re u_b` on `ℝ`. -/
+theorem realRealization_firstOrder (hν : 1 < (ν : ℝ)) (a : X₂ ℂ ν)
+    (hsym : ∀ n, coeff a (-n) = conj (coeff a n)) {c₀ c₁ : ℝ} {b : ℤ → ℂ}
+    (h : ∀ n : ℤ, (c₀ + I * c₁ * n) * coeff a n - convCoeff a a n - b n = 0) (t : ℝ) :
+    c₁ * deriv (realRealization (coeff a)) t + c₀ * realRealization (coeff a) t -
+      realRealization (coeff a) t ^ 2 = realRealization b t := by
+  have key := realRealization_secondOrder hν a hsym (c₀ := c₀) (c₁ := c₁) (c₂ := 0) (b := b)
+    (fun n => by rw [Complex.ofReal_zero, zero_mul, sub_zero]; exact h n) t
+  rwa [zero_mul, zero_add] at key
+
+/-- The coefficient form of the equation transfer: the realizations of the coefficient families
+satisfy the Duffing identity (the quadratic family at `c₀ = c₂`, `c₂ = 1`, `b = c₃ cosCoeff`). -/
+private theorem realization_duffing_coeff (hν : 1 < (ν : ℝ)) (a : X₂ ℂ ν) {c₁ c₂ c₃ : ℝ}
+    (h : ∀ n : ℤ, (-(n : ℂ) ^ 2 + I * c₁ * n + c₂) * coeff a n - convCoeff a a n -
+      c₃ * cosCoeff n = 0) (t : ℝ) :
+    realization (derivCoeff (derivCoeff (coeff a))) t + c₁ * realization (derivCoeff (coeff a)) t +
+      c₂ * realization (coeff a) t - realization (coeff a) t ^ 2 = c₃ * Real.cos t := by
+  have key := realization_secondOrder_coeff hν a (c₀ := c₂) (c₁ := c₁) (c₂ := 1)
+    (b := fun n => c₃ * cosCoeff n) (fun n => by push_cast; linear_combination h n) t
+  rw [show realization (fun n => (c₃ : ℂ) * cosCoeff n) t = c₃ * realization cosCoeff t from
+    (tsum_congr fun n => mul_assoc _ _ _).trans tsum_mul_left, realization_cosCoeff,
+    Complex.ofReal_one, one_mul] at key
+  exact key
 
 /-- **Equation transfer for the Duffing family** (`ν > 1`): a coefficient zero `a ∈ X₂ ℂ ν` of
 `(−n² + i c₁ n + c₂) aₙ − (a ⋆ a)ₙ − c₃ bₙ` realizes a solution of
