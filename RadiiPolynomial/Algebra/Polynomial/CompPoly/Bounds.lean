@@ -94,9 +94,6 @@ def derivativeLipschitzBound (p : CompPoly L) (R : Fin L → K) : K :=
 @[simp] theorem normBound_mul_op (p q : CompPoly L) (R : Fin L → K) :
     (p * q).normBound R = p.normBound R * q.normBound R := rfl
 
-@[simp] theorem normBound_neg_op (p : CompPoly L) (R : Fin L → K) :
-    (-p).normBound R = p.normBound R := rfl
-
 end Defs
 
 section Cast

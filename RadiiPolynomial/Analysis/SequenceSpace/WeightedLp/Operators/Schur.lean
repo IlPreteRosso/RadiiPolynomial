@@ -412,24 +412,6 @@ theorem kernelCLM_apply_coeff (x : WeightedLp J E p) (i : I) :
 
 end KernelCLM
 
-section KernelCLMOpNorm
-
-variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] {I J : Type*}
-  {E : J → Type*} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace 𝕜 (E j)]
-  [FiberTrivialization 𝕜 J E]
-  {F : I → Type*} [∀ i, NormedAddCommGroup (F i)] [∀ i, NormedSpace 𝕜 (F i)]
-  [FiberTrivialization 𝕜 I F] {K : I → J → 𝕜} {R C : ℝ}
-
-variable {p : ℝ≥0∞} [Fact (1 ≤ p)]
-  (h : SchurBound (FiberTrivialization.weight (E := F)) (FiberTrivialization.weight (E := E)) K R C)
-
-/-- `‖K‖_{p → p} ≤ R^(1/q) C^(1/p)`. -/
-theorem norm_kernelCLM_le (q : ℝ≥0∞) [p.HolderConjugate q] :
-    ‖kernelCLM (p := p) h‖ ≤ R ^ (1 / q.toReal) * C ^ (1 / p.toReal) :=
-  norm_kernelCLMOf_le _ _ q
-
-end KernelCLMOpNorm
-
 
 /-! ### Finitely supported rows and columns (the certificate hook) -/
 

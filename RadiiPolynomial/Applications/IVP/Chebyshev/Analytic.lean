@@ -23,7 +23,7 @@ into the function-level statement: the IVP `u̇ = f(u)`, `u(-1) = p` has a solut
   is what Mathlib's endpoint uniqueness theorem consumes).
 - `ChebyshevIVP.x_sol xTilde` — the canonical solution `t ↦ (u_{xTilde l}(t))_l` read off a
   sequence-space zero through `l1Chebyshev.eval` (book (14.9)).
-- `StdChebIVPData.x_sol_isSolution_of_evalBound` / `x_sol_hasDerivAt` / `solution_eq_canonical_of_evalBound` /
+- `StdChebIVPData.x_sol_isSolution_of_evalBound` / `solution_eq_canonical_of_evalBound` /
   `solution_existsUnique_of_evalBound`.
 - The declarations ending in `_of_evalBound` consume a proved uniform bound `C` on the
   existing evaluator. Their radius condition is `C(‖ā‖ + r₀) ≤ R`. In
@@ -32,9 +32,8 @@ into the function-level statement: the IVP `u̇ = f(u)`, `u(-1) = p` has a solut
   select `C = 2` or, at weights `ν ≥ 2`, `C = 1`.
 
 **No analyticity is claimed in this file.** The conclusions are continuity on `[-1, 1]`,
-the one-sided derivative on `[-1, 1)` (`IsSolution.solves`) and the two-sided derivative on
-`(-1, 1)` (`x_sol_hasDerivAt`), plus uniqueness in the trajectory ball; continuity of the
-derivative is not stated. Taylor's `analytic_existsUnique` name is deliberately *not*
+the one-sided derivative on `[-1, 1)` (`IsSolution.solves`), plus uniqueness in the
+trajectory ball; continuity of the derivative is not stated. Taylor's `analytic_existsUnique` name is deliberately *not*
 mirrored, and the `IsSolution` naming records that no analyticity is claimed.
 Analyticity of the canonical solution for `1 < ν` is proved separately, in
 `Chebyshev/Analyticity.lean` (`analyticOnNhd_x_sol`), which imports this file.
@@ -139,17 +138,6 @@ theorem x_sol_isSolution_of_evalBound (C : NNReal)
       (d.chebyshevIvpCoeffs_zero_of_G_zero φ p hZ₀_lt_one hG)
   exact ⟨funext hinit, hcont,
     fun t ht => d.x_sol_mem_closedBall_of_evalBound xTilde C h_eval hball hR ht, hderiv⟩
-
-/-- The canonical solution is two-sided differentiable in the interior `(-1, 1)`; the
-`IsSolution` field only records the one-sided derivative that uniqueness consumes. -/
-theorem x_sol_hasDerivAt
-    (hφ : ∀ (a : XCheb ν L) (l : Fin L) (t : ℝ), t ∈ Icc (-1 : ℝ) 1 →
-      l1Chebyshev.eval (φ a l) t = f (fun i => l1Chebyshev.eval (a i) t) l)
-    (hZ₀_lt_one : finiteBlockMatrixNorm ν d.defect.finBlock < 1)
-    (hG : d.G φ p xTilde = 0) {t : ℝ} (ht : t ∈ Ioo (-1 : ℝ) 1) :
-    HasDerivAt (x_sol xTilde) (f (x_sol xTilde t)) t :=
-  (solves_ODE_of_F_zero φ p xTilde f (fun l t ht => hφ xTilde l t ht)
-    (d.chebyshevIvpCoeffs_zero_of_G_zero φ p hZ₀_lt_one hG)).2.2.2 t ht
 
 /-- **Pinning**: any solution staying in the trajectory ball agrees with the canonical one
 on `[-1, 1]` (Picard–Lindelöf from the endpoint `t = -1`). -/

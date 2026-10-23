@@ -63,15 +63,6 @@ omit [DecidableEq M] in
     coeff (tailDiag S μ hd x) k = tailSymbol S μ k * coeff x k :=
   coeff_diagCLM _ hd x k
 
-/-- `T_S(μ)` on an atom: `T (single m r) = single m (d m * r)`. -/
-theorem tailDiag_single (m : M) (r : 𝕜) :
-    tailDiag (E := E) (p := p) S μ hd (single m r) = single m (tailSymbol S μ m * r) :=
-  ext_coeff <| funext fun k => by
-    rw [coeff_tailDiag, coeff_single, coeff_single]
-    by_cases h : k = m
-    · subst h; rw [Pi.single_eq_same, Pi.single_eq_same]
-    · rw [Pi.single_eq_of_ne h, Pi.single_eq_of_ne h, mul_zero]
-
 end SameExponent
 
 

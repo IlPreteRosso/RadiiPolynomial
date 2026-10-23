@@ -100,10 +100,6 @@ def ofCoeff (f : ℤ → 𝕜)
     WeightedLp ℤ (geomFiberZ 𝕜 ν) p :=
   ⟨_, hf⟩
 
-theorem ofCoeff_apply (f : ℤ → 𝕜)
-    (hf : Memℓp (fun k => FiberTrivialization.equiv (E := geomFiberZ 𝕜 ν) k (f k)) p) (k : ℤ) :
-    ofCoeff f hf k = FiberTrivialization.equiv (E := geomFiberZ 𝕜 ν) k (f k) := rfl
-
 /-- **The raw coefficients of `ofCoeff f _` are `f`.** -/
 @[simp] theorem coeff_ofCoeff (f : ℤ → 𝕜)
     (hf : Memℓp (fun k => FiberTrivialization.equiv (E := geomFiberZ 𝕜 ν) k (f k)) p) (k : ℤ) :

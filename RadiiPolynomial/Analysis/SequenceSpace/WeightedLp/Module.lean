@@ -167,9 +167,6 @@ def shift (hC : Moderate (FiberTrivialization.weight (E := E)) v C) (l : M) :
 
 variable (hC : Moderate (FiberTrivialization.weight (E := E)) v C)
 
-theorem shift_apply (l : M) (y : WeightedLp M E p) (n : M) :
-    shift hC l y n = FiberTrivialization.equiv (E := E) n (coeff y (n - l)) := rfl
-
 /-- The shift in coordinates: `coeff (S_l y) n = coeff y (n - l)`. -/
 @[simp] theorem coeff_shift (l : M) (y : WeightedLp M E p) (n : M) :
     coeff (shift hC l y) n = coeff y (n - l) :=
@@ -451,12 +448,6 @@ theorem symbolAction₀_one : symbolAction₀ (p := p) hC 1 = 1 := by
 theorem norm_symbolAction_le : ‖(symbolAction (p := p) hC).toContinuousLinearMap‖ ≤ C := by
   rw [← symbolAction₀_eq]
   exact norm_symbolAction₀_le hC
-
-/-- Pointwise bound: `‖symbolAction a‖ ≤ C ‖a‖`. -/
-theorem norm_symbolAction_apply_le (a : lpOneAlg M (WeightedScalar 𝕜 v)) :
-    ‖symbolAction (p := p) hC a‖ ≤ C * ‖a‖ := by
-  rw [← symbolAction₀_apply_eq]
-  exact (symbolAction₀ hC).le_of_opNorm_le (norm_symbolAction₀_le hC) a
 
 
 end Lift
