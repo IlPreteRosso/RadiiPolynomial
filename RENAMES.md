@@ -5225,3 +5225,13 @@ technical debt).
 | `RadiiPolynomial.OmegaScaledReal.norm_def` | `RadiiPolynomial.WeightedScalar.norm_def`; at `ofReal` arguments `RadiiPolynomial.WeightedScalar.norm_ofReal` with `Real.norm_eq_abs` (`l1Omega.mem_iff` migrated) | retired | NEW-05 (2026-10-23), `Analysis/SequenceSpace/Geometric/Omega.lean`; endpoint type and axioms unchanged; no alias |
 | `RadiiPolynomial.OmegaScaledReal.toReal_apply` | DELETED (no replacement: `OmegaScaledReal.toReal` abbreviates the identity `WeightedScalar.toReal`); its simp use in `l1Omega.mem_iff` is subsumed by `WeightedScalar.norm_ofReal` | deleted | NEW-05 (2026-10-23), `Analysis/SequenceSpace/Geometric/Omega.lean`; no alias |
 | `RadiiPolynomial.OmegaScaledReal.ofReal_apply` | DELETED (no replacement: `OmegaScaledReal.ofReal` abbreviates `WeightedScalar.ofReal = AddEquiv.refl ℝ`); the norm of an `ofReal` value is `RadiiPolynomial.WeightedScalar.norm_ofReal` | deleted | NEW-05 (2026-10-23), `Analysis/SequenceSpace/Geometric/Omega.lean`; no alias |
+
+## Fourier realization bridge (2026-10-23)
+
+The orphaned symbol-series convolution reading is deleted with the realization unit (D4). The
+additions of the unit (`Applications/Fourier/Realization.lean`, `Examples/Fourier/Duffing/Analytic.lean`)
+need no row.
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `RadiiPolynomial.WeightedLp.coeff_symbolSeries_eq_conv` | DELETED (no consumer at d7fbd29; the coefficient formula `coeff (symbolSeries a ha hC y) n = ∑' l, a l * coeff y (n - l)` stays as `RadiiPolynomial.WeightedLp.coeff_symbolSeries`); the `DiscreteConvolution` scoped open and `open DiscreteConvolution (addFiber addRingConvolution_apply)`, used only by its proof, are removed from `Analysis/SequenceSpace/WeightedLp/Module.lean`; no alias | deleted | D4, `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/fourier_realization_20261023/REPORT.md` |

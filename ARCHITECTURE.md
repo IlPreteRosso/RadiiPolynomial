@@ -43,6 +43,7 @@ layers, but the mathematical layers must not depend on them.
 | `Applications/PowerSeries` | Polynomial zeros `P(x) - c = 0` on `ℓ¹_ν` for a univariate `CompPoly` of any degree: the approximate inverse and derivative and the `Z₁`, `Z₂` bounds (`PolynomialZero`); `Z₂` bounds for maps whose derivative is affine in `leftMul`, as a corollary of the degree-general engine (`AffineZ2`) |
 | `Applications/FiniteDimensional` | The row-sum enclosure face on finite-dimensional normed real algebras, rational polynomial certificates (`StdFinDimData`, `ChecksC`) and scalar specialization remain shipped. The periodic-point family is owned by a staged record. |
 | `Applications/Galerkin` | The polynomial Galerkin face (`Face`): a `CompPoly` system between a lift, a projection and continuous linear parts (`polyFace`), its derivative `DpolyFace` from the syntactic Jacobian, the centred bounds from `derivativeCentredBound`, with consumers using the generic bound `norm_DpolyFace_sub_le`; the componentwise maps `Galerkin.I`/`Galerkin.Pi'` are `ContinuousLinearMap.piMap` of `ιN`/`πN` |
+| `Applications/Fourier` | The Fourier realization of bilateral coefficient families (`Realization`, namespace `RadiiPolynomial.Fourier`): `realization c t = ∑' n, cₙ e^{int}`, its complex-time form `complexRealization` and real part `realRealization`, `2π`-periodic for every `c`; the algebra lift `circleLift ν : ℓ¹_ν →A[ℂ] C(AddCircle (2π), ℂ)` (`ν ≥ 1`; `liftAlgHom` at Mathlib's `fourier`, with the global instance `fact_zero_lt_two_pi`), its sup-norm series `hasSum_circleLift` (uniform convergence), `circleLift_apply_coe` and multiplicativity `realization_mul` from `map_mul`; the decay chain `ℓ²_ν → ℓ^∞_ν → ℓ¹_{ν'}` (`Bilateral.incl`, then `toL1` for `0 < ν' < ν` with constant `(1 + q)/(1 − q)`, `q = ν'/ν`) and the moments `summable_moment_Y` of `Y ℂ ν` data at every weight `ρ < ν`; termwise differentiation in moment form `hasDerivAt_realization` (`∑ \|n\| ‖cₙ‖ < ∞`); holomorphy on the full strip `\|Im z\| < log ν` and real analyticity (`ν > 1`) for `Y ℂ ν` data; reality under conjugate symmetry; and the parameter-generic Duffing equation transfer `realization_duffing`/`realRealization_duffing` (termwise differentiation, linearity and `realization_mul`; no Fourier-coefficient uniqueness theorem). Imports no `Examples`; consumed by `Examples/Fourier/Duffing/Analytic` |
 | `Examples` | End-to-end mathematical applications and numerical certificates |
 
 The external LeanCert library remains a Lake dependency. `Certification/LeanCertAdapter.lean`
@@ -211,7 +212,11 @@ zeros, a local uniqueness/enclosure statement and conjugate-reflection reality. 
 is sequence-valued: the identity with the bounded map is coefficientwise through `rawA`, not
 an unsupported assertion that the residual itself belongs to Y. The head certificate has no
 phantom c₃ parameter; forcing and its residual bound retain c₃. The default Examples facade
-imports this actual certificate. Reconstruction as a periodic C² function is a separate result.
+imports this actual certificate. `Examples/Fourier/Duffing/Analytic` reads the shipped zero of
+`duffing_l2_real` as a function through `Applications/Fourier/Realization`
+(`duffing_analytic_solution`: a real-analytic `2π`-periodic solution of the equation on `ℝ`, the
+sum of its Fourier series, with a holomorphic extension to `|Im z| < log (6/5)`; the uniqueness
+stays among coefficient zeros in the `ℓ²_{6/5}` ball).
 
 ### M1 fix-forward scope
 

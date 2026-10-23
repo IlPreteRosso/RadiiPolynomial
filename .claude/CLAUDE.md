@@ -26,6 +26,7 @@ RadiiPolynomial/
     Applications/FiniteDimensional/ -- the row-sum face on R^n and rational polynomial systems
     Applications/Galerkin/       -- the polynomial Galerkin face on the finite Chebyshev carrier
     Applications/Fourier/        -- general-symbol semilinear ℓ¹ layer: no end consumer; archived at the API-v2 merge (user 2026-10-18); the Fourier consumer of record is book §10.1 Duffing on ℓ²
+  (2026-10-23: `Applications/Fourier/Realization.lean` is LIVE again — the Fourier realization bridge: circle algebra lift, ℓ²→Y→ℓ¹ chain, moment-form derivatives, strip analyticity, parameter-generic Duffing glue; end consumer `Examples/Fourier/Duffing/Analytic.lean`.)
     Examples/                    -- grouped by problem family and discretization
 ```
 

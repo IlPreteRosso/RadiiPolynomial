@@ -26,8 +26,7 @@ convergent operator series and the algebra lift. Unit normalization of the symbo
 required by these services. Completeness transfers from the fibers (`completeSpace_carrier`).
 -/
 
-open scoped ENNReal NNReal DiscreteConvolution
-open DiscreteConvolution (addFiber addRingConvolution_apply)
+open scoped ENNReal NNReal
 
 noncomputable section
 
@@ -277,16 +276,6 @@ theorem coeff_symbolSeries (y : WeightedLp M E p) (n : M) :
     (summable_smul_shift ha hC)).trans (tsum_congr fun l => ?_)
   rw [ContinuousLinearMap.comp_apply, ContinuousLinearMap.apply_apply, coeffCLM_apply,
     smul_apply, coeff_smul, Pi.smul_apply, coeff_shift, smul_eq_mul]
-
-/-- The symbol operator is convolution by `a` (Mathlib's `addRingConvolution`):
-`coeff (M_a y) = a ⋆ᵣ₊ coeff y`. -/
-theorem coeff_symbolSeries_eq_conv (y : WeightedLp M E p) (n : M) :
-    coeff (symbolSeries a ha hC y) n = (a ⋆ᵣ₊ coeff y) n := by
-  rw [coeff_symbolSeries, addRingConvolution_apply,
-    ← ((Equiv.subLeft n).trans (RadiiPolynomial.DiscreteConvolution.addFiberEquiv n)).tsum_eq]
-  exact tsum_congr fun l => by
-    show a l * coeff y (n - l) = a (n - (n - l)) * coeff y (n - l)
-    rw [sub_sub_cancel]
 
 end SeriesComplete
 
