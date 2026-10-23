@@ -119,7 +119,7 @@ protecting fiber/scalar parameters with `dont_translate` where needed.
 ## Polynomial And Certificate Automation
 
 The `compPolyOf%` reification and the polynomial derivative macros (`pderiv_simp`, `auto_poly_fderiv`) are retired (`pderiv_simp`: B4/U34, RENAMES B4; `auto_poly_fderiv` and the reifier: B5);
-use `decide +kernel` for exact finite identities where it is cheap and `native_decide` otherwise (accepted in certificates; see the Trust policy below), and `finmatrix_bound` for weighted matrix bounds.
+use `decide +kernel` for exact finite identities where it is cheap and `native_decide` otherwise (accepted in certificates; see the Trust policy below). A certificate closes every bound by ONE call — the family checker (`data.Checks`-style, `decide +kernel`) or a LeanCert tactic (`finsum_bound`, `native_decide`) — chosen by whichever makes the example call simpler (user 2026-10-23); the exact-ℚ bridges of `Certification/Rational/Matrix.lean` are plain soundness lemmas consumed directly, and the tactic-wrapper-over-a-bridge design (`finmatrix_bound`, deleted 2026-10-23) is retired as technical debt.
 The current polynomial IVPs keep literal `f_cpoly` definitions. Examples 8.1 and 14.2.1
 no longer carry the `f_cpoly_reified` `rfl` witnesses (retired at the API-v2 merge: A29 R-ELAB,
 executed DELETE; they sat outside the certificate's dependency path).
@@ -208,8 +208,8 @@ compass, proportional re-entry check, scoped readback, PROPOSAL labels): `lean-a
   `decide +kernel` is preferred where it is cheap (0.1–0.2 s per finite-dimensional certificate, 15 s
   for the L = 2 Chebyshev set on the pinned toolchain; Example 14.2.1's Checks close with 15
   per-conjunct kernel lemmas in ≈ 110–121 s). `native_decide` is accepted in certificates and
-  examples (standard Lean-community practice); `finmatrix_bound` itself closes through
-  `closeBridgeWithVerificationTyped` (LeanCert's configured kernel/native/auto route), and a
+  examples (standard Lean-community practice); LeanCert tactics close through
+  `closeBridgeWithVerificationTyped` (its configured kernel/native/auto route), and a
   declaration's actual axioms are read from its `#print axioms` record, not from source hits. Records
   list the inherited `…._native.native_decide.ax_*` axioms as facts; talks and notes carry no
   caveat. New general API-side lemmas prefer kernel-checkable `decide`. Inventory =

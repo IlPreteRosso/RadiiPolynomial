@@ -1,7 +1,6 @@
 import RadiiPolynomial.Examples.IVP.Taylor.Example83.Algebra
 import RadiiPolynomial.Certification
 import RadiiPolynomial.Certification.IVP.Taylor
-import RadiiPolynomial.Tactic.FinMatrixBound
 
 /-!
 # Example 8.3 — Certificate

@@ -5206,3 +5206,14 @@ The separately attributed Q7 consumer edit changes
 complex inverse. Its real-restriction helper
 `FourierDuffing.norm_I_E_sub_restrictScalars_B0` is deleted. The four Duffing certificate
 endpoint types and numerical data are preserved.
+
+## Orphaned `finmatrix_bound` deletion (2026-10-23)
+
+`finmatrix_bound` has had no production caller since 50e5b43: the Example 7.7, 8.1 and 8.3
+certificates imported it but close their bounds by `decide +kernel` on the family checkers.
+Deleted under the no-mercy deletion rule (user 2026-10-23: retire the tactic and its design as
+technical debt).
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `Tactic/FinMatrixBound.lean`, `Examples/tests/TC/FinMatrixBound.lean`, syntax node kind `RadiiPolynomial.Tactic.finMatrixBound`, token `finmatrix_bound` | DELETED (no replacement; the family checkers subsume it; the exact-ℚ bridges of `Certification/Rational/Matrix.lean` unchanged); design retired: tactic wrappers over bridge lemmas; the import line is removed from the Example 7.7/8.1/8.3 certificates and `RadiiPolynomial.lean` (user 2026-10-23) | deleted | `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/finmatrixbound_delete/REPORT.md` |

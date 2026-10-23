@@ -1,6 +1,5 @@
 import RadiiPolynomial.Examples.PowerSeries.Example77.Algebra
 import RadiiPolynomial.Certification
-import RadiiPolynomial.Tactic.FinMatrixBound
 import RadiiPolynomial.Certification.PowerSeries.PolynomialZero
 
 /-!

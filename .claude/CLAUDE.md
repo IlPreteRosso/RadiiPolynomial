@@ -18,7 +18,7 @@ RadiiPolynomial/
     Certification/               -- witness reductions, the LeanCert adapter, and the IVP/, PowerSeries/,
                                     Rational/ certificate faces (residual correction, formerly Residual/, is staged in
                                     exterior/api_v2/probes/records/B5_universal_api_retirement/staged/B5RecordResidualP{1,2}.lean)
-    Tactic/                      -- finmatrix_bound (pderiv_simp: B4/U34, RENAMES B4; auto_poly_fderiv and compPolyOf%: B5; all three retired)
+    Tactic/                      -- no shipped module (finmatrix_bound deleted 2026-10-23, RENAMES; pderiv_simp: B4/U34, RENAMES B4; auto_poly_fderiv and compPolyOf%: B5; all retired)
     Applications/IVP/            -- shared vector field (VectorField.lean); the split boundary `IVP.SplitBoundary` (formerly Boundary.lean) is staged (staged record: `exterior/api_v2/probes/records/B5_universal_api_retirement/staged/B5RecordIVPBoundaryP5.lean`);
       Taylor/                    --   Taylor IVP operator, theorem, Jacobian, and analytic bridge
       Chebyshev/                 --   Chebyshev IVP operator and block-diagonal realization
@@ -130,29 +130,9 @@ API design philosophy of record (effective API, two-layer operator membership, m
 3. All bounds (Y0, Z0, Z1, Z2) work at the raw coefficient level
 4. Matches the reference book: computations never use `||F(a)||_omega`
 
-### Matrix norm verification via `finmatrix_bound`
+### Certificate checks
 
-Certificate matrix norm bounds use `finmatrix_bound` (single `native_decide`) rather than per-column `finsum_bound`. The bridge lemmas compute the full norm in exact ℚ arithmetic:
-
-```lean
--- Scalar matrix norm: finWeightedMatrixNorm ν M ≤ C
-finmatrix_bound
-  (finWeightedMatrixNorm_le_of_Q_le _ cols ν_q hcols hν)
-
--- Block matrix norm: finiteBlockMatrixNorm ν A ≤ C
-finmatrix_bound
-  (finiteBlockMatrixNorm_le_of_Q_le _ blockCols ν_q hcols hν)
-
--- Scalar CLM norm: ‖A.toScalarCLM‖ ≤ C
-finmatrix_bound
-  (norm_toScalarCLM_le_of_Q A cols ν_q |tailCoeff| hcols hν htail)
-
--- System CLM norm: the former bridge `norm_toCLM_le_of_Q` is retired (API-v2 merge, B5 DELETE; RENAMES records no replacement)
-```
-
-The certificate provides: ℚ column arrays, `hcols` (ℝ entries = ℚ cast), `hν` (ℝ weight = ℚ cast).
-When the goal bound involves ℝ division (e.g., `≤ (C : ℝ) / 2`), rewrite first:
-`rw [show (C : ℝ) / 2 = ((C / 2 : ℚ) : ℝ) from by push_cast; ring]`
+Every bound of a certificate is decided by ONE call: the family checker (`data.Checks`, `dataQ.ChecksZ₀By`, `dataQ.ChecksZ₂`, … by `decide +kernel`) or a LeanCert tactic (`finsum_bound`, `native_decide`), whichever makes the EXAMPLE CALL simpler (user rule 2026-10-23). The exact-ℚ bridges in `Certification/Rational/Matrix.lean` (`finWeightedMatrixNorm_le_of_Q_le`, `finiteBlockMatrixNorm_le_of_Q_le`, `norm_toScalarCLM_le_of_Q`) are soundness lemmas consumed directly by the certification faces (`Certification/PowerSeries/PolynomialZero.lean`). The tactic-wrapper-over-a-bridge pattern (`finmatrix_bound`) is RETIRED as technical debt (user 2026-10-23).
 
 ### Example-facing IVP interface
 

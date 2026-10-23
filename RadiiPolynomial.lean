@@ -17,7 +17,6 @@ import RadiiPolynomial.Algebra.Polynomial
 import RadiiPolynomial.Operators.Matrix
 import RadiiPolynomial.Operators.BlockDiagonal
 import RadiiPolynomial.Certification
-import RadiiPolynomial.Tactic.FinMatrixBound
 import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Applications.IVP.Taylor.Analytic
 import RadiiPolynomial.Applications.IVP.Taylor.Analyticity
