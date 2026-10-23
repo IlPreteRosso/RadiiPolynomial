@@ -75,14 +75,6 @@ abbrev toReal (x : ScaledReal ν n) : ℝ := WeightedScalar.toReal x
 /-- Additive equivalence from `ℝ`. Alias for `WeightedScalar.ofReal`. -/
 abbrev ofReal : ℝ ≃+ ScaledReal ν n := WeightedScalar.ofReal
 
-lemma norm_def (x : ScaledReal ν n) : ‖x‖ = |toReal x| * (ν : ℝ) ^ n := rfl
-
-
-@[simp] lemma toReal_apply (x : ScaledReal ν n) : toReal x = x := rfl
-
-@[simp] lemma ofReal_apply (x : ℝ) : (ofReal x : ScaledReal ν n) = x := rfl
-
-
 end ScaledReal
 
 end RadiiPolynomial

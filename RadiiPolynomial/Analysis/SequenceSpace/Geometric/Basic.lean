@@ -53,20 +53,16 @@ def Mem (ν : PosReal) (p : ℝ≥0∞) (a : ℕ → ℝ) : Prop :=
 def mk (a : ℕ → ℝ) (ha : Mem ν p a) : lpWeighted ν p :=
   ⟨fun n => ScaledReal.ofReal (a n), ha⟩
 
-lemma toSeq_apply (a : lpWeighted ν p) (n : ℕ) : toSeq a n = a n := rfl
-
-
 lemma norm_eq_tsum_rpow (hp : 0 < p.toReal) (a : lpWeighted ν p) :
     ‖a‖ = (∑' n, (|toSeq a n| * (ν : ℝ) ^ n) ^ p.toReal) ^ (1 / p.toReal) := by
   rw [lp.norm_eq_tsum_rpow hp]
-  simp only [one_div, toSeq_apply]
   rfl
 
 lemma mem_iff_summable (hp : 0 < p.toReal) (a : ℕ → ℝ) (hp' : p ≠ ⊤) :
     Mem ν p a ↔ Summable (fun n => (|a n| * (ν : ℝ) ^ n) ^ p.toReal) := by
-  simp only [Mem, Memℓp, ScaledReal.ofReal_apply, ne_eq]
+  simp only [Mem, Memℓp, ne_eq]
   have hp0 : p ≠ 0 := fun h => by simp [h] at hp
-  simp only [hp0, hp', ↓reduceIte, ScaledReal.norm_def, ScaledReal.toReal_apply]
+  simp only [hp0, hp', ↓reduceIte, WeightedScalar.norm_ofReal, Real.norm_eq_abs]
 
 end lpWeighted
 

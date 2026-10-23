@@ -61,15 +61,6 @@ variable {ν : PosReal} {n : ℕ}
 abbrev toReal (x : OmegaScaledReal ν n) : ℝ := WeightedScalar.toReal x
 abbrev ofReal : ℝ ≃+ OmegaScaledReal ν n := WeightedScalar.ofReal
 
-lemma norm_def (x : OmegaScaledReal ν n) :
-    ‖x‖ = |toReal x| * omegaWeight ν n := rfl
-
-
-@[simp] lemma toReal_apply (x : OmegaScaledReal ν n) : toReal x = x := rfl
-
-@[simp] lemma ofReal_apply (x : ℝ) : (ofReal x : OmegaScaledReal ν n) = x := rfl
-
-
 end OmegaScaledReal
 
 /-- Omega-weighted `ℓ¹` space: `ℓ¹_ω` with `ω_n = ν^{n+1}/(n+1)`. -/
@@ -97,9 +88,9 @@ def mk (a : ℕ → ℝ) (ha : Mem ν a) : l1Omega ν :=
 
 lemma mem_iff (a : ℕ → ℝ) :
     Mem ν a ↔ Summable (fun n => |a n| * OmegaScaledReal.omegaWeight ν n) := by
-  simp only [Mem, Memℓp, OmegaScaledReal.ofReal_apply, ne_eq]
+  simp only [Mem, Memℓp, ne_eq]
   simp only [show (1 : ℝ≥0∞) ≠ 0 from one_ne_zero, ENNReal.one_ne_top, ↓reduceIte,
-    OmegaScaledReal.norm_def, OmegaScaledReal.toReal_apply, ENNReal.toReal_one, Real.rpow_one]
+    WeightedScalar.norm_ofReal, Real.norm_eq_abs, ENNReal.toReal_one, Real.rpow_one]
 
 end l1Omega
 
