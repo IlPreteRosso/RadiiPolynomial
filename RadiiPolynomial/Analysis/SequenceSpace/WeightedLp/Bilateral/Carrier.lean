@@ -106,11 +106,11 @@ def ofCoeff (f : ℤ → 𝕜)
     coeff (ofCoeff f hf) k = f k :=
   FiberTrivialization.equiv_symm_apply_equiv _ _
 
-/-- The round trip: an element is the `ofCoeff` of its own raw coefficients. -/
-theorem ofCoeff_coeff (x : WeightedLp ℤ (geomFiberZ 𝕜 ν) p)
-    (hx : Memℓp (fun k => FiberTrivialization.equiv (E := geomFiberZ 𝕜 ν) k (coeff x k)) p) :
-    ofCoeff (coeff x) hx = x :=
-  ext_coeff <| funext <| coeff_ofCoeff _ hx
+/-- The round trip: an element is the `ofCoeff` of its own raw coefficients. The membership of
+the coefficient family is that of `x` (`equiv_coeff`). -/
+theorem ofCoeff_coeff (x : WeightedLp ℤ (geomFiberZ 𝕜 ν) p) :
+    ofCoeff (coeff x) (by simpa only [equiv_coeff] using lp.memℓp x) = x :=
+  ext_coeff <| funext <| coeff_ofCoeff _ _
 
 end OfCoeff
 

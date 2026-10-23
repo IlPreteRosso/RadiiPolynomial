@@ -10,8 +10,8 @@ import Mathlib.Analysis.Normed.Operator.NormedSpace
 
 The frame reconstruction/completeness faces, translation along a reindexing
 (`memℓp_norm_le_of_le_comp`) and the raw symbols assume no operation on the index. The shift
-`shift`, its coordinate faces and `shift_zero` are stated over an additive group; the
-composition law `shift_add`, the shift norm bounds, and the symbol series, action and lift are
+`shift`, its coordinate faces, `shift_zero` and the shift norm bounds are stated over an
+additive group; the composition law `shift_add` and the symbol series, action and lift are
 stated over an additive commutative group. The moderate-weight symbol series acts on the ℓᵖ
 state under a positive symbol weight. When that weight is submultiplicative, its symbols form
 the distinct weighted ℓ¹ algebra, and the series/lift comparison specifies its universal algebra
@@ -196,7 +196,7 @@ end ShiftAdd
 
 section ShiftNorm
 
-variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] {M : Type*} [AddCommGroup M] {E : M → Type*}
+variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] {M : Type*} [AddGroup M] {E : M → Type*}
   [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]
   {p : ℝ≥0∞} [Fact (1 ≤ p)] {v : M → ℝ} {C : ℝ}
 
