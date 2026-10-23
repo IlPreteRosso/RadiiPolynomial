@@ -25,7 +25,8 @@ integer pairs over the common denominator `D = 10⁶`; `M` is the exact `ℚ(i)`
 `DF^{(10)}(ā)` rounded entrywise. Every finite fold of the mirror is indexed by `List.range`
 plus a shift (`Finset.Icc` on `ℤ` is noncomputable). The chunk constants are the exact chunk
 values rounded UPWARD at 15 significant digits; the generator verified the combined checks
-before emitting them. Each check below is one `decide +kernel`.
+before emitting them. Each chunk check (`_part_k`, `_rows_k`, `_cols_k`) is one `native_decide`;
+the combinations, the radii inequalities and the two centre checks are one `decide +kernel` each.
 -/
 
 namespace FourierDuffing.Numbers
@@ -310,7 +311,7 @@ def UpartC : ℕ → ℚ
 
 end Mirror
 
-/-! ### C. The checks (one `decide +kernel` per declaration) -/
+/-! ### C. The checks (one call per declaration: `native_decide` on the chunks, `decide +kernel` elsewhere) -/
 
 section Checks
 
@@ -321,64 +322,64 @@ theorem check_reality : ∀ n ∈ idx, abarQ (-n) = cconj (abarQ n) := by decide
 theorem check_support : ∀ n ∈ idx, 7 < |n| → abarQ n = (0, 0) := by decide +kernel
 
 /-- `Y₀` part 0. -/
-theorem check_Y0_part_0 : y0PartQ 0 ≤ YpartC 0 := by decide +kernel
+theorem check_Y0_part_0 : y0PartQ 0 ≤ YpartC 0 := by native_decide
 
 /-- `Y₀` part 1. -/
-theorem check_Y0_part_1 : y0PartQ 1 ≤ YpartC 1 := by decide +kernel
+theorem check_Y0_part_1 : y0PartQ 1 ≤ YpartC 1 := by native_decide
 
 /-- `Y₀` part 2. -/
-theorem check_Y0_part_2 : y0PartQ 2 ≤ YpartC 2 := by decide +kernel
+theorem check_Y0_part_2 : y0PartQ 2 ≤ YpartC 2 := by native_decide
 
 /-- The `Y₀` combination. -/
 theorem check_Y0 : YpartC 0 + YpartC 1 + YpartC 2 ≤ Y0c ^ 2 := by decide +kernel
 
 /-- `Z₀` row chunk 0. -/
-theorem check_Z0_rows_0 : ∀ i ∈ rowChunk 0, z0RowQ i ≤ RzC := by decide +kernel
+theorem check_Z0_rows_0 : ∀ i ∈ rowChunk 0, z0RowQ i ≤ RzC := by native_decide
 
 /-- `Z₀` row chunk 1. -/
-theorem check_Z0_rows_1 : ∀ i ∈ rowChunk 1, z0RowQ i ≤ RzC := by decide +kernel
+theorem check_Z0_rows_1 : ∀ i ∈ rowChunk 1, z0RowQ i ≤ RzC := by native_decide
 
 /-- `Z₀` row chunk 2. -/
-theorem check_Z0_rows_2 : ∀ i ∈ rowChunk 2, z0RowQ i ≤ RzC := by decide +kernel
+theorem check_Z0_rows_2 : ∀ i ∈ rowChunk 2, z0RowQ i ≤ RzC := by native_decide
 
 /-- `Z₀` column chunk 0. -/
-theorem check_Z0_cols_0 : ∀ j ∈ rowChunk 0, z0ColQ j ≤ CzC := by decide +kernel
+theorem check_Z0_cols_0 : ∀ j ∈ rowChunk 0, z0ColQ j ≤ CzC := by native_decide
 
 /-- `Z₀` column chunk 1. -/
-theorem check_Z0_cols_1 : ∀ j ∈ rowChunk 1, z0ColQ j ≤ CzC := by decide +kernel
+theorem check_Z0_cols_1 : ∀ j ∈ rowChunk 1, z0ColQ j ≤ CzC := by native_decide
 
 /-- `Z₀` column chunk 2. -/
-theorem check_Z0_cols_2 : ∀ j ∈ rowChunk 2, z0ColQ j ≤ CzC := by decide +kernel
+theorem check_Z0_cols_2 : ∀ j ∈ rowChunk 2, z0ColQ j ≤ CzC := by native_decide
 
 /-- The `Z₀` combination. -/
 theorem check_Z0 : RzC * CzC ≤ Z0c ^ 2 := by decide +kernel
 
 /-- Composed-kernel row chunk 0. -/
-theorem check_Z1_rows_0 : ∀ i ∈ rowChunk 0, kmRowQ i ≤ RmC := by decide +kernel
+theorem check_Z1_rows_0 : ∀ i ∈ rowChunk 0, kmRowQ i ≤ RmC := by native_decide
 
 /-- Composed-kernel row chunk 1. -/
-theorem check_Z1_rows_1 : ∀ i ∈ rowChunk 1, kmRowQ i ≤ RmC := by decide +kernel
+theorem check_Z1_rows_1 : ∀ i ∈ rowChunk 1, kmRowQ i ≤ RmC := by native_decide
 
 /-- Composed-kernel row chunk 2. -/
-theorem check_Z1_rows_2 : ∀ i ∈ rowChunk 2, kmRowQ i ≤ RmC := by decide +kernel
+theorem check_Z1_rows_2 : ∀ i ∈ rowChunk 2, kmRowQ i ≤ RmC := by native_decide
 
 /-- Composed-kernel column chunk 0. -/
-theorem check_Z1_cols_0 : ∀ c ∈ leakColChunk 0, kmColQ c ≤ CmC := by decide +kernel
+theorem check_Z1_cols_0 : ∀ c ∈ leakColChunk 0, kmColQ c ≤ CmC := by native_decide
 
 /-- Composed-kernel column chunk 1. -/
-theorem check_Z1_cols_1 : ∀ c ∈ leakColChunk 1, kmColQ c ≤ CmC := by decide +kernel
+theorem check_Z1_cols_1 : ∀ c ∈ leakColChunk 1, kmColQ c ≤ CmC := by native_decide
 
 /-- The `Z₁` combination (the endpoint's squared `hZ₁` form). -/
 theorem check_Z1 : RmC * CmC + betaQ ^ 2 * (100 / 1369021) ≤ Z1c ^ 2 := by decide +kernel
 
 /-- `U_row²` part 0. -/
-theorem check_Z2_part_0 : urowPartQ 0 ≤ UpartC 0 := by decide +kernel
+theorem check_Z2_part_0 : urowPartQ 0 ≤ UpartC 0 := by native_decide
 
 /-- `U_row²` part 1. -/
-theorem check_Z2_part_1 : urowPartQ 1 ≤ UpartC 1 := by decide +kernel
+theorem check_Z2_part_1 : urowPartQ 1 ≤ UpartC 1 := by native_decide
 
 /-- `U_row²` part 2. -/
-theorem check_Z2_part_2 : urowPartQ 2 ≤ UpartC 2 := by decide +kernel
+theorem check_Z2_part_2 : urowPartQ 2 ≤ UpartC 2 := by native_decide
 
 /-- The `Z₂` combination (the endpoint's squared `hZ₂` form). -/
 theorem check_Z2 : 4 * (UpartC 0 + UpartC 1 + UpartC 2 + t2Q) ≤ Z2c ^ 2 := by decide +kernel
