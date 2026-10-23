@@ -84,6 +84,14 @@ theorem tailProj_eq_id_sub_headProj :
       Pi.sub_apply, coeff_headProj]
     split_ifs <;> simp
 
+/-- **The identity-tail defect law**: for every operator `T`, `I − (T + Q_F) = P_F − T`. The
+identity tail `Q_F = I − P_F` cancels against `I`, so the defect of `T + Q_F` is the head
+defect `P_F − T` (no hypothesis on `T`). -/
+theorem id_sub_add_tailProj (T : WeightedLp M E p →L[𝕜] WeightedLp M E p) :
+    ContinuousLinearMap.id 𝕜 _ - (T + tailProj (𝕜 := 𝕜) F) = headProj (𝕜 := 𝕜) F - T := by
+  rw [tailProj_eq_id_sub_headProj]
+  abel
+
 /-- `P_F ∘ P_F = P_F`. -/
 theorem headProj_comp_headProj :
     (headProj (𝕜 := 𝕜) (E := E) (p := p) F).comp (headProj (𝕜 := 𝕜) F) = headProj (𝕜 := 𝕜) F :=

@@ -5217,3 +5217,4 @@ technical debt).
 | old FQN | new FQN or replacement | kind | evidence |
 |---|---|---|---|
 | `Tactic/FinMatrixBound.lean`, `Examples/tests/TC/FinMatrixBound.lean`, syntax node kind `RadiiPolynomial.Tactic.finMatrixBound`, token `finmatrix_bound` | DELETED (no replacement; the family checkers subsume it; the exact-ℚ bridges of `Certification/Rational/Matrix.lean` unchanged); design retired: tactic wrappers over bridge lemmas; the import line is removed from the Example 7.7/8.1/8.3 certificates and `RadiiPolynomial.lean` (user 2026-10-23) | deleted | `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/finmatrixbound_delete/REPORT.md` |
+| `FourierDuffing.one_sub_B0` | `RadiiPolynomial.WeightedLp.id_sub_add_tailProj F (M ∘L Kh F μ β)` after unfolding `B0` | generalized | LIB-02 (2026-10-23), `Operators/HeadProj.lean`; `existsUnique_G` and `injOn_head_of_norm_lt_one` migrated; no alias |

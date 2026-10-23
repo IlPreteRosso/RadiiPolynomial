@@ -36,7 +36,8 @@ At a finitely supported candidate `ā` the symbol `β = 2ā` lies in `ℓ¹_m` (
 `DG(ā) − B₀ = −(M P L_β Q + T₂ L_β)` (`DG_sub_B0`). The four bound faces are
 * `Y₀`: the exact finite residual `‖G ā‖² = ∑_{n ∈ F ∪ (F + F)} ‖coeff (G ā) n‖² ν^{2|n|}`
   (`norm_sq_G_abar`);
-* `Z₀`: `I − B₀ = P − M K_H` lives on the block `F × F` (`one_sub_B0`, `block_one_sub_B0`);
+* `Z₀`: `I − B₀ = P − M K_H` (the identity-tail defect law `id_sub_add_tailProj`) lives on the
+  block `F × F` (`block_one_sub_B0`);
 * `Z₁`: the tail-defect bound `norm_tailDefect_le` (UPPER; the two defect terms share the input);
 * `Z₂`: the symmetrized bilinear norm is at most `2 √(U² + T2)`, through `norm_AY_le_sqrt_tsum` and the
   `U_row` head certificate `norm_comp_headReal_le_urow` (both UPPER).
@@ -233,12 +234,6 @@ section Bounds
 variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] (F : Finset ℤ) (μ : ℤ → ℂ)
   (hs : Summable fun k => ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2) (M : X₂ ℂ ν →L[ℂ] X₂ ℂ ν)
   (g : X₂ ℂ ν)
-
-/-- `I − B₀ = P − M K_H`. -/
-theorem one_sub_B0 (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) :
-    ContinuousLinearMap.id ℂ (X₂ ℂ ν) - B0 F μ M β = headProj (𝕜 := ℂ) F - M ∘L Kh F μ β := by
-  rw [B0, tailProj_eq_id_sub_headProj]
-  abel
 
 omit [Fact (1 ≤ (ν : ℝ))] in
 /-- `Λ_H` has its range in the head: `P Λ_H = Λ_H`. -/
@@ -633,7 +628,7 @@ theorem existsUnique_G {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) {Y
   refine quadratic_radii_theorem_local
     (A := ContinuousLinearMap.id ℂ (X₂ ℂ ν))
     (A_dagger := B0 F μ M (betaOf F ā hā)) hr₀ hY₀ ?_ ?_ hZ₂ hrad fun _ _ h => h
-  · rwa [ContinuousLinearMap.id_comp, one_sub_B0]
+  · rwa [ContinuousLinearMap.id_comp, B0, id_sub_add_tailProj]
   · rwa [ContinuousLinearMap.id_comp, ← DG_eq, norm_sub_rev]
 
 /-- **`M` is injective on the head range** when `‖P − M K_H‖ < 1` and `P M = M`: `B₀` is a unit
@@ -648,7 +643,7 @@ theorem injOn_head_of_norm_lt_one (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ
     finiteDimensional_range_headProj (𝕜 := ℂ) F
   have hBsurj : Function.Surjective (B0 F μ M β) := by
     have hB : IsUnit (B0 F μ M β) := by
-      rw [← one_sub_B0] at h
+      rw [← id_sub_add_tailProj, ← B0] at h
       simpa using isUnit_one_sub_of_norm_lt_one
         (R := X₂ ℂ ν →L[ℂ] X₂ ℂ ν) (x := 1 - B0 F μ M β) h
     obtain ⟨u, hu⟩ := hB
