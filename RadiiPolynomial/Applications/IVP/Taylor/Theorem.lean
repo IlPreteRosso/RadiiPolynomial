@@ -88,9 +88,9 @@ lemma composedApprox_eq_fderiv_fin
   have hG_diff := differentiable_ivpMap A φ x₀ htail_diag_inv hmem hφ
   conv_rhs => rw [show toCoeff ((fderiv ℝ (ivpMap A φ x₀ hmem) ā) h) l n =
     (fderiv ℝ (fun a => A.action (ivpCoeffs φ x₀ a) l n) ā) h from
-    fderiv_ivpMap_coeff_at A φ x₀ hmem hG_diff ā h l n]
+    fderiv_ivpMap_coeff_at A φ x₀ hmem (hG_diff ā) h l n]
   rw [A.fderiv_action_fin (ivpCoeffs φ x₀)
-    (fun j k => differentiable_ivpCoeffs φ x₀ hφ j ↑k) l n hn ā h]
+    (fun j k => differentiable_ivpCoeffs φ x₀ hφ j ↑k ā) l n hn h]
   set n' : Fin (N + 1) := ⟨n, Nat.lt_succ_of_le hn⟩
   -- flattened: the derivative coefficients are `A_dag *ᵥ h`, the composed block is `A * A_dag`
   have hDF : (fun p : Fin L × Fin (N + 1) =>

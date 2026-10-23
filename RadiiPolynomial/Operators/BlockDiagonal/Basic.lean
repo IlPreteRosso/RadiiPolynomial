@@ -303,13 +303,13 @@ lemma SystemBlockDiagData.differentiable_action_fin {E : Type*}
   rw [this]; exact A.differentiable_actionFinite b hb l n hn
 
 /-- Fderiv of the action at a finite mode: linear in the coefficient fderiv.
-When `b(a)` is a differentiable family of coefficients and `n ≤ N`, the fderiv of
-`a ↦ A.action(b a) l n` equals `A.action` applied to the pointwise fderivs. -/
+When the finite coefficients of `b(a)` are differentiable at `x` and `n ≤ N`, the fderiv of
+`a ↦ A.action(b a) l n` at `x` equals `A.action` applied to the pointwise fderivs. -/
 lemma SystemBlockDiagData.fderiv_action_fin {E : Type*}
     [NormedAddCommGroup E] [NormedSpace ℝ E]
-    (A : SystemBlockDiagData L N) (b : E → SystemCoeff L)
-    (hb : ∀ j : Fin L, ∀ k : Fin (N + 1), Differentiable ℝ (fun a => b a j k))
-    (l : Fin L) (n : ℕ) (hn : n ≤ N) (x h : E) :
+    (A : SystemBlockDiagData L N) (b : E → SystemCoeff L) {x : E}
+    (hb : ∀ j : Fin L, ∀ k : Fin (N + 1), DifferentiableAt ℝ (fun a => b a j k) x)
+    (l : Fin L) (n : ℕ) (hn : n ≤ N) (h : E) :
     (fderiv ℝ (fun a => A.action (b a) l n) x) h =
       A.action (fun j k => (fderiv ℝ (fun a => b a j k) x) h) l n := by
   -- action = actionFinite on finite modes
@@ -328,7 +328,7 @@ lemma SystemBlockDiagData.fderiv_action_fin {E : Type*}
     rw [hfn]
     have := HasFDerivAt.sum fun j (_ : j ∈ Finset.univ) =>
       HasFDerivAt.sum fun k (_ : k ∈ Finset.univ) =>
-        (hb j k x).hasFDerivAt.const_mul
+        (hb j k).hasFDerivAt.const_mul
           (A.finBlock l j ⟨n, Nat.lt_succ_of_le hn⟩ k)
     have hsum :
         (fun a =>

@@ -69,9 +69,10 @@ section Translation
 variable {M : Type*} {E F : M → Type*} [∀ m, NormedAddCommGroup (E m)]
   [∀ m, NormedAddCommGroup (F m)] {p : ℝ≥0∞} [Fact (1 ≤ p)]
 
-/-- If `‖f n‖ ≤ c ‖x (σ n)‖` along a reindexing `σ` of `M`, then `f ∈ ℓᵖ` with `‖f‖ ≤ c ‖x‖`. -/
-theorem memℓp_norm_le_of_le_comp (σ : M ≃ M) (x : WeightedLp M E p) (f : ∀ n, F n) {c : ℝ}
-    (hc : 0 ≤ c) (hf : ∀ n, ‖f n‖ ≤ c * ‖x (σ n)‖) :
+/-- If `‖f n‖ ≤ c ‖x (σ n)‖` along an injective reindexing `σ` of `M`, then `f ∈ ℓᵖ` with
+`‖f‖ ≤ c ‖x‖`. -/
+theorem memℓp_norm_le_of_le_comp {σ : M → M} (hσ : Function.Injective σ) (x : WeightedLp M E p)
+    (f : ∀ n, F n) {c : ℝ} (hc : 0 ≤ c) (hf : ∀ n, ‖f n‖ ≤ c * ‖x (σ n)‖) :
     ∃ h : Memℓp f p, ‖(⟨f, h⟩ : WeightedLp M F p)‖ ≤ c * ‖x‖ := by
   have hcx : 0 ≤ c * ‖x‖ := mul_nonneg hc (norm_nonneg _)
   rcases p.dichotomy with rfl | hp
@@ -86,7 +87,7 @@ theorem memℓp_norm_le_of_le_comp (σ : M ≃ M) (x : WeightedLp M E p) (f : �
       simp_rw [Real.mul_rpow hc (norm_nonneg _)]
       rw [← Finset.mul_sum]
       refine mul_le_mul_of_nonneg_left ?_ (Real.rpow_nonneg hc _)
-      have := lp.sum_rpow_le_norm_rpow hp0 x (s.map σ.toEmbedding)
+      have := lp.sum_rpow_le_norm_rpow hp0 x (s.map ⟨σ, hσ⟩)
       rwa [Finset.sum_map] at this
     exact ⟨memℓp_gen' key, lp.norm_le_of_forall_sum_le hp0 hcx key⟩
 
@@ -143,9 +144,9 @@ theorem shift_memℓp (hC : Moderate (FiberTrivialization.weight (E := E)) v C) 
     (y : WeightedLp M E p) :
     ∃ h : Memℓp (fun n => FiberTrivialization.equiv (E := E) n (coeff y (n - l))) p,
       ‖(⟨_, h⟩ : WeightedLp M E p)‖ ≤ C * v l * ‖y‖ := by
-  refine memℓp_norm_le_of_le_comp (Equiv.subRight l) y _
+  refine memℓp_norm_le_of_le_comp (sub_left_injective (b := l)) y _
     (hC.mul_pos FiberTrivialization.weight_pos l).le fun n => ?_
-  rw [FiberTrivialization.norm_equiv_apply, Equiv.subRight_apply, norm_apply_eq]
+  rw [FiberTrivialization.norm_equiv_apply, norm_apply_eq]
   have hmod := hC (n - l) l
   rw [sub_add_cancel] at hmod
   exact (mul_le_mul_of_nonneg_left hmod (norm_nonneg _)).trans_eq (by ring)

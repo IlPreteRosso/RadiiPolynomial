@@ -209,37 +209,6 @@ theorem schurBound_blockKernel (T : WeightedLp M E p →L[𝕜] WeightedLp M E p
 
 end BlockGeometry
 
-section BlockIdentification
-
-variable {𝕜 : Type*} [NormedField 𝕜] [CompleteSpace 𝕜] {M : Type*} [DecidableEq M] {E : M → Type*}
-  [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 M E]
-  {p : ℝ≥0∞} [Fact (1 ≤ p)]
-
-/-- **An operator on a finite block is the Schur operator of its block kernel**: if
-`P_F ∘ T ∘ P_G = T` then `T = kernelCLM h` for any Schur hypotheses `h` of `blockKernel T F G`
-(every `1 ≤ p ≤ ∞`). The route is the finite input dependence `T x = P_F (T (P_G x))` and the
-finite expansion of `P_G x`, not atom extensionality (which does not determine an operator at
-`p = ∞`). -/
-theorem eq_kernelCLM_of_block (T : WeightedLp M E p →L[𝕜] WeightedLp M E p) {F G : Finset M}
-    (hT : headProj (𝕜 := 𝕜) F ∘L T ∘L headProj (𝕜 := 𝕜) G = T) {R C : ℝ}
-    (h : SchurBound (FiberTrivialization.weight (E := E)) (FiberTrivialization.weight (E := E))
-      (blockKernel T F G) R C) :
-    T = kernelCLM (p := p) h :=
-  ContinuousLinearMap.ext fun x => ext_coeff <| funext fun i => by
-    have hG : ∀ k ∉ G, coeff (headProj (𝕜 := 𝕜) (E := E) (p := p) G x) k = 0 := fun k hk => by
-      rw [coeff_headProj, ite_eq_right hk]
-    rw [kernelCLM_apply_coeff, tsum_eq_sum (s := G) fun j hj => by
-        rw [blockKernel, ite_eq_right fun h' => hj h'.2, zero_mul],
-      ← DFunLike.congr_fun hT x, ContinuousLinearMap.comp_apply, ContinuousLinearMap.comp_apply,
-      coeff_headProj, coeff_apply_of_coeff_eq_zero T hG]
-    split_ifs with hi
-    · exact Finset.sum_congr rfl fun j hj => by
-        rw [coeff_headProj, ite_eq_left hj, blockKernel, ite_eq_left ⟨hi, hj⟩]
-    · exact (Finset.sum_eq_zero fun j _ => by
-        rw [blockKernel, ite_eq_right fun h' => hi h'.1, zero_mul]).symm
-
-end BlockIdentification
-
 section BlockNorm
 
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] {M : Type*} [DecidableEq M] {E : M → Type*}

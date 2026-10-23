@@ -233,12 +233,13 @@ theorem StdIVPData.Z₂_le_of_compPoly
     (fderiv ℝ (d.G (banachField f_cpoly) x₀) c
       - fderiv ℝ (d.G (banachField f_cpoly) x₀) d.abar)‖ ≤ _
   rw [ContinuousLinearMap.id_comp]
+  have hG := d.differentiable_G _ x₀
+    fun l => MvPolyBridge.differentiable_evalBanach_l1Weighted (f_cpoly l)
   exact ivp_Z₂_le d.approxInverse (banachField f_cpoly) x₀
-    (ivpMap_mem_of_tailDiag_inv _ _ _ d.htail_diag_inv) d.abar
-    (d.differentiable_G _ x₀
-      fun l => MvPolyBridge.differentiable_evalBanach_l1Weighted (f_cpoly l))
-    (fun l => MvPolyBridge.differentiable_evalBanach_l1Weighted (f_cpoly l))
-    c hc active
+    (ivpMap_mem_of_tailDiag_inv _ _ _ d.htail_diag_inv) d.abar c hc (hG c) (hG d.abar)
+    (fun l => MvPolyBridge.differentiable_evalBanach_l1Weighted (f_cpoly l) c)
+    (fun l => MvPolyBridge.differentiable_evalBanach_l1Weighted (f_cpoly l) d.abar)
+    active
     (fun h j hj => norm_le_zero_iff.mp
       ((hlip h j).trans (by rw [hinactive j hj c hc]; simp)))
     hB0

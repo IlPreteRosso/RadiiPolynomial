@@ -18,10 +18,9 @@ and the bound `R^(1/q) * C^(1/p)` for a Hölder conjugate `q`. It needs the row 
 only when `p ≠ 1`, and the column hypothesis only when `p ≠ ∞`.
 
 `kernelCLMOf` bundles this coordinate operator using precisely those hypotheses;
-`coeff_kernelCLMOf`, `hasSum_coeff_kernelCLMOf` and `norm_kernelCLMOf_le` give its
-computation, convergent coordinate series and norm bound. `kernelCLM` takes both hypotheses,
-with its coefficient formula and general norm bound. `SchurBound.ofFinsets` supplies the
-finite-support sufficient conditions.
+`coeff_kernelCLMOf` and `hasSum_coeff_kernelCLMOf` give its computation and convergent
+coordinate series. `kernelCLM` takes both hypotheses, with its coefficient formula.
+`SchurBound.ofFinsets` supplies the finite-support sufficient conditions.
 
 The proof uses `lp.holderL` on the factors `κ^(1/q)` and `κ^(1/p) * ‖x j‖`, then aggregates
 over finite sets of rows using the column hypothesis. No multiplication on the state carrier or
@@ -345,8 +344,7 @@ def kernelLM : WeightedLp J E p →ₗ[𝕜] WeightedLp I F p where
 
 /-- **The kernel operator** `WeightedLp J E p →L[𝕜] WeightedLp I F p`, from the Schur
 hypotheses that the exponent uses (rows unless `p = 1`, columns unless `p = ∞`). The bundled
-constant is the one of the canonical conjugate exponent; `norm_kernelCLMOf_le` states the bound
-for any conjugate. -/
+constant is the one of the canonical conjugate exponent. -/
 def kernelCLMOf : WeightedLp J E p →L[𝕜] WeightedLp I F p :=
   (kernelLM hrow hcol).mkContinuous (R ^ (1 / p.conjExponent.toReal) * C ^ (1 / p.toReal))
     fun x => (schur_bound_of p.conjExponent hrow hcol x).2.2
@@ -362,30 +360,6 @@ theorem hasSum_coeff_kernelCLMOf (x : WeightedLp J E p) (i : I) :
   exact (summable_kernel hrow hcol x i).hasSum
 
 end CLM
-
-section CLMOpNorm
-
-variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] {I J : Type*}
-  {E : J → Type*} [∀ j, NormedAddCommGroup (E j)] [∀ j, NormedSpace 𝕜 (E j)]
-  [FiberTrivialization 𝕜 J E]
-  {F : I → Type*} [∀ i, NormedAddCommGroup (F i)] [∀ i, NormedSpace 𝕜 (F i)]
-  [FiberTrivialization 𝕜 I F]
-  {p : ℝ≥0∞} [Fact (1 ≤ p)] {K : I → J → 𝕜} {R C : ℝ}
-  (hrow : p ≠ 1 → RowSum (FiberTrivialization.weight (E := F))
-    (FiberTrivialization.weight (E := E)) K R)
-  (hcol : p ≠ ∞ → ColSum (FiberTrivialization.weight (E := F))
-    (FiberTrivialization.weight (E := E)) K C)
-
-/-- `‖K‖ ≤ R^(1/q) C^(1/p)` for every Hölder conjugate `q`. -/
-theorem norm_kernelCLMOf_le (q : ℝ≥0∞) [p.HolderConjugate q] :
-    ‖kernelCLMOf hrow hcol‖ ≤ R ^ (1 / q.toReal) * C ^ (1 / p.toReal) :=
-  ContinuousLinearMap.opNorm_le_bound _
-    (mul_nonneg (rpow_one_div_nonneg fun h =>
-        (hrow ((ENNReal.HolderConjugate.ne_top_iff_ne_one q p).1 h)).row_nonneg)
-      (rpow_one_div_nonneg fun h => (hcol h).col_nonneg))
-    fun x => (schur_bound_of q hrow hcol x).2.2
-
-end CLMOpNorm
 
 section KernelCLM
 
@@ -453,7 +427,7 @@ def diagCLM : WeightedLp M E p →L[𝕜] WeightedLp M E p :=
   have bound : ∀ x : WeightedLp M E p,
       ∃ h : Memℓp (fun n => d n • x n) p,
         ‖(⟨_, h⟩ : WeightedLp M E p)‖ ≤ D * ‖x‖ := fun x =>
-    memℓp_norm_le_of_le_comp (Equiv.refl M) x _ hD fun n =>
+    memℓp_norm_le_of_le_comp Function.injective_id x _ hD fun n =>
       (norm_smul_le (d n) (x n)).trans
         (mul_le_mul_of_nonneg_right (le_ciSup hd n) (norm_nonneg (x n)))
   LinearMap.mkContinuous
@@ -496,7 +470,7 @@ theorem norm_diagCLM : ‖diagCLM (E := E) (p := p) d hd‖ = ⨆ n, ‖d n‖ :
   apply (diagCLM (E := E) (p := p) d hd).opNorm_le_bound
     (Real.iSup_nonneg fun n => norm_nonneg (d n))
   intro x
-  exact (memℓp_norm_le_of_le_comp (Equiv.refl M) x (fun n => d n • x n)
+  exact (memℓp_norm_le_of_le_comp Function.injective_id x (fun n => d n • x n)
     (Real.iSup_nonneg fun n => norm_nonneg (d n)) fun n =>
       (norm_smul_le (d n) (x n)).trans
         (mul_le_mul_of_nonneg_right (le_ciSup hd n) (norm_nonneg (x n)))).2
