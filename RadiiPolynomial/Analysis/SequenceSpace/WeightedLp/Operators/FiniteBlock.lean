@@ -1,6 +1,6 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.TailDefect
 
-/-! Physical finite matrices and composed head leakage. Matrix multiplication and boundary summation occur before entry modulus; block Schur faces give upper bounds. Finite head injection is a consumer obligation, not full-space injection from finite range. -/
+/-! Physical finite matrices and composed head leakage. Matrix multiplication and boundary summation occur before entry modulus; block Schur faces give upper bounds. The finite-head solver service (§FiniteHead) proves head injectivity on the finite-dimensional head range from a defect bound `‖P − M K‖ < 1` and turns it into the raw-zero equivalence of a finite-head / diagonal-tail coefficient solver; it is head injectivity, not full-space injectivity from finite range. -/
 
 open scoped ENNReal NNReal
 
@@ -359,6 +359,47 @@ end ComposedNorm
 
 section FiniteHead
 
+/-! ### The finite-head solver service
+
+A coefficient solver `x ↦ M x + d x` with a finite head `F`, a head operator `M` and a diagonal
+tail `d` is inverted in three steps. `eq_zero_of_mem_of_norm_sub_comp_lt_one` is the
+carrier-neutral head injectivity: on a finite-dimensional subspace `V` with `P|_V = id`,
+`K(V) ⊆ V` and `‖P − M K‖ < 1`, `M` is injective on `V`. `eq_zero_of_headProj_eq_of_norm_lt_one`
+is its instance at `V = range P_F` on any framed carrier and any `1 ≤ p ≤ ∞`.
+`eq_zero_iff_of_coeff_eq_headSolve` turns head injectivity into the raw-zero equivalence
+`G u = 0 ↔ R u = 0` for a coefficient solver identity
+`coeff (G u) k = coeff (M (J (R u))) k + d k * R u k`. -/
+
+section HeadInjectivity
+
+variable {𝕜 X : Type*} [NontriviallyNormedField 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
+
+/-- **Finite-dimensional head injectivity**: on a finite-dimensional subspace `V` with `P v = v`
+and `K v ∈ V` for `v ∈ V`, the defect bound `‖P − M ∘ K‖ < 1` makes `M` injective on `V`. The
+bound gives `‖v‖ = ‖(P − M K) v‖ ≤ ‖P − M K‖ ‖v‖` when `M K v = 0`, so `M K` is injective on `V`;
+then `K|_V` is an injective endomorphism of the finite-dimensional `V`, hence surjective
+(`LinearMap.injective_iff_surjective`), and `x = K y`, `M K y = 0` give `y = 0`, `x = 0`. No
+completeness, Neumann series or `M(V) ⊆ V` is used. -/
+theorem eq_zero_of_mem_of_norm_sub_comp_lt_one (V : Submodule 𝕜 X) [FiniteDimensional 𝕜 V]
+    {P M K : X →L[𝕜] X} (hP : ∀ v ∈ V, P v = v) (hK : ∀ v ∈ V, K v ∈ V)
+    (h : ‖P - M ∘L K‖ < 1) {x : X} (hx : x ∈ V) (hMx : M x = 0) : x = 0 := by
+  have hMK : ∀ v ∈ V, M (K v) = 0 → v = 0 := fun v hv hv0 => by
+    have h1 := (P - M ∘L K).le_opNorm v
+    rw [sub_apply, ContinuousLinearMap.comp_apply, hv0, sub_zero, hP v hv] at h1
+    exact norm_eq_zero.1 (le_antisymm (by nlinarith [norm_nonneg v]) (norm_nonneg v))
+  have hinj : Function.Injective ((K : X →ₗ[𝕜] X).restrict hK) := by
+    refine (injective_iff_map_eq_zero _).2 fun v hv => Subtype.ext (hMK v v.2 ?_)
+    have e := congrArg Subtype.val hv
+    rw [LinearMap.coe_restrict_apply, ContinuousLinearMap.coe_coe] at e
+    rw [e, Submodule.coe_zero, map_zero]
+  obtain ⟨⟨y, hy⟩, hyx⟩ := LinearMap.injective_iff_surjective.1 hinj ⟨x, hx⟩
+  have hKy : K y = x := congrArg Subtype.val hyx
+  rw [← hKy, hMK y hy (by rw [hKy, hMx]), map_zero]
+
+end HeadInjectivity
+
+section HeadRange
+
 variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} [DecidableEq M] {E : M → Type*}
   [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 M E]
   {p : ℝ≥0∞} [Fact (1 ≤ p)]
@@ -381,6 +422,91 @@ theorem finiteDimensional_range_headProj (F : Finset M) :
   haveI := FiniteDimensional.span_of_finite 𝕜
     (F.finite_toSet.image fun j => single (E := E) (p := p) j (1 : 𝕜))
   Submodule.finiteDimensional_of_le (range_headProj_le_span F)
+
+end HeadRange
+
+section HeadSolver
+
+variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] {ι : Type*} [DecidableEq ι] {E : ι → Type*}
+  [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 ι E]
+  {p : ℝ≥0∞} [Fact (1 ≤ p)]
+
+/-- **Head injectivity on a framed carrier**: if `K` preserves the head range
+(`P_F K P_F = K P_F`) and `‖P_F − M ∘ K‖ < 1`, then `M` is injective on the head range, for every
+framed carrier and every `1 ≤ p ≤ ∞` (`eq_zero_of_mem_of_norm_sub_comp_lt_one` at
+`V = range P_F`, finite-dimensional by `finiteDimensional_range_headProj`). -/
+theorem eq_zero_of_headProj_eq_of_norm_lt_one (F : Finset ι)
+    {M K : WeightedLp ι E p →L[𝕜] WeightedLp ι E p}
+    (hK : headProj (𝕜 := 𝕜) F ∘L K ∘L headProj (𝕜 := 𝕜) F = K ∘L headProj (𝕜 := 𝕜) F)
+    (h : ‖headProj (𝕜 := 𝕜) F - M ∘L K‖ < 1) :
+    ∀ x, headProj (𝕜 := 𝕜) F x = x → M x = 0 → x = 0 := by
+  have := finiteDimensional_range_headProj (𝕜 := 𝕜) (E := E) (p := p) F
+  intro x hx hMx
+  refine eq_zero_of_mem_of_norm_sub_comp_lt_one _ ?_ ?_ h (LinearMap.mem_range.2 ⟨x, hx⟩) hMx
+  · rintro _ ⟨w, rfl⟩
+    exact DFunLike.congr_fun (headProj_comp_headProj (𝕜 := 𝕜) (E := E) (p := p) F) w
+  · rintro _ ⟨w, rfl⟩
+    exact LinearMap.mem_range.2 ⟨K (headProj (𝕜 := 𝕜) F w), DFunLike.congr_fun hK w⟩
+
+end HeadSolver
+
+section RawZero
+
+variable {𝕜 : Type*} [NormedField 𝕜] {ι : Type*} [DecidableEq ι] {E : ι → Type*}
+  [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 ι E]
+  {p : ℝ≥0∞} [Fact (1 ≤ p)]
+
+/-- **Raw zeros through the finite-head / diagonal-tail solver**: let `G u` and the raw family
+`R u` be related by the coefficient solver identity
+`coeff (G u) k = coeff (M (J (R u))) k + d k * R u k`, where `J` realizes the head of a raw
+family (`coeff (J f) k = 1_{k ∈ F} f k`), `M` preserves the head range (`P_F M P_F = M P_F`)
+and is injective on it (`hinj`, supplied by `eq_zero_of_headProj_eq_of_norm_lt_one`), and
+`d = 0` on `F`, `d ≠ 0` off `F`. Then `G u = 0 ↔ R u = 0`. Off `F` the identity reads
+`d k * R u k = 0`; on `F` it reads `coeff (M (J (R u))) k = 0`, so `M (J (R u)) = 0` and head
+injectivity gives `J (R u) = 0`. No norm, linearity of `J` or product structure is used. -/
+theorem eq_zero_iff_of_coeff_eq_headSolve (F : Finset ι)
+    (M : WeightedLp ι E p →L[𝕜] WeightedLp ι E p) (d : ι → 𝕜)
+    {J : (ι → 𝕜) → WeightedLp ι E p} (hJ : ∀ f k, coeff (J f) k = if k ∈ F then f k else 0)
+    (hM : headProj (𝕜 := 𝕜) F ∘L M ∘L headProj (𝕜 := 𝕜) F = M ∘L headProj (𝕜 := 𝕜) F)
+    (hinj : ∀ x, headProj (𝕜 := 𝕜) F x = x → M x = 0 → x = 0)
+    (hd₀ : ∀ k ∈ F, d k = 0) (hd : ∀ k ∉ F, d k ≠ 0)
+    {U : Type*} {G : U → WeightedLp ι E p} {R : U → ι → 𝕜}
+    (hG : ∀ u k, coeff (G u) k = coeff (M (J (R u))) k + d k * R u k) (u : U) :
+    G u = 0 ↔ R u = 0 := by
+  constructor
+  · intro hu
+    have hA : ∀ k, coeff (M (J (R u))) k + d k * R u k = 0 := fun k => by
+      rw [← hG, hu, coeff_zero, Pi.zero_apply]
+    have hP : headProj (𝕜 := 𝕜) F (J (R u)) = J (R u) := ext_coeff <| funext fun k => by
+      rw [coeff_headProj, hJ]
+      split_ifs <;> rfl
+    have hoff : ∀ k ∉ F, coeff (M (J (R u))) k = 0 := fun k hk => by
+      have e := congrArg (fun z => coeff z k) (DFunLike.congr_fun hM (J (R u)))
+      simp only [ContinuousLinearMap.comp_apply, hP, coeff_headProj, ite_eq_right hk] at e
+      exact e.symm
+    have hMJ : M (J (R u)) = 0 := ext_coeff <| funext fun k => by
+      rw [coeff_zero, Pi.zero_apply]
+      by_cases hk : k ∈ F
+      · have e := hA k
+        rwa [hd₀ k hk, zero_mul, add_zero] at e
+      · exact hoff k hk
+    have hJ0 := hinj _ hP hMJ
+    funext k
+    by_cases hk : k ∈ F
+    · have e := congrArg (fun z => coeff z k) hJ0
+      simp only [hJ, ite_eq_left hk, coeff_zero, Pi.zero_apply] at e
+      exact e
+    · have e := hA k
+      rw [hoff k hk, zero_add] at e
+      exact (mul_eq_zero.1 e).resolve_left (hd k hk)
+  · intro hu
+    have hJ0 : J 0 = 0 := ext_coeff <| funext fun k => by
+      rw [hJ, coeff_zero]
+      split_ifs <;> rfl
+    refine ext_coeff <| funext fun k => ?_
+    rw [hG, hu, hJ0, map_zero, coeff_zero, Pi.zero_apply, mul_zero, add_zero]
+
+end RawZero
 
 end FiniteHead
 

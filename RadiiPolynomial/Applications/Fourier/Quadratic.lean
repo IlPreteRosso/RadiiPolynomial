@@ -1,6 +1,7 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Bilateral.Quadratic
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.FiniteBlock
 import RadiiPolynomial.Core.Quadratic
+import RadiiPolynomial.Core.Transport
 
 /-!
 # The quadratic Fourier family on `ℓ²`
@@ -44,12 +45,15 @@ realization `H_F = headReal F` and the cross-exponent tail diagonal `T∞ = tail
   (`norm_quadComp_add_flip_le_of_bounds` with the `U_row` head certificate
   `norm_comp_headReal_le_urow`, UPPER).
 * **Existence and transfer of zeros.** One application of `quadratic_radii_theorem_local`
-  (`A = id`, `A† = B₀`) gives a unique zero of `G` in the ball (`existsUnique_G`). From `Z₀ < 1`,
-  `B₀` is a unit, so `M` is injective on the finite-dimensional head range
-  (`injOn_head_of_norm_lt_one`): this is HEAD injectivity, not injectivity of the nonlinear
-  `rawF`. With `P M = M`, `supp g ⊆ F` and `μₙ ≠ 0` off `F`, zeros of `G` are raw zeros and back
-  (`rawF_eq_zero_of_G_eq_zero`, `G_eq_zero_of_rawF_eq_zero`), so the radii inequality gives a
-  unique raw zero in the ball (`existsUnique_rawF`).
+  (`A = id`, `A† = B₀`) gives a unique zero of `G` in the ball (`existsUnique_G`). The radii
+  inequality gives `‖P − M K_H‖ < 1`, so `M` is injective on the finite-dimensional head range
+  (`WeightedLp.eq_zero_of_headProj_eq_of_norm_lt_one`, from `P K_H = K_H`): this is HEAD
+  injectivity, not injectivity of the nonlinear `rawF`. With `P M = M`, `supp g ⊆ F` and
+  `μₙ ≠ 0` off `F`, the coefficient identity `coeff_G` is a finite-head / diagonal-tail solver
+  identity with `d = tailSymbol ↑F μ`, so zeros of `G` are exactly the raw zeros
+  (`WeightedLp.eq_zero_iff_of_coeff_eq_headSolve`), and the unique zero of `G` transports to a
+  unique raw zero in the ball (`existsUnique_rawF`, through `existsUnique_zero_transport` at the
+  identity isometry).
 * **Conjugate reflection.** `(R a)ₙ = conj (a₋ₙ)` (`conjRefl`, any positive `ν`) is an additive
   isometry of `X` (a real structure, not a complex-linear map), and
   `(R a ⋆ R a)ₙ = conj ((a ⋆ a)₋ₙ)` (`convCoeff_conjRefl`, the diagonal square identity). The
@@ -389,97 +393,11 @@ theorem existsUnique_G {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) {Y
   · rwa [ContinuousLinearMap.id_comp, B0, id_sub_add_tailProj]
   · rwa [ContinuousLinearMap.id_comp, ← DG_eq, norm_sub_rev]
 
-/-- **`M` is injective on the head range** when `‖P − M K_H‖ < 1` and `P M = M`: `B₀` is a unit
-(Mathlib's complex Neumann series `isUnit_one_sub_of_norm_lt_one`), so `M` maps
-the finite-dimensional range of `P` onto itself (`finiteDimensional_range_headProj`),
-hence injectively (`LinearMap.injective_iff_surjective`). -/
-theorem injOn_head_of_norm_lt_one (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M)
-    (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) (h : ‖headProj (𝕜 := ℂ) F - M ∘L Kh F μ β‖ < 1) :
-    ∀ x : X₂ ℂ ν, headProj (𝕜 := ℂ) F x = x → M x = 0 → x = 0 := by
-  have : FiniteDimensional ℂ
-      (LinearMap.range (headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F).toLinearMap) :=
-    finiteDimensional_range_headProj (𝕜 := ℂ) F
-  have hBsurj : Function.Surjective (B0 F μ M β) := by
-    have hB : IsUnit (B0 F μ M β) := by
-      rw [← id_sub_add_tailProj, ← B0] at h
-      simpa using isUnit_one_sub_of_norm_lt_one
-        (R := X₂ ℂ ν →L[ℂ] X₂ ℂ ν) (x := 1 - B0 F μ M β) h
-    obtain ⟨u, hu⟩ := hB
-    intro y
-    refine ⟨(↑u⁻¹ : X₂ ℂ ν →L[ℂ] X₂ ℂ ν) y, ?_⟩
-    have e := DFunLike.congr_fun u.mul_inv y
-    rw [hu] at e
-    exact e
-  have hMV : ∀ x ∈ LinearMap.range (headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F).toLinearMap,
-      M x ∈ LinearMap.range (headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F).toLinearMap :=
-    fun x _ => LinearMap.mem_range.2 ⟨M x, DFunLike.congr_fun hPM x⟩
-  have hsurj : Function.Surjective (M.toLinearMap.restrict hMV) := by
-    rintro ⟨y, hy⟩
-    obtain ⟨w, rfl⟩ := LinearMap.mem_range.1 hy
-    obtain ⟨z, hz⟩ := hBsurj (headProj (𝕜 := ℂ) F w)
-    refine ⟨⟨Kh F μ β z, LinearMap.mem_range.2 ⟨Kh F μ β z,
-      DFunLike.congr_fun (headProj_comp_Kh F μ β) z⟩⟩, Subtype.ext ?_⟩
-    have e1 := DFunLike.congr_fun hPM (Kh F μ β z)
-    have e2 := DFunLike.congr_fun (headProj_comp_tailProj (E := geomFiberZ ℂ ν) (p := 2)
-      (𝕜 := ℂ) F) z
-    have e3 := DFunLike.congr_fun (headProj_comp_headProj (E := geomFiberZ ℂ ν) (p := 2)
-      (𝕜 := ℂ) F) w
-    simp only [ContinuousLinearMap.comp_apply, zero_apply] at e1 e2 e3
-    have h1 := congrArg (headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F) hz
-    simp only [B0, add_apply, ContinuousLinearMap.comp_apply, map_add, e1, e2, e3, add_zero] at h1
-    exact h1
-  have hinj := LinearMap.injective_iff_surjective.2 hsurj
-  intro x hx hMx
-  have h0 := @hinj ⟨x, LinearMap.mem_range.2 ⟨x, hx⟩⟩ 0 (Subtype.ext (by
-    rw [map_zero, Submodule.coe_zero]
-    exact hMx))
-  exact congrArg Subtype.val h0
-
-/-- **Zeros of `G` are raw zeros** (`P M = M`, `supp g ⊆ F`, `μ ≠ 0` off `F`, `M` injective on the
-head range): the tail of `A_raw` inverts `d`, the head of `A_raw` is `M` on the head range. -/
-theorem rawF_eq_zero_of_G_eq_zero (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M)
-    (hg : ∀ k ∉ F, coeff g k = 0) (hμ : ∀ k ∉ F, μ k ≠ 0)
-    (hinj : ∀ x : X₂ ℂ ν, headProj (𝕜 := ℂ) F x = x → M x = 0 → x = 0) {a : X₂ ℂ ν}
-    (ha : G F μ hs M g a = 0) : rawF μ g a = 0 := by
-  have hA : ∀ n, rawA F μ M (rawF μ g a) n = 0 := fun n => by
-    rw [← coeff_G F μ hs M g hg hμ a, ha, coeff_zero, Pi.zero_apply]
-  have htail : ∀ n ∉ F, rawF μ g a n = 0 := fun n hn => by
-    have h := hA n
-    rw [rawA, coeff_eq_zero_of_headProj_comp F M hPM _ hn, zero_add,
-      tailSymbol_of_notMem (fun h' => hn (Finset.mem_coe.1 h')), mul_eq_zero] at h
-    exact h.resolve_left (inv_ne_zero (hμ n hn))
-  have hM : M (headOfRaw F (rawF μ g a)) = 0 := ext_coeff <| funext fun n => by
-    rw [coeff_zero, Pi.zero_apply]
-    by_cases hn : n ∈ F
-    · have h := hA n
-      rwa [rawA, tailSymbol_of_mem (Finset.mem_coe.2 hn), zero_mul, add_zero] at h
-    · exact coeff_eq_zero_of_headProj_comp F M hPM _ hn
-  have hP : headProj (𝕜 := ℂ) F (headOfRaw (ν := ν) F (rawF μ g a)) = headOfRaw F (rawF μ g a) :=
-    ext_coeff <| funext fun n => by
-      rw [coeff_headProj, coeff_headOfRaw]
-      split_ifs <;> rfl
-  have h0 := hinj _ hP hM
-  funext n
-  by_cases hn : n ∈ F
-  · have e := congrArg (fun x => coeff x n) h0
-    simp only [coeff_headOfRaw, ite_eq_left hn, coeff_zero, Pi.zero_apply] at e
-    exact e
-  · exact htail n hn
-
-/-- **Raw zeros are zeros of `G`** (the coefficient identity at `F_raw a = 0`). -/
-theorem G_eq_zero_of_rawF_eq_zero (hg : ∀ k ∉ F, coeff g k = 0) (hμ : ∀ k ∉ F, μ k ≠ 0)
-    {a : X₂ ℂ ν} (ha : rawF μ g a = 0) : G F μ hs M g a = 0 := by
-  have h0 : headOfRaw (ν := ν) F 0 = 0 := ext_coeff <| funext fun n => by
-    rw [coeff_headOfRaw, coeff_zero, Pi.zero_apply]
-    split_ifs <;> rfl
-  refine ext_coeff ?_
-  rw [coeff_G F μ hs M g hg hμ a, ha, coeff_zero]
-  funext n
-  rw [rawA, h0, map_zero]
-  simp
-
 /-- **A unique raw zero of the Fourier map in the ball** (generic `F`, `μ`): the zero of `G` from
-`existsUnique_G`, transferred through `Z₀ < 1` (from `p(r₀) < 0`) and the finite head. -/
+`existsUnique_G`, transferred through `Z₀ < 1` (from `p(r₀) < 0`): head injectivity
+(`eq_zero_of_headProj_eq_of_norm_lt_one`), the raw-zero equivalence of the solver identity
+`coeff_G` (`eq_zero_iff_of_coeff_eq_headSolve`) and `existsUnique_zero_transport` at the identity
+isometry. -/
 theorem existsUnique_rawF {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0)
     (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M) (hg : ∀ k ∉ F, coeff g k = 0)
     (hμ : ∀ k ∉ F, μ k ≠ 0) {Y₀ Z₀ Z₁ Z₂ r₀ : ℝ} (hr₀ : 0 < r₀) (hY₀ : ‖G F μ hs M g ā‖ ≤ Y₀)
@@ -497,10 +415,17 @@ theorem existsUnique_rawF {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0)
     have h := general_radii_poly_neg_implies_Z_lt_one hY0 hr₀ hrad
     simp only [Z_bound_general] at h
     nlinarith [mul_nonneg hZ20 hr₀.le]
-  have hinj := injOn_head_of_norm_lt_one F μ M hPM _ hlt
-  obtain ⟨a, ⟨ha, hGa⟩, hu⟩ := existsUnique_G F μ hs M g hā hr₀ hY₀ hZ₀ hZ₁ hZ₂ hrad
-  exact ⟨a, ⟨ha, rawF_eq_zero_of_G_eq_zero F μ hs M g hPM hg hμ hinj hGa⟩,
-    fun z ⟨hz, hz0⟩ => hu z ⟨hz, G_eq_zero_of_rawF_eq_zero F μ hs M g hg hμ hz0⟩⟩
+  have hinj := eq_zero_of_headProj_eq_of_norm_lt_one F
+    (by rw [← ContinuousLinearMap.comp_assoc, headProj_comp_Kh]) hlt
+  refine existsUnique_zero_transport (IsometryEquiv.refl _) (fun a => ?_)
+    (existsUnique_G F μ hs M g hā hr₀ hY₀ hZ₀ hZ₁ hZ₂ hrad)
+  exact (eq_zero_iff_of_coeff_eq_headSolve F M (tailSymbol (F : Set ℤ) μ) (coeff_headOfRaw F)
+    (by rw [← ContinuousLinearMap.comp_assoc, hPM]) hinj
+    (fun k hk => tailSymbol_of_mem (Finset.mem_coe.2 hk))
+    (fun k hk => by
+      rw [tailSymbol_of_notMem (fun h => hk (Finset.mem_coe.1 h))]
+      exact inv_ne_zero (hμ k hk))
+    (fun a k => congrFun (coeff_G F μ hs M g hg hμ a) k) a).symm
 
 
 end Existence

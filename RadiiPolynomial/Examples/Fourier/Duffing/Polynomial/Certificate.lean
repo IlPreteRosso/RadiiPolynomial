@@ -457,79 +457,26 @@ lemma existsUnique_G : ∃! x ∈ Metric.closedBall abar (Numbers.radiusQ : ℝ)
     (by simpa [one_sub_B0] using Z0_le)
     (by simpa only [ContinuousLinearMap.id_comp] using Z1_le) Z2_le radii_neg (fun _ _ h => h)
 
-/-! Finite-head injectivity and raw zero transfer: the generic argument of the quadratic Fourier
-family (`Applications/Fourier/Quadratic.lean`), applied to the actual polynomial-weight carrier. -/
-lemma M_inj_head : ∀ x : X, P x = x → M x = 0 → x = 0 := by
-  have hlt : ‖P - M ∘L Kh‖ < 1 := Z0_le.trans_lt (by norm_num [Numbers.Z0Q])
-  have : FiniteDimensional ℂ (LinearMap.range P.toLinearMap) := finiteDimensional_range_headProj (𝕜 := ℂ) S
-  have hBsurj : Function.Surjective B0 := by
-    have hB : IsUnit B0 := by
-      rw [← one_sub_B0] at hlt
-      simpa using isUnit_one_sub_of_norm_lt_one (R := X →L[ℂ] X) (x := 1-B0) hlt
-    obtain ⟨u, hu⟩ := hB
-    intro y
-    refine ⟨(↑u⁻¹ : X →L[ℂ] X) y, ?_⟩
-    have e := DFunLike.congr_fun u.mul_inv y
-    rw [hu] at e
-    exact e
-  have hMV : ∀ x ∈ LinearMap.range P.toLinearMap, M x ∈ LinearMap.range P.toLinearMap :=
-    fun x _ => LinearMap.mem_range.mpr ⟨M x, DFunLike.congr_fun hPM x⟩
-  have hsurj : Function.Surjective (M.toLinearMap.restrict hMV) := by
-    rintro ⟨y, hy⟩
-    obtain ⟨w, rfl⟩ := LinearMap.mem_range.mp hy
-    obtain ⟨z, hz⟩ := hBsurj (P w)
-    refine ⟨⟨Kh z, LinearMap.mem_range.mpr ⟨Kh z, DFunLike.congr_fun P_Kh z⟩⟩, Subtype.ext ?_⟩
-    have e1 := DFunLike.congr_fun hPM (Kh z)
-    have e2 := DFunLike.congr_fun (headProj_comp_tailProj (E := E) (p := 2) (𝕜 := ℂ) S) z
-    have e3 := DFunLike.congr_fun (headProj_comp_headProj (E := E) (p := 2) (𝕜 := ℂ) S) w
-    simp only [ContinuousLinearMap.comp_apply, zero_apply] at e1 e2 e3
-    have h1 := congrArg P hz
-    simp only [B0, add_apply, ContinuousLinearMap.comp_apply, map_add, e1, e2, e3, add_zero] at h1
-    exact h1
-  have hinj := LinearMap.injective_iff_surjective.mpr hsurj
-  intro x hx hMx
-  have h0 := @hinj ⟨x, LinearMap.mem_range.mpr ⟨x, hx⟩⟩ 0 (Subtype.ext (by
-    rw [map_zero, Submodule.coe_zero]
-    exact hMx))
-  exact congrArg Subtype.val h0
-lemma raw_zero_of_G_zero {x : X} (hx : G x = 0) : rawF x = 0 := by
-  have hA : ∀ n, rawA (rawF x) n = 0 := fun n => by
-    rw [← coeff_G x, hx, coeff_zero, Pi.zero_apply]
-  have htail : ∀ n ∉ S, rawF x n = 0 := fun n hn => by
-    have h := hA n
-    rw [rawA, M, coeff_finMatrixCLM, ite_eq_right hn, zero_add,
-      tailSymbol_of_notMem (fun h' => hn (Finset.mem_coe.mp h')), mul_eq_zero] at h
-    exact h.resolve_left (inv_ne_zero (μ_tail_ne n hn))
-  have hM : M (head (rawF x)) = 0 := by
-    apply ext_coeff; funext n
-    rw [coeff_zero, Pi.zero_apply]
-    by_cases hn : n ∈ S
-    · have h := hA n
-      simpa only [rawA, tailSymbol_of_mem (Finset.mem_coe.mpr hn), zero_mul, add_zero] using h
-    · rw [M, coeff_finMatrixCLM, ite_eq_right hn]
-  have hP : P (head (rawF x)) = head (rawF x) := by
-    apply ext_coeff; funext n
-    rw [coeff_headProj, coeff_head]
-    split_ifs <;> rfl
-  have hz := M_inj_head _ hP hM
-  funext n
-  by_cases hn : n ∈ S
-  · have e := congrArg (fun z => coeff z n) hz
-    simpa only [coeff_head, ite_eq_left hn, coeff_zero, Pi.zero_apply] using e
-  · exact htail n hn
-lemma G_zero_of_raw_zero {x : X} (hx : rawF x = 0) : G x = 0 := by
-  apply ext_coeff
-  rw [coeff_G, hx, coeff_zero]
-  funext n
-  have hz : head 0 = 0 := by
-    apply ext_coeff; funext k
-    simp [coeff_head, coeff_zero]
-  simp [rawA, hz]
+/-! Raw zero transfer through the finite-head solver service of `WeightedLp/Operators/FiniteBlock`. -/
+
 /-- Local coefficient existence and uniqueness on the polynomial carrier, from the product
-certificate; the geometric existence theorem does not enter. -/
+certificate; the geometric existence theorem does not enter. The unique zero of `G`
+(`existsUnique_G`) is transported to the raw zero by `existsUnique_zero_transport` at the identity
+isometry, along `eq_zero_iff_of_coeff_eq_headSolve` (solver identity `coeff_G`, head realization
+`head`, `d = tailSymbol ↑S μ`) with head injectivity from `eq_zero_of_headProj_eq_of_norm_lt_one`
+(`‖P − M K_H‖ < 1`, `P K_H = K_H`). -/
 theorem existsUnique_raw : ∃! x ∈ Metric.closedBall abar (Numbers.radiusQ : ℝ), rawF x = 0 := by
-  obtain ⟨x, ⟨hx, hGx⟩, hu⟩ := existsUnique_G
-  exact ⟨x, ⟨hx, raw_zero_of_G_zero hGx⟩, fun y ⟨hy, hy0⟩ => hu y ⟨hy, G_zero_of_raw_zero hy0⟩⟩
+  have hinj := eq_zero_of_headProj_eq_of_norm_lt_one S
+    (by rw [← ContinuousLinearMap.comp_assoc, P_Kh])
+    (Z0_le.trans_lt (by norm_num [Numbers.Z0Q]))
+  refine existsUnique_zero_transport (IsometryEquiv.refl X) (fun x => ?_) existsUnique_G
+  exact (eq_zero_iff_of_coeff_eq_headSolve S M (tailSymbol (S : Set ℤ) μ) coeff_head
+    (by rw [← ContinuousLinearMap.comp_assoc, hPM]) hinj
+    (fun k hk => tailSymbol_of_mem (Finset.mem_coe.2 hk))
+    (fun k hk => by
+      rw [tailSymbol_of_notMem (fun h => hk (Finset.mem_coe.1 h))]
+      exact inv_ne_zero (μ_tail_ne k hk))
+    (fun x k => congrFun (coeff_G x) k) x).symm
 
 /-- **The polynomial-carrier zero**: the unique zero of the raw Fourier map in the closed ball of
 radius `1/10000` around `ā`, certified on `X` without the geometric existence theorem. -/
