@@ -228,7 +228,7 @@ theorem tail_evalBanach_mul_le_ker (d : IVP.StdIVPData ν L N) (p : CompPoly L)
         (ν : ℝ) ^ (n + (N + 1)) ≤ (kerColMaxQ N d.abar_Q d.ν_q p : ℝ) * ‖x‖ := by
   have hb : ∀ k, l1Weighted.toSeq (p.evalBanach d.abar) k =
       ((evalArr N d.abar_Q p).getD k 0 : ℝ) := fun k => by
-    rw [p.toSeq_evalBanach d.abar d.abar_Q d.abar_toSeq_eq k, evalArr_getD d]
+    rw [p.toSeq_evalBanach_eq_evalCoeff d.abar d.abar_Q d.abar_toSeq_eq k, evalArr_getD d]
   refine tailTsum_shiftDivN_mul_le_of_check (d := CompPoly.supportBound N p) _
     (fun k hk => by rw [hb, evalArr_getD_eq_zero p d.abar_Q k hk, Rat.cast_zero])
     (fun k => |(evalArr N d.abar_Q p).getD k 0| * d.ν_q ^ (k + 1))

@@ -18,7 +18,7 @@ namespace MvPolyBridge.CompPoly
 variable {L : ℕ} {ν : PosReal} [Fact (1 ≤ (ν : ℝ))]
 
 /-- Correctness against the completed Laurent algebra for rational inputs with support bounds. -/
-theorem toSeq_evalBanach_laurent_of_coeffs (p : CompPoly L)
+theorem toSeq_evalBanach_eq_evalLaurentCoeffSeq (p : CompPoly L)
     (a : Fin L → l1Chebyshev ν) (radii : Fin L → ℕ) (seqs : Fin L → ℤ → ℚ)
     (ha : ∀ i n, l1Chebyshev.toSeq (a i) n = (seqs i n : ℝ))
     (hs : ∀ i n, radii i < n.natAbs → seqs i n = 0) (n : ℤ) :
@@ -48,13 +48,13 @@ theorem toSeq_evalBanach_laurent_of_coeffs (p : CompPoly L)
 
 /-- The array interpreter agrees with polynomial evaluation on symmetrized stored data.
 Only the nonnegative stored coefficients must agree with the zero-padded rational arrays. -/
-theorem toSeq_evalBanach_cheb_of_coeffs (p : CompPoly L)
+theorem toSeq_evalBanach_eq_evalChebCoeff (p : CompPoly L)
     (a : Fin L → l1Chebyshev ν) (arrs : Fin L → Array ℚ)
     (ha : ∀ i (k : ℕ), l1Chebyshev.toSeq (a i) (k : ℤ) = ((arrs i).getD k 0 : ℝ))
     (n : ℤ) :
     l1Chebyshev.toSeq (p.evalBanach (fun i => l1Chebyshev.symmetrize (a i))) n =
       (p.evalChebCoeff arrs n : ℝ) := by
-  apply p.toSeq_evalBanach_laurent_of_coeffs
+  apply p.toSeq_evalBanach_eq_evalLaurentCoeffSeq
   · intro i k
     rw [l1Chebyshev.symmetrize_toSeq, ha]
   · intro i k hk

@@ -27,21 +27,21 @@ theorem compPoly_evalBanach_eq_aeval {ν : PosReal} {L : ℕ}
 namespace CompPoly
 
 /-- Sequence-level coefficient extraction commutes with `CompPoly.evalBanach`. -/
-theorem toSeq_evalBanach_of_coeffs {ν : PosReal} {L : ℕ} (p : CompPoly L)
+theorem toSeq_evalBanach_eq_evalCoeffSeq {ν : PosReal} {L : ℕ} (p : CompPoly L)
     (a : Fin L → l1Weighted ν) (coeffs : Fin L → ℕ → ℚ)
     (ha : ∀ i n, l1Weighted.toSeq (a i) n = (coeffs i n : ℝ)) (n : ℕ) :
     l1Weighted.toSeq (p.evalBanach a) n = (p.evalCoeffSeq coeffs n : ℝ) := by
   rw [compPoly_evalBanach_eq_aeval,
-    toSeq_aeval_of_coeffs _ a coeffs ha n]
+    toSeq_aeval_eq_mvPolyCoeff _ a coeffs ha n]
   exact_mod_cast (p.evalCoeffSeq_eq_mvPolyCoeff coeffs n).symm
 
 /-- Array-valued coefficient extraction commutes with `CompPoly.evalBanach`. -/
-theorem toSeq_evalBanach {ν : PosReal} {L : ℕ} (p : CompPoly L)
+theorem toSeq_evalBanach_eq_evalCoeff {ν : PosReal} {L : ℕ} (p : CompPoly L)
     (a : Fin L → l1Weighted ν) (arrs : Fin L → Array ℚ)
     (ha : ∀ i n, l1Weighted.toSeq (a i) n = ((arrs i).getD n 0 : ℝ)) (n : ℕ) :
     l1Weighted.toSeq (p.evalBanach a) n = (p.evalCoeff arrs n : ℝ) := by
   simpa only [evalCoeff] using
-    p.toSeq_evalBanach_of_coeffs a (fun i k => (arrs i).getD k 0) ha n
+    p.toSeq_evalBanach_eq_evalCoeffSeq a (fun i k => (arrs i).getD k 0) ha n
 
 
 /-! ## Certificate constants from syntax (Taylor face)
@@ -125,6 +125,6 @@ theorem compPoly_Dφ_bridge {ν : PosReal} {L : ℕ}
       (((φ_comp j).pderiv m).evalCoeff arrs k : ℝ) := by
   rw [← hφ, ← CompPoly.pderiv_toMvPoly,
     ← compPoly_evalBanach_eq_aeval]
-  exact ((φ_comp j).pderiv m).toSeq_evalBanach ā arrs ha k
+  exact ((φ_comp j).pderiv m).toSeq_evalBanach_eq_evalCoeff ā arrs ha k
 
 end MvPolyBridge

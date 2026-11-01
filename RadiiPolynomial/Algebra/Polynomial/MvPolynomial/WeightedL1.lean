@@ -53,7 +53,7 @@ variable {ν : PosReal}
 
 -- The `Algebra ℚ` instance `instAlgebraRat` is in Analysis/SequenceSpace/Geometric/Basic.lean
 
-/-! ## Coefficient bridge: `toSeq_aeval_of_coeffs`
+/-! ## Coefficient bridge: `toSeq_aeval_eq_mvPolyCoeff`
 
 Connects evaluation in `l1Weighted ν` to rational sequence semantics:
 
@@ -78,7 +78,7 @@ private lemma toSeq_algebraMap_rat (r : ℚ) (n : ℕ) :
 -- toSeq_mul is public in Analysis/SequenceSpace/Geometric/Basic.lean as l1Weighted.toSeq_mul
 
 /-- Coefficient extraction commutes with `MvPolynomial` evaluation. -/
-theorem toSeq_aeval_of_coeffs (p : MvPolynomial (Fin L) ℚ)
+theorem toSeq_aeval_eq_mvPolyCoeff (p : MvPolynomial (Fin L) ℚ)
     (a : Fin L → l1Weighted ν) (coeffs : Fin L → ℕ → ℚ)
     (ha : ∀ i n, l1Weighted.toSeq (a i) n = (coeffs i n : ℝ)) :
     ∀ n, l1Weighted.toSeq (MvPolynomial.aeval a p) n = (mvPolyCoeff p coeffs n : ℝ) := by

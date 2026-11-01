@@ -5360,3 +5360,18 @@ through the service and `Core/Transport.existsUnique_zero_transport` at `Isometr
 | — | `RadiiPolynomial.WeightedLp.eq_zero_of_mem_of_norm_sub_comp_lt_one` : finite-dimensional `V ≤ X` over a nontrivially normed field, `P v = v` and `K v ∈ V` on `V`, `‖P − M ∘L K‖ < 1`, `x ∈ V`, `M x = 0` ⟹ `x = 0` | added | FH1, `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/carrier_generic_assembly_20261023/FH1_unit/` |
 | — | `RadiiPolynomial.WeightedLp.eq_zero_of_headProj_eq_of_norm_lt_one` : any framed carrier, any `1 ≤ p`, `P_F K P_F = K P_F`, `‖P_F − M ∘L K‖ < 1` ⟹ `∀ x, P_F x = x → M x = 0 → x = 0` | added | FH1, `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/carrier_generic_assembly_20261023/FH1_unit/` |
 | — | `RadiiPolynomial.WeightedLp.eq_zero_iff_of_coeff_eq_headSolve` : normed field, `coeff (J f) k = 1_{k ∈ F} f k`, `P_F M P_F = M P_F`, head injectivity, `d = 0` on `F`, `d ≠ 0` off `F`, `coeff (G u) k = coeff (M (J (R u))) k + d k * R u k` ⟹ `G u = 0 ↔ R u = 0` | added | FH1, `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/carrier_generic_assembly_20261023/FH1_unit/` |
+
+## Coefficient-identity names (paper v7.17 §3.5, 2026-11-01)
+
+The theorems that equate a coefficient extraction with a computable evaluator now name both sides,
+as `MvPolyBridge.CompPoly.evalCoeffSeq_eq_mvPolyCoeff` and `MvPolyBridge.compPoly_evalBanach_eq_aeval` already
+did. Statements, proofs and files unchanged; the Chebyshev siblings of the `_of_coeffs` family are
+renamed with them. No compatibility aliases.
+
+| old FQN | new FQN or replacement | kind | evidence |
+|---|---|---|---|
+| `MvPolyBridge.CompPoly.toSeq_evalBanach` | `MvPolyBridge.CompPoly.toSeq_evalBanach_eq_evalCoeff` | renamed | `Algebra/Polynomial/CompPoly/WeightedL1.lean`; the user's reading of the paper (the name hid `evalCoeff`) |
+| `MvPolyBridge.CompPoly.toSeq_evalBanach_of_coeffs` | `MvPolyBridge.CompPoly.toSeq_evalBanach_eq_evalCoeffSeq` | renamed | `Algebra/Polynomial/CompPoly/WeightedL1.lean` |
+| `MvPolyBridge.toSeq_aeval_of_coeffs` | `MvPolyBridge.toSeq_aeval_eq_mvPolyCoeff` | renamed | `Algebra/Polynomial/MvPolynomial/WeightedL1.lean` |
+| `MvPolyBridge.CompPoly.toSeq_evalBanach_laurent_of_coeffs` | `MvPolyBridge.CompPoly.toSeq_evalBanach_eq_evalLaurentCoeffSeq` | renamed | `Algebra/Polynomial/CompPoly/Chebyshev/Coefficients.lean` |
+| `MvPolyBridge.CompPoly.toSeq_evalBanach_cheb_of_coeffs` | `MvPolyBridge.CompPoly.toSeq_evalBanach_eq_evalChebCoeff` | renamed | `Algebra/Polynomial/CompPoly/Chebyshev/Coefficients.lean` |

@@ -81,7 +81,7 @@ theorem stored_inputs_coefficients (i : Fin 2) (k : ℕ) :
 theorem semantic_coefficients (k : ℤ) :
     l1Chebyshev.toSeq (CompPoly.Chebyshev.eval mixedPolynomial (storedInputs (ν := ν))) k =
       (mixedPolynomial.evalChebCoeff inputArrays k : ℝ) :=
-  mixedPolynomial.toSeq_evalBanach_cheb_of_coeffs _ _ stored_inputs_coefficients k
+  mixedPolynomial.toSeq_evalBanach_eq_evalChebCoeff _ _ stored_inputs_coefficients k
 
 /-- The computed nonzero constant is consequently a coefficient of the completed object. -/
 theorem semantic_constant :

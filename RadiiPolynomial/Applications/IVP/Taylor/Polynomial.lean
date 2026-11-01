@@ -55,7 +55,7 @@ lemma StdIVPData.ivpCoeffs_abar_eq_cast_of_compPoly
   | succ n =>
       simp only [ivpCoeffs, ivpCoeffsQ]
       rw [d.abar_toSeq_eq,
-        (f_cpoly l).toSeq_evalBanach d.abar d.abar_Q d.abar_toSeq_eq n]
+        (f_cpoly l).toSeq_evalBanach_eq_evalCoeff d.abar d.abar_Q d.abar_toSeq_eq n]
       push_cast
       rfl
 

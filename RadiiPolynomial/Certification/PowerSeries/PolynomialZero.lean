@@ -162,13 +162,13 @@ omit hν hc in
 /-- `P′(x̄)` coefficientwise = ℚ cast. -/
 lemma D_toSeq (n : ℕ) :
     l1Weighted.toSeq ((d.P.pderiv 0).evalBanach (fun _ => xbar)) n = (d.dQ n : ℝ) :=
-  CompPoly.toSeq_evalBanach_of_coeffs _ _ (fun _ => d.a) (fun _ k => hx k) n
+  CompPoly.toSeq_evalBanach_eq_evalCoeffSeq _ _ (fun _ => d.a) (fun _ k => hx k) n
 
 omit hν in
 /-- `F(x̄)` coefficientwise = ℚ cast. -/
 lemma F_toSeq (n : ℕ) : l1Weighted.toSeq (CompPoly.polyMap d.P c xbar) n = (d.FQ n : ℝ) := by
   rw [CompPoly.polyMap, l1Weighted.sub_toSeq,
-    CompPoly.toSeq_evalBanach_of_coeffs _ _ (fun _ => d.a) (fun _ k => hx k) n, hc,
+    CompPoly.toSeq_evalBanach_eq_evalCoeffSeq _ _ (fun _ => d.a) (fun _ k => hx k) n, hc,
     PolyZeroData.FQ, Rat.cast_sub]
 
 /-- `Y₀` from the exact ℚ value. -/

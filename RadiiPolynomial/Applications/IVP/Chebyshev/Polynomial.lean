@@ -92,8 +92,8 @@ lemma StdChebIVPData.ivpCoeffs_abar_eq_cast_of_compPoly
       simp only [chebyshevIvpCoeffs, compPolyIvpCoeffsQ, banachField,
         CompPoly.Chebyshev.eval]
       rw [d.abar_toSeq_eq,
-        (f l).toSeq_evalBanach_cheb_of_coeffs d.abar d.abar_Q d.abar_toSeq_eq,
-        (f l).toSeq_evalBanach_cheb_of_coeffs d.abar d.abar_Q d.abar_toSeq_eq]
+        (f l).toSeq_evalBanach_eq_evalChebCoeff d.abar d.abar_Q d.abar_toSeq_eq,
+        (f l).toSeq_evalBanach_eq_evalChebCoeff d.abar d.abar_Q d.abar_toSeq_eq]
       push_cast
       rfl
 
@@ -177,9 +177,9 @@ lemma compPoly_derivative_single_toSeq_eq_cast (p : CompPoly L)
   rw [CompPoly.Chebyshev.derivative_single_toSeq]
   simp only [CompPoly.Chebyshev.eval, compPolyDphiQ]
   split_ifs
-  · exact (p.pderiv m).toSeq_evalBanach_cheb_of_coeffs a arrs ha n
-  · rw [(p.pderiv m).toSeq_evalBanach_cheb_of_coeffs a arrs ha,
-      (p.pderiv m).toSeq_evalBanach_cheb_of_coeffs a arrs ha, Rat.cast_add]
+  · exact (p.pderiv m).toSeq_evalBanach_eq_evalChebCoeff a arrs ha n
+  · rw [(p.pderiv m).toSeq_evalBanach_eq_evalChebCoeff a arrs ha,
+      (p.pderiv m).toSeq_evalBanach_eq_evalChebCoeff a arrs ha, Rat.cast_add]
 
 /-- The two linear row contributions agree with the computable raw Jacobian. -/
 lemma StdChebIVPData.rawDerivative_single_eq_cast_of_compPoly
