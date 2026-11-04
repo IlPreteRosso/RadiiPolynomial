@@ -24,7 +24,7 @@ noncomputable section
 namespace FourierDuffing.Certificate
 
 open RadiiPolynomial RadiiPolynomial.WeightedLp RadiiPolynomial.WeightedLp.Bilateral
-  RadiiPolynomial.Fourier.Quadratic FourierDuffing
+  RadiiPolynomial.Fourier.Quadratic RadiiPolynomial.Fourier.Duffing
 
 /-- The certified coefficient zero of `duffing_l2_real`. -/
 def aTilde : X₂ ℂ ν₆₅ := duffing_l2_real.choose

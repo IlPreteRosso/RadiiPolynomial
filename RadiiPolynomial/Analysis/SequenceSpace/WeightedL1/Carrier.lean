@@ -30,6 +30,10 @@ and no convolution. The convolution ring structure is in `WeightedL1/Algebra.lea
 * The scalar singles `single m x = fiberSingle m (θ_m x)` (coefficient atom
   `toRealSeq_single_eq_piSingle`), the mode expansion `hasSum_single`, coordinate evaluation
   `evalCLM`, and the column-norm bounds `norm_le_of_cols`, `finsum_norm_le_of_cols`.
+* Over `RCLike` scalars with any index and frame: the coefficient conjugation
+  `coeffConj : lpOneAlg M E ≃ₗᵢ⋆[𝕜] lpOneAlg M E`, `(κ x)_m = conj x_m` (`toRealSeq_coeffConj`),
+  a conjugate-linear isometric equivalence; its ring part on a convolution algebra is
+  `coeffConjRingHom` (`WeightedL1/Algebra.lean`).
 
 ## Frames
 
@@ -531,6 +535,59 @@ theorem finsum_norm_le_of_cols {M' : Type*} {E' : M' → Type*}
   exact tsum_congr fun m => by rw [norm_eq_abs_toReal_mul_weight h m]; ring
 
 end ColumnNorm
+
+/-! ### Coefficient conjugation (`RCLike` scalars, any index and frame) -/
+
+section CoeffConj
+
+open scoped ComplexConjugate
+
+variable {𝕜 : Type*} [RCLike 𝕜]
+variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E]
+
+/-- The coefficientwise conjugate stays in `ℓ¹` (construction internal of `coeffConj`):
+`‖θ_m (conj x_m)‖ = ‖x_m‖ ω_m = ‖x m‖`. -/
+private theorem memℓp_coeffConj (x : lpOneAlg M E) :
+    Memℓp (fun m => FiberTrivialization.equiv (E := E) m (conj (toRealSeq x m))) 1 := by
+  apply memℓp_gen
+  simp only [ENNReal.toReal_one, Real.rpow_one]
+  exact (summable_norm x).congr fun m => by
+    rw [norm_eq_abs_toReal_mul_weight, FiberTrivialization.norm_equiv_apply, RCLike.norm_conj]
+
+/-- The coefficientwise conjugate (the function underlying `coeffConj`). -/
+private def coeffConjFun (x : lpOneAlg M E) : lpOneAlg M E := ⟨⟨_, memℓp_coeffConj x⟩⟩
+
+private theorem toRealSeq_coeffConjFun (x : lpOneAlg M E) (m : M) :
+    toRealSeq (coeffConjFun x) m = conj (toRealSeq x m) :=
+  FiberTrivialization.equiv_symm_apply_equiv _ _
+
+/-- **The coefficient conjugation** `(κ x)_m = conj x_m` in the chosen frame: a
+conjugate-linear isometric involution of the carrier (`RCLike` scalars, any index, any frame). -/
+def coeffConj : lpOneAlg M E ≃ₗᵢ⋆[𝕜] lpOneAlg M E where
+  toFun := coeffConjFun
+  invFun := coeffConjFun
+  map_add' x y := ext_toRealSeq (funext fun m => by
+    simp only [toRealSeq_coeffConjFun, toRealSeq_add, Pi.add_apply, map_add])
+  map_smul' c x := ext_toRealSeq (funext fun m => by
+    simp only [toRealSeq_coeffConjFun, toRealSeq_smul, Pi.smul_apply, smul_eq_mul, map_mul])
+  left_inv x := ext_toRealSeq (funext fun m => by
+    simp only [toRealSeq_coeffConjFun, RCLike.conj_conj])
+  right_inv x := ext_toRealSeq (funext fun m => by
+    simp only [toRealSeq_coeffConjFun, RCLike.conj_conj])
+  norm_map' x := by
+    change ‖coeffConjFun x‖ = ‖x‖
+    rw [norm_eq_tsum, norm_eq_tsum]
+    exact tsum_congr fun m => by
+      rw [norm_eq_abs_toReal_mul_weight, norm_eq_abs_toReal_mul_weight, toRealSeq_coeffConjFun,
+        RCLike.norm_conj]
+
+/-- Coefficient face of the conjugation: `(κ x)_m = conj x_m`. -/
+theorem toRealSeq_coeffConj (x : lpOneAlg M E) (m : M) :
+    toRealSeq (coeffConj x) m = conj (toRealSeq x m) :=
+  toRealSeq_coeffConjFun x m
+
+end CoeffConj
 
 end lpOneAlg
 

@@ -7,8 +7,9 @@ The fixed complex symbol `ik k = I * k` on `ℤ` supplies a square-summable reci
 comparison on the head `headZ N = {k : |k| ≤ N}`. Its squared tail sum is `2 * psi1 N`, where
 `psi1 N = ∑_{k > N} k⁻²`. This is symbol data of the Fourier family (no state carrier, weight,
 candidate or certificate), shared by the Duffing symbol comparison
-(`Examples/Fourier/Duffing/Algebra.lean`) and the Riccati certificate
-(`Examples/Fourier/Riccati/Certificate.lean`).
+(`Applications/Fourier/Duffing.lean`) and the Riccati certificate
+(`Examples/Fourier/Riccati/Certificate.lean`). The same head as a `Finset`, `headF N`, and the
+bridge `tailSymbol_headF` between the two heads are symbol-free.
 -/
 
 open scoped ENNReal
@@ -89,6 +90,29 @@ theorem summable_sq_tailSymbol_ik (N : ℕ) :
   (hasSum_sq_tailSymbol_ik N).summable
 
 end IK
+
+/-! ### The head as a `Finset` -/
+
+section HeadF
+
+/-- The head `|k| ≤ N` as a `Finset`. -/
+abbrev headF (N : ℕ) : Finset ℤ := Finset.Icc (-(N : ℤ)) N
+
+theorem mem_headF {N : ℕ} {k : ℤ} : k ∈ headF N ↔ |k| ≤ (N : ℤ) := by
+  rw [Finset.mem_Icc, abs_le]
+
+/-- **The Finset/Set head bridge** at the symbol level: the tail symbol on `↑(headF N)` is the
+tail symbol on `headZ N` (the two decidability instances differ; the functions agree). -/
+theorem tailSymbol_headF (N : ℕ) (μ : ℤ → ℂ) :
+    tailSymbol ((headF N : Finset ℤ) : Set ℤ) μ = tailSymbol (headZ N) μ := by
+  funext k
+  by_cases h : |k| ≤ (N : ℤ)
+  · rw [tailSymbol_of_mem (Finset.mem_coe.2 (mem_headF.2 h)),
+      tailSymbol_of_mem (show k ∈ headZ N from h)]
+  · rw [tailSymbol_of_notMem (fun h' => h (mem_headF.1 (Finset.mem_coe.1 h'))),
+      tailSymbol_of_notMem (show k ∉ headZ N from h)]
+
+end HeadF
 
 end RadiiPolynomial.Fourier.IkData
 

@@ -230,9 +230,9 @@ theorem raw_existsUnique : ∃! x ∈ Metric.closedBall abar (1 / 100 : ℝ), ra
   existsUnique_rawF F μ hs M g abar_supp hPM hg (fun n _ => μ_ne n)
     (by norm_num) Y0_le Z0_le Z1_le Z2_le radii_neg
 
-lemma μ_sym (n : ℤ) : μ n = (starRingEnd ℂ) (μ (-n)) := by
+lemma μ_sym (n : ℤ) : μ (-n) = (starRingEnd ℂ) (μ n) := by
   apply Complex.ext <;> simp [μ]
-lemma g_sym (n : ℤ) : coeff g n = (starRingEnd ℂ) (coeff g (-n)) := by
+lemma g_sym (n : ℤ) : coeff g (-n) = (starRingEnd ℂ) (coeff g n) := by
   rw [coeff_g, coeff_g]
   have hn : (-n = 2 ∨ -n = -2) ↔ (n = 2 ∨ n = -2) := by omega
   simp only [gc, hn]
@@ -241,30 +241,24 @@ lemma d_sym (n : ℤ) : d n = (starRingEnd ℂ) (d (-n)) := by
   have hn : (-n ∈ F) ↔ n ∈ F := by simp only [F, Finset.mem_Icc]; omega
   simp only [d, hn]
   split_ifs
-  · rw [map_inv₀, ← μ_sym]
+  · rw [μ_sym, map_inv₀, Complex.conj_conj]
   · exact (map_zero _).symm
 lemma real_abar : conjRefl abar = abar := by
   apply ext_coeff; funext n
   simp only [coeff_conjRefl, abar, M, coeff_diagCLM, map_mul]
-  rw [← d_sym, ← g_sym]
-lemma rawF_conj (x : X₂ ℂ ν) (n : ℤ) :
-    rawF μ g (conjRefl x) n = (starRingEnd ℂ) (rawF μ g x (-n)) := by
-  simp only [rawF, coeff_conjRefl, convCoeff_conjRefl, map_sub, map_mul]
-  rw [← μ_sym, ← g_sym]
-
-/-- Conjugate-symmetric raw zero and uniqueness among all raw zeros in the coefficient ball. -/
+  rw [← d_sym, g_sym, Complex.conj_conj]
+/-- Conjugate-symmetric raw zero and uniqueness among all raw zeros in the coefficient ball (the
+isometry `conjRefl` and the equivariance `rawF_conjRefl` at the conjugate-symmetric symbol and
+forcing). -/
 theorem raw_existsUnique_real :
     ∃ x ∈ Metric.closedBall abar (1 / 100 : ℝ), rawF μ g x = 0 ∧ conjRefl x = x ∧
       ∀ y ∈ Metric.closedBall abar (1 / 100 : ℝ), rawF μ g y = 0 → y = x := by
   obtain ⟨x, ⟨hx, hx0⟩, hu⟩ := raw_existsUnique
-  have hball : conjRefl x ∈ Metric.closedBall abar (1 / 100 : ℝ) := by
-    rw [Metric.mem_closedBall, dist_eq_norm] at hx ⊢
-    rwa [← real_abar, ← conjRefl_sub, norm_conjRefl]
-  have hz : rawF μ g (conjRefl x) = 0 := by
-    funext n
-    rw [rawF_conj, hx0]
+  refine ⟨x, hx, hx0, hu _ ⟨?_, funext fun n => ?_⟩, fun y hy hy0 => hu y ⟨hy, hy0⟩⟩
+  · rw [← real_abar]
+    exact isometry_conjRefl.mapsTo_closedBall _ _ hx
+  · rw [rawF_conjRefl μ_sym g_sym, hx0]
     simp
-  exact ⟨x, hx, hx0, hu _ ⟨hball, hz⟩, fun y hy hy0 => hu y ⟨hy, hy0⟩⟩
 
 def a : X₂ ℂ ν := raw_existsUnique_real.choose
 private lemma a_spec : a ∈ Metric.closedBall abar (1 / 100 : ℝ) ∧

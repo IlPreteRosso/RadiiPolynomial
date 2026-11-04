@@ -3,7 +3,7 @@ import Mathlib.Analysis.MeanInequalities
 import Mathlib.Analysis.Normed.Operator.Bilinear
 import Mathlib.Analysis.Complex.Norm
 
-/-! Bounded convolution X₂×X₂→Y at ν≥1. Absolute convergence uses complete scalars; operator-norm packaging uses nontrivially normed scalars. No product X₂×X₂→X₂ or convolution ring on X₂ is asserted. -/
+/-! Bounded convolution X₂×X₂→Y at ν≥1. Absolute convergence uses complete scalars; operator-norm packaging uses nontrivially normed scalars. No product X₂×X₂→X₂ or convolution ring on X₂ is asserted. The reflection `(refl a)ₙ = a₋ₙ` (any normed field, any positive ν) is an isometry of X₂ and commutes with the raw product. -/
 
 open scoped ENNReal NNReal
 
@@ -184,6 +184,49 @@ theorem prodCLM_comm (x y : X₂ 𝕜 ν) : prodCLM x y = prodCLM y x :=
   ext_coeff <| funext fun k => by rw [coeff_prodCLM, coeff_prodCLM, convCoeff_comm]
 
 end BoundedProduct
+
+section Reflection
+
+variable {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal}
+
+/-- The reflected coefficient family `n ↦ a₋ₙ` of `a ∈ X₂ 𝕜 ν` lies in `X₂ 𝕜 ν` (the weight
+`ν ^ |n|` is even). -/
+theorem memℓp_refl (a : X₂ 𝕜 ν) :
+    Memℓp (fun k => FiberTrivialization.equiv (E := geomFiberZ 𝕜 ν) k (coeff a (-k))) 2 :=
+  memℓp_two_of_summable _ (((Equiv.neg ℤ).summable_iff.2 (summable_sq_X₂ a)).congr fun k => by
+    simp only [Function.comp_apply, Equiv.neg_apply, Int.natAbs_neg])
+
+/-- **The reflection** `(refl a)ₙ = a₋ₙ` of the bilateral carrier `X₂ 𝕜 ν` (any normed field,
+any positive `ν`). -/
+def refl (a : X₂ 𝕜 ν) : X₂ 𝕜 ν := ofCoeff (fun n => coeff a (-n)) (memℓp_refl a)
+
+/-- The reflection in coordinates. -/
+@[simp] theorem coeff_refl (a : X₂ 𝕜 ν) (n : ℤ) : coeff (refl a) n = coeff a (-n) :=
+  coeff_ofCoeff _ _ n
+
+private theorem norm_refl (a : X₂ 𝕜 ν) : ‖refl a‖ = ‖a‖ := by
+  refine (pow_left_inj₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
+  rw [norm_sq_X₂, norm_sq_X₂, ← (Equiv.neg ℤ).tsum_eq]
+  exact tsum_congr fun k => by simp only [coeff_refl, Equiv.neg_apply, neg_neg, Int.natAbs_neg]
+
+private theorem refl_sub (a b : X₂ 𝕜 ν) : refl (a - b) = refl a - refl b :=
+  ext_coeff <| funext fun n => by
+    rw [coeff_refl, coeff_sub, coeff_sub, Pi.sub_apply, Pi.sub_apply, coeff_refl, coeff_refl]
+
+/-- **The reflection is an isometry** of `X₂ 𝕜 ν`. -/
+theorem isometry_refl : Isometry (refl : X₂ 𝕜 ν → X₂ 𝕜 ν) :=
+  Isometry.of_dist_eq fun a b => by rw [dist_eq_norm, dist_eq_norm, ← refl_sub, norm_refl]
+
+/-- The raw product commutes with the reflection: `(refl x ⋆ refl y)ₙ = (x ⋆ y)₋ₙ` (the reindex
+`j ↦ −j`; no summability). -/
+theorem convCoeff_refl (x y : X₂ 𝕜 ν) (n : ℤ) :
+    convCoeff (refl x) (refl y) n = convCoeff x y (-n) := by
+  rw [convCoeff, convCoeff]
+  refine (tsum_congr fun j => ?_).trans
+    ((Equiv.neg ℤ).tsum_eq fun j => coeff x j * coeff y (-n - j))
+  rw [coeff_refl, coeff_refl, Equiv.neg_apply, show -(n - j) = -n - -j by ring]
+
+end Reflection
 
 end RadiiPolynomial.WeightedLp.Bilateral
 

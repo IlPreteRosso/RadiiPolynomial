@@ -25,7 +25,9 @@ import RadiiPolynomial.Examples.Galerkin.Diblock
 import RadiiPolynomial.Examples.Fourier.Duffing.Certificate
 import RadiiPolynomial.Examples.Fourier.Duffing.Analytic
 import RadiiPolynomial.Examples.Fourier.Duffing.Polynomial.Analytic
+import RadiiPolynomial.Examples.Fourier.Duffing.Even.Analytic
 import RadiiPolynomial.Examples.Fourier.Riccati.Analytic
+import RadiiPolynomial.Examples.Fourier.Exponential.Analytic
 
 
 /-! Production examples included in the default project build. -/

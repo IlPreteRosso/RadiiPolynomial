@@ -13,9 +13,9 @@ Its scope is the bilateral geometric complex carrier `X = X₂ ℂ ν = ℓ²_m(
 (`m_k = ν ^ |k|`; the moderate-weight services assume `ν ≥ 1`) with an arbitrary symbol
 `μ : ℤ → ℂ`, a finite head `F : Finset ℤ`, a forcing `g : X` and an approximate head inverse
 `M : X →L[ℂ] X`. It is not an API for every exponent, weight, scalar field or polynomial degree.
-The consumers are book §10.1 Helmholtz–Duffing (`Examples/Fourier/Duffing/Algebra.lean`,
-`μₙ = −n² + i c₁ n + c₂`) and the forced Riccati equation
-(`Examples/Fourier/Riccati/Certificate.lean`, `μₙ = 1 + i n`).
+The consumers are the book §10.1 Helmholtz–Duffing family (`Applications/Fourier/Duffing.lean`,
+`μₙ = −n² + i c₁ n + c₂`, with its examples `Examples/Fourier/Duffing/`) and the forced Riccati
+equation (`Examples/Fourier/Riccati/Certificate.lean`, `μₙ = 1 + i n`).
 
 ## The maps
 
@@ -44,6 +44,9 @@ realization `H_F = headReal F` and the cross-exponent tail diagonal `T∞ = tail
   `Z₂`: the symmetrized bilinear norm is at most `2 √(U² + T2)`
   (`norm_quadComp_add_flip_le_of_bounds` with the `U_row` head certificate
   `norm_comp_headReal_le_urow`, UPPER).
+* **The head certificate.** `Cert F μ ν` packages a candidate supported in `F`, a head matrix
+  with `P M = M` and the three head numbers `Z₀`, `H`, `U` with their operator bounds; the forcing,
+  tail and radius hypotheses stay with the consuming theorem.
 * **Existence and transfer of zeros.** One application of `quadratic_radii_theorem_local`
   (`A = id`, `A† = B₀`) gives a unique zero of `G` in the ball (`existsUnique_G`). The radii
   inequality gives `‖P − M K_H‖ < 1`, so `M` is injective on the finite-dimensional head range
@@ -54,10 +57,13 @@ realization `H_F = headReal F` and the cross-exponent tail diagonal `T∞ = tail
   (`WeightedLp.eq_zero_iff_of_coeff_eq_headSolve`), and the unique zero of `G` transports to a
   unique raw zero in the ball (`existsUnique_rawF`, through `existsUnique_zero_transport` at the
   identity isometry).
-* **Conjugate reflection.** `(R a)ₙ = conj (a₋ₙ)` (`conjRefl`, any positive `ν`) is an additive
-  isometry of `X` (a real structure, not a complex-linear map), and
-  `(R a ⋆ R a)ₙ = conj ((a ⋆ a)₋ₙ)` (`convCoeff_conjRefl`, the diagonal square identity). The
-  equivariance of a particular raw map (symbol and forcing symmetry) belongs to its consumer.
+* **Conjugate reflection and reflection.** `(R a)ₙ = conj (a₋ₙ)` (`conjRefl`, any positive `ν`)
+  is an additive isometry of `X` (`isometry_conjRefl`; a real structure, not a complex-linear
+  map), and `(R a ⋆ R a)ₙ = conj ((a ⋆ a)₋ₙ)` (`convCoeff_conjRefl`, the diagonal square
+  identity). The raw map is `R`-equivariant, `F(R a)ₙ = conj (F(a)₋ₙ)`, for a conjugate-symmetric
+  symbol and forcing (`rawF_conjRefl`), and equivariant under the plain reflection
+  `refl` of `WeightedLp.Bilateral`, `F(refl a)ₙ = F(a)₋ₙ`, for an even symbol and forcing
+  (`rawF_refl`). The symmetry of a particular symbol and forcing is the consumer's hypothesis.
 -/
 
 open scoped ENNReal NNReal
@@ -368,6 +374,33 @@ theorem norm_sq_G_abar (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p
 
 end Bounds
 
+/-! ### C′. The head certificate -/
+
+section Certificate
+
+/-- **The head certificate** (book Theorem 10.1.3's data, any finite head `F` and symbol `μ`):
+the candidate `ā` supported in `F`, the head matrix `M` with `P M = M`, and the three numerical
+head hypotheses `Z₀` (head block), `H` (composed leakage) and `U` (`U_row`). -/
+structure Cert (F : Finset ℤ) (μ : ℤ → ℂ) (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] where
+  /-- The candidate. -/
+  abar : X₂ ℂ ν
+  /-- The head matrix. -/
+  M : X₂ ℂ ν →L[ℂ] X₂ ℂ ν
+  /-- The `Z₀` number. -/
+  Z₀ : ℝ
+  /-- The composed-leakage number of `Z₁`. -/
+  H : ℝ
+  /-- The `U_row` number of `Z₂`. -/
+  U : ℝ
+  abar_supp : ∀ k ∉ F, coeff abar k = 0
+  hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M
+  hZ₀ : ‖headProj F - M ∘L Kh F μ (betaOf F abar abar_supp)‖ ≤ Z₀
+  hH : ‖M ∘L headProj F ∘L symbolAction₀ (p := 2) hC (betaOf F abar abar_supp) ∘L
+    tailProj F‖ ≤ H
+  hU : ‖M ∘L headReal F‖ ≤ U
+
+end Certificate
+
 /-! ### D. Existence and the transfer of zeros -/
 
 section Existence
@@ -475,6 +508,24 @@ theorem convCoeff_conjRefl (a : X₂ ℂ ν) (n : ℤ) :
   rw [coeff_conjRefl, coeff_conjRefl, Equiv.neg_apply, map_mul,
     show -(n - j) = -n - -j by ring]
 
+/-- **`R` is an isometry** of `X₂ ℂ ν`. -/
+theorem isometry_conjRefl : Isometry (conjRefl : X₂ ℂ ν → X₂ ℂ ν) :=
+  Isometry.of_dist_eq fun a b => by rw [dist_eq_norm, dist_eq_norm, ← conjRefl_sub, norm_conjRefl]
+
+/-- **Conjugate equivariance of the raw map**: a conjugate-symmetric symbol
+`μ₋ₙ = conj μₙ` and forcing `g₋ₙ = conj gₙ` give `F(R a)ₙ = conj (F(a)₋ₙ)`. -/
+theorem rawF_conjRefl {μ : ℤ → ℂ} {g : X₂ ℂ ν} (hμ : ∀ n, μ (-n) = starRingEnd ℂ (μ n))
+    (hg : ∀ n, coeff g (-n) = starRingEnd ℂ (coeff g n)) (a : X₂ ℂ ν) (n : ℤ) :
+    rawF μ g (conjRefl a) n = starRingEnd ℂ (rawF μ g a (-n)) := by
+  rw [rawF, rawF, coeff_conjRefl, convCoeff_conjRefl, hμ, hg, map_sub, map_sub, map_mul,
+    Complex.conj_conj, Complex.conj_conj]
+
+/-- **Equivariance of the raw map under the reflection**: an even symbol `μ₋ₙ = μₙ` and an even
+forcing `g₋ₙ = gₙ` give `F(refl a)ₙ = F(a)₋ₙ` (`refl` of `WeightedLp.Bilateral`). -/
+theorem rawF_refl {μ : ℤ → ℂ} {g : X₂ ℂ ν} (hμ : ∀ n, μ (-n) = μ n)
+    (hg : ∀ n, coeff g (-n) = coeff g n) (a : X₂ ℂ ν) (n : ℤ) :
+    rawF μ g (refl a) n = rawF μ g a (-n) := by
+  rw [rawF, rawF, coeff_refl, convCoeff_refl, hμ, hg]
 
 end Reality
 

@@ -5375,3 +5375,71 @@ renamed with them. No compatibility aliases.
 | `MvPolyBridge.toSeq_aeval_of_coeffs` | `MvPolyBridge.toSeq_aeval_eq_mvPolyCoeff` | renamed | `Algebra/Polynomial/MvPolynomial/WeightedL1.lean` |
 | `MvPolyBridge.CompPoly.toSeq_evalBanach_laurent_of_coeffs` | `MvPolyBridge.CompPoly.toSeq_evalBanach_eq_evalLaurentCoeffSeq` | renamed | `Algebra/Polynomial/CompPoly/Chebyshev/Coefficients.lean` |
 | `MvPolyBridge.CompPoly.toSeq_evalBanach_cheb_of_coeffs` | `MvPolyBridge.CompPoly.toSeq_evalBanach_eq_evalChebCoeff` | renamed | `Algebra/Polynomial/CompPoly/Chebyshev/Coefficients.lean` |
+
+## U-A exponential family (2026-11-04)
+
+Three head/tail faces retired to the staged record at B5 are revived because the exponential
+consumer `Examples/Fourier/Exponential` reaches them (endpoint
+`FourierExponential.exponential_analytic_solution`). Their statements are byte-identical to the
+staged record. The DELETE row `headProj_comp_headProj` stays deleted (idempotence is consumed in
+the `IsIdempotentElem` form). New declarations of the unit need no row (precedent: "Fourier
+realization bridge"); the trial → library map is in the unit report
+`exterior/tmp/lp_api_campaign_20261017/POST_MERGE/promotion_20261104/U-A/REPORT.md`. No
+compatibility aliases.
+
+| FQN | B5 disposition | U-A disposition | endpoint trail |
+|---|---|---|---|
+| `RadiiPolynomial.lpOneAlg.headProj_single` | STAGED (B5RecordL1HeadTail.lean) | REVIVED (Analysis/SequenceSpace/WeightedL1/Diagonal.lean:162) | `exponential_analytic_solution` ← `exponential_l1_solution` ← `exponential_l1_enclosure` ← `exponential_radii` ← `Aop_injective` ← `norm_head_defect_le`; also the proof of `tailProj_single` |
+| `RadiiPolynomial.lpOneAlg.tailProj_single` | STAGED (B5RecordL1HeadTail.lean) | REVIVED (Analysis/SequenceSpace/WeightedL1/Diagonal.lean:175) | … ← `exponential_radii` ← `Y0_bound`, `Z1_bound`, `Z2_bound` ← `norm_Aop_Lam_le` |
+| `RadiiPolynomial.lpOneAlg.isIdempotentElem_headProj` | STAGED (B5RecordL1HeadTail.lean) | REVIVED (Analysis/SequenceSpace/WeightedL1/Diagonal.lean:184) | … ← `exponential_radii` ← `Aop_injective` |
+
+## U-B Duffing family (2026-11-04)
+
+The shared Duffing mathematics leaves `Examples/` for `Applications/Fourier/Duffing.lean`
+(namespace `RadiiPolynomial.Fourier.Duffing`); the head `headF` goes to
+`Applications/Fourier/IkData.lean`; the head certificate is generalized to
+`RadiiPolynomial.Fourier.Quadratic.Cert (F : Finset ℤ) (μ : ℤ → ℂ) ν`; the rational bridges of
+the first Duffing instance become the generic rational-leaf adapter
+`Certification/Fourier/Quadratic.lean` (namespace `RadiiPolynomial.Certification.Fourier.Quadratic`).
+`Examples/Fourier/Duffing/Algebra.lean` is deleted. The printed types of the five endpoints
+`FourierDuffing.Certificate.{duffing_l2_existsUnique, duffing_l2_existsUnique_r1,
+duffing_l2_enclosure, duffing_l2_real, duffing_analytic_solution}` change only by the declared map
+`FourierDuffing.duffing → RadiiPolynomial.Fourier.Duffing.duffing`,
+`FourierDuffing.forcing → RadiiPolynomial.Fourier.Duffing.forcing`; the six
+`FourierDuffing.Polynomial` endpoint types (they print the local abbrev `μ`) and the eight Riccati
+endpoint types are byte-identical; axiom profiles unchanged
+(the 17 `FourierDuffing.Numbers.check_*._native.native_decide.ax_1_1` keep their names). New
+declarations (the ℓ² reflection, the symmetry faces, the adapter, the even instance) need no row;
+the trial → library map is in `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/promotion_20261104/U-B/`.
+No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| `FourierDuffing.duffing`, `sq_norm_duffing`, `duffing_min`, `duffing_succ_ne_zero`, `summable_sq_tailSymbol_duffing`, `summable_sq_tailSymbol_duffing_headF`, `duffing_ne_zero`, `norm_tailSymbol_duffing_le`, `forcing`, `coeff_forcing`, `forcing_supp`, `rawF_duffing` | `RadiiPolynomial.Fourier.Duffing.*` (same names) | `Applications/Fourier/Duffing.lean` | moved: family-level, parameter-generic |
+| `FourierDuffing.duffing_lower_linear` | `RadiiPolynomial.Fourier.Duffing.duffing_lower_linear` | `Applications/Fourier/Duffing.lean` | moved; hypotheses WEAKENED `(hN : c₂ < (N+1)²) (hc₂ : 0 ≤ c₂)` → `(hc₂ : -((N+1)(N+2)) ≤ c₂)` alone (integer-tail factorization for `c₂ < (N+1)²`; `κ ≤ 0` otherwise; conclusion unchanged) |
+| `FourierDuffing.tsum_sq_tailSymbol_duffing_le` | `RadiiPolynomial.Fourier.Duffing.tsum_sq_tailSymbol_duffing_le` | `Applications/Fourier/Duffing.lean` | moved; hypothesis WEAKENED `hc₂ : 0 ≤ c₂` → `hc₂ : -((N+1)(N+2)) ≤ c₂`, `hN : c₂ < (N+1)²` kept (`κ > 0`, summability); conclusion unchanged |
+| `FourierDuffing.duffing_existsUnique`, `FourierDuffing.duffing_existsUnique_real` | `RadiiPolynomial.Fourier.Duffing.*` | `Applications/Fourier/Duffing.lean` | moved; `cert : Cert c₁ c₂ N ν` restated as `cert : Cert (headF N) (duffing c₁ c₂) ν`; `_real` through `isometry_conjRefl.mapsTo_closedBall` and `rawF_conjRefl` |
+| `FourierDuffing.headF`, `FourierDuffing.mem_headF`, `FourierDuffing.tailSymbol_headF` | `RadiiPolynomial.Fourier.IkData.*` | `Applications/Fourier/IkData.lean` | moved: symbol-free head, beside `headZ` |
+| `FourierDuffing.Cert c₁ c₂ N ν` | `RadiiPolynomial.Fourier.Quadratic.Cert F μ ν` | `Applications/Fourier/Quadratic.lean` | generalized (`headF N` → `F`, `duffing c₁ c₂` → `μ`); same fields |
+| `FourierDuffing.rawF_duffing_conjRefl` | retired → `Fourier.Quadratic.rawF_conjRefl` + `Fourier.Duffing.duffing_conj` + `Fourier.Duffing.coeff_forcing_conj` | — | generic equivariance with the family's symmetry premises |
+| `FourierRiccati.rawF_conj` | retired → `Fourier.Quadratic.rawF_conjRefl` | — | generic equivariance (premises from `μ_sym`, `g_sym`) |
+| `FourierDuffing.control_hN`, `FourierDuffing.sq_norm_duffing_control` | `FourierDuffing.Certificate.*` | `Examples/Fourier/Duffing/Certificate.lean` | moved: instance-1 data out of the family file |
+| `FourierDuffing.Certificate.{toC, toC_re, toC_im, toC_zero, toC_cadd, toC_csub, toC_cmul, toC_cscale, toC_cinv, toC_cconj, qabs_eq, norm_le_reim, sq_norm_toC, toC_csum, cast_qsum, qsum_append, sum_eq_list}` | `RadiiPolynomial.Certification.Fourier.Quadratic.*` (same names) | `Certification/Fourier/Quadratic.lean` | moved: carrier-free bridges (`cast_qsum`, `qsum_append` proof-rebased on `qsum_eq_sum`) |
+| `FourierDuffing.Certificate.{mem_idx, mem_leakColsQ, mem_leakRowsQ, nodup_idx, nodup_leakColsQ, nodup_leakRowsQ, sum_headF_eq_list, mem_leakCols_iff, mem_leakRows_iff, leakCols_eq, leakRows_eq, mem_support_iff}` | `RadiiPolynomial.Certification.Fourier.Quadratic.*` (same names, generic in `N`, `B`; `nodup_leakRowsQ`, `mem_leakRows_iff`, `leakRows_eq` take `B ≤ N`) | `Certification/Fourier/Quadratic.lean` | generalized from `N = 10`, `B = 7` |
+| `FourierDuffing.Certificate.{mem_idx41, nodup_idx41}` | `RadiiPolynomial.Certification.Fourier.Quadratic.{mem_idx2, nodup_idx2}` | `Certification/Fourier/Quadratic.lean` | renamed with `idx41 → idx2 N` (`= idx2 10`) |
+| `FourierDuffing.Certificate.{mem_headF10, mem_headF7}` | retired → `Finset.mem_Icc` (`headF N = Finset.Icc (−N) N`) | — | numeral instances of a Mathlib lemma |
+| `FourierDuffing.Certificate.{idx_eq_chunks, leakColsQ_eq_chunks, idx41_eq_chunks}` | `QuadFourierLeafQ.Checks` coverage clauses; Poly's copy `FourierDuffing.Polynomial.Numbers.idx2_eq_chunks` | `Certification/Fourier/Quadratic.lean`, `Examples/Fourier/Duffing/Polynomial/Numbers.lean` | absorbed into the leaf obligations |
+| `FourierDuffing.Certificate.{z0Row_le, z0Col_le, kmRow_le, kmCol_le}` | absorbed (Mathlib `List.forall_mem_flatten` on `QuadFourierLeafQ.ChunkChecks` and the coverage clauses) | `Certification/Fourier/Quadratic.lean` | chunk coverage generic |
+| `FourierDuffing.Certificate.{abarC, MC, cast_nuQ}` | retired (inlined in `QuadFourierLeafQ.abar`, `QuadFourierLeafQ.Mop`; the bridge hypothesis `hν`, at instance 1 `FourierDuffing.Certificate.hν`) | — | |
+| `FourierDuffing.Certificate.weighted_le_reim` | `RadiiPolynomial.Certification.Fourier.Quadratic.weighted_le_reim` (takes `hν : ν = q`) | `Certification/Fourier/Quadratic.lean` | generic weight |
+| `FourierDuffing.Certificate.{abar_supp, Mop, hPM, abarQ_eq_zero, MQ_eq_zero, matrixOf_Mop, convCoeff_abar, rawF_abar, coeff_G_abar_eq, matrixOf_Kh, matrixOf_Z0op_eq, band_beta, composedLeakKernel_eq, norm_beta_le}` | `RadiiPolynomial.Certification.Fourier.Quadratic.QuadFourierLeafQ.*` (same names; under the bridges `hν`, `hμ`, `hg` where used) | `Certification/Fourier/Quadratic.lean` | leaf-parametric |
+| `FourierDuffing.Certificate.real_abar` | `QuadFourierLeafQ.conjRefl_abar` | `Certification/Fourier/Quadratic.lean` | reality from the `Checks` clause |
+| `FourierDuffing.Certificate.{RzC_nonneg, CzC_nonneg, RmC_nonneg, CmC_nonneg, UpartC_sum_nonneg}` | `QuadFourierLeafQ.Checks` nonnegativity clauses (the `U` sum: private `uParts_sum_nonneg`) | `Certification/Fourier/Quadratic.lean` | |
+| `FourierDuffing.Certificate.{Y0_le, Z0_le, H_le, U_le, Z2_ok}` | `QuadFourierLeafQ.cert` fields and `QuadFourierLeafQ.cert_spec` (instance: `FourierDuffing.Certificate.bounds`; its clauses also give `0 ≤ Z1c`, `0 ≤ Z2c`) | `Certification/Fourier/Quadratic.lean` | the soundness theorem |
+| `FourierDuffing.Numbers.{idx, cadd, csub, cmul, cscale, cconj, cnormSq, cinv, qabs, reim, csum, qsum, ofNum, leakColsQ, leakRowsQ}` | `RadiiPolynomial.Certification.Fourier.Quadratic.*` (`idx N`, `leakColsQ N B`, `leakRowsQ N B`, `ofNum D`) | `Certification/Fourier/Quadratic.lean` | the executable mirror, unchanged code |
+| `FourierDuffing.Numbers.{abarQ, MQ, DFQ, EQ, KMQ, convQ, residQ, GQ, y0Term, z0RowQ, z0ColQ, kmRowQ, kmColQ, betaQ, urowRowQ}` | `QuadFourierLeafQ.*` at `FourierDuffing.Numbers.leaf` | `Certification/Fourier/Quadratic.lean` | leaf-parametric mirror |
+| `FourierDuffing.Numbers.{idx41, y0PartQ, urowPartQ}` | `idx2 10`; `qsum (y0Chunk k) leaf.y0Term`; `qsum (rowChunk k) (fun i => leaf.urowRowQ i ^ 2)` | — | inlined in the chunk-check statements |
+| `FourierDuffing.Numbers.{check_reality, check_support, check_Y0, check_Z0, check_Z1, check_Z2}` | `FourierDuffing.Numbers.checks : leaf.Checks` (one `decide +kernel`) | `Examples/Fourier/Duffing/Numbers.lean` | the leaf obligations; the literal `100/1369021` is `tailInvSqQ` |
+| `FourierDuffing.Numbers.check_{Y0_part,Z0_rows,Z0_cols,Z1_rows,Z2_part}_{0,1,2}`, `check_Z1_cols_{0,1}` | same names, statements restated on `leaf` | `Examples/Fourier/Duffing/Numbers.lean` | 17 separate `native_decide`; axiom names unchanged |
+| `Examples/Fourier/Duffing/Algebra.lean` | deleted | — | family content in `Applications/Fourier/Duffing.lean`, instance data in `Certificate.lean` |
+| `FourierDuffing.Even.even_existsUnique` (U-B draft, `Examples/Fourier/Duffing/Even/Algebra.lean`) | `RadiiPolynomial.Fourier.Duffing.duffing_existsUnique_even` | `Applications/Fourier/Duffing.lean` | moved (Codex review R1, family ownership): fully parametric in `c₂, c₃, N, ν`, certificate and bounds, no instance data; statement and proof unchanged; `Even/Algebra.lean` deleted; no alias |

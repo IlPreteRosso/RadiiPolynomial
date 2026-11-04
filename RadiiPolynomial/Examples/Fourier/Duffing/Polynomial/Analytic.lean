@@ -32,6 +32,7 @@ namespace FourierDuffing.Polynomial
 
 open RadiiPolynomial RadiiPolynomial.WeightedLp RadiiPolynomial.WeightedLp.Bilateral
 open RadiiPolynomial.Fourier.Quadratic (rawF)
+open RadiiPolynomial.Fourier.Duffing (duffing forcing)
 open FourierDuffing.Certificate (ν₆₅ coe_ν₆₅ aTilde duffing_analytic_solution coeff_forcing_eq)
 
 /-! ### The weight comparison and the embedding -/

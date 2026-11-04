@@ -20,6 +20,13 @@ with `liftAlgHom_single` and `norm_liftAlgHom_apply_le`. `continuousAlgHom_ext`,
 `eq_liftAlgHom_of_atoms` and `exists_eq_liftAlgHom` give the corresponding determination
 and reconstruction contracts. Their target-space and boundedness hypotheses are explicit
 in the declarations.
+
+Over an additive commutative index group with complete fibers and a symmetric weight
+(`ω_(−m) ≤ ω_m` for every `m`, equivalently `ω_(−m) = ω_m`), the reflection
+`refl hw : lpOneAlg M E →A[𝕜] lpOneAlg M E` is the algebra lift of `m ↦ e_(−m)`: `refl_single`,
+the contraction `norm_refl_le`, the involution `refl_refl`, the coefficient face `toRealSeq_refl`
+(`(refl x)_k = x_(−k)`) and, over `RCLike` scalars, the commutation `coeffConj_refl` with the
+coefficient conjugation.
 -/
 
 open scoped BigOperators
@@ -438,6 +445,79 @@ theorem exists_eq_liftAlgHom (φ : lpOneAlg M E →A[𝕜] B) :
   exact ⟨hb, eq_liftAlgHom_of_atoms φ hb⟩
 
 end AlgHomOpNorm
+
+/-! ### The reflection `x_k ↦ x_(−k)` -/
+
+section Reflection
+
+variable {𝕜 : Type*} [NormedField 𝕜]
+variable {M : Type*} [AddCommGroup M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+variable [∀ m, NormedSpace 𝕜 (E m)] [∀ m, CompleteSpace (E m)] [FiberTrivialization 𝕜 M E]
+variable [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E]
+variable (hw : ∀ m,
+  FiberTrivialization.weight (E := E) (-m) ≤ FiberTrivialization.weight (E := E) m)
+
+/-- **The reflection** `(refl x)_k = x_(−k)`: the algebra lift of the monoid map `m ↦ e_(−m)`,
+dominated at `C = 1` since the weight is symmetric (`hw : ∀ m, ω_(−m) ≤ ω_m`, equivalently
+`ω_(−m) = ω_m`). -/
+def refl : lpOneAlg M E →A[𝕜] lpOneAlg M E :=
+  liftAlgHom (fun m => (single (-m) (1 : 𝕜) : lpOneAlg M E)) 1
+    (fun m => by rw [norm_single, norm_one, one_mul, one_mul]; exact hw m)
+    (by rw [neg_zero, ← one_eq_single_zero])
+    (fun m n => by rw [single_mul_single, one_mul, neg_add])
+
+/-- Atom face of the reflection: `refl e_m = e_(−m)`. -/
+theorem refl_single (m : M) : refl hw (single m (1 : 𝕜) : lpOneAlg M E) = single (-m) 1 :=
+  liftAlgHom_single _ _ _ _ _ m
+
+/-- The reflection is a contraction. -/
+theorem norm_refl_le (x : lpOneAlg M E) : ‖refl hw x‖ ≤ ‖x‖ :=
+  (norm_liftAlgHom_apply_le _ _ _ _ _ x).trans_eq (one_mul _)
+
+/-- The reflection is an involution. -/
+theorem refl_refl (x : lpOneAlg M E) : refl hw (refl hw x) = x := by
+  have h : (refl hw).comp (refl hw) = ContinuousAlgHom.id 𝕜 (lpOneAlg M E) :=
+    continuousAlgHom_ext fun m => by
+      rw [ContinuousAlgHom.comp_apply, refl_single, refl_single, neg_neg,
+        ContinuousAlgHom.id_apply]
+  exact DFunLike.congr_fun h x
+
+/-- **Coefficient face of the reflection**: `(refl x)_k = x_(−k)`. -/
+theorem toRealSeq_refl (x : lpOneAlg M E) (k : M) :
+    toRealSeq (refl hw x) k = toRealSeq x (-k) := by
+  let c : lpOneAlg M E →L[𝕜] 𝕜 :=
+    ((FiberTrivialization.equivL (E := E) k).symm : E k →L[𝕜] 𝕜).comp (evalCLM k)
+  have hc : ∀ y, c y = toRealSeq y k := fun _ => rfl
+  have h := (hasSum_single_mapCLM (refl hw).toContinuousLinearMap x).mapL c
+  rw [← hc]
+  refine h.unique ?_
+  convert hasSum_ite_eq (-k) (toRealSeq x (-k)) using 1
+  funext m
+  simp only [ContinuousAlgHom.coe_toContinuousLinearMap]
+  rw [single_smul, map_smul, refl_single, map_smul, hc, toRealSeq_single, smul_eq_mul]
+  by_cases hm : m = -k
+  · rw [ite_eq_left (by rw [hm, neg_neg]), ite_eq_left hm, mul_one, hm]
+  · rw [ite_eq_right (fun h => hm (by rw [h, neg_neg])), ite_eq_right hm, mul_zero]
+
+end Reflection
+
+section ReflectionConj
+
+open scoped ComplexConjugate
+
+variable {𝕜 : Type*} [RCLike 𝕜]
+variable {M : Type*} [AddCommGroup M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+variable [∀ m, NormedSpace 𝕜 (E m)] [∀ m, CompleteSpace (E m)] [FiberTrivialization 𝕜 M E]
+variable [DecidableEq M] [lpOneAlgConvCompat 𝕜 M E]
+variable (hw : ∀ m,
+  FiberTrivialization.weight (E := E) (-m) ≤ FiberTrivialization.weight (E := E) m)
+
+/-- The coefficient conjugation commutes with the reflection: `κ ∘ refl = refl ∘ κ`. -/
+theorem coeffConj_refl (x : lpOneAlg M E) : coeffConj (refl hw x) = refl hw (coeffConj x) :=
+  ext_toRealSeq (funext fun k => by
+    rw [toRealSeq_coeffConj, toRealSeq_refl, toRealSeq_refl, toRealSeq_coeffConj])
+
+end ReflectionConj
 
 end lpOneAlg
 

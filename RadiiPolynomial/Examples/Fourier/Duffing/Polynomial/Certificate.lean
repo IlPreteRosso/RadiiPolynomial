@@ -21,12 +21,12 @@ transfers it to the unique zero `xPoly` of the raw Fourier map `rawF` in that ba
 
 open scoped ENNReal NNReal DiscreteConvolution
 open RadiiPolynomial RadiiPolynomial.WeightedLp
-open FourierDuffing FourierDuffing.Numbers
-open FourierDuffing.Certificate (toC toC_zero toC_cmul toC_csub toC_cscale toC_cinv norm_le_reim
-  sq_norm_toC toC_csum cast_qsum qsum_append sum_eq_list mem_headF10 mem_headF7 mem_idx
-  nodup_idx41 nodup_leakColsQ nodup_leakRowsQ idx41_eq_chunks sum_headF_eq_list
-  mem_leakCols_iff leakCols_eq leakRows_eq mem_support_iff abarQ_eq_zero MQ_eq_zero
-  duffing_eq_toC)
+open RadiiPolynomial.Fourier.IkData RadiiPolynomial.Fourier.Duffing FourierDuffing.Numbers
+open FourierDuffing.Certificate (control_hN duffing_eq_toC)
+open RadiiPolynomial.Certification.Fourier.Quadratic (QuadFourierLeafQ toC toC_zero toC_cmul toC_csub
+  toC_cscale toC_cinv norm_le_reim sq_norm_toC toC_csum cast_qsum qsum_append sum_eq_list mem_idx
+  nodup_idx2 nodup_leakColsQ nodup_leakRowsQ sum_headF_eq_list mem_leakCols_iff leakCols_eq
+  leakRows_eq mem_support_iff idx idx2 leakColsQ reim)
 
 noncomputable section
 
@@ -50,24 +50,24 @@ def head (v : ℤ → ℂ) : X := ∑ n ∈ S, single n (v n)
 @[simp] lemma coeff_head (v : ℤ → ℂ) (n : ℤ) : coeff (head v) n = if n ∈ S then v n else 0 :=
   coeff_sum_single S v n
 
-def abar : X := head (fun n => toC (abarQ n))
+def abar : X := head (fun n => toC (leaf.abarQ n))
 def g : X := head (fun n => toC (forcQ n))
 lemma abar_supp : ∀ n ∉ S, coeff abar n = 0 := fun n hn => by simp [abar, coeff_head, hn]
-lemma coeff_abar (n : ℤ) : coeff abar n = toC (abarQ n) := by
+lemma coeff_abar (n : ℤ) : coeff abar n = toC (leaf.abarQ n) := by
   rw [abar, coeff_head]
   by_cases hn : n ∈ S
   · simp [hn]
-  · simp [hn, abarQ_eq_zero hn, toC_zero]
+  · simp [hn, leaf.abarQ_eq_zero hn, toC_zero]
 lemma hg : ∀ n ∉ S, coeff g n = 0 := fun n hn => by simp [g, coeff_head, hn]
 lemma coeff_g (n : ℤ) : coeff g n = toC (forcQ n) := by
   rw [g, coeff_head]
   by_cases hn : n ∈ S
   · simp [hn]
-  · have hn' := mt mem_headF10.mpr hn
+  · have hn' := mt Finset.mem_Icc.mpr hn
     have h1 : n ≠ 1 := by intro h; subst n; norm_num at hn'
     have h2 : n ≠ -1 := by intro h; subst n; norm_num at hn'
     simp [hn, forcQ, h1, h2, toC_zero]
-private lemma μ_cast (n : ℤ) : μ n = toC (muQ n) := duffing_eq_toC n
+private lemma μ_cast (n : ℤ) : μ n = toC (leaf.muQ n) := duffing_eq_toC n
 lemma μ_tail_ne : ∀ n ∉ S, μ n ≠ 0 := duffing_ne_zero control_hN
 lemma tail_bound (n : ℤ) : ‖tailSymbol (S : Set ℤ) μ n‖ ≤ (Numbers.tailQ : ℝ) := by
   have h := norm_tailSymbol_duffing_le (c₁ := (1 / 10 : ℝ)) control_hN n
@@ -82,7 +82,7 @@ lemma tail_bound (n : ℤ) : ‖tailSymbol (S : Set ℤ) μ n‖ ≤ (Numbers.ta
 lemma tail_bdd : BddAbove (Set.range fun n => ‖tailSymbol (S : Set ℤ) μ n‖) :=
   ⟨(Numbers.tailQ : ℝ), by rintro _ ⟨n, rfl⟩; exact tail_bound n⟩
 
-def MC (i j : ℤ) : ℂ := toC (MQ i j)
+def MC (i j : ℤ) : ℂ := toC (leaf.MQ i j)
 def M : X →L[ℂ] X := finMatrixCLM S MC
 def T : X →L[ℂ] X := diagCLM (tailSymbol (S : Set ℤ) μ) tail_bdd
 def A : X →L[ℂ] X := M + T
@@ -94,11 +94,11 @@ lemma hMP : M ∘L P = M := by
   · apply Finset.sum_congr rfl; intro j hj
     rw [coeff_headProj, ite_eq_left hj]
   · rfl
-lemma matrix_M (i j : ℤ) : matrixOf M i j = toC (MQ i j) := by
+lemma matrix_M (i j : ℤ) : matrixOf M i j = toC (leaf.MQ i j) := by
   rw [M, matrixOf_finMatrixCLM]
   split_ifs with h
   · rfl
-  · rw [MQ_eq_zero h, toC_zero]
+  · rw [leaf.MQ_eq_zero h, toC_zero]
 lemma coeff_T (x : X) (n : ℤ) : coeff (T x) n = tailSymbol (S : Set ℤ) μ n * coeff x n :=
   coeff_diagCLM _ _ _ _
 lemma norm_T : ‖T‖ ≤ (Numbers.tailQ : ℝ) :=
@@ -112,10 +112,10 @@ def LB : X →L[ℂ] X := symbolAction₀ (p := 2) polyModerate β
 lemma band_beta : ∀ n ∉ Band, rawSymbol β n = 0 := fun n hn => by
   change 2 * coeff abar n = 0
   rw [coeff_abar]
-  by_cases hs : n ∈ idx
-  · have h7 : 7 < |n| := lt_abs.mpr (by rw [mem_headF7] at hn; omega)
-    rw [check_support n hs h7, toC_zero, mul_zero]
-  · rw [abarQ_eq_zero (fun h => hs (mem_idx.mpr (mem_headF10.mp h))), toC_zero, mul_zero]
+  by_cases hs : n ∈ idx 10
+  · have h7 : 7 < |n| := lt_abs.mpr (by rw [Finset.mem_Icc] at hn; omega)
+    rw [checks.2.1 n hs h7, toC_zero, mul_zero]
+  · rw [leaf.abarQ_eq_zero (fun h => hs (mem_idx.mpr (Finset.mem_Icc.mp h))), toC_zero, mul_zero]
 
 /-- The derivative at the centre through the coherence of the product with the symbol action:
 `2 ā ⋆ h = L_β h`, `β = 2ā`. -/
@@ -200,10 +200,10 @@ lemma weighted_le_reim (z : ℚ × ℚ) (i j : ℤ) :
   apply div_le_div_of_nonneg_right _ (show 0 ≤ polyWeight j from sq_nonneg _)
   exact mul_le_mul_of_nonneg_right (norm_le_reim z) (show 0 ≤ polyWeight i from sq_nonneg _)
 lemma matrix_Kh (i j : ℤ) (hi : i ∈ S) (hj : j ∈ S) :
-    matrixOf Kh i j = toC (DFQ i j) := by
+    matrixOf Kh i j = toC (leaf.DFQ i j) := by
   rw [Kh, matrixOf_sub, LamH, matrixOf_diagCLM, LB,
     matrixOf_headProj_symbolAction_headProj, ite_eq_left (show i ∈ S ∧ j ∈ S from ⟨hi, hj⟩),
-    DFQ, toC_csub, toC_cscale]
+    QuadFourierLeafQ.DFQ, toC_csub, toC_cscale]
   simp only [raw_β, coeff_abar, hsSym]
   by_cases h : i = j
   · rw [ite_eq_left h, ite_eq_left h, ite_eq_left hi, μ_cast]
@@ -211,11 +211,11 @@ lemma matrix_Kh (i j : ℤ) (hi : i ∈ S) (hj : j ∈ S) :
   · rw [ite_eq_right h, ite_eq_right h, toC_zero]
     push_cast; ring
 lemma matrix_defect (i j : ℤ) (hi : i ∈ S) (hj : j ∈ S) :
-    matrixOf (P - M ∘L Kh) i j = toC (EQ i j) := by
+    matrixOf (P - M ∘L Kh) i j = toC (leaf.EQ i j) := by
   have hK : ∀ x, ∀ n ∉ S, coeff (Kh x) n = 0 := fun x n hn => by
     rw [← P_Kh, ContinuousLinearMap.comp_apply, coeff_headProj, ite_eq_right hn]
   rw [matrixOf_sub, matrixOf_headProj, matrixOf_comp_of_support M _ hK,
-    EQ, toC_csub, toC_csum, ← sum_headF_eq_list]
+    QuadFourierLeafQ.EQ, toC_csub, toC_csum, ← sum_headF_eq_list]
   congr 1
   · by_cases h : i = j
     · rw [ite_eq_left ⟨h, hi⟩, ite_eq_left h]
@@ -223,8 +223,9 @@ lemma matrix_defect (i j : ℤ) (hi : i ∈ S) (hj : j ∈ S) :
     · rw [ite_eq_right (fun h' => h h'.1), ite_eq_right h, toC_zero]
   · exact Finset.sum_congr rfl fun n hn => by rw [matrix_M, matrix_Kh n j hn hj, toC_cmul]
 lemma composedLeak_eq (i k : ℤ) :
-    composedLeakKernel M β S Band i k = toC (KMQ i k) := by
-  rw [composedLeakKernel, KMQ, toC_csum, leakRows_eq, List.sum_toFinset _ nodup_leakRowsQ]
+    composedLeakKernel M β S Band i k = toC (leaf.KMQ i k) := by
+  rw [composedLeakKernel, QuadFourierLeafQ.KMQ, toC_csum, leakRows_eq (show 7 ≤ 10 by norm_num),
+    List.sum_toFinset _ (nodup_leakRowsQ (show 7 ≤ 10 by norm_num))]
   refine congrArg List.sum (List.map_congr_left fun n _ => ?_)
   rw [matrix_M, toC_cmul, toC_cscale]
   simp only [raw_β, coeff_abar]
@@ -250,7 +251,7 @@ lemma Z0_le : ‖P - M ∘L Kh‖ ≤ (Numbers.Z0Q : ℝ) := by
     (by norm_num [Numbers.RzQ]) (by norm_num [Numbers.CzQ]) ?_ ?_).trans ?_
   · intro i hi
     refine le_trans ?_ (show (Numbers.zRowQ i : ℝ) ≤ (Numbers.RzQ : ℝ) by
-      exact_mod_cast hrow i (mem_idx.mpr (mem_headF10.mp hi)))
+      exact_mod_cast hrow i (mem_idx.mpr (Finset.mem_Icc.mp hi)))
     rw [Numbers.zRowQ, cast_qsum, ← sum_headF_eq_list]
     apply Finset.sum_le_sum; intro j hj
     rw [schurEntry, matrix_defect i j hi hj, WeightedScalar.fiberTrivialization_weight,
@@ -258,7 +259,7 @@ lemma Z0_le : ‖P - M ∘L Kh‖ ≤ (Numbers.Z0Q : ℝ) := by
     exact weighted_le_reim _ i j
   · intro j hj
     refine le_trans ?_ (show (Numbers.zColQ j : ℝ) ≤ (Numbers.CzQ : ℝ) by
-      exact_mod_cast hcol j (mem_idx.mpr (mem_headF10.mp hj)))
+      exact_mod_cast hcol j (mem_idx.mpr (Finset.mem_Icc.mp hj)))
     rw [Numbers.zColQ, cast_qsum, ← sum_headF_eq_list]
     apply Finset.sum_le_sum; intro i hi
     rw [schurEntry, matrix_defect i j hi hj, WeightedScalar.fiberTrivialization_weight,
@@ -273,15 +274,15 @@ lemma H_le : ‖M ∘L P ∘L LB ∘L Q‖ ≤ (Numbers.HQ : ℝ) := by
     (by norm_num [Numbers.RhQ]) (by norm_num [Numbers.ChQ]) ?_ ?_).trans ?_
   · intro i hi
     refine le_trans ?_ (show (Numbers.hRowQ i : ℝ) ≤ (Numbers.RhQ : ℝ) by
-      exact_mod_cast hrow i (mem_idx.mpr (mem_headF10.mp hi)))
-    rw [Numbers.hRowQ, cast_qsum, ← List.sum_toFinset _ nodup_leakColsQ, ← leakCols_eq]
+      exact_mod_cast hrow i (mem_idx.mpr (Finset.mem_Icc.mp hi)))
+    rw [Numbers.hRowQ, cast_qsum, ← List.sum_toFinset _ (nodup_leakColsQ 10 7), ← leakCols_eq]
     apply Finset.sum_le_sum; intro k hk
     rw [composedLeak_eq, WeightedScalar.fiberTrivialization_weight,
       WeightedScalar.fiberTrivialization_weight]
     exact weighted_le_reim _ i k
   · intro k hk
     refine le_trans ?_ (show (Numbers.hColQ k : ℝ) ≤ (Numbers.ChQ : ℝ) by
-      exact_mod_cast hcol k ((mem_leakCols_iff k).mp hk))
+      exact_mod_cast hcol k ((mem_leakCols_iff 10 7 k).mp hk))
     rw [Numbers.hColQ, cast_qsum, ← sum_headF_eq_list]
     apply Finset.sum_le_sum; intro i hi
     rw [composedLeak_eq, WeightedScalar.fiberTrivialization_weight,
@@ -296,7 +297,7 @@ lemma norm_M : ‖M‖ ≤ (Numbers.AQ : ℝ) := by
     (by norm_num [Numbers.RaQ]) (by norm_num [Numbers.CaQ]) ?_ ?_).trans ?_
   · intro i hi
     refine le_trans ?_ (show (Numbers.aRowQ i : ℝ) ≤ (Numbers.RaQ : ℝ) by
-      exact_mod_cast hrow i (mem_idx.mpr (mem_headF10.mp hi)))
+      exact_mod_cast hrow i (mem_idx.mpr (Finset.mem_Icc.mp hi)))
     rw [Numbers.aRowQ, cast_qsum, ← sum_headF_eq_list]
     apply Finset.sum_le_sum; intro j hj
     rw [schurEntry, matrix_M, WeightedScalar.fiberTrivialization_weight,
@@ -304,7 +305,7 @@ lemma norm_M : ‖M‖ ≤ (Numbers.AQ : ℝ) := by
     exact weighted_le_reim _ i j
   · intro j hj
     refine le_trans ?_ (show (Numbers.aColQ j : ℝ) ≤ (Numbers.CaQ : ℝ) by
-      exact_mod_cast hcol j (mem_idx.mpr (mem_headF10.mp hj)))
+      exact_mod_cast hcol j (mem_idx.mpr (Finset.mem_Icc.mp hj)))
     rw [Numbers.aColQ, cast_qsum, ← sum_headF_eq_list]
     apply Finset.sum_le_sum; intro i hi
     rw [schurEntry, matrix_M, WeightedScalar.fiberTrivialization_weight,
@@ -405,18 +406,21 @@ lemma conv_finite (x : X) (n : ℤ) :
     (coeff abar ⋆ᵣ₊ coeff x) n = ∑ k ∈ S, coeff abar k * coeff x (n-k) := by
   rw [conv_apply]
   exact tsum_eq_sum (fun k hk => by rw [abar_supp k hk, zero_mul])
-lemma conv_abar (n : ℤ) : (coeff abar ⋆ᵣ₊ coeff abar) n = toC (convQ n) := by
-  rw [conv_finite, convQ, toC_csum, sum_headF_eq_list]
+lemma conv_abar (n : ℤ) : (coeff abar ⋆ᵣ₊ coeff abar) n = toC (leaf.convQ n) := by
+  rw [conv_finite, QuadFourierLeafQ.convQ, toC_csum, sum_headF_eq_list]
   exact congrArg List.sum (List.map_congr_left fun k _ => by rw [coeff_abar, coeff_abar, toC_cmul])
-lemma rawF_abar (n : ℤ) : rawF abar n = toC (residQ n) := by
-  rw [rawF, μ_cast, coeff_abar, conv_abar, coeff_g, residQ, toC_csub, toC_csub, toC_cmul]
-lemma coeff_G_abar (n : ℤ) : coeff (G abar) n = toC (GQ n) := by
-  rw [congrFun (coeff_G abar) n, rawA, M, coeff_finMatrixCLM, GQ]
+lemma rawF_abar (n : ℤ) : rawF abar n = toC (leaf.residQ n) := by
+  rw [rawF, μ_cast, coeff_abar, conv_abar, coeff_g, QuadFourierLeafQ.residQ, toC_csub, toC_csub,
+    toC_cmul]
+lemma coeff_G_abar (n : ℤ) : coeff (G abar) n = toC (leaf.GQ n) := by
+  rw [congrFun (coeff_G abar) n, rawA, M, coeff_finMatrixCLM, QuadFourierLeafQ.GQ]
   by_cases hn : n ∈ S
-  · rw [ite_eq_left hn, ite_eq_left (mem_headF10.mp hn), tailSymbol_of_mem (Finset.mem_coe.mpr hn),
+  · rw [ite_eq_left hn, ite_eq_left (Finset.mem_Icc.mp hn),
+      tailSymbol_of_mem (Finset.mem_coe.mpr hn),
       zero_mul, add_zero, toC_csum, ← sum_headF_eq_list]
-    exact Finset.sum_congr rfl fun j hj => by rw [coeff_head, ite_eq_left hj, rawF_abar, MC, toC_cmul]
-  · rw [ite_eq_right hn, ite_eq_right (fun h => hn (mem_headF10.mpr h)),
+    exact Finset.sum_congr rfl fun j hj => by
+      rw [coeff_head, ite_eq_left hj, rawF_abar, MC, toC_cmul]
+  · rw [ite_eq_right hn, ite_eq_right (fun h => hn (Finset.mem_Icc.mpr h)),
       tailSymbol_of_notMem (fun h => hn (Finset.mem_coe.mp h)), zero_add,
       rawF_abar, μ_cast, toC_cmul, toC_cinv]
 lemma G_abar_support (n : ℤ) (hn : n ∉ S ∪ S.image₂ (·+·) S) : coeff (G abar) n = 0 := by
@@ -433,9 +437,9 @@ lemma Y0_le : ‖G abar‖ ≤ (Numbers.Y0Q : ℝ) := by
   have heq : ‖G abar‖^2 = (Numbers.ySquaredQ : ℝ) := by
     rw [norm_sq_eq_tsum, tsum_eq_sum (s := S ∪ S.image₂ (·+·) S) (fun n hn => by
       rw [norm_apply_eq, G_abar_support n hn, norm_zero, zero_mul, sq, zero_mul]),
-      sum_eq_list nodup_idx41 mem_support_iff]
+      sum_eq_list (nodup_idx2 10) (mem_support_iff 10)]
     rw [Numbers.ySquaredQ, Numbers.yPartQ, Numbers.yPartQ, Numbers.yPartQ,
-      ← qsum_append, ← qsum_append, ← idx41_eq_chunks, cast_qsum]
+      ← qsum_append, ← qsum_append, ← Numbers.idx2_eq_chunks, cast_qsum]
     congr 1
     apply List.map_congr_left; intro n hn
     rw [norm_apply_eq, WeightedScalar.fiberTrivialization_weight, mul_pow, coeff_G_abar,

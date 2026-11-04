@@ -1,6 +1,7 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Carrier
 import Mathlib.Analysis.Normed.Operator.Basic
 import Mathlib.Algebra.Ring.Idempotent
+import Mathlib.LinearAlgebra.FiniteDimensional.Basic
 
 /-!
 # Bounded scalar diagonals and finite-head projections
@@ -14,6 +15,13 @@ The indicator of `H : Finset J` defines `headProj H`; `tailProj H` is its comple
 `1 - headProj H`. The coefficient formulas `toRealSeq_headProj` and `toRealSeq_tailProj`
 describe their support, and `norm_tailProj_apply_le` gives `‖tailProj H x‖ ≤ ‖x‖` over a
 `NormedField`.
+
+The head/tail faces reached by a finite-head certificate: the atom faces `headProj_single` and
+`tailProj_single`, idempotence `isIdempotentElem_headProj`, the head expansion
+`headProj_eq_sum` (`P_H x = ∑_(j ∈ H) x_j e_j`) with the instance
+`finiteDimensional_range_headProj`, the head norm identity `norm_headProj`
+(`‖P_H y‖ = ∑_(k ∈ H) ‖y k‖`) and the tail bound of a diagonal
+`norm_tailProj_diagCLM_apply_le` (`‖Q_H D_r w‖ ≤ C' ‖w‖` when `‖r k‖ ≤ C'` off `H`).
 -/
 
 noncomputable section
@@ -150,22 +158,68 @@ theorem toRealSeq_tailProj {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J 
     toRealSeq_headProj]
   split_ifs <;> simp only [sub_self, sub_zero]
 
+/-- Atom face of the head projection. -/
+theorem headProj_single {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
+    [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J]
+    (H : Finset J) (j : J) (x : 𝕜) :
+    headProj (𝕜 := 𝕜) H (single j x : lpOneAlg J G) = if j ∈ H then single j x else 0 := by
+  refine ext_toRealSeq (funext fun k => ?_)
+  rw [toRealSeq_headProj, toRealSeq_single]
+  by_cases hkj : k = j
+  · subst hkj
+    split_ifs <;> simp_all [toRealSeq_single, toRealSeq_zero]
+  · split_ifs <;> simp [hkj, toRealSeq_single, toRealSeq_zero]
 
+/-- Atom face of the tail projection. -/
+theorem tailProj_single {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
+    [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J]
+    (H : Finset J) (j : J) (x : 𝕜) :
+    tailProj (𝕜 := 𝕜) H (single j x : lpOneAlg J G) = if j ∈ H then 0 else single j x := by
+  rw [tailProj_eq_one_sub, sub_apply, one_apply_eq_self, headProj_single]
+  split_ifs <;> simp only [sub_self, sub_zero]
 
+/-- The head projection is an idempotent of the operator ring. -/
+theorem isIdempotentElem_headProj {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
+    [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)] [DecidableEq J]
+    (H : Finset J) : IsIdempotentElem (headProj H : lpOneAlg J G →L[𝕜] lpOneAlg J G) := by
+  refine ContinuousLinearMap.ext fun x => ext fun j => ?_
+  rw [mul_apply_eq_comp, headProj, diagCLM_apply, diagCLM_apply, smul_smul, headSymbol]
+  split_ifs <;> simp only [mul_one, mul_zero]
 
+/-- **The head expansion** `P_H x = ∑_(j ∈ H) x_j e_j` in the chosen frame. -/
+theorem headProj_eq_sum {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
+    [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J]
+    (H : Finset J) (x : lpOneAlg J G) :
+    headProj (𝕜 := 𝕜) H x = ∑ j ∈ H, toRealSeq x j • (single j (1 : 𝕜) : lpOneAlg J G) :=
+  ext_toRealSeq (funext fun k => by
+    rw [toRealSeq_headProj, toRealSeq_finset_sum]
+    simp only [toRealSeq_smul, Pi.smul_apply, toRealSeq_single, smul_eq_mul, mul_ite, mul_one,
+      mul_zero]
+    rw [Finset.sum_ite_eq])
 
+/-- The range of the head projection lies in the span of the head atoms (construction internal
+of `finiteDimensional_range_headProj`). -/
+private theorem range_headProj_le {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
+    [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J] (H : Finset J) :
+    LinearMap.range (headProj (𝕜 := 𝕜) (G := G) H).toLinearMap ≤
+      Submodule.span 𝕜 (Set.range fun j : H => (single (j : J) (1 : 𝕜) : lpOneAlg J G)) := by
+  rintro _ ⟨x, rfl⟩
+  rw [ContinuousLinearMap.coe_coe, headProj_eq_sum]
+  exact Submodule.sum_mem _ fun j hj =>
+    Submodule.smul_mem _ _ (Submodule.subset_span ⟨⟨j, hj⟩, rfl⟩)
 
-
-
-
-
-
-
-
-
-
-
-
+/-- **The head range is finite-dimensional** (spanned by the atoms `e_j`, `j ∈ H`). -/
+instance finiteDimensional_range_headProj {𝕜 : Type*} [NormedField 𝕜] {J : Type*}
+    {G : J → Type*} [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)]
+    [FiberTrivialization 𝕜 J G] [DecidableEq J] (H : Finset J) :
+    FiniteDimensional 𝕜 (LinearMap.range (headProj (𝕜 := 𝕜) (G := G) H).toLinearMap) :=
+  haveI := FiniteDimensional.span_of_finite 𝕜
+    (Set.finite_range fun j : H => (single (j : J) (1 : 𝕜) : lpOneAlg J G))
+  Submodule.finiteDimensional_of_le (range_headProj_le H)
 
 /-- The tail projection is a contraction. -/
 theorem norm_tailProj_apply_le {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
@@ -180,15 +234,31 @@ theorem norm_tailProj_apply_le {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G 
   · rw [one_smul, sub_self, norm_zero]; exact norm_nonneg _
   · rw [zero_smul, sub_zero]
 
+/-- **The head norm identity** `‖P_H y‖ = ∑_(k ∈ H) ‖y k‖` (fiber norms; no frame). -/
+theorem norm_headProj {𝕜 : Type*} [NormedField 𝕜] {J : Type*} {G : J → Type*}
+    [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)] [DecidableEq J]
+    (H : Finset J) (y : lpOneAlg J G) : ‖headProj (𝕜 := 𝕜) H y‖ = ∑ k ∈ H, ‖y k‖ := by
+  rw [norm_eq_tsum, tsum_eq_sum (s := H) fun k hk => by
+    rw [headProj, diagCLM_apply, headSymbol, ite_eq_right hk, zero_smul, norm_zero]]
+  exact Finset.sum_congr rfl fun k hk => by
+    rw [headProj, diagCLM_apply, headSymbol, ite_eq_left hk, one_smul]
 
-
-
-
-
-
-
-
-
+/-- **The tail bound of a diagonal**: if `‖r k‖ ≤ C'` off the head, then
+`‖Q_H D_r w‖ ≤ C' ‖w‖` (`0 ≤ C'` covers the modes of `H`). -/
+theorem norm_tailProj_diagCLM_apply_le {𝕜 : Type*} [NormedField 𝕜] {J : Type*}
+    {G : J → Type*} [∀ j, NormedAddCommGroup (G j)] [∀ j, NormedSpace 𝕜 (G j)] [DecidableEq J]
+    (H : Finset J) (r : J → 𝕜) (C : ℝ) (hr : ∀ j, ‖r j‖ ≤ C) {C' : ℝ} (hC' : 0 ≤ C')
+    (htail : ∀ k ∉ H, ‖r k‖ ≤ C') (w : lpOneAlg J G) :
+    ‖tailProj (𝕜 := 𝕜) H (diagCLM r C hr w)‖ ≤ C' * ‖w‖ := by
+  rw [norm_eq_tsum, norm_eq_tsum, ← tsum_mul_left]
+  refine (summable_norm _).tsum_le_tsum (fun k => ?_) ((summable_norm w).mul_left _)
+  rw [tailProj_eq_one_sub, sub_apply, one_apply_eq_self]
+  change ‖r k • w k - headSymbol H k • (r k • w k)‖ ≤ C' * ‖w k‖
+  rw [headSymbol]
+  split_ifs with hk
+  · rw [one_smul, sub_self, norm_zero]; exact mul_nonneg hC' (norm_nonneg _)
+  · rw [zero_smul, sub_zero]
+    exact (norm_smul_le _ _).trans (mul_le_mul_of_nonneg_right (htail k hk) (norm_nonneg _))
 
 end lpOneAlg
 

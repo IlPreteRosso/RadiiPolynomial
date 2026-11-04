@@ -21,7 +21,10 @@ the corresponding additive-index presentation uses the `Additive M` index/fiber 
   `toRealSeq_mul_fun`, `toRealSeq_one_fun`; `instAlgebra` and `instNormedAlgebra` over any
   additive index monoid; `instCommRing` and `instNormedCommRing` over a commutative one;
   `instNormOneClass` (from the frame's `ω_0 = 1` alone; no convolution witness).
-* Convolution evaluation: `toRealSeq_mul_tsum`, `toRealSeq_mul_eq_finsum`.
+* Convolution evaluation: `toRealSeq_mul_tsum`, `toRealSeq_mul_eq_finsum`, and against an atom
+  over an additive index group `toRealSeq_mul_single` (`(x * c e_m)_k = x_(k − m) c`).
+* Over `RCLike` scalars and an additive index monoid: the ring part `coeffConjRingHom` of the
+  coefficient conjugation `coeffConj` (`WeightedL1/Carrier.lean`).
 
 ## Typeclass convention
 
@@ -487,6 +490,53 @@ theorem mulToRealSeq_mul_eq_finsum [Group M] [lpOneMulAlgConvCompat 𝕜 M E]
   exact tsum_eq_sum fun i hi => by rw [hy i hi, mul_zero]
 
 end ConvolutionEval
+
+section ConvolutionAtom
+
+variable {𝕜 : Type*} [NormedField 𝕜]
+variable {M : Type*} [AddGroup M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [DecidableEq M]
+variable [lpOneAlgConvCompat 𝕜 M E]
+
+/-- **Convolution against an atom** shifts the coefficients: `(x * c e_m)_k = x_(k − m) c`. -/
+theorem toRealSeq_mul_single (x : lpOneAlg M E) (m : M) (c : 𝕜) (k : M) :
+    toRealSeq (x * single m c) k = toRealSeq x (k - m) * c := by
+  rw [toRealSeq_mul_eq_finsum x (single m c) k {m} fun i hi => by
+    rw [toRealSeq_single, ite_eq_right (by simpa using hi)], Finset.sum_singleton,
+    toRealSeq_single, ite_eq_left rfl]
+
+end ConvolutionAtom
+
+section CoeffConjRing
+
+open scoped ComplexConjugate
+
+variable {𝕜 : Type*} [RCLike 𝕜]
+variable {M : Type*} [AddMonoid M] [DecidableEq M] {E : M → Type*} [∀ m, NormedAddCommGroup (E m)]
+variable [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] [lpOneAlgConvCompat 𝕜 M E]
+
+/-- **The coefficient conjugation as a ring homomorphism** (`RCLike` scalars, any additive index
+monoid, any frame): the underlying function is `coeffConj`; multiplicativity is `conj` of the
+convolution `tsum` (`toRealSeq_mul_fun`, `RCLike.conj_tsum`). -/
+def coeffConjRingHom : lpOneAlg M E →+* lpOneAlg M E where
+  toFun := coeffConj
+  map_one' := ext_toRealSeq (funext fun k => by
+    rw [toRealSeq_coeffConj, congr_fun (toRealSeq_one_fun (E := E) (𝕜 := 𝕜)) k]
+    simp only [addDelta, Pi.single_apply]
+    split_ifs <;> simp)
+  map_mul' x y := by
+    apply ext_toRealSeq
+    funext k
+    rw [toRealSeq_coeffConj]
+    simp only [toRealSeq_mul_fun, _root_.DiscreteConvolution.addRingConvolution_apply]
+    rw [RCLike.conj_tsum]
+    apply tsum_congr
+    intro p
+    simp only [map_mul, toRealSeq_coeffConj]
+  map_zero' := map_zero _
+  map_add' := map_add _
+
+end CoeffConjRing
 
 end lpOneAlg
 

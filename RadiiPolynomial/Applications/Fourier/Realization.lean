@@ -1,5 +1,6 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Bilateral.Quadratic
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.UniversalProperty
+import RadiiPolynomial.Analysis.Norm.Exponential
 import Mathlib.Analysis.Fourier.AddCircle
 import Mathlib.Analysis.Complex.LocallyUniformLimit
 import Mathlib.Analysis.Calculus.SmoothSeries
@@ -23,11 +24,16 @@ in complex time and as `realRealization c t = Re (realization c t)`.
   summable (`summable_norm_toRealSeq`), `‖circleLift ν a‖ ≤ ‖a‖`, and at `t : ℝ` it is
   `realization (toRealSeq a) t` (`circleLift_apply_coe`). Multiplicativity
   `realization_mul` is `map_mul` of the lift; no rearrangement of double series is proved here.
+  The exponential: `realization_exp` (`u_(e^a)(t) = exp (u_a(t))` at every `t`, no evenness or
+  reality hypothesis), since the lift and the evaluation at `t` are continuous ring homomorphisms
+  (`NormHelpers.map_exp_of_continuous`).
 * **Exponential decay.** The bounded-coefficient carrier `Y ℂ ν = ℓ^∞_{ν^|n|}` is the weakest
   carrier hypothesis: for `0 ≤ ρ < ν` the moments `|n|^j ‖aₙ‖ ρ^|n|` are summable
   (`summable_moment_Y`), and `toL1 : Y 𝕜 ν →L[𝕜] ℓ¹_{ν'}` (`0 < ν' < ν`) keeps the coefficients,
   with `‖toL1 a‖ ≤ (1 + q) / (1 − q) ‖a‖`, `q = ν'/ν`. With the inclusion `incl : X₂ → Y` this is
-  the chain `ℓ²_ν → ℓ^∞_ν → ℓ¹_{ν'}` that feeds the lift from an `ℓ²` zero.
+  the chain `ℓ²_ν → ℓ^∞_ν → ℓ¹_{ν'}` that feeds the lift from an `ℓ²` zero. An `ℓ¹_ν` element
+  enters `Y 𝕜 ν` through the function `toY` (`coeff_toY`: the coefficients are kept), from the
+  coefficient bound `‖xₖ‖ ν^|k| ≤ ‖x‖`.
 * **Derivatives in moment form.** `derivCoeff c n = i n cₙ`. If `∑ |n| ‖cₙ‖ < ∞`, then
   `realization c` has derivative `realization (derivCoeff c)` at every `t`
   (`hasDerivAt_realization`); the summability of `‖cₙ‖` is derived, the zero mode handled
@@ -38,8 +44,9 @@ in complex time and as `realRealization c t = Re (realization c t)`.
   open strip `|Im z| < log ν` (`analyticOnNhd_complexRealization`) and restricts to
   `realization (coeff a)` on `ℝ` (`complexRealization_ofReal`); for `ν > 1` the real realization
   is real-analytic on `ℝ` (`analyticOnNhd_realRealization`).
-* **Reality.** Conjugate symmetry `c₋ₙ = conj cₙ` makes `realization c` real-valued
-  (`ofReal_realRealization`).
+* **Reality and parity.** Conjugate symmetry `c₋ₙ = conj cₙ` makes `realization c` real-valued
+  (`ofReal_realRealization`); an even family `c₋ₙ = cₙ` has an even realization
+  (`realization_neg_of_even`).
 * **The quadratic family.** For `a ∈ X₂ ℂ ν`, `ν > 1`, real `c₀, c₁, c₂` and any `b : ℤ → ℂ`, the
   coefficient equation `(c₀ + i c₁ n − c₂ n²) aₙ − (a ⋆ a)ₙ − bₙ = 0` gives
   `c₂ u'' + c₁ u' + c₀ u − u² = u_b` on `ℝ` for `u = realization (coeff a)`, `u_b = realization b`
@@ -54,9 +61,9 @@ in complex time and as `realRealization c t = Re (realization c t)`.
   (`realization_duffing`) and, under conjugate symmetry, for `u = realRealization (coeff a)`
   (`realRealization_duffing`). The route is direct: termwise differentiation, linearity and
   multiplicativity of the lift; no Fourier-coefficient uniqueness theorem is used. The hypothesis
-  is the raw-coefficient form of the consumer's `rawF (duffing c₁ c₂) (forcing c₃) a n = 0`
-  (`FourierDuffing.rawF_duffing`); the symbol and the forcing are owned by the example family, so
-  this module, which imports no `Examples`, states it on raw coefficients.
+  is the raw-coefficient form of `rawF (duffing c₁ c₂) (forcing c₃) a n = 0`
+  (`RadiiPolynomial.Fourier.Duffing.rawF_duffing`, `Applications/Fourier/Duffing.lean`); this
+  module does not import the Duffing family and states it on raw coefficients.
 -/
 
 open scoped ComplexConjugate
@@ -122,6 +129,16 @@ theorem conj_realization {c : ℤ → ℂ} (hc : ∀ n, c (-n) = conj (c n)) (t 
 theorem ofReal_realRealization {c : ℤ → ℂ} (hc : ∀ n, c (-n) = conj (c n)) (t : ℝ) :
     (realRealization c t : ℂ) = realization c t :=
   Complex.conj_eq_iff_re.1 (conj_realization hc t)
+
+/-- **The realization of an even family is even** (the reindex `n ↦ −n`). -/
+theorem realization_neg_of_even {c : ℤ → ℂ} (hc : ∀ n, c (-n) = c n) (t : ℝ) :
+    realization c (-t) = realization c t := by
+  rw [realization, realization, ← (Equiv.neg ℤ).tsum_eq]
+  refine tsum_congr fun n => ?_
+  rw [Equiv.neg_apply, hc]
+  congr 2
+  push_cast
+  ring
 
 end Realization
 
@@ -195,6 +212,18 @@ theorem realization_mul (a b : lpOneAlg ℤ (geomFiberZ ℂ ν)) (t : ℝ) :
       realization (toRealSeq a) t * realization (toRealSeq b) t := by
   rw [← circleLift_apply_coe, ← circleLift_apply_coe, ← circleLift_apply_coe, map_mul,
     ContinuousMap.mul_apply]
+
+/-- **The realization of `e^a` is the pointwise exponential**: `u_(e^a)(t) = exp (u_a(t))` at every
+`t : ℝ` (no evenness or reality hypothesis; the lift `circleLift ν` and the evaluation at `t` are
+continuous ring homomorphisms). -/
+theorem realization_exp (a : lpOneAlg ℤ (geomFiberZ ℂ ν)) (t : ℝ) :
+    realization (toRealSeq (NormedSpace.exp a)) t =
+      Complex.exp (realization (toRealSeq a) t) := by
+  rw [← circleLift_apply_coe, ← circleLift_apply_coe,
+    NormHelpers.map_exp_of_continuous (circleLift ν) (circleLift ν).continuous a,
+    Complex.exp_eq_exp_ℂ]
+  exact NormHelpers.map_exp_of_continuous
+    (ContinuousMap.evalAlgHom ℂ ℂ (t : AddCircle (2 * Real.pi))) (continuous_eval_const _) _
 
 end CircleLift
 
@@ -284,6 +313,22 @@ def toL1 (h : (ν' : ℝ) < ν) : Y 𝕜 ν →L[𝕜] lpOneAlg ℤ (geomFiberZ 
 theorem norm_toL1_apply_le (h : (ν' : ℝ) < ν) (a : Y 𝕜 ν) :
     ‖toL1 h a‖ ≤ (1 + ν' / ν) / (1 - ν' / ν) * ‖a‖ :=
   norm_ofRaw_coeff_le h a
+
+/-- Every weighted coefficient of `x ∈ ℓ¹_ν` is at most the norm: `‖xₖ‖ ν^|k| ≤ ‖x‖`
+(construction internal of `toY`). -/
+private theorem norm_toRealSeq_mul_pow_le (x : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (k : ℤ) :
+    ‖toRealSeq x k‖ * (ν : ℝ) ^ k.natAbs ≤ ‖x‖ := by
+  rw [← geomFiberZ_weight (𝕜 := 𝕜), ← norm_eq_abs_toReal_mul_weight]
+  exact norm_apply_le_norm x k
+
+/-- **The inclusion `ℓ¹_ν → ℓ^∞_ν`** (`Y 𝕜 ν`), keeping the coefficients (a function; no linear
+service consumes it). -/
+def toY (x : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) : Y 𝕜 ν :=
+  ofCoeff (toRealSeq x) (memℓp_top_of_bdd (toRealSeq x) (norm_toRealSeq_mul_pow_le x))
+
+/-- `toY` keeps the coefficients. -/
+theorem coeff_toY (x : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) : coeff (toY x) = toRealSeq x :=
+  funext fun k => coeff_ofCoeff _ _ k
 
 end Decay
 

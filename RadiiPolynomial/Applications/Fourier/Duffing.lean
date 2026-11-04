@@ -2,42 +2,50 @@ import RadiiPolynomial.Applications.Fourier.Quadratic
 import RadiiPolynomial.Applications.Fourier.IkData
 
 /-!
-# The Fourier consumer on `ℓ²`: book §10.1 Helmholtz–Duffing
+# The Helmholtz–Duffing family on `ℓ²` (book §10.1)
 
 The equation `u'' + c₁ u' + c₂ u − u² = c₃ cos t` (book (10.1)) with the `2π`-periodic ansatz
 `u = ∑ aₙ e^{int}` becomes the raw Fourier map (book §10.1, `F_n`)
 `F_n(a) = (−n² + i c₁ n + c₂) aₙ − (a ⋆ a)ₙ − c₃ bₙ`, `b_{±1} = 1/2`.
-This file instantiates the quadratic Fourier family `RadiiPolynomial.Fourier.Quadratic`
+This module instantiates the quadratic Fourier family `RadiiPolynomial.Fourier.Quadratic`
 (`Applications/Fourier/Quadratic.lean`: the maps `G`, `DG`, `rawF`, the defect identity, the four
-bound faces, the radii-polynomial existence and the transfer of zeros, conjugate reflection) at the
-Duffing symbol and forcing. It proves, on the bilateral geometric carrier
-`X = X₂ ℂ ν = ℓ²_m(ℤ; ℂ)` (`m_k = ν ^ |k|`, `ν ≥ 1`), that every certificate whose four bounds
-satisfy the radii inequality yields a unique zero of the raw Fourier map in the closed ball of
-radius `r₀` around the candidate, and that this zero is conjugate-symmetric (`conj ã₋ₙ = ãₙ`)
-when the candidate is.
+bound faces, the head certificate `Cert`, the radii-polynomial existence and the transfer of
+zeros, the reflections) at the Duffing symbol and forcing, for every real `(c₁, c₂, c₃)`, head
+`headF N` and weight `ν ≥ 1`. It proves, on the bilateral geometric carrier
+`X = X₂ ℂ ν = ℓ²_m(ℤ; ℂ)` (`m_k = ν ^ |k|`), that every certificate whose four bounds satisfy the
+radii inequality yields a unique zero of the raw Fourier map in the closed ball of radius `r₀`
+around the candidate, and that this zero is conjugate-symmetric (`conj ã₋ₙ = ãₙ`) when the
+candidate is.
 
 ## The Duffing data
 
 * The symbol `duffing c₁ c₂ n = −n² + i c₁ n + c₂`: its norm identity, the tail witness
   inequality, the nonvanishing and square summability of its tail symbol on the head
   `headF N = Icc (−N) N`, and the tail-sum producer for `T2` through the comparison with the
-  first-order symbol data of `Applications/Fourier/IkData.lean`.
+  first-order symbol data of `Applications/Fourier/IkData.lean`, under
+  `−(N+1)(N+2) ≤ c₂ < (N+1)²`. Its pointwise step `duffing_lower_linear` holds under
+  `−(N+1)(N+2) ≤ c₂` alone (the integer-tail factorization; the lower bound is the sharp one for
+  that comparison, and for `c₂ ≥ (N+1)²` the factor `κ` is `≤ 0`); the sum also needs
+  `c₂ < (N+1)²` (`κ > 0`, summability).
 * The forcing `forcing c₃ = (c₃/2)(δ₁ + δ₋₁)` and the identification `rawF_duffing` of the family's
   raw map with the book's `F_n`.
+* The symmetries: the symbol and the forcing are conjugate-symmetric for real parameters
+  (`duffing_conj`, `coeff_forcing_conj`) and even without damping (`duffing_neg` at `c₁ = 0`,
+  `coeff_forcing_neg`), the premises of `rawF_conjRefl` and `rawF_refl`.
 
-## The endpoints
+## The existence theorems
 
-The head certificate `Cert` packages the candidate, the head matrix and the three numerical head
-hypotheses. The Duffing endpoint `duffing_existsUnique` is the family's `existsUnique_rawF` at the
-Duffing data; conjugate symmetry is `duffing_existsUnique_real` (book Prop 10.1.2 route: raw
-uniqueness and the Duffing equivariance `rawF_duffing_conjRefl`, not `R`-equivariance of `M`).
+`duffing_existsUnique` is the family's `existsUnique_rawF` at the Duffing data, for a certificate
+`Cert (headF N) (duffing c₁ c₂) ν`; conjugate symmetry is `duffing_existsUnique_real` (book
+Prop 10.1.2 route: raw uniqueness, the isometry `conjRefl` and the equivariance `rawF_conjRefl`,
+not `R`-equivariance of `M`).
 -/
 
 open scoped ENNReal NNReal
 
 noncomputable section
 
-namespace FourierDuffing
+namespace RadiiPolynomial.Fourier.Duffing
 
 open RadiiPolynomial RadiiPolynomial.WeightedLp
 open RadiiPolynomial.WeightedLp.Bilateral RadiiPolynomial.Fourier.Quadratic
@@ -49,10 +57,6 @@ local notation "hC" => Fourier.moderate_geomFiberZ
 /-! ### A. The Duffing symbol and its producers -/
 
 section DuffingSymbol
-
-/-! The Duffing symbol `duffing`, its norm identity, the tail witness inequality, the exact
-rational control at the certificate data and the square summability of its tail symbol, on the
-head `headZ` of `RadiiPolynomial.Fourier.IkData` (`Applications/Fourier/IkData.lean`). -/
 
 /-- The Duffing symbol `μ_n = -n² + i c₁ n + c₂` (real parameters, as complex). -/
 def duffing (c₁ c₂ : ℝ) (n : ℤ) : ℂ := -(n : ℂ) ^ 2 + Complex.I * c₁ * n + c₂
@@ -90,18 +94,8 @@ theorem duffing_succ_ne_zero {c₁ c₂ : ℝ} {N : ℕ} (hN : c₂ < ((N : ℝ)
   have h1 : 0 < ((N : ℝ) + 1) ^ 2 - c₂ := by linarith
   nlinarith [mul_pos h1 h1, sq_nonneg (c₁ * ((N : ℝ) + 1))]
 
-
-/-- **The exact rational control** at `c₁ = 1/10`, `c₂ = 4`, `N = 10`:
-`|μ₁₁|² = 117² + (11/10)² = 13689 + 121/100`. -/
-theorem sq_norm_duffing_control : ‖duffing (1 / 10) 4 11‖ ^ 2 = 13689 + 121 / 100 := by
-  rw [sq_norm_duffing]; norm_num
-
-/-- The control hypothesis `(10 + 1)² > 4`. -/
-theorem control_hN : (4 : ℝ) < (((10 : ℕ) : ℝ) + 1) ^ 2 := by norm_num
-
-
-/-- **The summability hypothesis of `tailDiagInf` at the Duffing symbol**: `Summable ‖d‖²` (`|μ_n|⁻² ≲ n⁻⁴`); the sum is
-not computed. -/
+/-- **The summability hypothesis of `tailDiagInf` at the Duffing symbol**: `Summable ‖d‖²`
+(`|μ_n|⁻² ≲ n⁻⁴`); the sum is not computed. -/
 theorem summable_sq_tailSymbol_duffing {c₁ c₂ : ℝ} {N : ℕ} (hN : c₂ < ((N : ℝ) + 1) ^ 2) :
     Summable fun n : ℤ => ‖tailSymbol (headZ N) (duffing c₁ c₂) n‖ ^ 2 := by
   set a : ℝ := ((N : ℝ) + 1) ^ 2
@@ -143,27 +137,6 @@ theorem summable_sq_tailSymbol_duffing {c₁ c₂ : ℝ} {N : ℕ} (hN : c₂ < 
     rw [inv_pow, one_div, ← mul_inv, show (ε ^ 2 * (n : ℝ) ^ 4) = (ε * (n : ℝ) ^ 2) ^ 2 by ring]
     exact inv_anti₀ (by positivity) (pow_le_pow_left₀ hεn.le hl 2)
 
-
-/-! The same facts on the `Finset` head `headF N`, and the producers of the certificate
-hypotheses. -/
-
-/-- The head `|k| ≤ N` as a `Finset`. -/
-abbrev headF (N : ℕ) : Finset ℤ := Finset.Icc (-(N : ℤ)) N
-
-theorem mem_headF {N : ℕ} {k : ℤ} : k ∈ headF N ↔ |k| ≤ (N : ℤ) := by
-  rw [Finset.mem_Icc, abs_le]
-
-/-- **The Finset/Set head bridge** at the symbol level: the tail symbol on `↑(headF N)` is the
-tail symbol on `headZ N` (the two decidability instances differ; the functions agree). -/
-theorem tailSymbol_headF (N : ℕ) (μ : ℤ → ℂ) :
-    tailSymbol ((headF N : Finset ℤ) : Set ℤ) μ = tailSymbol (headZ N) μ := by
-  funext k
-  by_cases h : |k| ≤ (N : ℤ)
-  · rw [tailSymbol_of_mem (Finset.mem_coe.2 (mem_headF.2 h)),
-      tailSymbol_of_mem (show k ∈ headZ N from h)]
-  · rw [tailSymbol_of_notMem (fun h' => h (mem_headF.1 (Finset.mem_coe.1 h'))),
-      tailSymbol_of_notMem (show k ∉ headZ N from h)]
-
 variable {c₁ c₂ : ℝ} {N : ℕ}
 
 /-- The Duffing tail symbol on the `Finset` head is square summable (the summability hypothesis
@@ -186,12 +159,20 @@ theorem norm_tailSymbol_duffing_le (hN : c₂ < ((N : ℝ) + 1) ^ 2) (k : ℤ) :
   rw [tailSymbol_headF]
   exact norm_tailSymbol_le_of_witness _ _ (duffing_succ_ne_zero hN) (duffing_min hN) k
 
-/-- **The linear lower bound** under `0 ≤ c₂ < (N+1)²`: on the tail,
-`κ |k| ≤ |μ_k|` with `κ = (N + 1) − c₂/(N + 1)` (from `|μ_k| ≥ k² − c₂` and
-`k² − c₂ − κ|k| = (|k| − (N+1)) (|k| + c₂/(N+1)) ≥ 0`). -/
-theorem duffing_lower_linear (hN : c₂ < ((N : ℝ) + 1) ^ 2) (hc₂ : 0 ≤ c₂) :
+/-- **The linear lower bound** under `−(N+1)(N+2) ≤ c₂`: on the tail, `κ |k| ≤ |μ_k|` with
+`κ = (N + 1) − c₂/(N + 1)`. For `c₂ < (N+1)²`: from `|μ_k| ≥ k² − c₂` and, on the integer tail
+`|k| ≥ N + 1`, `k² − c₂ − κ|k| = (|k| − (N+1)) (|k| + c₂/(N+1))`: the product vanishes at
+`|k| = N + 1` and both factors are nonnegative for `|k| ≥ N + 2`, where `c₂/(N+1) ≥ −(N+2)`. For
+`c₂ ≥ (N+1)²` the factor `κ` is `≤ 0` and the bound is trivial. -/
+theorem duffing_lower_linear (hc₂ : -(((N : ℝ) + 1) * ((N : ℝ) + 2)) ≤ c₂) :
     ∀ k ∉ headZ N, ((N : ℝ) + 1 - c₂ / ((N : ℝ) + 1)) * ‖ik k‖ ≤ ‖duffing c₁ c₂ k‖ :=
   fun k hk => by
+  rcases lt_or_ge c₂ (((N : ℝ) + 1) ^ 2) with hN | hN
+  swap
+  · have hκ : (N : ℝ) + 1 - c₂ / ((N : ℝ) + 1) ≤ 0 := by
+      rw [sub_nonpos, le_div_iff₀ (by positivity)]
+      nlinarith
+    exact (mul_nonpos_of_nonpos_of_nonneg hκ (norm_nonneg _)).trans (norm_nonneg _)
   simp only [headZ, Set.mem_ofPred_eq, not_le] at hk
   have ha : (0 : ℝ) < (N : ℝ) + 1 := by positivity
   have ht : (N : ℝ) + 1 ≤ |(k : ℝ)| := by rw [← Int.cast_abs]; exact_mod_cast hk
@@ -203,19 +184,28 @@ theorem duffing_lower_linear (hN : c₂ < ((N : ℝ) + 1) ^ 2) (hc₂ : 0 ≤ c�
     nlinarith [sq_nonneg (c₁ * k)]
   refine le_trans ?_ hsq
   rw [norm_ik, Int.cast_abs]
-  have hc : c₂ ≤ c₂ * |(k : ℝ)| / ((N : ℝ) + 1) := by
-    rw [le_div_iff₀ ha]
-    nlinarith [mul_le_mul_of_nonneg_left ht hc₂]
-  have key : ((N : ℝ) + 1 - c₂ / ((N : ℝ) + 1)) * |(k : ℝ)| =
-      |(k : ℝ)| * ((N : ℝ) + 1) - c₂ * |(k : ℝ)| / ((N : ℝ) + 1) := by
+  have hfac : 0 ≤ (|(k : ℝ)| - ((N : ℝ) + 1)) * (|(k : ℝ)| + c₂ / ((N : ℝ) + 1)) := by
+    rcases (show |k| = (N : ℤ) + 1 ∨ (N : ℤ) + 2 ≤ |k| by generalize |k| = m at hk ⊢; omega)
+      with h | h
+    · rw [show |(k : ℝ)| = (N : ℝ) + 1 by rw [← Int.cast_abs, h]; push_cast; ring, sub_self,
+        zero_mul]
+    · have h2 : (N : ℝ) + 2 ≤ |(k : ℝ)| := by rw [← Int.cast_abs]; exact_mod_cast h
+      have h3 : -((N : ℝ) + 2) ≤ c₂ / ((N : ℝ) + 1) := by
+        rw [le_div_iff₀ ha]
+        nlinarith
+      exact mul_nonneg (by linarith) (by linarith)
+  have key : (k : ℝ) ^ 2 - c₂ - ((N : ℝ) + 1 - c₂ / ((N : ℝ) + 1)) * |(k : ℝ)| =
+      (|(k : ℝ)| - ((N : ℝ) + 1)) * (|(k : ℝ)| + c₂ / ((N : ℝ) + 1)) := by
+    rw [hk2]
     field_simp
-  rw [key, hk2]
-  nlinarith [mul_le_mul_of_nonneg_left ht (abs_nonneg (k : ℝ))]
+    ring
+  nlinarith [hfac, key]
 
-/-- **The tail-sum producer for `T2`** (UPPER; consumer-owned comparison with the `ik` data):
-under `0 ≤ c₂ < (N+1)²`,
+/-- **The tail-sum producer for `T2`** (UPPER; comparison with the `ik` data):
+under `−(N+1)(N+2) ≤ c₂ < (N+1)²`,
 `∑' ‖d‖² ≤ κ⁻² ∑' ‖tailSymbol (headZ N) ik‖² = κ⁻² · 2 psi1 N ≤ 4 / ((2N + 1) κ²)`. -/
-theorem tsum_sq_tailSymbol_duffing_le (hN : c₂ < ((N : ℝ) + 1) ^ 2) (hc₂ : 0 ≤ c₂) :
+theorem tsum_sq_tailSymbol_duffing_le (hN : c₂ < ((N : ℝ) + 1) ^ 2)
+    (hc₂ : -(((N : ℝ) + 1) * ((N : ℝ) + 2)) ≤ c₂) :
     ∑' k, ‖tailSymbol ((headF N : Finset ℤ) : Set ℤ) (duffing c₁ c₂) k‖ ^ 2 ≤
       4 / ((2 * N + 1) * ((N : ℝ) + 1 - c₂ / ((N : ℝ) + 1)) ^ 2) := by
   have ha : (0 : ℝ) < (N : ℝ) + 1 := by positivity
@@ -227,7 +217,7 @@ theorem tsum_sq_tailSymbol_duffing_le (hN : c₂ < ((N : ℝ) + 1) ^ 2) (hc₂ :
     rw [norm_tailSymbol, norm_tailSymbol]
     split_ifs with hk
     · simp
-    · have hl := duffing_lower_linear (c₁ := c₁) hN hc₂ k hk
+    · have hl := duffing_lower_linear (c₁ := c₁) hc₂ k hk
       have hik : 0 < ‖ik k‖ := by
         simp only [headZ, Set.mem_ofPred_eq, not_le] at hk
         rw [norm_ik]
@@ -249,6 +239,17 @@ theorem tsum_sq_tailSymbol_duffing_le (hN : c₂ < ((N : ℝ) + 1) ^ 2) (hc₂ :
       ring,
     mul_inv_cancel₀ (pow_ne_zero 2 hκ0.ne'), mul_one]
   linarith
+
+/-- **Real parameters make the symbol conjugate-symmetric**: `μ₋ₙ = conj μₙ`. -/
+theorem duffing_conj (c₁ c₂ : ℝ) (n : ℤ) :
+    duffing c₁ c₂ (-n) = starRingEnd ℂ (duffing c₁ c₂ n) := by
+  simp only [duffing, map_add, map_neg, map_pow, map_mul, Complex.conj_I, Complex.conj_ofReal,
+    map_intCast, Int.cast_neg]
+  ring
+
+/-- **Without damping the symbol is even**: `μ₋ₙ = μₙ` at `c₁ = 0`. -/
+theorem duffing_neg (c₂ : ℝ) (n : ℤ) : duffing 0 c₂ (-n) = duffing 0 c₂ n := by
+  simp [duffing]
 
 variable {ν : PosReal}
 
@@ -287,41 +288,33 @@ theorem rawF_duffing {c₃ : ℝ} (a : X₂ ℂ ν) (n : ℤ) :
     ring
   · ring
 
+/-- **The forcing is conjugate-symmetric** (real `c₃`): `g₋ₙ = conj gₙ`. -/
+theorem coeff_forcing_conj (c₃ : ℝ) (n : ℤ) :
+    coeff (forcing (ν := ν) c₃) (-n) = starRingEnd ℂ (coeff (forcing (ν := ν) c₃) n) := by
+  rw [coeff_forcing, coeff_forcing, apply_ite (starRingEnd ℂ), Complex.conj_ofReal, map_zero]
+  exact if_congr (by omega) rfl rfl
+
+/-- **The forcing is even**: `g₋ₙ = gₙ`. -/
+theorem coeff_forcing_neg (c₃ : ℝ) (n : ℤ) :
+    coeff (forcing (ν := ν) c₃) (-n) = coeff (forcing (ν := ν) c₃) n := by
+  rw [coeff_forcing, coeff_forcing]
+  exact if_congr (by omega) rfl rfl
+
 end DuffingSymbol
 
-/-! ### B. The certificate and the endpoint -/
+/-! ### B. The existence theorem -/
 
 section Existence
 
-/-- **The head certificate** (book Theorem 10.1.3's data; the Example81 `Cert` pattern): the
-candidate `ā` supported in `headF N`, the head matrix `M` with `P M = M`, and the three numerical
-head hypotheses `Z₀` (head block), `H` (composed leakage) and `U` (`U_row`). -/
-structure Cert (c₁ c₂ : ℝ) (N : ℕ) (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] where
-  /-- The candidate. -/
-  abar : X₂ ℂ ν
-  /-- The head matrix. -/
-  M : X₂ ℂ ν →L[ℂ] X₂ ℂ ν
-  /-- The `Z₀` number. -/
-  Z₀ : ℝ
-  /-- The composed-leakage number of `Z₁`. -/
-  H : ℝ
-  /-- The `U_row` number of `Z₂`. -/
-  U : ℝ
-  abar_supp : ∀ k ∉ headF N, coeff abar k = 0
-  hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) (headF N) ∘L M = M
-  hZ₀ : ‖headProj (headF N) - M ∘L Kh (headF N) (duffing c₁ c₂)
-    (betaOf (headF N) abar abar_supp)‖ ≤ Z₀
-  hH : ‖M ∘L headProj (headF N) ∘L symbolAction₀ (p := 2) hC
-    (betaOf (headF N) abar abar_supp) ∘L tailProj (headF N)‖ ≤ H
-  hU : ‖M ∘L headReal (headF N)‖ ≤ U
-
 variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] {c₁ c₂ c₃ : ℝ} {N : ℕ}
 
-/-- **THE ENDPOINT: a unique zero of the Fourier map in the ball** (book Theorem 10.1.3 on
-`ℓ²_ν`): under `(N+1)² > c₂`, a certificate, `supp (c₃ b) ⊆ headF N`, the four bounds and the
-radii inequality, the raw Fourier map `F_n(a) = (−n² + i c₁ n + c₂) aₙ − (a ⋆ a)ₙ − c₃ bₙ` has a
-unique zero in the closed ball of radius `r₀` around the candidate. -/
-theorem duffing_existsUnique (hN : c₂ < ((N : ℝ) + 1) ^ 2) (cert : Cert c₁ c₂ N ν)
+/-- **The Duffing existence theorem: a unique zero of the Fourier map in the ball** (book
+Theorem 10.1.3 on `ℓ²_ν`): under `(N+1)² > c₂`, a certificate, `supp (c₃ b) ⊆ headF N`, the four
+bounds and the radii inequality, the raw Fourier map
+`F_n(a) = (−n² + i c₁ n + c₂) aₙ − (a ⋆ a)ₙ − c₃ bₙ` has a unique zero in the closed ball of
+radius `r₀` around the candidate. -/
+theorem duffing_existsUnique (hN : c₂ < ((N : ℝ) + 1) ^ 2)
+    (cert : Cert (headF N) (duffing c₁ c₂) ν)
     (hg : ∀ k ∉ headF N, coeff (forcing (ν := ν) c₃) k = 0) {Y₀ Z₁ Z₂ T2 r₀ : ℝ}
     (hY₀ : ‖G (headF N) (duffing c₁ c₂) (summable_sq_tailSymbol_duffing_headF hN) cert.M
       (forcing c₃) cert.abar‖ ≤ Y₀)
@@ -349,37 +342,44 @@ theorem duffing_existsUnique (hN : c₂ < ((N : ℝ) + 1) ^ 2) (cert : Cert c₁
     cert.abar_supp cert.hPM hg (duffing_ne_zero hN) hr₀ hY₀ cert.hZ₀ hZ1' hZ2' hrad
   exact ⟨a, ⟨ha, fun n => congrFun hFa n⟩, fun z ⟨hz, hz0⟩ => hu z ⟨hz, funext hz0⟩⟩
 
+/-- **The enclosure at two radii**: with the hypotheses of `duffing_existsUnique` and the radii
+inequality at `r₀ ≤ r₁`, the zero in the ball of radius `r₀` is the only zero in the ball of radius
+`r₁`. -/
+theorem duffing_enclosure (hN : c₂ < ((N : ℝ) + 1) ^ 2)
+    (cert : Cert (headF N) (duffing c₁ c₂) ν)
+    (hg : ∀ k ∉ headF N, coeff (forcing (ν := ν) c₃) k = 0) {Y₀ Z₁ Z₂ T2 r₀ r₁ : ℝ}
+    (hY₀ : ‖G (headF N) (duffing c₁ c₂) (summable_sq_tailSymbol_duffing_headF hN) cert.M
+      (forcing c₃) cert.abar‖ ≤ Y₀)
+    (hZ₁ : cert.H ^ 2 + (‖betaOf (headF N) cert.abar cert.abar_supp‖ /
+      ‖duffing c₁ c₂ ((N : ℤ) + 1)‖) ^ 2 ≤ Z₁ ^ 2) (hZ₁0 : 0 ≤ Z₁)
+    (hT2 : ∑' k, ‖tailSymbol ((headF N : Finset ℤ) : Set ℤ) (duffing c₁ c₂) k‖ ^ 2 ≤ T2)
+    (hZ₂ : 4 * (cert.U ^ 2 + T2) ≤ Z₂ ^ 2) (hZ₂0 : 0 ≤ Z₂) (hr₀ : 0 < r₀) (hr : r₀ ≤ r₁)
+    (hrad₀ : generalRadiiPolynomial Y₀ cert.Z₀ Z₁ (fun _ => Z₂) r₀ < 0)
+    (hrad₁ : generalRadiiPolynomial Y₀ cert.Z₀ Z₁ (fun _ => Z₂) r₁ < 0) :
+    ∃ a ∈ Metric.closedBall cert.abar r₀, (∀ n, rawF (duffing c₁ c₂) (forcing c₃) a n = 0) ∧
+      ∀ z ∈ Metric.closedBall cert.abar r₁,
+        (∀ n, rawF (duffing c₁ c₂) (forcing c₃) z n = 0) → z = a := by
+  obtain ⟨a, ⟨ha, hFa⟩, -⟩ :=
+    duffing_existsUnique hN cert hg hY₀ hZ₁ hZ₁0 hT2 hZ₂ hZ₂0 hr₀ hrad₀
+  obtain ⟨b, -, hub⟩ :=
+    duffing_existsUnique hN cert hg hY₀ hZ₁ hZ₁0 hT2 hZ₂ hZ₂0 (hr₀.trans_le hr) hrad₁
+  have hab : a = b := hub a ⟨Metric.closedBall_subset_closedBall hr ha, hFa⟩
+  exact ⟨a, ha, hFa, fun z hz hFz => (hub z ⟨hz, hFz⟩).trans hab.symm⟩
+
 end Existence
 
 /-! ### C. Reality -/
 
 section Reality
 
-variable {ν : PosReal}
+variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] {c₁ c₂ c₃ : ℝ} {N : ℕ}
 
-variable [Fact (1 ≤ (ν : ℝ))] {c₁ c₂ c₃ : ℝ} {N : ℕ}
-
-omit [Fact (1 ≤ (ν : ℝ))] in
-/-- **Real parameters make the Duffing map `R`-equivariant**:
-`F(R a)ₙ = conj (F(a)₋ₙ)`. -/
-theorem rawF_duffing_conjRefl (a : X₂ ℂ ν) (n : ℤ) :
-    rawF (duffing c₁ c₂) (forcing c₃) (conjRefl a) n =
-      starRingEnd ℂ (rawF (duffing c₁ c₂) (forcing c₃) a (-n)) := by
-  rw [rawF_duffing, rawF_duffing, coeff_conjRefl, convCoeff_conjRefl]
-  by_cases h : n = 1 ∨ n = -1
-  · rw [ite_eq_left h, ite_eq_left (by omega)]
-    simp only [map_sub, map_mul, map_add, map_neg, map_pow, Complex.conj_ofReal, Complex.conj_I,
-      map_intCast, map_div₀, map_one, map_ofNat, Int.cast_neg]
-    ring
-  · rw [ite_eq_right h, ite_eq_right (by omega)]
-    simp only [map_sub, map_mul, map_add, map_neg, map_pow, Complex.conj_ofReal, Complex.conj_I,
-      map_intCast, map_zero, Int.cast_neg]
-    ring
-
-/-- **THE CONJUGATE-SYMMETRIC ENDPOINT** (book Prop 10.1.2 route): with the hypotheses of
+/-- **The conjugate-symmetric existence theorem** (book Prop 10.1.2 route): with the hypotheses of
 `duffing_existsUnique` and `R ā = ā`, the unique zero of the Fourier map in the ball satisfies
-`R ã = ã`, i.e. `conj ã₋ₙ = ãₙ` (uniqueness of the raw zero, not `R`-equivariance of `M`). -/
-theorem duffing_existsUnique_real (hN : c₂ < ((N : ℝ) + 1) ^ 2) (cert : Cert c₁ c₂ N ν)
+`R ã = ã`, i.e. `conj ã₋ₙ = ãₙ` (uniqueness of the raw zero, the isometry `conjRefl` and the
+equivariance `rawF_conjRefl` at the real parameters; not `R`-equivariance of `M`). -/
+theorem duffing_existsUnique_real (hN : c₂ < ((N : ℝ) + 1) ^ 2)
+    (cert : Cert (headF N) (duffing c₁ c₂) ν)
     (hg : ∀ k ∉ headF N, coeff (forcing (ν := ν) c₃) k = 0) {Y₀ Z₁ Z₂ T2 r₀ : ℝ}
     (hY₀ : ‖G (headF N) (duffing c₁ c₂) (summable_sq_tailSymbol_duffing_headF hN) cert.M
       (forcing c₃) cert.abar‖ ≤ Y₀)
@@ -393,15 +393,48 @@ theorem duffing_existsUnique_real (hN : c₂ < ((N : ℝ) + 1) ^ 2) (cert : Cert
       conjRefl a = a ∧ ∀ z ∈ Metric.closedBall cert.abar r₀,
         (∀ n, rawF (duffing c₁ c₂) (forcing c₃) z n = 0) → z = a := by
   obtain ⟨a, ⟨ha, hFa⟩, hu⟩ := duffing_existsUnique hN cert hg hY₀ hZ₁ hZ₁0 hT2 hZ₂ hZ₂0 hr₀ hrad
-  have hRa : conjRefl a ∈ Metric.closedBall cert.abar r₀ := by
-    rw [Metric.mem_closedBall, dist_eq_norm] at ha ⊢
-    rwa [← hR, ← conjRefl_sub, norm_conjRefl]
-  have hFRa : ∀ n, rawF (duffing c₁ c₂) (forcing c₃) (conjRefl a) n = 0 := fun n => by
-    rw [rawF_duffing_conjRefl, hFa, map_zero]
-  exact ⟨a, ha, hFa, hu _ ⟨hRa, hFRa⟩, fun z hz hz0 => hu z ⟨hz, hz0⟩⟩
+  refine ⟨a, ha, hFa, hu _ ⟨?_, fun n => ?_⟩, fun z hz hz0 => hu z ⟨hz, hz0⟩⟩
+  · rw [← hR]
+    exact isometry_conjRefl.mapsTo_closedBall _ _ ha
+  · rw [rawF_conjRefl (duffing_conj c₁ c₂) (coeff_forcing_conj c₃), hFa, map_zero]
 
 end Reality
 
-end FourierDuffing
+/-! ### The undamped even subfamily -/
+
+section Even
+
+open RadiiPolynomial RadiiPolynomial.WeightedLp RadiiPolynomial.WeightedLp.Bilateral
+  RadiiPolynomial.Fourier.Quadratic RadiiPolynomial.Fourier.IkData RadiiPolynomial.Fourier.Duffing
+
+variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] {c₂ c₃ : ℝ} {N : ℕ}
+
+/-- **The even existence theorem** (`c₁ = 0`): with the hypotheses of
+`duffing_existsUnique_real` and an even candidate `refl ā = ā`, the unique zero of the raw Fourier
+map in the ball is conjugate-symmetric and even, `conj ã₋ₙ = ãₙ = ã₋ₙ`. -/
+theorem duffing_existsUnique_even (hN : c₂ < ((N : ℝ) + 1) ^ 2)
+    (cert : Cert (headF N) (duffing 0 c₂) ν)
+    (hg : ∀ k ∉ headF N, coeff (forcing (ν := ν) c₃) k = 0) {Y₀ Z₁ Z₂ T2 r₀ : ℝ}
+    (hY₀ : ‖G (headF N) (duffing 0 c₂) (summable_sq_tailSymbol_duffing_headF hN) cert.M
+      (forcing c₃) cert.abar‖ ≤ Y₀)
+    (hZ₁ : cert.H ^ 2 + (‖betaOf (headF N) cert.abar cert.abar_supp‖ /
+      ‖duffing 0 c₂ ((N : ℤ) + 1)‖) ^ 2 ≤ Z₁ ^ 2) (hZ₁0 : 0 ≤ Z₁)
+    (hT2 : ∑' k, ‖tailSymbol ((headF N : Finset ℤ) : Set ℤ) (duffing 0 c₂) k‖ ^ 2 ≤ T2)
+    (hZ₂ : 4 * (cert.U ^ 2 + T2) ≤ Z₂ ^ 2) (hZ₂0 : 0 ≤ Z₂) (hr₀ : 0 < r₀)
+    (hrad : generalRadiiPolynomial Y₀ cert.Z₀ Z₁ (fun _ => Z₂) r₀ < 0)
+    (hR : conjRefl cert.abar = cert.abar) (hE : refl cert.abar = cert.abar) :
+    ∃ a ∈ Metric.closedBall cert.abar r₀, (∀ n, rawF (duffing 0 c₂) (forcing c₃) a n = 0) ∧
+      conjRefl a = a ∧ refl a = a ∧ ∀ z ∈ Metric.closedBall cert.abar r₀,
+        (∀ n, rawF (duffing 0 c₂) (forcing c₃) z n = 0) → z = a := by
+  obtain ⟨a, ha, hFa, hRa, hu⟩ :=
+    duffing_existsUnique_real hN cert hg hY₀ hZ₁ hZ₁0 hT2 hZ₂ hZ₂0 hr₀ hrad hR
+  refine ⟨a, ha, hFa, hRa, hu _ ?_ fun n => ?_, hu⟩
+  · rw [← hE]
+    exact isometry_refl.mapsTo_closedBall _ _ ha
+  · rw [rawF_refl (duffing_neg c₂) (coeff_forcing_neg c₃), hFa]
+
+end Even
+
+end RadiiPolynomial.Fourier.Duffing
 
 end

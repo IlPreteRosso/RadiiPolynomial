@@ -5,8 +5,10 @@ import RadiiPolynomial.Examples.Fourier.Duffing.Numbers
 
 The second carrier of the same Duffing problem: the physical amplitude weight
 `m_n = (1 + |n|)²` (mass `ω_n = (1 + |n|)⁴`) on `ℓ²(ℤ; ℂ)`, with no renormalization. The centre
-`ā` and the head matrix `M` are the shipped exact rational data of
-`Examples/Fourier/Duffing/Numbers.lean`, reused without copies; only the weight changes.
+`ā` and the head matrix `M` are the shipped exact rational leaf `leaf` of
+`Examples/Fourier/Duffing/Numbers.lean`, read through the leaf-parametric mirror of the
+rational-leaf adapter `Certification/Fourier/Quadratic.lean` without copies; only the weight
+changes.
 
 This module is finite arithmetic only. The bound constants (`Y₀ = 71/10⁶`, `Z₀ = 1/1000`,
 `H = 7/1000`, `‖2ā‖ ≤ 103/10`, tail `≤ 1/117`, `‖A‖ ≤ 11`, `Z₁ = 9/100`, `Z₂ = 220` from the
@@ -16,13 +18,16 @@ product bound `κ = 10`, radius `1/10000`) are those of the trial certificate. E
 
 namespace FourierDuffing.Polynomial.Numbers
 
-open FourierDuffing.Numbers
+open FourierDuffing.Numbers RadiiPolynomial.Certification.Fourier.Quadratic
 
 /-- Polynomial amplitude weight `(1 + |n|)²`; the `ℓ²` mass is its square. -/
 def weightQ (n : ℤ) : ℚ := (1 + (n.natAbs : ℚ)) ^ 2
 
 /-- Exact squared weighted residual summand, from the shipped preconditioned residual `GQ`. -/
-def yTermQ (n : ℤ) : ℚ := cnormSq (GQ n) * weightQ n ^ 2
+def yTermQ (n : ℤ) : ℚ := cnormSq (leaf.GQ n) * weightQ n ^ 2
+
+/-- The residual support `{|n| ≤ 20}` is covered by the three `Y₀` chunks of the leaf. -/
+theorem idx2_eq_chunks : idx2 10 = y0Chunk 0 ++ y0Chunk 1 ++ y0Chunk 2 := by decide +kernel
 
 /-- The three residual chunks of the shipped arithmetic mirror. -/
 def yPartQ (k : ℕ) : ℚ := qsum (y0Chunk k) yTermQ
@@ -31,27 +36,27 @@ def ySquaredQ : ℚ := yPartQ 0 + yPartQ 1 + yPartQ 2
 
 /-- Weighted rows/columns of the finite defect `I − M DF`. -/
 def zRowQ (i : ℤ) : ℚ :=
-  qsum idx fun j => reim (EQ i j) * weightQ i / weightQ j
+  qsum (idx 10) fun j => reim (leaf.EQ i j) * weightQ i / weightQ j
 
 def zColQ (j : ℤ) : ℚ :=
-  qsum idx fun i => reim (EQ i j) * weightQ i / weightQ j
+  qsum (idx 10) fun i => reim (leaf.EQ i j) * weightQ i / weightQ j
 
 /-- Weighted rows/columns after composing the finite inverse and the leakage. -/
 def hRowQ (i : ℤ) : ℚ :=
-  qsum leakColsQ fun k => reim (KMQ i k) * weightQ i / weightQ k
+  qsum (leakColsQ 10 7) fun k => reim (leaf.KMQ i k) * weightQ i / weightQ k
 
 def hColQ (k : ℤ) : ℚ :=
-  qsum idx fun i => reim (KMQ i k) * weightQ i / weightQ k
+  qsum (idx 10) fun i => reim (leaf.KMQ i k) * weightQ i / weightQ k
 
 /-- Weighted rows/columns of `M`, for its `ℓ²` Schur bound. -/
 def aRowQ (i : ℤ) : ℚ :=
-  qsum idx fun j => reim (MQ i j) * weightQ i / weightQ j
+  qsum (idx 10) fun j => reim (leaf.MQ i j) * weightQ i / weightQ j
 
 def aColQ (j : ℤ) : ℚ :=
-  qsum idx fun i => reim (MQ i j) * weightQ i / weightQ j
+  qsum (idx 10) fun i => reim (leaf.MQ i j) * weightQ i / weightQ j
 
 /-- Fixed-centre weighted-`ℓ¹` symbol majorant of `2ā`. -/
-def betaBoundQ : ℚ := qsum idx fun k => 2 * reim (abarQ k) * weightQ k
+def betaBoundQ : ℚ := qsum (idx 10) fun k => 2 * reim (leaf.abarQ k) * weightQ k
 
 def Y0Q : ℚ := 71 / 10 ^ 6
 def Z0Q : ℚ := 1 / 1000
@@ -73,16 +78,16 @@ def CaQ : ℚ := 193 / 20
 def Y0Check : Prop := ySquaredQ ≤ Y0Q ^ 2
 
 def Z0Check : Prop :=
-  (∀ i ∈ idx, zRowQ i ≤ RzQ) ∧
-  (∀ j ∈ idx, zColQ j ≤ CzQ) ∧ RzQ * CzQ ≤ Z0Q ^ 2
+  (∀ i ∈ idx 10, zRowQ i ≤ RzQ) ∧
+  (∀ j ∈ idx 10, zColQ j ≤ CzQ) ∧ RzQ * CzQ ≤ Z0Q ^ 2
 
 def HCheck : Prop :=
-  (∀ i ∈ idx, hRowQ i ≤ RhQ) ∧
-  (∀ k ∈ leakColsQ, hColQ k ≤ ChQ) ∧ RhQ * ChQ ≤ HQ ^ 2
+  (∀ i ∈ idx 10, hRowQ i ≤ RhQ) ∧
+  (∀ k ∈ leakColsQ 10 7, hColQ k ≤ ChQ) ∧ RhQ * ChQ ≤ HQ ^ 2
 
 def ACheck : Prop :=
-  (∀ i ∈ idx, aRowQ i ≤ RaQ) ∧
-  (∀ j ∈ idx, aColQ j ≤ CaQ) ∧ RaQ * CaQ ≤ AQ ^ 2 ∧ tailQ ≤ AQ
+  (∀ i ∈ idx 10, aRowQ i ≤ RaQ) ∧
+  (∀ j ∈ idx 10, aColQ j ≤ CaQ) ∧ RaQ * CaQ ≤ AQ ^ 2 ∧ tailQ ≤ AQ
 
 def BetaCheck : Prop := betaBoundQ ≤ betaQ
 
