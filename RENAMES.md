@@ -5495,3 +5495,48 @@ No compatibility aliases.
 | private `FourierDuffing.Even.coeff_aTilde_neg` | deleted; the two call sites pass `(conjReflL_eq_self_iff_coeff _ aTilde).1 …` | `Examples/Fourier/Duffing/Even/Analytic.lean` | idem |
 | private `FourierRiccati.coeff_a_neg` | deleted; the two call sites pass `(conjReflL_eq_self_iff_coeff _ a).1 coefficient_reality` | `Examples/Fourier/Riccati/Analytic.lean` | idem |
 | `FourierDuffing.Polynomial.Eigenpair.coeff_neg_of_conjRefl_eq` | deleted; `abar_mem_realSub` and `xPoly_mem_realSub` pass `(conjReflL_eq_self_iff_coeff _ _).1 …` | `Examples/Fourier/Duffing/Polynomial/Eigenpair/Certificate.lean` | idem |
+
+## U-D2b the head symbol through Mathlib's indicator (2026-11-05)
+
+The two application copies of the finite-head symbol are retired in favour of Mathlib's
+`Set.indicator`: `Eigenpair.eigenLam` and `Quadratic.LamH` take `(↑S : Set M).indicator μ` as
+their diagonal symbol, bounded by the one shared finite norm bound
+`RadiiPolynomial.NormHelpers.bddAbove_norm_indicator_finset` (`Analysis/Norm/FiniteSum.lean`,
+`[SeminormedAddGroup E]`, no decidability premise; no pinned Mathlib lemma supplies this range
+bound). The consumers use Mathlib's `Set.indicator_apply`, `Set.indicator_of_mem`,
+`Set.indicator_of_notMem`, `Set.indicator_eq_indicator` and `map_indicator`. Refinement of the
+U-D2 record: head and tail stay distinct operations; the conjugate symmetry of the head symbol is
+supplied at its consumer by Mathlib's map/indicator laws, while `tailSymbol_neg` (the inverse
+tail symbol) is unchanged. Design of record:
+`exterior/tmp/lp_api_campaign_20261017/POST_MERGE/promotion_20261104/U-D2b/CONSENSUS_design_20261105.md`.
+No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| `RadiiPolynomial.Fourier.Eigenpair.headPart` | `Set.indicator` (`(↑S : Set M).indicator μ`) | `Applications/Fourier/Eigenpair.lean` | a copy of Mathlib's zero extension; `eigenLam` and `coeff_eigenLam` state the indicator |
+| `RadiiPolynomial.Fourier.Eigenpair.bddAbove_headPart` | `RadiiPolynomial.NormHelpers.bddAbove_norm_indicator_finset` | `Analysis/Norm/FiniteSum.lean` | one finite norm bound for both diagonal constructors, at `SeminormedAddGroup` |
+| `RadiiPolynomial.Fourier.Eigenpair.headPart_neg` | deleted; `conjReflL_eigenLam` passes `map_indicator` and `Set.indicator_eq_indicator` with the head symmetry `hS` and the symbol symmetry `hμ` | `Applications/Fourier/Eigenpair.lean` | its only user; Mathlib's map/indicator laws supply the symmetry |
+| `RadiiPolynomial.Fourier.Quadratic.headSym` | `Set.indicator` (`(↑F : Set ℤ).indicator μ`) | `Applications/Fourier/Quadratic.lean` | the same function as `headPart` at `M = ℤ`; `LamH` takes the indicator (`coeff_LamH` keeps its statement) |
+| `RadiiPolynomial.Fourier.Quadratic.bddAbove_headSym` | `RadiiPolynomial.NormHelpers.bddAbove_norm_indicator_finset` | `Analysis/Norm/FiniteSum.lean` | idem `bddAbove_headPart` |
+| `import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.FiniteBlock` in `Applications/Fourier/Quadratic.lean` | dropped (implied by `Operators.Reality`); `Analysis.Norm.FiniteSum` imported for the bound | `Applications/Fourier/Quadratic.lean` | redundant direct import |
+
+## U-D3 D1 the bounded evaluation through the canonical algebra evaluator (2026-11-05)
+
+`l1Weighted.abs_eval_le` (statement unchanged) is re-proved as the real instance of the
+contractivity `lpOneAlg.norm_geomAeval_of_norm_le_apply_le` of the universal geometric
+evaluation, through `aeval_of_norm_le_apply_real`; the second, private bounded-evaluation
+construction of `Geometric/Evaluation.lean` and its two unused coordinate linearity faces are
+deleted. No evaluator is redefined; the definitional bridge `aeval_of_norm_le ν t ht a = eval a t`
+holds by `rfl`. Design of record:
+`exterior/tmp/lp_api_campaign_20261017/POST_MERGE/promotion_20261104/U-D3/CONSENSUS_D1_20261105.md`.
+No compatibility aliases; historical outer-tree callers (staged B5 records, the pinned v1 book
+checkout) stay at their pins.
+
+| old | new | file | reason |
+|---|---|---|---|
+| private `RadiiPolynomial.l1Weighted.evalCLM` | deleted; `abs_eval_le` uses `lpOneAlg.norm_geomAeval_of_norm_le_apply_le` | `Analysis/SequenceSpace/Geometric/Evaluation.lean` | a second construction of the bounded evaluation; its only user was `abs_eval_le` |
+| private `RadiiPolynomial.l1Weighted.evalCLM_apply` (`@[simp]`) | deleted | `Analysis/SequenceSpace/Geometric/Evaluation.lean` | the computation rule of the deleted `evalCLM`; no user |
+| private `RadiiPolynomial.l1Weighted.summable_norm_eval` | deleted | `Analysis/SequenceSpace/Geometric/Evaluation.lean` | its only user was the bound of `evalCLM`; `summable_eval` and `norm_term_le` stay |
+| `RadiiPolynomial.l1Weighted.eval_add` (`\|z\| ≤ ν`) | `map_add (l1Weighted.aeval_of_norm_le ν z hz)` read through `aeval_of_norm_le_apply_real` | — | same identity on the same closed disc; its only user was `evalCLM` |
+| `RadiiPolynomial.l1Weighted.eval_smul` (every real `z`) | deleted (retired unused off-disc face); NOT replaced by `map_smul`, which gives homogeneity only on `\|z\| ≤ ν` | — | its only user was `evalCLM`; the all-point total-`tsum` homogeneity has no consumer |
+| private `RadiiPolynomial.l1Weighted.seq` (abbrev of `toSeq`) | `RadiiPolynomial.l1Weighted.toSeq` | `Analysis/SequenceSpace/Geometric/Evaluation.lean` | presentation change, definitionally equal: the value of `eval` and the statements of `summable_eval`, `eval_at_zero` now print `toSeq` |

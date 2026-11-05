@@ -1,4 +1,5 @@
 import RadiiPolynomial.Core.Quadratic
+import RadiiPolynomial.Analysis.Norm.FiniteSum
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Pairing
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.RealityConvolution
 import RadiiPolynomial.Operators.BlockDiagonal.ProdBlock
@@ -27,34 +28,6 @@ noncomputable section
 namespace RadiiPolynomial.Fourier.Eigenpair
 
 open RadiiPolynomial.WeightedLp
-
-section HeadPart
-
-/-! ### The head part of a symbol (`[DecidableEq M]`) -/
-
-variable {M : Type*} [DecidableEq M]
-
-/-- The head part `Λ_S` of a symbol: `μ n` on the head `S`, `0` off it. -/
-def headPart (S : Finset M) (μ : M → ℂ) (n : M) : ℂ := if n ∈ S then μ n else 0
-
-/-- The head part is bounded by `∑ j ∈ S, ‖μ j‖`. -/
-theorem bddAbove_headPart (S : Finset M) (μ : M → ℂ) :
-    BddAbove (Set.range fun n => ‖headPart S μ n‖) :=
-  ⟨∑ j ∈ S, ‖μ j‖, Set.forall_mem_range.2 fun n => by
-    by_cases h : n ∈ S
-    · rw [headPart, ite_eq_left h]
-      exact Finset.single_le_sum (fun j _ => norm_nonneg (μ j)) h
-    · rw [headPart, ite_eq_right h, norm_zero]
-      exact Finset.sum_nonneg fun j _ => norm_nonneg (μ j)⟩
-
-/-- A symmetric head and a conjugate-symmetric symbol give a conjugate-symmetric head part. -/
-theorem headPart_neg [Neg M] {S : Finset M} (hS : ∀ n, -n ∈ S ↔ n ∈ S) {μ : M → ℂ}
-    (hμ : ∀ n, μ (-n) = starRingEnd ℂ (μ n)) (n : M) :
-    headPart S μ (-n) = starRingEnd ℂ (headPart S μ n) := by
-  rw [headPart, headPart, apply_ite (starRingEnd ℂ), map_zero, hμ]
-  exact if_congr (hS n) rfl rfl
-
-end HeadPart
 
 section Data
 
@@ -155,12 +128,14 @@ variable {M : Type*} [DecidableEq M] {w : M → ℝ} [PosWeight w]
 
 local notation "X" => WeightedLp M (WeightedScalar ℂ w) 2
 
-/-- `Λ_S`, the diagonal multiplier by the head part of `μ`. -/
-def eigenLam (R : EigenRaw M w) : X →L[ℂ] X := diagCLM (headPart R.S R.μ) (bddAbove_headPart _ _)
+/-- `Λ_S`, the diagonal multiplier by the head part `(↑S : Set M).indicator μ` of `μ`
+(`μ n` on the head `S`, `0` off it). -/
+def eigenLam (R : EigenRaw M w) : X →L[ℂ] X :=
+  diagCLM ((↑R.S : Set M).indicator R.μ) (NormHelpers.bddAbove_norm_indicator_finset _ _)
 
 /-- `Λ_S` in coordinates: `coeff (Λ_S x) n = Λ_S(n) coeff x n`. -/
 theorem coeff_eigenLam (R : EigenRaw M w) (x : X) (n : M) :
-    coeff (eigenLam R x) n = headPart R.S R.μ n * coeff x n :=
+    coeff (eigenLam R x) n = (↑R.S : Set M).indicator R.μ n * coeff x n :=
   coeff_diagCLM _ _ x n
 
 /-- The corrected tail inverse `T_t = tailDiag S (μ - lbar)`. -/
@@ -211,7 +186,10 @@ local notation "X" => WeightedLp M (WeightedScalar ℂ w) 2
 /-- `Λ_S` commutes with `K`. -/
 theorem conjReflL_eigenLam (D : EigenData hw) (x : X) :
     conjReflL hw (eigenLam D.toEigenRaw x) = eigenLam D.toEigenRaw (conjReflL hw x) :=
-  conjReflL_diagCLM hw _ (headPart_neg D.hS D.hμ) x
+  conjReflL_diagCLM hw _ (fun n => by
+    rw [map_indicator]
+    exact Set.indicator_eq_indicator
+      (Finset.mem_coe.trans ((D.hS n).trans Finset.mem_coe.symm)) (D.hμ n)) x
 
 /-- `T_t` commutes with `K`. -/
 theorem conjReflL_eigenTail (D : EigenData hw) (x : X) :
@@ -466,7 +444,7 @@ theorem coeff_eigenHeadRes_of_mem (R : EigenRaw M w) (v : X) (l : ℝ) {n : M} (
     coeff (eigenHeadRes h R v l) n =
       R.μ n * coeff v n + coeff (convCLM h R.q v) n - (l : ℂ) * coeff v n := by
   rw [eigenHeadRes, eigenPot, coeff_headProj, ite_eq_left hn, coeff_sub, coeff_add, Pi.sub_apply,
-    Pi.add_apply, coeff_eigenLam, headPart, ite_eq_left hn, coeff_real_smul]
+    Pi.add_apply, coeff_eigenLam, Set.indicator_of_mem (Finset.mem_coe.2 hn), coeff_real_smul]
 
 private theorem eigenHeadRes_eq_zero (R : EigenRaw M w) (v : X) (l : ℝ)
     (hE1 : ∀ n ∈ R.S, R.μ n * coeff v n + coeff (convCLM h R.q v) n - (l : ℂ) * coeff v n = 0) :
@@ -1002,7 +980,7 @@ private theorem eigenLam_headProj (R : EigenRaw M w) (x : X) :
     rw [coeff_eigenLam, coeff_eigenLam, coeff_headProj]
     by_cases hn : n ∈ R.S
     · rw [ite_eq_left hn]
-    · rw [ite_eq_right hn, headPart, ite_eq_right hn, zero_mul, zero_mul]
+    · rw [ite_eq_right hn, Set.indicator_of_notMem (mt Finset.mem_coe.1 hn), zero_mul, zero_mul]
 
 /-- `P_S P_S = P_S`, applied. -/
 private theorem headProj_headProj_apply (S : Finset M) (x : X) :

@@ -1,5 +1,5 @@
+import RadiiPolynomial.Analysis.Norm.FiniteSum
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Bilateral.Quadratic
-import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.FiniteBlock
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.Reality
 import RadiiPolynomial.Core.Quadratic
 import RadiiPolynomial.Core.Transport
@@ -88,29 +88,17 @@ variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] (F : Finset ℤ) (μ : ℤ →
   (hs : Summable fun k => ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2) (M : X₂ ℂ ν →L[ℂ] X₂ ℂ ν)
   (g : X₂ ℂ ν)
 
-/-- The finite-head symbol `1_{k ∈ F} μ k`. -/
-def headSym (k : ℤ) : ℂ := if k ∈ F then μ k else 0
-
-/-- The finite-head symbol is bounded (finite support). -/
-theorem bddAbove_headSym : BddAbove (Set.range fun k => ‖headSym F μ k‖) := by
-  refine ⟨∑ j ∈ F, ‖μ j‖, ?_⟩
-  rintro _ ⟨k, rfl⟩
-  show ‖headSym F μ k‖ ≤ _
-  unfold headSym
-  split_ifs with hk
-  · exact Finset.single_le_sum (f := fun j => ‖μ j‖) (fun _ _ => norm_nonneg _) hk
-  · rw [norm_zero]
-    exact Finset.sum_nonneg fun _ _ => norm_nonneg _
-
-/-- **The finite-head diagonal** `Λ_H = diag(1_F μ)` on `X₂ ℂ ν`. -/
-def LamH : X₂ ℂ ν →L[ℂ] X₂ ℂ ν := diagCLM (headSym F μ) (bddAbove_headSym F μ)
+/-- **The finite-head diagonal** `Λ_H = diag(1_F μ)` on `X₂ ℂ ν`, with the finite-head symbol
+`1_F μ = (↑F : Set ℤ).indicator μ`. -/
+def LamH : X₂ ℂ ν →L[ℂ] X₂ ℂ ν :=
+  diagCLM ((↑F : Set ℤ).indicator μ) (NormHelpers.bddAbove_norm_indicator_finset F μ)
 
 omit [Fact (1 ≤ (ν : ℝ))] in
 /-- `Λ_H` in coordinates. -/
 @[simp] theorem coeff_LamH (x : X₂ ℂ ν) (k : ℤ) :
     coeff (LamH F μ x) k = if k ∈ F then μ k * coeff x k else 0 := by
-  rw [LamH, coeff_diagCLM, headSym]
-  split_ifs <;> simp
+  rw [LamH, coeff_diagCLM, Set.indicator_apply]
+  split_ifs <;> simp_all
 
 /-- The head block `K_H = Λ_H − P L_β P` of the approximate derivative. On the head range it is
 the finite Jacobian `DF^{(N)}(ā)` of the book's truncation (10.3) at `β = 2ā` when `supp ā ⊆ F`:
@@ -180,7 +168,7 @@ theorem convCoeff_eq_sum {x : X₂ ℂ ν} (hx : ∀ k ∉ F, coeff x k = 0) (y 
     convCoeff x y n = ∑ j ∈ F, coeff x j * coeff y (n - j) :=
   tsum_eq_sum (s := F) fun j hj => by rw [hx j hj, zero_mul]
 
-/-- **The coefficient identity** `coeff (G a) = A_raw (F_raw a)` (consensus §2): the head part
+/-- **The coefficient identity** `coeff (G a) = A_raw (F_raw a)`: the head part
 reads the forcing through `supp g ⊆ F`, the tail part inverts `μ` off `F`. -/
 theorem coeff_G (hg : ∀ k ∉ F, coeff g k = 0) (hμ : ∀ k ∉ F, μ k ≠ 0) (a : X₂ ℂ ν) :
     coeff (G F μ hs M g a) = rawA F μ M (rawF μ g a) := by
@@ -302,7 +290,7 @@ theorem norm_DG_sub_B0_le {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0)
     (norm_tail_term_le_of_bound hC (betaOf F ā hā) _ _ hR ((norm_nonneg _).trans (hR 0)))
 
 omit [Fact (1 ≤ (ν : ℝ))] in
-/-- **The `U_row` head certificate** (consensus §6; UPPER): with `B_ij = m_i M_ij / m_j`,
+/-- **The `U_row` head certificate** (UPPER): with `B_ij = m_i M_ij / m_j`,
 `‖M H_F‖ ≤ √(∑_{i ∈ F} (∑_{j ∈ F} |B_ij|)²)` under `P M = M`. -/
 theorem norm_comp_headReal_le_urow (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M) :
     ‖M ∘L headReal F‖ ≤ √(∑ i ∈ F, (∑ j ∈ F, ‖matrixOf M i j‖ * (ν : ℝ) ^ i.natAbs /

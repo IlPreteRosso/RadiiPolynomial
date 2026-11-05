@@ -604,7 +604,7 @@ theorem matrixOf_Kh {μ : ℤ → ℂ} (hμ : ∀ n, μ n = toC (L.muQ n)) {n j 
       toC (L.DFQ n j) := by
   rw [Kh, matrixOf_sub, LamH, matrixOf_diagCLM, matrixOf_headProj_symbolAction_headProj,
     ite_eq_left (show n ∈ headF L.N ∧ j ∈ headF L.N from ⟨hn, hj⟩), DFQ, toC_csub, toC_cscale]
-  simp only [rawSymbol_betaOf, L.coeff_abar, headSym]
+  simp only [rawSymbol_betaOf, L.coeff_abar, Set.indicator_apply, Finset.mem_coe]
   by_cases h : n = j
   · rw [ite_eq_left h, ite_eq_left h, ite_eq_left hn, hμ]
     push_cast

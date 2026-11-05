@@ -8,7 +8,8 @@ import Mathlib.Analysis.Normed.Group.Constructions
 /-!
 # Finite Norm Inequality Helpers
 
-Reusable finite-sum inequalities used across norm proofs.
+Reusable finite-sum inequalities used across norm proofs, and the norm bound of a family
+restricted to a finite set (`bddAbove_norm_indicator_finset`).
 -/
 
 open scoped BigOperators
@@ -54,5 +55,22 @@ theorem norm_sum_mul_pi_le (f h : ι → A) :
     mul_le_mul_of_nonneg_left (norm_le_pi_norm h i) (norm_nonneg _)
 
 end SumMul
+
+section Indicator
+
+variable {M E : Type*} [SeminormedAddGroup E]
+
+/-- The restriction `(F : Set M).indicator μ` of a family to a finite set `F` has bounded norm,
+with bound `∑ j ∈ F, ‖μ j‖`: on `F` the norm is one summand, off `F` it is zero. -/
+theorem bddAbove_norm_indicator_finset (F : Finset M) (μ : M → E) :
+    BddAbove (Set.range fun n => ‖(F : Set M).indicator μ n‖) := by
+  refine ⟨∑ j ∈ F, ‖μ j‖, Set.forall_mem_range.2 fun n => ?_⟩
+  by_cases h : n ∈ F
+  · rw [Set.indicator_of_mem (Finset.mem_coe.2 h)]
+    exact Finset.single_le_sum (fun j _ => norm_nonneg (μ j)) h
+  · rw [Set.indicator_of_notMem (mt Finset.mem_coe.1 h), norm_zero]
+    exact Finset.sum_nonneg fun j _ => norm_nonneg (μ j)
+
+end Indicator
 
 end RadiiPolynomial.NormHelpers
