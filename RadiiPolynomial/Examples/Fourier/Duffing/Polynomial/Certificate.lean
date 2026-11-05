@@ -126,17 +126,10 @@ lemma two_polyProd (h : X) : (2 : ℂ) • polyProd abar h = LB h := by
   have heq := convCLM_eq_symbolAction₀ polyRowBound polyModerate hb h
   simpa only [map_smul, smul_apply, LB] using heq
 
-def hsSym (n : ℤ) : ℂ := if n ∈ S then μ n else 0
-lemma hsSym_bdd : BddAbove (Set.range fun n => ‖hsSym n‖) := by
-  refine ⟨∑ j ∈ S, ‖μ j‖, ?_⟩
-  rintro _ ⟨n, rfl⟩
-  change ‖if n ∈ S then μ n else 0‖ ≤ _
-  split_ifs with hn
-  · exact Finset.single_le_sum (fun j _ => norm_nonneg _) hn
-  · simpa using (Finset.sum_nonneg (s := S) (fun j _ => norm_nonneg (μ j)))
-def LamH : X →L[ℂ] X := diagCLM hsSym hsSym_bdd
+def LamH : X →L[ℂ] X :=
+  diagCLM ((↑S : Set ℤ).indicator μ) (NormHelpers.bddAbove_norm_indicator_finset S μ)
 lemma coeff_LamH (x : X) (n : ℤ) : coeff (LamH x) n = if n ∈ S then μ n * coeff x n else 0 := by
-  simp only [LamH, coeff_diagCLM, hsSym]
+  simp only [LamH, coeff_diagCLM, Set.indicator_apply, Finset.mem_coe]
   split_ifs <;> simp
 
 def Kh : X →L[ℂ] X := LamH - P ∘L LB ∘L P
@@ -204,7 +197,7 @@ lemma matrix_Kh (i j : ℤ) (hi : i ∈ S) (hj : j ∈ S) :
   rw [Kh, matrixOf_sub, LamH, matrixOf_diagCLM, LB,
     matrixOf_headProj_symbolAction_headProj, ite_eq_left (show i ∈ S ∧ j ∈ S from ⟨hi, hj⟩),
     QuadFourierLeafQ.DFQ, toC_csub, toC_cscale]
-  simp only [raw_β, coeff_abar, hsSym]
+  simp only [raw_β, coeff_abar, Set.indicator_apply, Finset.mem_coe]
   by_cases h : i = j
   · rw [ite_eq_left h, ite_eq_left h, ite_eq_left hi, μ_cast]
     push_cast; ring

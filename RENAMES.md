@@ -5540,3 +5540,18 @@ checkout) stay at their pins.
 | `RadiiPolynomial.l1Weighted.eval_add` (`\|z\| ≤ ν`) | `map_add (l1Weighted.aeval_of_norm_le ν z hz)` read through `aeval_of_norm_le_apply_real` | — | same identity on the same closed disc; its only user was `evalCLM` |
 | `RadiiPolynomial.l1Weighted.eval_smul` (every real `z`) | deleted (retired unused off-disc face); NOT replaced by `map_smul`, which gives homogeneity only on `\|z\| ≤ ν` | — | its only user was `evalCLM`; the all-point total-`tsum` homogeneity has no consumer |
 | private `RadiiPolynomial.l1Weighted.seq` (abbrev of `toSeq`) | `RadiiPolynomial.l1Weighted.toSeq` | `Analysis/SequenceSpace/Geometric/Evaluation.lean` | presentation change, definitionally equal: the value of `eval` and the statements of `summable_eval`, `eval_at_zero` now print `toSeq` |
+
+## U-D2c-A the polynomial-carrier head symbol through Mathlib's indicator (2026-11-05, batch 5)
+
+The third copy of the finite-head symbol, in the polynomial-carrier Duffing certificate, is
+retired as in U-D2b: `FourierDuffing.Polynomial.Certificate.LamH` (same name and type
+`X →L[ℂ] X`) takes `(↑S : Set ℤ).indicator μ` as its diagonal symbol, bounded by
+`RadiiPolynomial.NormHelpers.bddAbove_norm_indicator_finset`; `coeff_LamH` keeps its statement
+and `matrix_Kh` unfolds `Set.indicator_apply` and `Finset.mem_coe`. Design of record:
+`exterior/tmp/lp_api_campaign_20261017/POST_MERGE/promotion_20261104/U-D2c/CONSENSUS_design_20261105.md` (D1).
+No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| `FourierDuffing.Polynomial.Certificate.hsSym` | `Set.indicator` (`(↑S : Set ℤ).indicator μ`) | `Examples/Fourier/Duffing/Polynomial/Certificate.lean` | a copy of Mathlib's zero extension; `LamH` takes the indicator (`coeff_LamH` keeps its statement) |
+| `FourierDuffing.Polynomial.Certificate.hsSym_bdd` | `RadiiPolynomial.NormHelpers.bddAbove_norm_indicator_finset` | `Analysis/Norm/FiniteSum.lean` | the one finite norm bound of the head diagonals |
