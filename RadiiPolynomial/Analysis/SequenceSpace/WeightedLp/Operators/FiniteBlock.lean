@@ -510,6 +510,22 @@ end RawZero
 
 end FiniteHead
 
+section FinMatrixHead
+
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} [DecidableEq M] {E : M → Type*}
+  [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 M E]
+  {p : ENNReal} [Fact (1 ≤ p)]
+
+/-- A finite matrix ignores the coordinates off its head: `A ∘ P_F = A`. -/
+theorem finMatrixCLM_comp_headProj (F : Finset M) (A : M → M → 𝕜) :
+    finMatrixCLM (E := E) (p := p) F A ∘L headProj F = finMatrixCLM F A :=
+  ContinuousLinearMap.ext fun x => ext_coeff <| funext fun i => by
+    rw [ContinuousLinearMap.comp_apply, coeff_finMatrixCLM, coeff_finMatrixCLM]
+    exact if_congr Iff.rfl (Finset.sum_congr rfl fun j hj => by
+      rw [coeff_headProj, ite_eq_left hj]) rfl
+
+end FinMatrixHead
+
 end RadiiPolynomial.WeightedLp
 
 end

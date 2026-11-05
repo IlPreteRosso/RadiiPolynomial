@@ -112,6 +112,10 @@ theorem tailSymbol_headF (N : ℕ) (μ : ℤ → ℂ) :
   · rw [tailSymbol_of_notMem (fun h' => h (mem_headF.1 (Finset.mem_coe.1 h'))),
       tailSymbol_of_notMem (show k ∉ headZ N from h)]
 
+/-- The head `headF N` is negation-invariant. -/
+theorem neg_mem_headF (N : ℕ) (n : ℤ) : -n ∈ headF N ↔ n ∈ headF N := by
+  rw [mem_headF, mem_headF, abs_neg]
+
 end HeadF
 
 end RadiiPolynomial.Fourier.IkData

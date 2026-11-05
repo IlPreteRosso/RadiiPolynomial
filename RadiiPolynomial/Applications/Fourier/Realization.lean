@@ -32,8 +32,8 @@ in complex time and as `realRealization c t = Re (realization c t)`.
   (`summable_moment_Y`), and `toL1 : Y 𝕜 ν →L[𝕜] ℓ¹_{ν'}` (`0 < ν' < ν`) keeps the coefficients,
   with `‖toL1 a‖ ≤ (1 + q) / (1 − q) ‖a‖`, `q = ν'/ν`. With the inclusion `incl : X₂ → Y` this is
   the chain `ℓ²_ν → ℓ^∞_ν → ℓ¹_{ν'}` that feeds the lift from an `ℓ²` zero. An `ℓ¹_ν` element
-  enters `Y 𝕜 ν` through the function `toY` (`coeff_toY`: the coefficients are kept), from the
-  coefficient bound `‖xₖ‖ ν^|k| ≤ ‖x‖`.
+  enters `Y 𝕜 ν` through the bounded inclusion `lpOneAlg.toLinf` (`lpOneAlg.coeff_toLinf`: the
+  coefficients are kept; `Compatibility/WeightedL1Iso`).
 * **Derivatives in moment form.** `derivCoeff c n = i n cₙ`. If `∑ |n| ‖cₙ‖ < ∞`, then
   `realization c` has derivative `realization (derivCoeff c)` at every `t`
   (`hasDerivAt_realization`); the summability of `‖cₙ‖` is derived, the zero mode handled
@@ -314,22 +314,6 @@ theorem norm_toL1_apply_le (h : (ν' : ℝ) < ν) (a : Y 𝕜 ν) :
     ‖toL1 h a‖ ≤ (1 + ν' / ν) / (1 - ν' / ν) * ‖a‖ :=
   norm_ofRaw_coeff_le h a
 
-/-- Every weighted coefficient of `x ∈ ℓ¹_ν` is at most the norm: `‖xₖ‖ ν^|k| ≤ ‖x‖`
-(construction internal of `toY`). -/
-private theorem norm_toRealSeq_mul_pow_le (x : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) (k : ℤ) :
-    ‖toRealSeq x k‖ * (ν : ℝ) ^ k.natAbs ≤ ‖x‖ := by
-  rw [← geomFiberZ_weight (𝕜 := 𝕜), ← norm_eq_abs_toReal_mul_weight]
-  exact norm_apply_le_norm x k
-
-/-- **The inclusion `ℓ¹_ν → ℓ^∞_ν`** (`Y 𝕜 ν`), keeping the coefficients (a function; no linear
-service consumes it). -/
-def toY (x : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) : Y 𝕜 ν :=
-  ofCoeff (toRealSeq x) (memℓp_top_of_bdd (toRealSeq x) (norm_toRealSeq_mul_pow_le x))
-
-/-- `toY` keeps the coefficients. -/
-theorem coeff_toY (x : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) : coeff (toY x) = toRealSeq x :=
-  funext fun k => coeff_ofCoeff _ _ k
-
 end Decay
 
 /-! ### D. Derivatives in moment form -/
@@ -595,6 +579,269 @@ theorem realRealization_duffing (hν : 1 < (ν : ℝ)) (a : X₂ ℂ ν)
   exact hre
 
 end Duffing
+
+section Summability
+
+open WeightedLp
+
+/-- If `∑ (weight n)⁻¹ ^ 2 < ∞`, then every `x : WeightedLp M E 2` has
+`Summable fun n => ‖WeightedLp.coeff x n‖`. -/
+theorem summable_norm_coeff_of_summable_inv_sq {𝕜 : Type*} [NormedField 𝕜] {M : Type*}
+    {E : M → Type*} [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)]
+    [FiberTrivialization 𝕜 M E]
+    (hw : Summable fun n => (FiberTrivialization.weight (E := E) n)⁻¹ ^ 2)
+    (x : WeightedLp M E 2) : Summable fun n => ‖WeightedLp.coeff x n‖ := by
+  have hx : Summable fun n => ‖x n‖ ^ 2 := by
+    simpa only [ENNReal.toReal_ofNat, Real.rpow_two] using (lp.memℓp x).summable (by norm_num)
+  refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun n => ?_)
+    ((hx.add hw).div_const 2)
+  rw [WeightedLp.norm_coeff, div_eq_mul_inv]
+  nlinarith [two_mul_le_add_sq ‖x n‖ (FiberTrivialization.weight (E := E) n)⁻¹]
+
+/-- If `∑ (w n)⁻¹ ^ 2 < ∞`, then every `x : WeightedLp M (WeightedScalar 𝕜 w) 2` has
+`Summable fun n => ‖WeightedLp.coeff x n‖`. -/
+theorem summable_norm_coeff_weightedScalar {𝕜 : Type*} [NormedField 𝕜] {M : Type*}
+    {w : M → ℝ} [PosWeight w] (hw : Summable fun n => (w n)⁻¹ ^ 2)
+    (x : WeightedLp M (WeightedScalar 𝕜 w) 2) : Summable fun n => ‖WeightedLp.coeff x n‖ :=
+  summable_norm_coeff_of_summable_inv_sq
+    (by simpa only [WeightedScalar.fiberTrivialization_weight] using hw) x
+
+/-- For `1 ≤ j`, `Summable fun n : ℤ => ((1 + |n|) ^ j)⁻¹ ^ 2`. -/
+theorem summable_inv_one_add_abs_pow_sq {j : ℕ} (hj : 1 ≤ j) :
+    Summable fun n : ℤ => ((1 + |(n : ℝ)|) ^ j)⁻¹ ^ 2 := by
+  have h2 := (summable_nat_add_iff 1).2 (Real.summable_nat_pow_inv.2 one_lt_two)
+  have hN : Summable fun n : ℕ => ((1 + (n : ℝ)) ^ j)⁻¹ ^ 2 :=
+    h2.of_nonneg_of_le (fun _ => by positivity) fun n => by
+      rw [inv_pow, ← pow_mul, Nat.cast_add_one, add_comm (n : ℝ) 1]
+      exact inv_anti₀ (by positivity)
+        (pow_le_pow_right₀ (le_add_of_nonneg_right n.cast_nonneg) (by omega))
+  refine Summable.of_nat_of_neg (hN.congr fun n => ?_) (hN.congr fun n => ?_)
+  · rw [Int.cast_natCast, abs_of_nonneg n.cast_nonneg]
+  · rw [Int.cast_neg, Int.cast_natCast, abs_neg, abs_of_nonneg n.cast_nonneg]
+
+end Summability
+
+section RealizationEnd
+
+open WeightedLp WeightedLp.Bilateral
+open Complex (I)
+open scoped _root_.DiscreteConvolution ComplexConjugate
+
+/-! ### Product realization -/
+
+/-- For `c : ℤ → ℂ` with `n ↦ ‖c n‖` summable, `MemL1v` holds for `c` at the weight
+`k ↦ ((1 : PosReal) : ℝ) ^ k.natAbs`. -/
+private theorem memL1v_one {c : ℤ → ℂ} (hc : Summable fun n => ‖c n‖) :
+    MemL1v (fun k : ℤ => ((1 : PosReal) : ℝ) ^ k.natAbs) c :=
+  hc.congr fun n => by
+    show ‖c n‖ = ‖c n‖ * ((1 : PosReal) : ℝ) ^ n.natAbs
+    rw [show ((1 : PosReal) : ℝ) = 1 from rfl, one_pow, mul_one]
+
+/-- For `p v : ℤ → ℂ` with `n ↦ ‖p n‖` and `n ↦ ‖v n‖` summable, `n ↦ ‖(p ⋆ᵣ₊ v) n‖` is
+summable. -/
+theorem summable_norm_addRingConvolution {p v : ℤ → ℂ} (hp : Summable fun n => ‖p n‖)
+    (hv : Summable fun n => ‖v n‖) : Summable fun n => ‖(p ⋆ᵣ₊ v) n‖ := by
+  have : Fact (1 ≤ ((1 : PosReal) : ℝ)) := ⟨le_rfl⟩
+  let P : lpOneAlg ℤ (geomFiberZ ℂ 1) := ofRaw p (memL1v_one hp)
+  let V : lpOneAlg ℤ (geomFiberZ ℂ 1) := ofRaw v (memL1v_one hv)
+  have hc : (P * V).toRealSeq = p ⋆ᵣ₊ v := lpOneAlg.toRealSeq_mul_fun P V
+  exact hc ▸ summable_norm_toRealSeq 1 (P * V)
+
+/-- For `p v : ℤ → ℂ` with `n ↦ ‖p n‖` and `n ↦ ‖v n‖` summable and every `t : ℝ`,
+`realization (p ⋆ᵣ₊ v) t = realization p t * realization v t`. -/
+theorem realization_addRingConvolution {p v : ℤ → ℂ} (hp : Summable fun n => ‖p n‖)
+    (hv : Summable fun n => ‖v n‖) (t : ℝ) :
+    realization (p ⋆ᵣ₊ v) t = realization p t * realization v t := by
+  have : Fact (1 ≤ ((1 : PosReal) : ℝ)) := ⟨le_rfl⟩
+  let P : lpOneAlg ℤ (geomFiberZ ℂ 1) := ofRaw p (memL1v_one hp)
+  let V : lpOneAlg ℤ (geomFiberZ ℂ 1) := ofRaw v (memL1v_one hv)
+  have hc : (P * V).toRealSeq = p ⋆ᵣ₊ v := lpOneAlg.toRealSeq_mul_fun P V
+  exact hc ▸ realization_mul 1 P V t
+
+/-! ### Linear transfer, complex form -/
+
+/-- For real `c₁ c₂`, `n : ℤ` and `z : ℂ`, both `‖c₂ * (I * n * (I * n * z))‖` and
+`‖c₁ * (I * n * z)‖` are at most `‖(I * c₁ * n - c₂ * n ^ 2) * z‖`. -/
+private theorem norm_terms_le (c₁ c₂ : ℝ) (n : ℤ) (z : ℂ) :
+    ‖(c₂ : ℂ) * (I * n * (I * n * z))‖ ≤ ‖(I * c₁ * n - c₂ * (n : ℂ) ^ 2) * z‖ ∧
+      ‖(c₁ : ℂ) * (I * n * z)‖ ≤ ‖(I * c₁ * n - c₂ * (n : ℂ) ^ 2) * z‖ := by
+  have e1 : (c₂ : ℂ) * (I * n * (I * n * z)) = ((-(c₂ * (n : ℝ) ^ 2) : ℝ) : ℂ) * z := by
+    push_cast
+    linear_combination ((c₂ : ℂ) * (n : ℂ) ^ 2 * z) * Complex.I_sq
+  have e2 : (c₁ : ℂ) * (I * n * z) = (((c₁ * n : ℝ) : ℂ) * I) * z := by
+    push_cast
+    ring
+  have e3 : I * c₁ * n - c₂ * (n : ℂ) ^ 2 =
+      ((-(c₂ * (n : ℝ) ^ 2) : ℝ) : ℂ) + ((c₁ * n : ℝ) : ℂ) * I := by
+    push_cast
+    ring
+  rw [e1, e2, e3]
+  simp only [norm_mul, Complex.norm_add_mul_I, Complex.norm_real, Complex.norm_I, mul_one,
+    Real.norm_eq_abs]
+  exact ⟨mul_le_mul_of_nonneg_right (Real.abs_le_sqrt (le_add_of_nonneg_right (sq_nonneg _)))
+    (norm_nonneg _), mul_le_mul_of_nonneg_right (by
+      rw [← abs_mul]
+      exact Real.abs_le_sqrt (le_add_of_nonneg_left (sq_nonneg _))) (norm_nonneg _)⟩
+
+/-- If `n ↦ ‖p n‖` and `n ↦ ‖v n‖` are summable (`p v : ℤ → ℂ`) and, for every `n : ℤ`,
+`(c₀ + I * c₁ * n - c₂ * n ^ 2) * v n + κ * (p ⋆ᵣ₊ v) n - lam * v n = 0` (real `c₀ c₁ c₂ κ`,
+complex `lam`), then `n ↦ ‖c₂ * derivCoeff (derivCoeff v) n‖` and `n ↦ ‖c₁ * derivCoeff v n‖`
+are summable. -/
+private theorem summable_norm_terms {c₀ c₁ c₂ κ : ℝ} {lam : ℂ} {p v : ℤ → ℂ}
+    (hp : Summable fun n => ‖p n‖) (hv : Summable fun n => ‖v n‖)
+    (hE : ∀ n : ℤ, (c₀ + I * c₁ * n - c₂ * (n : ℂ) ^ 2) * v n + κ * (p ⋆ᵣ₊ v) n - lam * v n = 0) :
+    (Summable fun n => ‖(c₂ : ℂ) * derivCoeff (derivCoeff v) n‖) ∧
+      Summable fun n => ‖(c₁ : ℂ) * derivCoeff v n‖ := by
+  have hw : Summable fun n : ℤ => ‖(I * c₁ * n - c₂ * (n : ℂ) ^ 2) * v n‖ := by
+    refine ((hv.mul_left ‖lam - c₀‖).add
+      ((summable_norm_addRingConvolution hp hv).mul_left ‖(κ : ℂ)‖)).of_nonneg_of_le
+      (fun _ => norm_nonneg _) fun n => ?_
+    rw [show (I * c₁ * n - c₂ * (n : ℂ) ^ 2) * v n = (lam - c₀) * v n - κ * (p ⋆ᵣ₊ v) n by
+      linear_combination hE n, ← norm_mul, ← norm_mul]
+    exact norm_sub_le _ _
+  exact ⟨hw.of_nonneg_of_le (fun _ => norm_nonneg _) fun n => (norm_terms_le c₁ c₂ n (v n)).1,
+    hw.of_nonneg_of_le (fun _ => norm_nonneg _) fun n => (norm_terms_le c₁ c₂ n (v n)).2⟩
+
+/-- For a real `c ≠ 0` and `f : ℤ → ℂ`, if `n ↦ ‖c * f n‖` is summable, then `n ↦ ‖f n‖` is
+summable. -/
+private theorem summable_of_mul {c : ℝ} (hc : c ≠ 0) {f : ℤ → ℂ}
+    (hf : Summable fun n => ‖(c : ℂ) * f n‖) : Summable fun n => ‖f n‖ :=
+  (hf.mul_left |c|⁻¹).congr fun n => by
+    rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, ← mul_assoc,
+      inv_mul_cancel₀ (abs_ne_zero.2 hc), one_mul]
+
+/-- For real `c`, `f : ℤ → ℂ` and `t : ℝ`,
+`realization (fun n => c * f n) t = c * realization f t`. -/
+private theorem realization_ofReal_mul (c : ℝ) (f : ℤ → ℂ) (t : ℝ) :
+    realization (fun n => (c : ℂ) * f n) t = c * realization f t := by
+  rw [realization, realization, ← tsum_mul_left]
+  exact tsum_congr fun n => mul_assoc _ _ _
+
+/-- If `n ↦ ‖p n‖` and `n ↦ ‖v n‖` are summable (`p v : ℤ → ℂ`) and, for every `n : ℤ`,
+`(c₀ + I * c₁ * n - c₂ * n ^ 2) * v n + κ * (p ⋆ᵣ₊ v) n - lam * v n = 0` (real `c₀ c₁ c₂ κ`,
+complex `lam`), then for every `t : ℝ`,
+`realization (fun n => c₂ * derivCoeff (derivCoeff v) n) t +
+realization (fun n => c₁ * derivCoeff v n) t + c₀ * realization v t +
+κ * realization p t * realization v t = lam * realization v t`. -/
+private theorem realization_linearSecondOrder_coeff {c₀ c₁ c₂ κ : ℝ} {lam : ℂ} {p v : ℤ → ℂ}
+    (hp : Summable fun n => ‖p n‖) (hv : Summable fun n => ‖v n‖)
+    (hE : ∀ n : ℤ, (c₀ + I * c₁ * n - c₂ * (n : ℂ) ^ 2) * v n + κ * (p ⋆ᵣ₊ v) n - lam * v n = 0)
+    (t : ℝ) :
+    realization (fun n => (c₂ : ℂ) * derivCoeff (derivCoeff v) n) t +
+      realization (fun n => (c₁ : ℂ) * derivCoeff v n) t + c₀ * realization v t +
+        κ * realization p t * realization v t = lam * realization v t := by
+  obtain ⟨hA, hB⟩ := summable_norm_terms hp hv hE
+  have H := (((hasSum_realization hA t).add (hasSum_realization hB t)).add
+    ((hasSum_realization hv t).mul_left (c₀ : ℂ))).add
+    ((hasSum_realization (summable_norm_addRingConvolution hp hv) t).mul_left (κ : ℂ))
+  rw [mul_assoc (κ : ℂ), ← realization_addRingConvolution hp hv t]
+  refine H.unique (((hasSum_realization hv t).mul_left lam).congr_fun fun n => ?_)
+  simp only [derivCoeff]
+  linear_combination (Complex.exp (n * t * I)) * hE n +
+    c₂ * (n : ℂ) ^ 2 * v n * Complex.exp (n * t * I) * Complex.I_sq
+
+/-! ### Linear transfer, real form -/
+
+/-- For real `c₂` and `v : ℤ → ℂ`, if `n ↦ ‖c₂ * derivCoeff (derivCoeff v) n‖` is summable, then
+for every `t : ℝ`, `c₂ * deriv (deriv (realRealization v)) t` equals
+`(realization (fun n => c₂ * derivCoeff (derivCoeff v) n) t).re`. -/
+private theorem mul_deriv_deriv_realRealization {c₂ : ℝ} {v : ℤ → ℂ}
+    (hA : Summable fun n => ‖(c₂ : ℂ) * derivCoeff (derivCoeff v) n‖) (t : ℝ) :
+    c₂ * deriv (deriv (realRealization v)) t =
+      (realization (fun n => (c₂ : ℂ) * derivCoeff (derivCoeff v) n) t).re := by
+  rcases eq_or_ne c₂ 0 with rfl | hc₂
+  · simp [realization]
+  · have h2 := summable_of_mul hc₂ hA
+    have h1 := summable_norm_of_summable_norm_derivCoeff h2
+    rw [funext fun s => (hasDerivAt_realRealization h1 s).deriv,
+      (hasDerivAt_realRealization h2 t).deriv, realization_ofReal_mul, Complex.re_ofReal_mul]
+    rfl
+
+/-- For real `c₁` and `v : ℤ → ℂ`, if `n ↦ ‖c₁ * derivCoeff v n‖` is summable, then for every
+`t : ℝ`, `c₁ * deriv (realRealization v) t = (realization (fun n => c₁ * derivCoeff v n) t).re`. -/
+private theorem mul_deriv_realRealization {c₁ : ℝ} {v : ℤ → ℂ}
+    (hB : Summable fun n => ‖(c₁ : ℂ) * derivCoeff v n‖) (t : ℝ) :
+    c₁ * deriv (realRealization v) t = (realization (fun n => (c₁ : ℂ) * derivCoeff v n) t).re := by
+  rcases eq_or_ne c₁ 0 with rfl | hc₁
+  · simp [realization]
+  · rw [(hasDerivAt_realRealization (summable_of_mul hc₁ hB) t).deriv,
+      realization_ofReal_mul, Complex.re_ofReal_mul]
+    rfl
+
+/-- If `n ↦ ‖p n‖` and `n ↦ ‖v n‖` are summable (`p v : ℤ → ℂ`), `p (-n) = conj (p n)` for every
+`n : ℤ`, and, for every `n : ℤ`,
+`(c₀ + I * c₁ * n - c₂ * n ^ 2) * v n + κ * (p ⋆ᵣ₊ v) n - lam * v n = 0` (real `c₀ c₁ c₂ κ lam`),
+then for every `t : ℝ`, with `V = realRealization v` and `P = realRealization p`,
+`c₂ * deriv (deriv V) t + c₁ * deriv V t + c₀ * V t + κ * P t * V t = lam * V t`. -/
+theorem realRealization_linearSecondOrder {c₀ c₁ c₂ κ lam : ℝ} {p v : ℤ → ℂ}
+    (hp : Summable fun n => ‖p n‖) (hv : Summable fun n => ‖v n‖)
+    (hps : ∀ n, p (-n) = conj (p n))
+    (hE : ∀ n : ℤ, (c₀ + I * c₁ * n - c₂ * (n : ℂ) ^ 2) * v n + κ * (p ⋆ᵣ₊ v) n - lam * v n = 0)
+    (t : ℝ) :
+    c₂ * deriv (deriv (realRealization v)) t + c₁ * deriv (realRealization v) t +
+      c₀ * realRealization v t + κ * realRealization p t * realRealization v t =
+        lam * realRealization v t := by
+  obtain ⟨hA, hB⟩ := summable_norm_terms hp hv hE
+  rw [mul_deriv_deriv_realRealization hA, mul_deriv_realRealization hB]
+  have key := realization_linearSecondOrder_coeff hp hv hE t
+  rw [← ofReal_realRealization hps t, ← Complex.ofReal_mul] at key
+  have hre := congrArg Complex.re key
+  simp only [Complex.add_re, Complex.re_ofReal_mul] at hre
+  exact hre
+
+/-! ### Fourier-coefficient recovery and injectivity -/
+
+/-- For `ν : PosReal` with `1 ≤ ν`, `a : lpOneAlg ℤ (geomFiberZ ℂ ν)` and `n : ℤ`,
+`fourierCoeff (circleLift ν a) n = a.toRealSeq n`. -/
+theorem fourierCoeff_circleLift (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
+    (a : lpOneAlg ℤ (geomFiberZ ℂ ν)) (n : ℤ) :
+    fourierCoeff (circleLift ν a) n = a.toRealSeq n := by
+  have h := ((hasSum_circleLift ν a).mapL (ContinuousMap.toLp (E := ℂ) 2
+    (AddCircle.haarAddCircle (T := 2 * Real.pi)) ℂ)).mapL
+      (innerSL ℂ (fourierBasis (T := 2 * Real.pi) n))
+  rw [← fourierCoeff_toLp, ← fourierBasis_repr, HilbertBasis.repr_apply_apply]
+  refine h.unique ?_
+  have hb : ∀ m, innerSL ℂ (fourierBasis (T := 2 * Real.pi) n)
+      (ContinuousMap.toLp (E := ℂ) 2 AddCircle.haarAddCircle ℂ (a.toRealSeq m • fourier m)) =
+        if m = n then a.toRealSeq n else 0 := fun m => by
+    rw [innerSL_apply_apply, ← HilbertBasis.repr_apply_apply, fourierBasis_repr, fourierCoeff_toLp,
+      ContinuousMap.coe_smul, fourierCoeff.const_smul, fourierCoeff_fourier, Pi.single_apply]
+    split_ifs with h1 h2 h2
+    · subst h1; rw [smul_eq_mul, mul_one]
+    · exact absurd h1.symm h2
+    · exact absurd h2.symm h1
+    · exact smul_zero _
+  simp only [hb]
+  exact hasSum_ite_eq n _
+
+/-- For `ν : PosReal` with `1 ≤ ν`, `circleLift ν` is injective. -/
+theorem circleLift_injective (ν : PosReal) [Fact (1 ≤ (ν : ℝ))] :
+    Function.Injective (circleLift ν) := fun a b hab =>
+  lpOneAlg.ext_toRealSeq <| funext fun m => by
+    rw [← fourierCoeff_circleLift, ← fourierCoeff_circleLift, hab]
+
+/-! ### Nonvanishing -/
+
+/-- If `n ↦ ‖v n‖` is summable (`v : ℤ → ℂ`) and `realization v = 0`, then `v = 0`. -/
+theorem eq_zero_of_realization_eq_zero {v : ℤ → ℂ} (hv : Summable fun n => ‖v n‖)
+    (hV : realization v = 0) : v = 0 := by
+  have : Fact (1 ≤ ((1 : PosReal) : ℝ)) := ⟨le_rfl⟩
+  let a : lpOneAlg ℤ (geomFiberZ ℂ 1) := ofRaw v (memL1v_one hv)
+  have h0 : circleLift 1 a = 0 := ContinuousMap.ext fun x => by
+    obtain ⟨t, rfl⟩ := QuotientAddGroup.mk_surjective x
+    exact (circleLift_apply_coe 1 a t).trans (congrFun hV t)
+  have := congrArg lpOneAlg.toRealSeq (circleLift_injective 1 (h0.trans (map_zero _).symm))
+  exact this.trans lpOneAlg.toRealSeq_zero
+
+/-- If `n ↦ ‖v n‖` is summable (`v : ℤ → ℂ`), `v (-n) = conj (v n)` for every `n : ℤ`, and
+`realRealization v = 0`, then `v = 0`. -/
+theorem eq_zero_of_realRealization_eq_zero {v : ℤ → ℂ} (hv : Summable fun n => ‖v n‖)
+    (hsym : ∀ n, v (-n) = conj (v n)) (hV : realRealization v = 0) : v = 0 :=
+  eq_zero_of_realization_eq_zero hv <| funext fun t => by
+    rw [← ofReal_realRealization hsym t, congrFun hV t, Pi.zero_apply, Pi.zero_apply,
+      Complex.ofReal_zero]
+
+end RealizationEnd
 
 end RadiiPolynomial.Fourier
 

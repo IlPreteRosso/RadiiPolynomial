@@ -216,6 +216,59 @@ theorem norm_tailDefect_le (hPM : headProj (𝕜 := 𝕜) S ∘L headOp = headOp
 
 end Aggregation
 
+section HeadDiagonalSum
+
+/-! ### Disjoint-support aggregation, head operator plus tail diagonal
+(`[DecidableEq M]`, generic field and frame) -/
+
+variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] {M : Type*} [DecidableEq M] {E : M → Type*}
+  [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 M E]
+
+/-- An operator mapping the head into the head and a diagonal vanishing on the
+head have disjoint inputs and outputs, so their sum has norm at most the larger bound:
+`‖H P_S + diag(r)‖ ≤ max a t`. -/
+theorem norm_comp_headProj_add_diagCLM_le (S : Finset M)
+    (H : WeightedLp M E 2 →L[𝕜] WeightedLp M E 2)
+    (hPHP : headProj (𝕜 := 𝕜) S ∘L (H ∘L headProj (𝕜 := 𝕜) S) =
+      H ∘L headProj (𝕜 := 𝕜) S)
+    (r : M → 𝕜) (hr : BddAbove (Set.range fun k => ‖r k‖)) (hrS : ∀ k ∈ S, r k = 0) {a t : ℝ}
+    (hH : ‖H‖ ≤ a) (ht : ∀ k, ‖r k‖ ≤ t) :
+    ‖H ∘L headProj (𝕜 := 𝕜) S + diagCLM r hr‖ ≤ max a t := by
+  have hmax0 : 0 ≤ max a t := ((norm_nonneg _).trans hH).trans (le_max_left _ _)
+  have hdiag : ‖diagCLM (E := E) (p := 2) r hr‖ ≤ max a t :=
+    norm_diagCLM_le r hr (fun k => (ht k).trans (le_max_right _ _)) hmax0
+  refine ContinuousLinearMap.opNorm_le_bound _ hmax0 fun x => ?_
+  have hPQ : ∀ k, coeff (headProj (𝕜 := 𝕜) S x) k = 0 ∨ coeff (tailProj (𝕜 := 𝕜) S x) k = 0 :=
+    fun k => by
+      by_cases hk : k ∈ S
+      · exact Or.inr (by rw [coeff_tailProj, ite_eq_left hk])
+      · exact Or.inl (by rw [coeff_headProj, ite_eq_right hk])
+  have hx : headProj (𝕜 := 𝕜) S x + tailProj (𝕜 := 𝕜) S x = x := by
+    rw [tailProj_eq_id_sub_headProj, sub_apply, ContinuousLinearMap.id_apply, add_sub_cancel]
+  have hsum : ‖headProj (𝕜 := 𝕜) S x‖ ^ 2 + ‖tailProj (𝕜 := 𝕜) S x‖ ^ 2 = ‖x‖ ^ 2 := by
+    rw [← norm_add_sq_of_disjoint hPQ, hx]
+  have hdQ : diagCLM (E := E) (p := 2) r hr x = diagCLM r hr (tailProj (𝕜 := 𝕜) S x) :=
+    ext_coeff <| funext fun k => by
+      rw [coeff_diagCLM, coeff_diagCLM, coeff_tailProj]
+      by_cases hk : k ∈ S
+      · rw [ite_eq_left hk, hrS k hk, zero_mul, zero_mul]
+      · rw [ite_eq_right hk]
+  have h₁ : ‖H (headProj (𝕜 := 𝕜) S x)‖ ≤ max a t * ‖headProj (𝕜 := 𝕜) S x‖ :=
+    (H.le_opNorm _).trans (mul_le_mul_of_nonneg_right (hH.trans (le_max_left _ _)) (norm_nonneg _))
+  have h₂ : ‖diagCLM r hr (tailProj (𝕜 := 𝕜) S x)‖ ≤ max a t * ‖tailProj (𝕜 := 𝕜) S x‖ :=
+    ((diagCLM (E := E) (p := 2) r hr).le_opNorm _).trans
+      (mul_le_mul_of_nonneg_right hdiag (norm_nonneg _))
+  have hdisj : ∀ k, coeff (H (headProj (𝕜 := 𝕜) S x)) k = 0 ∨
+      coeff (diagCLM (E := E) (p := 2) r hr x) k = 0 :=
+    coeff_disjoint S (H ∘L headProj (𝕜 := 𝕜) S) r hr hPHP hrS x x
+  rw [← pow_le_pow_iff_left₀ (norm_nonneg _) (mul_nonneg hmax0 (norm_nonneg x)) two_ne_zero,
+    add_apply, ContinuousLinearMap.comp_apply,
+    norm_add_sq_of_disjoint hdisj, hdQ, mul_pow, ← hsum, mul_add,
+    ← mul_pow, ← mul_pow]
+  exact add_le_add (pow_le_pow_left₀ (norm_nonneg _) h₁ 2) (pow_le_pow_left₀ (norm_nonneg _) h₂ 2)
+
+end HeadDiagonalSum
+
 end RadiiPolynomial.WeightedLp
 
 end

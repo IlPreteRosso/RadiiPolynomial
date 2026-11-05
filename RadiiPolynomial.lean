@@ -9,6 +9,9 @@ import RadiiPolynomial.Algebra.Convolution
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Compatibility.FiniteBlockTransport
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.Reality
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Pairing
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.Bootstrap
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev
 import RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry
@@ -18,6 +21,7 @@ import RadiiPolynomial.Core
 import RadiiPolynomial.Algebra.Polynomial
 import RadiiPolynomial.Operators.Matrix
 import RadiiPolynomial.Operators.BlockDiagonal
+import RadiiPolynomial.Operators.BlockDiagonal.ProdBlock
 import RadiiPolynomial.Certification
 import RadiiPolynomial.Applications.IVP.Taylor
 import RadiiPolynomial.Applications.IVP.Taylor.Analytic
@@ -38,6 +42,7 @@ import RadiiPolynomial.Applications.Fourier.IkData
 import RadiiPolynomial.Applications.Fourier.Quadratic
 import RadiiPolynomial.Applications.Fourier.Duffing
 import RadiiPolynomial.Applications.Fourier.Realization
+import RadiiPolynomial.Applications.Fourier.Eigenpair
 import RadiiPolynomial.Certification.Fourier.Quadratic
 import RadiiPolynomial.Examples
 

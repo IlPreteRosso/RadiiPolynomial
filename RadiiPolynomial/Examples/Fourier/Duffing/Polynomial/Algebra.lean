@@ -229,6 +229,15 @@ theorem polyModerate :
   rw [← mul_pow]
   exact pow_le_pow_left₀ (pw_pos (j + l)).le (h.trans_eq (mul_comm _ _)) 2
 
+/-- The polynomial weight is negation-invariant (the `hw` of `conjReflL`). -/
+theorem polyWeight_neg : ∀ n : ℤ, polyWeight (-n) = polyWeight n := fun n => by
+  unfold polyWeight
+  rw [Int.cast_neg, abs_neg]
+
+/-- The polynomial weight is at least `1` (the `h1` of `pairing`). -/
+theorem one_le_polyWeight : ∀ n : ℤ, 1 ≤ polyWeight n := fun _ =>
+  one_le_pow₀ (le_add_of_nonneg_right (abs_nonneg _))
+
 /-- **The product** of the polynomial carrier: `convCLM` at the row bound `K = 10`. -/
 abbrev polyProd : X →L[ℂ] X →L[ℂ] X := convCLM polyRowBound
 

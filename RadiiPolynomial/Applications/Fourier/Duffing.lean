@@ -435,6 +435,84 @@ theorem duffing_existsUnique_even (hN : c₂ < ((N : ℝ) + 1) ^ 2)
 
 end Even
 
+open RadiiPolynomial.WeightedLp RadiiPolynomial.Fourier.IkData
+
+section Symbols
+
+/-! ### The shifted symbol as a real translate (`duffing_sub_ofReal`) -/
+
+/-- The shift of a Duffing symbol by a real `l` is the Duffing symbol with `c₂ - l`. -/
+theorem duffing_sub_ofReal (c₁ c₂ l : ℝ) (n : ℤ) :
+    duffing c₁ c₂ n - (l : ℂ) = duffing c₁ (c₂ - l) n := by
+  rw [duffing, duffing, Complex.ofReal_sub]
+  ring
+
+end Symbols
+
+section Tail
+
+/-! ### The tail data at a real eigenvalue
+
+Hypothesis `hN : c₂ - l < (N + 1)²` (tail nonresonance of the shifted symbol). The tail inverse of
+`μ - l` is `tailSymbol ↑(headF N) (fun n => μ n - l)`: `tailSymbol` already inverts off the head. -/
+
+variable {c₁ c₂ l : ℝ} {N : ℕ}
+
+/-- Tail nonresonance: `μ_n ≠ l` off the head. -/
+theorem duffing_ne_ofReal (hN : c₂ - l < ((N : ℝ) + 1) ^ 2) :
+    ∀ n ∉ headF N, duffing c₁ c₂ n ≠ (l : ℂ) := fun n hn =>
+  sub_ne_zero.1 <| (duffing_sub_ofReal c₁ c₂ l n).trans_ne (duffing_ne_zero hN n hn)
+
+/-- The tail inverse of the shifted symbol is bounded by `|μ_{N+1} - l|⁻¹`. -/
+theorem norm_tailSymbol_duffing_sub_le (hN : c₂ - l < ((N : ℝ) + 1) ^ 2) (k : ℤ) :
+    ‖tailSymbol ↑(headF N) (fun n => duffing c₁ c₂ n - (l : ℂ)) k‖ ≤
+      ‖duffing c₁ (c₂ - l) ((N : ℤ) + 1)‖⁻¹ :=
+  (congrArg (fun μ => ‖tailSymbol ↑(headF N) μ k‖)
+    (funext (duffing_sub_ofReal c₁ c₂ l))).trans_le (norm_tailSymbol_duffing_le hN k)
+
+/-- The tail inverse of the shifted symbol is bounded. -/
+theorem bddAbove_tailSymbol_duffing_sub (hN : c₂ - l < ((N : ℝ) + 1) ^ 2) :
+    BddAbove (Set.range fun k => ‖tailSymbol ↑(headF N) (fun n => duffing c₁ c₂ n - (l : ℂ)) k‖) :=
+  ⟨_, Set.forall_mem_range.2 (norm_tailSymbol_duffing_sub_le hN)⟩
+
+/-- The rational tail constant: `|μ_{N+1} - l|⁻¹ ≤ ((N + 1)² - (c₂ - l))⁻¹`, from
+`|μ| ≥ |Re μ| = (N + 1)² - (c₂ - l) > 0`. -/
+theorem inv_norm_duffing_succ_le (hN : c₂ - l < ((N : ℝ) + 1) ^ 2) :
+    ‖duffing c₁ (c₂ - l) ((N : ℤ) + 1)‖⁻¹ ≤ (((N : ℝ) + 1) ^ 2 - (c₂ - l))⁻¹ := by
+  have hsq := sq_norm_duffing c₁ (c₂ - l) ((N : ℤ) + 1)
+  rw [Int.cast_add, Int.cast_natCast, Int.cast_one] at hsq
+  refine inv_anti₀ (sub_pos.2 hN) ?_
+  nlinarith [sub_pos.2 hN, norm_nonneg (duffing c₁ (c₂ - l) ((N : ℤ) + 1)),
+    mul_nonneg (sq_nonneg c₁) (sq_nonneg ((N : ℝ) + 1))]
+
+end Tail
+
+section Growth
+
+/-- For real `c₁ c₂` and `n : ℤ`, `|(n : ℝ)| ≤ ‖duffing c₁ c₂ n‖ + |c₂|`. -/
+theorem abs_le_norm_duffing_add (c₁ c₂ : ℝ) (n : ℤ) :
+    |(n : ℝ)| ≤ ‖duffing c₁ c₂ n‖ + |c₂| := by
+  have hsq : |(n : ℝ)| ≤ (n : ℝ) ^ 2 := by
+    have h := Int.natAbs_le_self_sq n
+    rw [Int.natCast_natAbs] at h
+    exact_mod_cast h
+  have hd := sq_norm_duffing c₁ c₂ n
+  have h0 := norm_nonneg (duffing c₁ c₂ n)
+  have hre : (n : ℝ) ^ 2 - c₂ ≤ ‖duffing c₁ c₂ n‖ := by
+    nlinarith [sq_nonneg (c₁ * (n : ℝ)), sq_nonneg ((n : ℝ) ^ 2 - c₂ - ‖duffing c₁ c₂ n‖)]
+  linarith [le_abs_self c₂]
+
+/-- For real `c₁ c₂`, `n ↦ ‖duffing c₁ c₂ n‖` tends to `Filter.atTop` along `Filter.cofinite`. -/
+theorem tendsto_norm_duffing (c₁ c₂ : ℝ) :
+    Filter.Tendsto (fun n : ℤ => ‖duffing c₁ c₂ n‖) Filter.cofinite Filter.atTop :=
+  (Filter.tendsto_atTop_add_const_right _ (-|c₂|)
+    (Filter.tendsto_atTop_mono (fun n => (Real.norm_eq_abs _).trans_le
+        (abs_le_norm_duffing_add c₁ c₂ n))
+      (tendsto_norm_cocompact_atTop.comp Int.tendsto_coe_cofinite))).congr
+    fun _ => add_neg_cancel_right _ _
+
+end Growth
+
 end RadiiPolynomial.Fourier.Duffing
 
 end

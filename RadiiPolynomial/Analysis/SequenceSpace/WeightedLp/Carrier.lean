@@ -141,6 +141,10 @@ theorem coeff_single (m : M) (r : 𝕜) :
     coeff (single (E := E) (p := p) m r) m = r := by
   rw [coeff_single, Pi.single_eq_same]
 
+/-- A scalar atom with a nonzero coordinate is nonzero: `r ≠ 0 → single m r ≠ 0`. -/
+theorem single_ne_zero {m : M} {r : 𝕜} (hr : r ≠ 0) : (single m r : WeightedLp M E p) ≠ 0 :=
+  fun h => hr <| by rw [← coeff_single_self (E := E) (p := p) m r, h, coeff_zero, Pi.zero_apply]
+
 
 /-- `single m r = r • single m 1`. -/
 theorem single_eq_smul (m : M) (r : 𝕜) :
@@ -150,6 +154,21 @@ theorem single_eq_smul (m : M) (r : 𝕜) :
 end Single
 
 end Coordinates
+
+/-! ### Real multiples on a complex carrier -/
+
+section RealScalar
+
+variable {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace ℂ (E m)]
+  [FiberTrivialization ℂ M E] {p : ℝ≥0∞}
+
+/-- Coordinates of a real multiple on a complex carrier: `(r • x)ₙ = r xₙ`. -/
+theorem coeff_real_smul (r : ℝ) (x : WeightedLp M E p) (n : M) :
+    coeff (r • x) n = (r : ℂ) * coeff x n := by
+  rw [RCLike.real_smul_eq_coe_smul (K := ℂ), RCLike.ofReal_eq_complex_ofReal, coeff_smul,
+    Pi.smul_apply, smul_eq_mul]
+
+end RealScalar
 
 /-! ### Coordinates of finite sums (at arbitrary exponents) -/
 

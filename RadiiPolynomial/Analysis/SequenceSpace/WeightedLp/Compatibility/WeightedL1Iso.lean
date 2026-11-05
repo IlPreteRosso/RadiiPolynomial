@@ -45,6 +45,28 @@ variable {𝕜} [FiberTrivialization 𝕜 M E] [DecidableEq M]
 
 end Iso
 
+section Linf
+open scoped ENNReal
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
+  [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)]
+
+/-- The continuous `𝕜`-linear map `lpOneAlg M E → WeightedLp M E ∞` given by
+`a ↦ ⟨a.toLp, _⟩` (`LinearMap.mkContinuous` at bound `1`); its coefficient face is
+`coeff_toLinf`. -/
+def toLinf : lpOneAlg M E →L[𝕜] WeightedLp M E ∞ :=
+  LinearMap.mkContinuous
+    { toFun := fun a => ⟨a.toLp, (lp.memℓp a.toLp).of_exponent_ge le_top⟩
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+    1 fun a => (lp.norm_le_of_forall_le (norm_nonneg a) fun k =>
+      lpOneAlg.norm_apply_le_norm a k).trans_eq (one_mul _).symm
+
+/-- `WeightedLp.coeff (toLinf a) = lpOneAlg.toRealSeq a`. -/
+@[simp] theorem coeff_toLinf [FiberTrivialization 𝕜 M E] (a : lpOneAlg M E) :
+    WeightedLp.coeff (toLinf (𝕜 := 𝕜) a) = lpOneAlg.toRealSeq a := rfl
+
+end Linf
+
 end lpOneAlg
 
 namespace WeightedLp

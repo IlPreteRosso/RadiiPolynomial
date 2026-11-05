@@ -62,7 +62,8 @@ theorem weight_le_geometric (n : ℤ) :
 /-- **The embedding** `ℓ²_{6/5} → X`: the coefficient-preserving reweighting at `C = 20`. -/
 def embed : X₂ ℂ ν₆₅ →L[ℂ] X := reweightCLM (by norm_num) weight_le_geometric
 
-private theorem coeff_embed (x : X₂ ℂ ν₆₅) (n : ℤ) : coeff (embed x) n = coeff x n :=
+/-- `embed` keeps the coefficients. -/
+theorem coeff_embed (x : X₂ ℂ ν₆₅) (n : ℤ) : coeff (embed x) n = coeff x n :=
   coeff_reweightCLM _ _ x n
 
 private theorem embed_center : embed FourierDuffing.Certificate.abar = Certificate.abar :=
@@ -91,7 +92,9 @@ theorem embed_aTilde_eq_xPoly : embed aTilde = Certificate.xPoly :=
   Certificate.unique_eq_xPoly _ embed_aTilde_ball <| funext fun n =>
     (raw_embed aTilde n).trans (duffing_analytic_solution.2.1 n)
 
-private theorem coeff_xPoly : coeff Certificate.xPoly = coeff aTilde := by
+/-- The certified zero on the polynomial carrier has the coefficients of the geometric-carrier
+zero. -/
+theorem coeff_xPoly_eq_coeff_aTilde : coeff Certificate.xPoly = coeff aTilde := by
   rw [← embed_aTilde_eq_xPoly]
   exact funext (coeff_embed aTilde)
 
@@ -123,17 +126,17 @@ theorem certified_analytic_solution :
     (∀ t, deriv (deriv solution) t + (1 / 10 : ℝ) * deriv solution t +
       4 * solution t - (solution t) ^ 2 = Real.cos t) := by
   have hs : solution = FourierDuffing.Certificate.solution := by
-    rw [solution, coeff_xPoly]
+    rw [solution, coeff_xPoly_eq_coeff_aTilde]
     rfl
   have he : extension = FourierDuffing.Certificate.extension := by
-    rw [extension, coeff_xPoly]
+    rw [extension, coeff_xPoly_eq_coeff_aTilde]
     rfl
   have hr : ((Numbers.radiusQ : ℚ) : ℝ) = 1 / 10000 := by norm_num [Numbers.radiusQ]
   obtain ⟨-, -, -, -, hsum, han, hper, hext, hagree, hode⟩ := duffing_analytic_solution
   refine ⟨hr ▸ Certificate.xPoly_ball, Certificate.xPoly_zero,
     fun x hx hF => Certificate.unique_eq_xPoly x (hr ▸ hx) hF, hs ▸ han, hs ▸ hper,
     fun t => ?_, he ▸ hext, fun t => ?_, fun t => ?_⟩
-  · rw [hs, coeff_xPoly]
+  · rw [hs, coeff_xPoly_eq_coeff_aTilde]
     exact (hsum t).tsum_eq.symm
   · rw [he, hs]
     exact hagree t

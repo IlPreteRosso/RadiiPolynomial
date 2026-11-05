@@ -109,6 +109,25 @@ theorem headProj_comp_tailProj :
 
 end Projections
 
+section ProjectionApplyNorm
+
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} [DecidableEq M] {E : M → Type*}
+  [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 M E]
+  {p : ℝ≥0∞} [Fact (1 ≤ p)]
+
+/-- `‖P_S x‖ ≤ ‖x‖`. -/
+theorem norm_headProj_apply_le (S : Finset M) (x : WeightedLp M E p) :
+    ‖headProj (𝕜 := 𝕜) S x‖ ≤ ‖x‖ := by
+  have hp : p ≠ 0 := ne_of_gt (lt_of_lt_of_le zero_lt_one (Fact.out : 1 ≤ p))
+  refine lp.norm_mono hp fun n => ?_
+  rw [norm_apply_eq, norm_apply_eq, coeff_headProj]
+  by_cases hn : n ∈ S
+  · rw [ite_eq_left hn]
+  · rw [ite_eq_right hn, norm_zero, zero_mul, ← norm_apply_eq]
+    exact norm_nonneg _
+
+end ProjectionApplyNorm
+
 end RadiiPolynomial.WeightedLp
 
 end
