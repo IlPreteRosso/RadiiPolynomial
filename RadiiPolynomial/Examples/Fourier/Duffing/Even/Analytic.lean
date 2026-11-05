@@ -52,11 +52,6 @@ private theorem aTilde_spec :
         (∀ n, rawF (duffing 0 (-1)) (forcing (-4 / 5)) z n = 0) → z = aTilde :=
   even_l2_even.choose_spec
 
-private theorem coeff_aTilde_neg (n : ℤ) : coeff aTilde (-n) = conj (coeff aTilde n) := by
-  have h := congrArg (fun x : X₂ ℂ ν₆₅ => coeff x n) aTilde_spec.2.2.1
-  rw [coeff_conjRefl] at h
-  rw [← h, Complex.conj_conj]
-
 private theorem coeff_aTilde_even (n : ℤ) : coeff aTilde (-n) = coeff aTilde n := by
   have h := congrArg (fun x : X₂ ℂ ν₆₅ => coeff x n) aTilde_spec.2.2.2.1
   rwa [coeff_refl] at h
@@ -78,7 +73,7 @@ private theorem complexSolution_analytic :
 
 private theorem realSolution_ofReal (t : ℝ) :
     (Fourier.realRealization (coeff aTilde) t : ℂ) = Fourier.realization (coeff aTilde) t :=
-  Fourier.ofReal_realRealization coeff_aTilde_neg t
+  Fourier.ofReal_realRealization ((conjReflL_eq_self_iff_coeff _ aTilde).1 aTilde_spec.2.2.1) t
 
 /-- **THE ANALYTIC ENDPOINT** (PlasmaLean's periodic problem in our convention): the certified
 zero `aTilde` of the raw Fourier map at `(c₁, c₂, c₃) = (0, −1, −4/5)`, with the ball statement of
@@ -113,7 +108,8 @@ theorem even_analytic_solution :
       realSolution_ofReal]
   · rw [solution, solution, Fourier.realRealization, Fourier.realRealization,
       Fourier.realization_neg_of_even coeff_aTilde_even]
-  · have h := Fourier.realRealization_duffing one_lt_ν₆₅ aTilde coeff_aTilde_neg hcoeff t
+  · have h := Fourier.realRealization_duffing one_lt_ν₆₅ aTilde
+      ((conjReflL_eq_self_iff_coeff _ aTilde).1 hreal) hcoeff t
     have hd : deriv (deriv solution) t =
         -deriv (deriv (Fourier.realRealization (coeff aTilde))) t := by
       rw [show solution = fun s => -Fourier.realRealization (coeff aTilde) s from rfl,

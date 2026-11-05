@@ -5472,3 +5472,26 @@ realization bridge"); the trial → library map is in
 | `RadiiPolynomial.WeightedLp.conjRefl_memℓp`, `RadiiPolynomial.WeightedLp.conjReflLM` (public) | private (same names) | `Analysis/SequenceSpace/WeightedLp/Operators/Reality.lean` | critic finding 5: construction internals of `conjReflL` (precedent U-A `memℓp_coeffConj`/`coeffConjFun`) |
 | private `RadiiPolynomial.WeightedLp.tsum_re_conj_mul_coeff_single`; private `RadiiPolynomial.Fourier.mul_deriv_deriv_realization`, `RadiiPolynomial.Fourier.mul_deriv_realization` | deleted | `WeightedLp/Pairing.lean`; `Applications/Fourier/Realization.lean` | critic finding 3: dead code (zero users) |
 | `FourierDuffing.Polynomial.Eigenpair.summable_norm_coeff_xPoly` | deleted; the call site passes `summable_norm_coeff_X Certificate.xPoly` | `Examples/Fourier/Duffing/Polynomial/Eigenpair/Analytic.lean` | critic note N4: a second proof of an instance of `summable_norm_coeff_X` |
+
+## U-D2 conjugate-reflection carriers (2026-11-05)
+
+The geometric conjugate reflection of the quadratic Fourier family is re-bodied as the
+specialization of the generic `WeightedLp.conjReflL` at the symmetric geometric weight; the
+generic owner gains the involution, isometry and fixed-point faces; the product commutation moves
+to its own module so that `Reality` no longer imports the convolution. Design of record:
+`exterior/tmp/lp_api_campaign_20261017/POST_MERGE/promotion_20261104/U-D2/CONSENSUS_design_20261105.md`.
+No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| `RadiiPolynomial.Fourier.Quadratic.memℓp_conjRefl` | deleted (absorbed in the construction of `RadiiPolynomial.WeightedLp.conjReflL`) | `Applications/Fourier/Quadratic.lean` | its only user was the old body of `conjRefl` |
+| `RadiiPolynomial.Fourier.Quadratic.norm_conjRefl` | `RadiiPolynomial.WeightedLp.norm_conjReflL` | `Analysis/SequenceSpace/WeightedLp/Operators/Reality.lean` | the generic face at the owner of the map; its only user was `isometry_conjRefl` |
+| `RadiiPolynomial.Fourier.Quadratic.conjRefl_sub` | `map_sub (RadiiPolynomial.WeightedLp.conjReflL _)` | — | `conjRefl` is now a continuous ℝ-linear map applied; its only user was `isometry_conjRefl` |
+| `RadiiPolynomial.Fourier.Quadratic.conjRefl` (body `ofCoeff …`) | same name and type, body `conjReflL (geomFiberZ_weight_neg ν) a` (re-bodied `def`) | `Applications/Fourier/Quadratic.lean` | the geometric specialization of the generic conjugate reflection; `coeff_conjRefl` (re-proved by `coeff_conjReflL`, still `@[simp]`) and `isometry_conjRefl` (re-proved by `isometry_conjReflL`) keep their statements |
+| `RadiiPolynomial.WeightedLp.mem_realSub_iff_coeff` (proof) | same statement, proved by `mem_realSub` and `conjReflL_eq_self_iff_coeff` | `Analysis/SequenceSpace/WeightedLp/Operators/Reality.lean` | one copy of the fixed-point coefficient argument |
+| `RadiiPolynomial.WeightedLp.conjReflL_convCLM` (in `Operators/Reality.lean`) | same name and type | `Analysis/SequenceSpace/WeightedLp/Operators/RealityConvolution.lean` | moved: the only face of the reflection that needs `RowBound`/`convCLM`; `Reality` drops its `Convolution` import, `Applications/Fourier/Eigenpair` imports `RealityConvolution` |
+| `FourierExponential.Family.weight_neg_le` (proof) | same statement, proved through `(geomFiberZ_weight_neg ν m).le` | `Examples/Fourier/Exponential/Algebra.lean` | one copy of the geometric weight symmetry |
+| private `FourierDuffing.Certificate.coeff_aTilde_neg` | deleted; the two call sites pass `(conjReflL_eq_self_iff_coeff _ aTilde).1 …` | `Examples/Fourier/Duffing/Analytic.lean` | a copy of the generic fixed-point face |
+| private `FourierDuffing.Even.coeff_aTilde_neg` | deleted; the two call sites pass `(conjReflL_eq_self_iff_coeff _ aTilde).1 …` | `Examples/Fourier/Duffing/Even/Analytic.lean` | idem |
+| private `FourierRiccati.coeff_a_neg` | deleted; the two call sites pass `(conjReflL_eq_self_iff_coeff _ a).1 coefficient_reality` | `Examples/Fourier/Riccati/Analytic.lean` | idem |
+| `FourierDuffing.Polynomial.Eigenpair.coeff_neg_of_conjRefl_eq` | deleted; `abar_mem_realSub` and `xPoly_mem_realSub` pass `(conjReflL_eq_self_iff_coeff _ _).1 …` | `Examples/Fourier/Duffing/Polynomial/Eigenpair/Certificate.lean` | idem |

@@ -64,6 +64,12 @@ theorem geomFiberZ_weight {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal) (k : 
     FiberTrivialization.weight (E := geomFiberZ 𝕜 ν) k = (ν : ℝ) ^ k.natAbs :=
   WeightedScalar.fiberTrivialization_weight k
 
+/-- The weight `k ↦ ν^|k|` of `geomFiberZ 𝕜 ν` is symmetric, `ν^|−k| = ν^|k|`, for every positive
+radius. This is the hypothesis of the conjugate reflection on `X₂ ℂ ν`. -/
+theorem geomFiberZ_weight_neg (ν : PosReal) (k : ℤ) :
+    (ν : ℝ) ^ (-k).natAbs = (ν : ℝ) ^ k.natAbs := by
+  rw [Int.natAbs_neg]
+
 
 /-! ### Fiber-norm bridge -/
 

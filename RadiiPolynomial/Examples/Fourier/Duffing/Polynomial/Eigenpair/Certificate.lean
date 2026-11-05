@@ -30,19 +30,12 @@ section Centre
 
 /-! ### The centre `ā ∈ XR` and the symmetric symbol `β = 2ā` -/
 
-/-- A fixed point of the shipped conjugate reflection on the geometric carrier, in coordinates. -/
-theorem coeff_neg_of_conjRefl_eq {ν : PosReal} {a : Bilateral.X₂ ℂ ν}
-    (ha : Fourier.Quadratic.conjRefl a = a) (n : ℤ) :
-    coeff a (-n) = starRingEnd ℂ (coeff a n) :=
-  (congrArg (coeff · (-n)) ha).symm.trans <|
-    (Fourier.Quadratic.coeff_conjRefl a (-n)).trans <| by rw [neg_neg]
-
 /-- The polynomial-carrier centre `ā` lies in `XR`. -/
 theorem abar_mem_realSub : Certificate.abar ∈ realSub polyWeight_neg :=
   (mem_realSub_iff_coeff polyWeight_neg).2 fun n =>
     (Certificate.coeff_abar (-n)).trans <|
       (FourierDuffing.Certificate.coeff_abar (-n)).symm.trans <|
-        (coeff_neg_of_conjRefl_eq (FourierDuffing.Numbers.leaf.conjRefl_abar
+        ((conjReflL_eq_self_iff_coeff _ _).1 (FourierDuffing.Numbers.leaf.conjRefl_abar
           (ν := FourierDuffing.Certificate.ν₆₅) FourierDuffing.Numbers.checks) n).trans <|
           congrArg _ <|
             (FourierDuffing.Certificate.coeff_abar n).trans (Certificate.coeff_abar n).symm
@@ -57,7 +50,8 @@ section Zero
 theorem xPoly_mem_realSub : Certificate.xPoly ∈ realSub polyWeight_neg :=
   (mem_realSub_iff_coeff polyWeight_neg).2 fun n => by
     rw [← embed_aTilde_eq_xPoly, coeff_embed, coeff_embed]
-    exact coeff_neg_of_conjRefl_eq FourierDuffing.Certificate.duffing_analytic_solution.2.2.1 n
+    exact (conjReflL_eq_self_iff_coeff _ _).1
+      FourierDuffing.Certificate.duffing_analytic_solution.2.2.1 n
 
 /-- The potential `q = -2 u*` lies in `XR`. -/
 theorem potential_mem_realSub : (-2 : ℝ) • Certificate.xPoly ∈ realSub polyWeight_neg :=

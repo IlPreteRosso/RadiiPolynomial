@@ -36,11 +36,6 @@ private theorem one_lt_ν : 1 < (ν : ℝ) := by
   rw [coe_ν]
   norm_num
 
-private theorem coeff_a_neg (n : ℤ) : coeff a (-n) = conj (coeff a n) := by
-  have h := congrArg (fun x : X₂ ℂ ν => coeff x n) coefficient_reality
-  rw [coeff_conjRefl] at h
-  rw [← h, Complex.conj_conj]
-
 private theorem coeff_incl_a : coeff (incl a) = coeff a := funext (coeff_incl a)
 
 private theorem solution_analytic : AnalyticOnNhd ℝ solution Set.univ := by
@@ -56,7 +51,7 @@ private theorem extension_analytic :
 
 private theorem solution_ofReal (t : ℝ) :
     (solution t : ℂ) = Fourier.realization (coeff a) t :=
-  Fourier.ofReal_realRealization coeff_a_neg t
+  Fourier.ofReal_realRealization ((conjReflL_eq_self_iff_coeff _ a).1 coefficient_reality) t
 
 /-- The raw zero in the coefficient form of the first-order family (`c₀ = c₁ = 1`, `b = g`). -/
 private theorem coeff_equation (n : ℤ) :
@@ -104,7 +99,8 @@ theorem riccati_analytic_solution :
     exact Fourier.hasSum_realization
       ((Fourier.summable_moment_Y (incl a) zero_le_one one_lt_ν 0).congr fun n => by
         rw [coeff_incl, pow_zero, one_mul, one_pow, mul_one]) t
-  · have h := Fourier.realRealization_firstOrder one_lt_ν a coeff_a_neg coeff_equation t
+  · have h := Fourier.realRealization_firstOrder one_lt_ν a
+      ((conjReflL_eq_self_iff_coeff _ a).1 coefficient_reality) coeff_equation t
     rw [one_mul, one_mul, realRealization_coeff_g] at h
     exact h
 

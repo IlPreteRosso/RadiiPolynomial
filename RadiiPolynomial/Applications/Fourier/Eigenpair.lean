@@ -1,5 +1,6 @@
 import RadiiPolynomial.Core.Quadratic
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Pairing
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.RealityConvolution
 import RadiiPolynomial.Operators.BlockDiagonal.ProdBlock
 
 /-!

@@ -77,7 +77,8 @@ omit [Fact (1 ≤ (ν : ℝ))] in
 theorem weight_neg_le (m : ℤ) :
     FiberTrivialization.weight (E := geomFiberZ ℂ ν) (-m) ≤
       FiberTrivialization.weight (E := geomFiberZ ℂ ν) m := by
-  rw [geomFiberZ_weight, geomFiberZ_weight, Int.natAbs_neg]
+  rw [geomFiberZ_weight, geomFiberZ_weight]
+  exact (geomFiberZ_weight_neg ν m).le
 
 /-- The reflection `(R x)_k = x_(−k)` of `ℓ¹_ν`. -/
 abbrev R : X ν →A[ℂ] X ν := lpOneAlg.refl (weight_neg_le ν)

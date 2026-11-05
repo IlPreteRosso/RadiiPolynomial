@@ -1,5 +1,6 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Bilateral.Quadratic
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.FiniteBlock
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.Reality
 import RadiiPolynomial.Core.Quadratic
 import RadiiPolynomial.Core.Transport
 
@@ -57,13 +58,14 @@ realization `H_F = headReal F` and the cross-exponent tail diagonal `T∞ = tail
   (`WeightedLp.eq_zero_iff_of_coeff_eq_headSolve`), and the unique zero of `G` transports to a
   unique raw zero in the ball (`existsUnique_rawF`, through `existsUnique_zero_transport` at the
   identity isometry).
-* **Conjugate reflection and reflection.** `(R a)ₙ = conj (a₋ₙ)` (`conjRefl`, any positive `ν`)
-  is an additive isometry of `X` (`isometry_conjRefl`; a real structure, not a complex-linear
-  map), and `(R a ⋆ R a)ₙ = conj ((a ⋆ a)₋ₙ)` (`convCoeff_conjRefl`, the diagonal square
-  identity). The raw map is `R`-equivariant, `F(R a)ₙ = conj (F(a)₋ₙ)`, for a conjugate-symmetric
-  symbol and forcing (`rawF_conjRefl`), and equivariant under the plain reflection
-  `refl` of `WeightedLp.Bilateral`, `F(refl a)ₙ = F(a)₋ₙ`, for an even symbol and forcing
-  (`rawF_refl`). The symmetry of a particular symbol and forcing is the consumer's hypothesis.
+* **Conjugate reflection and reflection.** `(R a)ₙ = conj (a₋ₙ)` (`conjRefl`, any positive `ν`;
+  the geometric specialization of `WeightedLp.conjReflL`) is an additive isometry of `X`
+  (`isometry_conjRefl`; a real structure, not a complex-linear map), and
+  `(R a ⋆ R a)ₙ = conj ((a ⋆ a)₋ₙ)` (`convCoeff_conjRefl`, the diagonal square identity). The raw
+  map is `R`-equivariant, `F(R a)ₙ = conj (F(a)₋ₙ)`, for a conjugate-symmetric symbol and forcing
+  (`rawF_conjRefl`), and equivariant under the plain reflection `refl` of `WeightedLp.Bilateral`,
+  `F(refl a)ₙ = F(a)₋ₙ`, for an even symbol and forcing (`rawF_refl`). The symmetry of a
+  particular symbol and forcing is the consumer's hypothesis.
 -/
 
 open scoped ENNReal NNReal
@@ -469,34 +471,16 @@ section Reality
 
 variable {ν : PosReal}
 
-/-- The conjugate reflection of a coefficient family stays in `X₂ ℂ ν` (symmetric weight). -/
-theorem memℓp_conjRefl (a : X₂ ℂ ν) :
-    Memℓp (fun k => FiberTrivialization.equiv (E := geomFiberZ ℂ ν) k
-      (starRingEnd ℂ (coeff a (-k)))) 2 :=
-  memℓp_two_of_summable _ (((Equiv.neg ℤ).summable_iff.2 (summable_sq_X₂ a)).congr fun k => by
-    simp only [Function.comp_apply, Equiv.neg_apply, Int.natAbs_neg, Complex.norm_conj])
-
-/-- **The conjugate reflection** `(R a)ₙ = conj (a₋ₙ)`. -/
+/-- **The conjugate reflection** `(R a)ₙ = conj (a₋ₙ)`: the geometric specialization of the
+conjugate reflection `conjReflL` of `WeightedLp`, at the symmetric weight `ν^|k|`
+(`geomFiberZ_weight_neg`). -/
 def conjRefl (a : X₂ ℂ ν) : X₂ ℂ ν :=
-  ofCoeff (fun n => starRingEnd ℂ (coeff a (-n))) (memℓp_conjRefl a)
+  conjReflL (geomFiberZ_weight_neg ν) a
 
 /-- `R` in coordinates. -/
 @[simp] theorem coeff_conjRefl (a : X₂ ℂ ν) (n : ℤ) :
     coeff (conjRefl a) n = starRingEnd ℂ (coeff a (-n)) :=
-  coeff_ofCoeff _ _ n
-
-/-- `R` is an isometry (`m₋ₙ = mₙ`). -/
-theorem norm_conjRefl (a : X₂ ℂ ν) : ‖conjRefl a‖ = ‖a‖ := by
-  refine (pow_left_inj₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
-  rw [norm_sq_X₂, norm_sq_X₂, ← (Equiv.neg ℤ).tsum_eq]
-  exact tsum_congr fun k => by
-    simp only [coeff_conjRefl, Equiv.neg_apply, neg_neg, Int.natAbs_neg, Complex.norm_conj]
-
-/-- `R` is additive. -/
-theorem conjRefl_sub (a b : X₂ ℂ ν) : conjRefl (a - b) = conjRefl a - conjRefl b :=
-  ext_coeff <| funext fun n => by
-    rw [coeff_conjRefl, coeff_sub, coeff_sub, Pi.sub_apply, Pi.sub_apply, coeff_conjRefl,
-      coeff_conjRefl, map_sub]
+  coeff_conjReflL _ a n
 
 /-- The product commutes with `R`: `(R a ⋆ R a)ₙ = conj ((a ⋆ a)₋ₙ)` (`Complex.conj_tsum` and the
 reindex `j ↦ −j`). -/
@@ -510,7 +494,7 @@ theorem convCoeff_conjRefl (a : X₂ ℂ ν) (n : ℤ) :
 
 /-- **`R` is an isometry** of `X₂ ℂ ν`. -/
 theorem isometry_conjRefl : Isometry (conjRefl : X₂ ℂ ν → X₂ ℂ ν) :=
-  Isometry.of_dist_eq fun a b => by rw [dist_eq_norm, dist_eq_norm, ← conjRefl_sub, norm_conjRefl]
+  isometry_conjReflL _
 
 /-- **Conjugate equivariance of the raw map**: a conjugate-symmetric symbol
 `μ₋ₙ = conj μₙ` and forcing `g₋ₙ = conj gₙ` give `F(R a)ₙ = conj (F(a)₋ₙ)`. -/

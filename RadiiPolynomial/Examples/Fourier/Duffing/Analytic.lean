@@ -46,11 +46,6 @@ private theorem aTilde_spec :
         (∀ n, rawF (duffing (1 / 10) 4) (forcing 1) z n = 0) → z = aTilde :=
   duffing_l2_real.choose_spec
 
-private theorem coeff_aTilde_neg (n : ℤ) : coeff aTilde (-n) = conj (coeff aTilde n) := by
-  have h := congrArg (fun x : X₂ ℂ ν₆₅ => coeff x n) aTilde_spec.2.2.1
-  rw [coeff_conjRefl] at h
-  rw [← h, Complex.conj_conj]
-
 private theorem coeff_incl_aTilde : coeff (incl aTilde) = coeff aTilde := funext (coeff_incl aTilde)
 
 private theorem solution_analytic : AnalyticOnNhd ℝ solution Set.univ := by
@@ -66,7 +61,7 @@ private theorem extension_analytic :
 
 private theorem solution_ofReal (t : ℝ) :
     (solution t : ℂ) = Fourier.realization (coeff aTilde) t :=
-  Fourier.ofReal_realRealization coeff_aTilde_neg t
+  Fourier.ofReal_realRealization ((conjReflL_eq_self_iff_coeff _ aTilde).1 aTilde_spec.2.2.1) t
 
 /-- **THE ANALYTIC ENDPOINT** (book §10.1 at its data): the certified zero `aTilde` of the raw
 Fourier map, with the ball statement of `duffing_l2_real`, realizes the real-analytic
@@ -97,7 +92,8 @@ theorem duffing_analytic_solution :
     exact Fourier.hasSum_realization
       ((Fourier.summable_moment_Y (incl aTilde) zero_le_one one_lt_ν₆₅ 0).congr fun n => by
         rw [coeff_incl, pow_zero, one_mul, one_pow, mul_one]) t
-  · have h := Fourier.realRealization_duffing one_lt_ν₆₅ aTilde coeff_aTilde_neg hcoeff t
+  · have h := Fourier.realRealization_duffing one_lt_ν₆₅ aTilde
+      ((conjReflL_eq_self_iff_coeff _ aTilde).1 hreal) hcoeff t
     rw [one_mul] at h
     exact h
 

@@ -1,17 +1,21 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.FiniteBlock
-import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Convolution
 
 /-!
 # Conjugate reflection and the real subspace of a weighted ℓ² carrier
 
 On `X = WeightedLp M (WeightedScalar ℂ w) 2` with a negation-invariant weight
 `hw : ∀ n, w (-n) = w n`, the conjugate reflection `conjReflL hw : X →L[ℝ] X`,
-`(K x)ₙ = conj x₋ₙ`, is ℝ-linear and conjugate-linear over `ℂ` (`conjReflL_smul`). Its fixed
-ℝ-subspace `realSub hw = {x : x₋ₙ = conj xₙ}` (`mem_realSub_iff_coeff`) is complete, and a
-`K`-commuting operator restricts to it (`restrictReal`). The commutation faces with `K`: the bounded
-product `convCLM` on a commutative index, diagonal multipliers with conjugate-symmetric symbols and
-`tailDiag`, the head and tail projections of a symmetric head, and finite matrices with
-`A (-i) (-j) = conj (A i j)`.
+`(K x)ₙ = conj x₋ₙ`, is ℝ-linear and conjugate-linear over `ℂ` (`conjReflL_smul`), an involution
+(`conjReflL_conjReflL`) and an isometry (`norm_conjReflL`, `isometry_conjReflL`); its fixed points
+are the conjugate-symmetric families (`conjReflL_eq_self_iff_coeff`). Its fixed ℝ-subspace
+`realSub hw = {x : x₋ₙ = conj xₙ}` (`mem_realSub_iff_coeff`) is complete, and a `K`-commuting
+operator restricts to it (`restrictReal`). The commutation faces with `K`: diagonal multipliers
+with conjugate-symmetric symbols and `tailDiag`, the head and tail projections of a symmetric
+head, and finite matrices with `A (-i) (-j) = conj (A i j)`.
+
+These are carrier faces: none needs a product on `X`. The commutation of `K` with the
+row-bounded product `convCLM` is in `Operators/RealityConvolution.lean`, the only face that
+imports `WeightedLp/Convolution`.
 -/
 
 open scoped ENNReal NNReal
@@ -64,6 +68,30 @@ theorem conjReflL_smul (c : ℂ) (x : X) :
     rw [coeff_conjReflL, coeff_smul, coeff_smul, Pi.smul_apply, Pi.smul_apply, coeff_conjReflL,
       smul_eq_mul, smul_eq_mul, map_mul]
 
+/-- `K` is an involution: `K (K x) = x`. -/
+theorem conjReflL_conjReflL (x : X) : conjReflL hw (conjReflL hw x) = x :=
+  ext_coeff <| funext fun n => by
+    rw [coeff_conjReflL, coeff_conjReflL, neg_neg, Complex.conj_conj]
+
+/-- `K` preserves the norm: the bound `‖K x‖ ≤ ‖x‖` of the construction, applied to `x` and to
+`K x` (`conjReflL_conjReflL`). -/
+theorem norm_conjReflL (x : X) : ‖conjReflL hw x‖ = ‖x‖ := by
+  have h (y : X) : ‖conjReflL hw y‖ ≤ ‖y‖ := by
+    simpa only [one_mul] using
+      (conjReflL hw).le_of_opNorm_le (LinearMap.mkContinuous_norm_le _ zero_le_one _) y
+  exact le_antisymm (h x) ((congrArg norm (conjReflL_conjReflL hw x)).symm.trans_le (h _))
+
+/-- **`K` is an isometry** of `X`. -/
+theorem isometry_conjReflL : Isometry (conjReflL hw) :=
+  AddMonoidHomClass.isometry_of_norm (conjReflL hw) (norm_conjReflL hw)
+
+/-- **The fixed points of `K`** in coordinates: `K x = x` iff `x₋ₙ = conj xₙ` for every `n`. -/
+theorem conjReflL_eq_self_iff_coeff (x : X) :
+    conjReflL hw x = x ↔ ∀ n, coeff x (-n) = starRingEnd ℂ (coeff x n) := by
+  refine ⟨fun h n => ?_, fun h => ext_coeff <| funext fun n => ?_⟩
+  · rw [← congrFun (congrArg coeff h) (-n), coeff_conjReflL, neg_neg]
+  · rw [coeff_conjReflL, h, Complex.conj_conj]
+
 /-! Two real structures on `X`. Instance search gives `lp.instNormedSpace` (module
 `lp.instModuleSubtypePreLpMemAddSubgroup`) over the fibre `NormedSpace.complexToReal`. The global
 carrier-level `NormedSpace.complexToReal` / `Module.complexToReal` (priority 900) gives a second
@@ -92,11 +120,8 @@ theorem mem_realSub {x : X} : x ∈ realSub hw ↔ conjReflL hw x = x := by
 
 /-- Membership in coordinates: `x_{-n} = conj x_n`. -/
 theorem mem_realSub_iff_coeff {x : X} :
-    x ∈ realSub hw ↔ ∀ n, coeff x (-n) = starRingEnd ℂ (coeff x n) := by
-  rw [mem_realSub]
-  refine ⟨fun h n => ?_, fun h => ext_coeff <| funext fun n => ?_⟩
-  · rw [← congrFun (congrArg coeff h) (-n), coeff_conjReflL, neg_neg]
-  · rw [coeff_conjReflL, h, Complex.conj_conj]
+    x ∈ realSub hw ↔ ∀ n, coeff x (-n) = starRingEnd ℂ (coeff x n) :=
+  (mem_realSub hw).trans (conjReflL_eq_self_iff_coeff hw x)
 
 /-- `XR` is complete: it is the kernel of the continuous `K - id`. -/
 instance completeSpace_realSub : CompleteSpace (realSub hw) :=
@@ -121,33 +146,6 @@ def restrictReal (T : X →L[ℝ] X) (hT : ∀ x, conjReflL hw (T x) = T (conjRe
 end Restriction
 
 /-! ## The commutations with `K` -/
-
-section Product
-
-/-! ### The product (commutative index) -/
-
-variable {M : Type*} [AddCommGroup M] {w : M → ℝ} [PosWeight w] (hw : ∀ n, w (-n) = w n)
-
-local notation "X" => WeightedLp M (WeightedScalar ℂ w) 2
-
-/-- On a commutative index the product commutes with `K`:
-`K (x ⋆ y) = K x ⋆ K y`. Both fibre sums are reindexed over `M` (`addFiberEquiv`), the left one
-also by `i ↦ -i`; no summability is needed. -/
-theorem conjReflL_convCLM {K : ℝ}
-    (h : RowBound (FiberTrivialization.weight (E := WeightedScalar ℂ w)) 2 K) (x y : X) :
-    conjReflL hw (convCLM h x y) = convCLM h (conjReflL hw x) (conjReflL hw y) :=
-  ext_coeff <| funext fun n => by
-    rw [coeff_conjReflL, coeff_convCLM, coeff_convCLM, DiscreteConvolution.addRingConvolution_apply,
-      DiscreteConvolution.addRingConvolution_apply,
-      ← (DiscreteConvolution.addFiberEquiv (-n)).tsum_eq,
-      ← (DiscreteConvolution.addFiberEquiv n).tsum_eq, Complex.conj_tsum,
-      ← (Equiv.neg M).tsum_eq, Equiv.neg_apply]
-    exact tsum_congr fun i => by
-      show starRingEnd ℂ (coeff x (-n - -i) * coeff y (-i)) =
-        coeff (conjReflL hw x) (n - i) * coeff (conjReflL hw y) i
-      rw [map_mul, coeff_conjReflL, coeff_conjReflL, neg_sub, sub_neg_eq_add, neg_add_eq_sub]
-
-end Product
 
 section TailSymbol
 
