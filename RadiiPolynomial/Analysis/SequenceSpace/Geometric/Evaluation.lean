@@ -1,9 +1,4 @@
-import RadiiPolynomial.Algebra.Convolution.CauchyProduct
-import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Basic
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Aeval
-import Mathlib.Analysis.Normed.Ring.InfiniteSum
-import Mathlib.Topology.Algebra.InfiniteSum.Real
-import Mathlib.Topology.Algebra.Algebra
 
 /-!
 # From Coefficient Space to Analytic Functions

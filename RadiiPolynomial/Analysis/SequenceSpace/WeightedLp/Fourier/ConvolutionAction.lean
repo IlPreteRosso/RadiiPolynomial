@@ -1,5 +1,4 @@
-import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Module
-import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Scalar
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Bilateral.Carrier
 
 /-! The geometric moderation constant 1 at ν ≥ 1. -/
 
@@ -15,13 +14,11 @@ variable {ν : PosReal}
 variable [Fact (1 ≤ (ν : ℝ))]
 
 /-- The carrier weight `ν^|k|` is moderate with respect to the symbol weight `ν^|k|`, with
-constant `1` (`ν ≥ 1`; `Moderate.of_submul`). -/
+constant `1` (`ν ≥ 1`; the frame form of `Bilateral.geomSubmul`). -/
 theorem moderate_geomFiberZ :
     Moderate (FiberTrivialization.weight (E := geomFiberZ ℂ ν))
-      (fun k : ℤ => (ν : ℝ) ^ k.natAbs) 1 := by
-  rw [show FiberTrivialization.weight (E := geomFiberZ ℂ ν) = fun k : ℤ => (ν : ℝ) ^ k.natAbs from
-    funext (geomFiberZ_weight ν)]
-  exact Moderate.of_submul (ScaledRealZ.pow_natAbs_add_le ν Fact.out)
+      (fun k : ℤ => (ν : ℝ) ^ k.natAbs) 1 :=
+  Moderate.weightedScalar_iff.mpr (Bilateral.geomSubmul ν)
 
 
 

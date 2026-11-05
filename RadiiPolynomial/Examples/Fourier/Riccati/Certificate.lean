@@ -80,9 +80,9 @@ lemma hPM : headProj (𝕜 := ℂ) F ∘L M = M := by
   apply ContinuousLinearMap.ext; intro x; apply ext_coeff; funext n
   simp only [ContinuousLinearMap.comp_apply, coeff_headProj, M, coeff_diagCLM]
   by_cases hn : n ∈ F <;> simp [d, hn]
-lemma M_LamH : M ∘L LamH F μ = headProj (𝕜 := ℂ) F := by
+lemma M_headDiag : M ∘L headDiag F μ = headProj (𝕜 := ℂ) F := by
   apply ContinuousLinearMap.ext; intro x; apply ext_coeff; funext n
-  simp only [ContinuousLinearMap.comp_apply, M, coeff_diagCLM, coeff_LamH, coeff_headProj]
+  simp only [ContinuousLinearMap.comp_apply, M, coeff_diagCLM, coeff_headDiag, coeff_headProj]
   by_cases hn : n ∈ F
   · simp [d, hn, ← mul_assoc, inv_mul_cancel₀ (μ_ne n)]
   · simp [d, hn]
@@ -132,9 +132,9 @@ lemma normLB : ‖LB‖ ≤ (18 / 625 : ℝ) := by
     (norm_symbolAction₀_le Fourier.moderate_geomFiberZ) β
   have h' : ‖LB‖ ≤ ‖β‖ := by simpa only [one_mul] using h
   exact h'.trans normβ
-lemma Z0_identity : headProj (𝕜 := ℂ) F - M ∘L Kh F μ β =
+lemma Z0_identity : headProj (𝕜 := ℂ) F - M ∘L headBlock F μ LB =
     M ∘L headProj (𝕜 := ℂ) F ∘L LB ∘L headProj (𝕜 := ℂ) F := by
-  rw [Kh, ContinuousLinearMap.comp_sub, M_LamH]
+  rw [headBlock, ContinuousLinearMap.comp_sub, M_headDiag]
   abel
 private lemma head_action_bound (Q : X₂ ℂ ν →L[ℂ] X₂ ℂ ν) (hQ : ‖Q‖ ≤ 1) :
     ‖M ∘L headProj (𝕜 := ℂ) F ∘L LB ∘L Q‖ ≤ (1 / 20 : ℝ) := by
@@ -148,7 +148,7 @@ private lemma head_action_bound (Q : X₂ ℂ ν →L[ℂ] X₂ ℂ ν) (hQ : �
       (mul_le_mul h2 hQ (norm_nonneg _) (by norm_num))
   have h4 := h3.trans (by norm_num : ((1 * 1 : ℝ) * (18 / 625)) * 1 ≤ 1 / 20)
   simpa only [ContinuousLinearMap.comp_assoc] using h4
-lemma Z0_le : ‖headProj (𝕜 := ℂ) F - M ∘L Kh F μ β‖ ≤ (1 / 20 : ℝ) := by
+lemma Z0_le : ‖headProj (𝕜 := ℂ) F - M ∘L headBlock F μ LB‖ ≤ (1 / 20 : ℝ) := by
   rw [Z0_identity]
   exact head_action_bound _ normP
 lemma H_le : ‖M ∘L headProj (𝕜 := ℂ) F ∘L LB ∘L tailProj (𝕜 := ℂ) F‖ ≤ (1 / 20 : ℝ) :=
@@ -174,7 +174,7 @@ lemma U_le : ‖M ∘L headReal F‖ ≤ (3 : ℝ) := by
         nlinarith [hd1 i, norm_nonneg (d i)]
       _ = 5 := by norm_num [F_eq]
   exact (Real.sqrt_le_sqrt hsum).trans (by norm_num [Real.sqrt_le_iff])
-lemma Z1_le : ‖DG F μ hs M abar - B0 F μ M β‖ ≤ (1 / 10 : ℝ) := by
+lemma Z1_le : ‖DG F μ hs M abar - blockMap F μ LB M‖ ≤ (1 / 10 : ℝ) := by
   refine (norm_DG_sub_B0_le F μ hs M abar_supp hPM H_le tail_norm_le).trans ?_
   apply (Real.sqrt_le_iff).mpr
   constructor
@@ -189,9 +189,9 @@ lemma Z2_le :
   norm_num only [show (3 : ℝ) ^ 2 + 1 = 10 by norm_num]
   linarith
 
-lemma LamH_abar : LamH F μ abar = g := by
+lemma headDiag_abar : headDiag F μ abar = g := by
   apply ext_coeff; funext n
-  rw [coeff_LamH, abar, M, coeff_diagCLM]
+  rw [coeff_headDiag, abar, M, coeff_diagCLM]
   by_cases hn : n ∈ F
   · simp [hn, d, ← mul_assoc, mul_inv_cancel₀ (μ_ne n)]
   · simp [hn, hg n hn]
@@ -201,7 +201,7 @@ lemma tail_abar : tailProj (𝕜 := ℂ) F abar = 0 := by
   by_cases hn : n ∈ F <;> simp [hn, abar_supp n]
 lemma G_abar :
     G F μ hs M g abar = -AY F M (F : Set ℤ) μ hs (prodCLM (geomSubmul ν) abar abar) := by
-  rw [G, LamH_abar, tail_abar, AY]
+  rw [G, headDiag_abar, tail_abar, AY]
   simp only [map_sub, add_apply, ContinuousLinearMap.comp_apply]
   abel
 lemma AY_norm : ‖AY F M (F : Set ℤ) μ hs‖ ≤ (4 : ℝ) := by

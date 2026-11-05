@@ -218,25 +218,23 @@ theorem polyRowBound :
         (by norm_num)) (by positivity)).trans ?_
       norm_num
 
-/-- **Self-moderation** of the polynomial frame (`m` is submultiplicative, constant `1`). -/
-theorem polyModerate :
-    Moderate (FiberTrivialization.weight (E := WeightedScalar ℂ polyWeight)) polyWeight 1 := by
+/-- **Self-moderation at the raw weight** (`m` is submultiplicative, constant `1`): the positive
+submultiplicativity `Moderate polyWeight polyWeight 1` consumed by the bounded product
+`Bilateral.prodCLM`. -/
+theorem polyModerate_raw : Moderate polyWeight polyWeight 1 := by
   intro j l
-  rw [WeightedScalar.fiberTrivialization_weight, WeightedScalar.fiberTrivialization_weight,
-    one_mul]
+  rw [one_mul]
   have h := pw_le_mul (j + l) l
   rw [add_sub_cancel_right] at h
   simp only [polyWeight]
   rw [← mul_pow]
   exact pow_le_pow_left₀ (pw_pos (j + l)).le (h.trans_eq (mul_comm _ _)) 2
 
-/-- **Self-moderation at the raw weight**: `polyModerate` with its first (frame) weight rewritten
-to `polyWeight` (`WeightedScalar.fiberTrivialization_weight`), the positive submultiplicativity
-`Moderate polyWeight polyWeight 1` consumed by the bounded product `Bilateral.prodCLM`. -/
-theorem polyModerate_raw : Moderate polyWeight polyWeight 1 := by
-  have h := polyModerate
-  rwa [show FiberTrivialization.weight (E := WeightedScalar ℂ polyWeight) = polyWeight from
-    funext WeightedScalar.fiberTrivialization_weight] at h
+/-- **Self-moderation** of the polynomial frame: `polyModerate_raw` in the frame form
+(`Moderate.weightedScalar_iff`). -/
+theorem polyModerate :
+    Moderate (FiberTrivialization.weight (E := WeightedScalar ℂ polyWeight)) polyWeight 1 :=
+  Moderate.weightedScalar_iff.mpr polyModerate_raw
 
 /-- The polynomial weight is negation-invariant (the `hw` of `conjReflL`). -/
 theorem polyWeight_neg : ∀ n : ℤ, polyWeight (-n) = polyWeight n := fun n => by

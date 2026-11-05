@@ -124,20 +124,12 @@ lemma two_polyProd (h : X) : (2 : ℂ) • polyProd abar h = LB h := by
   have heq := convCLM_eq_symbolAction₀ polyRowBound polyModerate hb h
   simpa only [map_smul, smul_apply, LB] using heq
 
-def LamH : X →L[ℂ] X :=
-  diagCLM ((↑S : Set ℤ).indicator μ) (NormHelpers.bddAbove_norm_indicator_finset S μ)
-lemma coeff_LamH (x : X) (n : ℤ) : coeff (LamH x) n = if n ∈ S then μ n * coeff x n else 0 := by
-  simp only [LamH, coeff_diagCLM, Set.indicator_apply, Finset.mem_coe]
-  split_ifs <;> simp
-
-def Kh : X →L[ℂ] X := LamH - P ∘L LB ∘L P
-def B0 : X →L[ℂ] X := M ∘L Kh + Q
-def L : X →L[ℂ] X := M ∘L LamH + Q
+def L : X →L[ℂ] X := M ∘L headDiag S μ + Q
 def C : X →L[ℂ] X →L[ℂ] X := (ContinuousLinearMap.compL ℂ X X X A).comp polyProd
 def G : X → X := quadMap (-A g) L (-C)
 def DG : X →L[ℂ] X := L - (2 : ℂ) • C abar
 lemma C_apply (x y : X) : C x y = A (polyProd x y) := rfl
-lemma G_apply (x : X) : G x = M (LamH x - polyProd x x - g) + Q x - T (polyProd x x + g) := by
+lemma G_apply (x : X) : G x = M (headDiag S μ x - polyProd x x - g) + Q x - T (polyProd x x + g) := by
   simp only [G, quadMap, C_apply, L, A, add_apply, neg_apply,
     ContinuousLinearMap.comp_apply, map_add, map_sub]
   abel
@@ -154,33 +146,13 @@ lemma two_C : (2 : ℂ) • C abar = M ∘L P ∘L LB + T ∘L LB := by
   simp only [A, add_apply, ContinuousLinearMap.comp_apply]
   rw [← DFunLike.congr_fun hMP (LB h)]
   rfl
-lemma DG_sub_B0 : DG - B0 = -tailDefect polyModerate β S M
+lemma DG_sub_B0 : DG - blockMap S μ LB M = -tailDefect polyModerate β S M
     (tailSymbol (S : Set ℤ) μ) tail_bdd := by
   apply ContinuousLinearMap.ext; intro h
-  simp only [DG, two_C, L, B0, Kh, tailDefect, tailProj_eq_id_sub_headProj, T,
+  simp only [DG, two_C, L, blockMap, headBlock, tailDefect, tailProj_eq_id_sub_headProj, T,
     sub_apply, add_apply, neg_apply, ContinuousLinearMap.comp_apply,
     ContinuousLinearMap.id_apply, map_sub, P, Q, LB]
   abel
-private lemma one_sub_B0 : ContinuousLinearMap.id ℂ X - B0 = P - M ∘L Kh :=
-  id_sub_add_tailProj S _
-lemma P_LamH : P ∘L LamH = LamH := by
-  apply ContinuousLinearMap.ext; intro x; apply ext_coeff; funext n
-  rw [ContinuousLinearMap.comp_apply, coeff_headProj, coeff_LamH]
-  split_ifs <;> rfl
-lemma LamH_P : LamH ∘L P = LamH := by
-  apply ContinuousLinearMap.ext; intro x; apply ext_coeff; funext n
-  simp only [ContinuousLinearMap.comp_apply, coeff_LamH, coeff_headProj]
-  split_ifs <;> simp
-lemma P_Kh : P ∘L Kh = Kh := by
-  rw [Kh, ContinuousLinearMap.comp_sub, P_LamH, ← ContinuousLinearMap.comp_assoc,
-    headProj_comp_headProj]
-lemma Kh_P : Kh ∘L P = Kh := by
-  rw [Kh, ContinuousLinearMap.sub_comp, LamH_P, ContinuousLinearMap.comp_assoc,
-    ContinuousLinearMap.comp_assoc, headProj_comp_headProj]
-lemma block_defect : P ∘L (P - M ∘L Kh) ∘L P = P - M ∘L Kh := by
-  rw [ContinuousLinearMap.sub_comp, headProj_comp_headProj, ContinuousLinearMap.comp_assoc,
-    Kh_P, ContinuousLinearMap.comp_sub, headProj_comp_headProj,
-    ← ContinuousLinearMap.comp_assoc, hPM]
 
 /-! Rational matrix bridges. The formulas are independent of the carrier norm;
 only `weighted_le_reim` below changes from the original geometric certificate. -/
@@ -191,8 +163,8 @@ lemma weighted_le_reim (z : ℚ × ℚ) (i j : ℤ) :
   apply div_le_div_of_nonneg_right _ (show 0 ≤ polyWeight j from sq_nonneg _)
   exact mul_le_mul_of_nonneg_right (norm_le_reim z) (show 0 ≤ polyWeight i from sq_nonneg _)
 lemma matrix_Kh (i j : ℤ) (hi : i ∈ S) (hj : j ∈ S) :
-    matrixOf Kh i j = toC (leaf.DFQ i j) := by
-  rw [Kh, matrixOf_sub, LamH, matrixOf_diagCLM, LB,
+    matrixOf (headBlock S μ LB) i j = toC (leaf.DFQ i j) := by
+  rw [headBlock, matrixOf_sub, headDiag, matrixOf_diagCLM, LB,
     matrixOf_headProj_symbolAction_headProj, ite_eq_left (show i ∈ S ∧ j ∈ S from ⟨hi, hj⟩),
     QuadFourierLeafQ.DFQ, toC_csub, toC_cscale]
   simp only [raw_β, coeff_abar, Set.indicator_apply, Finset.mem_coe]
@@ -202,9 +174,9 @@ lemma matrix_Kh (i j : ℤ) (hi : i ∈ S) (hj : j ∈ S) :
   · rw [ite_eq_right h, ite_eq_right h, toC_zero]
     push_cast; ring
 lemma matrix_defect (i j : ℤ) (hi : i ∈ S) (hj : j ∈ S) :
-    matrixOf (P - M ∘L Kh) i j = toC (leaf.EQ i j) := by
-  have hK : ∀ x, ∀ n ∉ S, coeff (Kh x) n = 0 := fun x n hn => by
-    rw [← P_Kh, ContinuousLinearMap.comp_apply, coeff_headProj, ite_eq_right hn]
+    matrixOf (P - M ∘L headBlock S μ LB) i j = toC (leaf.EQ i j) := by
+  have hK : ∀ x, ∀ n ∉ S, coeff (headBlock S μ LB x) n = 0 := fun x n hn => by
+    rw [← headProj_comp_headBlock S μ LB, ContinuousLinearMap.comp_apply, coeff_headProj, ite_eq_right hn]
   rw [matrixOf_sub, matrixOf_headProj, matrixOf_comp_of_support M _ hK,
     QuadFourierLeafQ.EQ, toC_csub, toC_csum, ← sum_headF_eq_list]
   congr 1
@@ -236,9 +208,10 @@ lemma norm_beta : ‖β‖ ≤ (Numbers.betaQ : ℝ) := by
     exact_mod_cast (show (0 : ℚ) ≤ Numbers.weightQ n from sq_nonneg _)
   exact mul_le_mul_of_nonneg_right
     (mul_le_mul_of_nonneg_left (norm_le_reim _) (by norm_num)) hw
-lemma Z0_le : ‖P - M ∘L Kh‖ ≤ (Numbers.Z0Q : ℝ) := by
+lemma Z0_le : ‖P - M ∘L headBlock S μ LB‖ ≤ (Numbers.Z0Q : ℝ) := by
   rcases Numbers.check_Z0 with ⟨hrow, hcol, hsq⟩
-  refine (norm_le_sqrt_of_block _ block_defect (R := (Numbers.RzQ : ℝ)) (C := (Numbers.CzQ : ℝ))
+  refine (norm_le_sqrt_of_block _ (by simpa only [id_sub_blockMap] using
+    headProj_comp_id_sub_blockMap_comp_headProj S μ LB M hPM) (R := (Numbers.RzQ : ℝ)) (C := (Numbers.CzQ : ℝ))
     (by norm_num [Numbers.RzQ]) (by norm_num [Numbers.CzQ]) ?_ ?_).trans ?_
   · intro i hi
     refine le_trans ?_ (show (Numbers.zRowQ i : ℝ) ≤ (Numbers.RzQ : ℝ) by
@@ -342,7 +315,7 @@ lemma Z2_le : ‖quadComp (ContinuousLinearMap.id ℂ X) (-C) +
   have h2 := Real.sqrt_le_sqrt hcurv
   rw [Real.sqrt_mul (by norm_num), h4, Real.sqrt_sq (by norm_num [Numbers.Z2Q])] at h2
   exact (mul_le_mul_of_nonneg_left norm_C zero_le_two).trans h2
-lemma Z1_le : ‖B0 - quadDeriv L (-C) abar‖ ≤ (Numbers.Z1Q : ℝ) := by
+lemma Z1_le : ‖blockMap S μ LB M - quadDeriv L (-C) abar‖ ≤ (Numbers.Z1Q : ℝ) := by
   rw [← DG_eq_quadDeriv, norm_sub_rev, DG_sub_B0, norm_neg]
   refine (norm_tailDefect_le polyModerate β S M (tailSymbol (S : Set ℤ) μ) tail_bdd hPM
     (fun n hn => tailSymbol_of_mem (Finset.mem_coe.mpr hn)) H_le
@@ -360,14 +333,14 @@ lemma Z1_le : ‖B0 - quadDeriv L (-C) abar‖ ≤ (Numbers.Z1Q : ℝ) := by
 def rawF (x : X) (n : ℤ) : ℂ := μ n * coeff x n - (coeff x ⋆ᵣ₊ coeff x) n - coeff g n
 def rawA (v : ℤ → ℂ) (n : ℤ) : ℂ := coeff (M (head v)) n + tailSymbol (S : Set ℤ) μ n * v n
 lemma coeff_G (x : X) : coeff (G x) = rawA (rawF x) := by
-  have hhead : head (rawF x) = LamH x - P (polyProd x x) - g := by
+  have hhead : head (rawF x) = headDiag S μ x - P (polyProd x x) - g := by
     apply ext_coeff; funext n
-    simp only [coeff_head, coeff_sub, Pi.sub_apply, coeff_LamH,
+    simp only [coeff_head, coeff_sub, Pi.sub_apply, coeff_headDiag,
       coeff_headProj, coeff_convCLM]
     by_cases hn : n ∈ S
     · simp [hn, rawF]
     · simp [hn, hg n hn]
-  have hM : M (LamH x - P (polyProd x x) - g) = M (LamH x - polyProd x x - g) := by
+  have hM : M (headDiag S μ x - P (polyProd x x) - g) = M (headDiag S μ x - polyProd x x - g) := by
     have hp := DFunLike.congr_fun hMP (polyProd x x)
     simp only [ContinuousLinearMap.comp_apply] at hp
     simp only [map_sub]
@@ -380,7 +353,7 @@ lemma coeff_G (x : X) : coeff (G x) = rawA (rawF x) := by
   · rw [tailSymbol_of_mem (Finset.mem_coe.mpr hn)]
     simp [hn]
   · rw [ite_eq_right hn, tailSymbol_of_notMem (fun h => hn (Finset.mem_coe.mp h)), rawF, hg n hn]
-    have hz : coeff (M (LamH x - polyProd x x - g)) n = 0 := by
+    have hz : coeff (M (headDiag S μ x - polyProd x x - g)) n = 0 := by
       rw [M, coeff_finMatrixCLM, ite_eq_right hn]
     rw [hz]
     simp only [sub_zero, mul_sub, ← mul_assoc, inv_mul_cancel₀ (μ_tail_ne n hn), one_mul]
@@ -439,9 +412,9 @@ lemma radii_neg : generalRadiiPolynomial (Numbers.Y0Q : ℝ) (Numbers.Z0Q : ℝ)
 lemma existsUnique_G : ∃! x ∈ Metric.closedBall abar (Numbers.radiusQ : ℝ), G x = 0 := by
   exact quadratic_radii_theorem_local
     (c := -A g) (L := L) (B := -C) (xBar := abar)
-    (A := ContinuousLinearMap.id ℂ X) (A_dagger := B0)
+    (A := ContinuousLinearMap.id ℂ X) (A_dagger := blockMap S μ LB M)
     (by exact_mod_cast Numbers.check_radii.1) (by simpa [G] using Y0_le)
-    (by simpa [one_sub_B0] using Z0_le)
+    (by simpa only [ContinuousLinearMap.id_comp, id_sub_blockMap] using Z0_le)
     (by simpa only [ContinuousLinearMap.id_comp] using Z1_le) Z2_le radii_neg (fun _ _ h => h)
 
 /-! Raw zero transfer through the finite-head solver service of `WeightedLp/Operators/FiniteBlock`. -/
@@ -454,7 +427,7 @@ isometry, along `eq_zero_iff_of_coeff_eq_headSolve` (solver identity `coeff_G`, 
 (`‖P − M K_H‖ < 1`, `P K_H = K_H`). -/
 theorem existsUnique_raw : ∃! x ∈ Metric.closedBall abar (Numbers.radiusQ : ℝ), rawF x = 0 := by
   have hinj := eq_zero_of_headProj_eq_of_norm_lt_one S
-    (by rw [← ContinuousLinearMap.comp_assoc, P_Kh])
+    (by rw [← ContinuousLinearMap.comp_assoc, headProj_comp_headBlock])
     (Z0_le.trans_lt (by norm_num [Numbers.Z0Q]))
   refine existsUnique_zero_transport (IsometryEquiv.refl X) (fun x => ?_) existsUnique_G
   exact (eq_zero_iff_of_coeff_eq_headSolve S M (tailSymbol (S : Set ℤ) μ) coeff_head

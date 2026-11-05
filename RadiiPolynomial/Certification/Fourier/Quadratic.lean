@@ -600,9 +600,9 @@ theorem coeff_G_abar_eq {μ : ℤ → ℂ} (hμ : ∀ n, μ n = toC (L.muQ n)) {
 /-- The Jacobian block `K_H` has the mirror matrix `DF` on the head block. -/
 theorem matrixOf_Kh {μ : ℤ → ℂ} (hμ : ∀ n, μ n = toC (L.muQ n)) {n j : ℤ} (hn : n ∈ headF L.N)
     (hj : j ∈ headF L.N) :
-    matrixOf (Kh (headF L.N) μ (betaOf (headF L.N) (L.abar ν) (L.abar_supp ν))) n j =
-      toC (L.DFQ n j) := by
-  rw [Kh, matrixOf_sub, LamH, matrixOf_diagCLM, matrixOf_headProj_symbolAction_headProj,
+    matrixOf (headBlock (headF L.N) μ (symbolAction₀ (p := 2) RadiiPolynomial.WeightedLp.Fourier.moderate_geomFiberZ
+      (betaOf (headF L.N) (L.abar ν) (L.abar_supp ν)))) n j = toC (L.DFQ n j) := by
+  rw [headBlock, matrixOf_sub, headDiag, matrixOf_diagCLM, matrixOf_headProj_symbolAction_headProj,
     ite_eq_left (show n ∈ headF L.N ∧ j ∈ headF L.N from ⟨hn, hj⟩), DFQ, toC_csub, toC_cscale]
   simp only [rawSymbol_betaOf, L.coeff_abar, Set.indicator_apply, Finset.mem_coe]
   by_cases h : n = j
@@ -616,12 +616,15 @@ theorem matrixOf_Kh {μ : ℤ → ℂ} (hμ : ∀ n, μ n = toC (L.muQ n)) {n j 
 /-- **The `Z₀` matrix** `P − M K_H` on the head block is the mirror `E = I − M DF`. -/
 theorem matrixOf_Z0op_eq {μ : ℤ → ℂ} (hμ : ∀ n, μ n = toC (L.muQ n)) (i j : ℤ)
     (hi : i ∈ headF L.N) (hj : j ∈ headF L.N) :
-    matrixOf (headProj (headF L.N) - L.Mop ν ∘L Kh (headF L.N) μ
-      (betaOf (headF L.N) (L.abar ν) (L.abar_supp ν))) i j = toC (L.EQ i j) := by
+    matrixOf (headProj (headF L.N) - L.Mop ν ∘L headBlock (headF L.N) μ
+      (symbolAction₀ (p := 2) RadiiPolynomial.WeightedLp.Fourier.moderate_geomFiberZ
+        (betaOf (headF L.N) (L.abar ν) (L.abar_supp ν)))) i j = toC (L.EQ i j) := by
   have h₂ : ∀ x, ∀ n ∉ headF L.N,
-      coeff (Kh (headF L.N) μ (betaOf (headF L.N) (L.abar ν) (L.abar_supp ν)) x) n = 0 :=
+      coeff (headBlock (headF L.N) μ (symbolAction₀ (p := 2) RadiiPolynomial.WeightedLp.Fourier.moderate_geomFiberZ
+        (betaOf (headF L.N) (L.abar ν) (L.abar_supp ν))) x) n = 0 :=
     fun x n hn => by
-      rw [← headProj_comp_Kh (headF L.N) μ (betaOf (headF L.N) (L.abar ν) (L.abar_supp ν)),
+      rw [← headProj_comp_headBlock (headF L.N) μ (symbolAction₀ (p := 2) RadiiPolynomial.WeightedLp.Fourier.moderate_geomFiberZ
+          (betaOf (headF L.N) (L.abar ν) (L.abar_supp ν))),
         ContinuousLinearMap.comp_apply, coeff_headProj, ite_eq_right hn]
   rw [matrixOf_sub, matrixOf_headProj, matrixOf_comp_of_support (L.Mop ν) _ h₂, EQ, toC_csub,
     toC_csum, ← sum_headF_eq_list]
@@ -659,12 +662,14 @@ private theorem Y0_le (hL : L.Checks) (hC : L.ChunkChecks) (hν : (ν : ℝ) = L
 
 private theorem Z0_le (hL : L.Checks) (hC : L.ChunkChecks) (hν : (ν : ℝ) = L.nuQ) {μ : ℤ → ℂ}
     (hμ : ∀ n, μ n = toC (L.muQ n)) :
-    ‖headProj (headF L.N) - L.Mop ν ∘L Kh (headF L.N) μ
-      (betaOf (headF L.N) (L.abar ν) (L.abar_supp ν))‖ ≤ (L.Z0c : ℝ) := by
+    ‖headProj (headF L.N) - L.Mop ν ∘L headBlock (headF L.N) μ
+      (symbolAction₀ (p := 2) RadiiPolynomial.WeightedLp.Fourier.moderate_geomFiberZ
+        (betaOf (headF L.N) (L.abar ν) (L.abar_supp ν)))‖ ≤ (L.Z0c : ℝ) := by
   obtain ⟨-, -, -, -, -, hcR, -, -, hZ0, -, -, -, hZ0c, -, -, hRz, hCz, -, -⟩ := hL
   have hrow := hcR ▸ List.forall_mem_flatten.2 hC.2.1
   have hcol := hcR ▸ List.forall_mem_flatten.2 hC.2.2.1
-  refine (norm_le_sqrt_of_block _ (block_one_sub_B0 (headF L.N) μ (L.Mop ν) (L.hPM ν) _)
+  refine (norm_le_sqrt_of_block _ (by simpa only [id_sub_blockMap] using
+      headProj_comp_id_sub_blockMap_comp_headProj (headF L.N) μ _ (L.Mop ν) (L.hPM ν))
     (R := (L.RzC : ℝ)) (C := (L.CzC : ℝ)) (by exact_mod_cast hRz) (by exact_mod_cast hCz) ?_
     ?_).trans ?_
   · intro i hi

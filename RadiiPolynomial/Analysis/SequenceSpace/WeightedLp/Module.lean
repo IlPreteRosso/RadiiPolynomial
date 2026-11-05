@@ -117,6 +117,12 @@ theorem Moderate.of_submul {M : Type*} [Add M] {w : M → ℝ}
     (hs : ∀ i j, w (i + j) ≤ w i * w j) : Moderate w w 1 := fun j l =>
   (hs j l).trans_eq (by ring)
 
+/-- Moderateness of the standard frame weight of `WeightedScalar 𝕜 w` is moderateness of `w`. -/
+theorem Moderate.weightedScalar_iff {𝕜 : Type*} [NormedField 𝕜] [PosWeight w] :
+    Moderate (FiberTrivialization.weight (E := WeightedScalar 𝕜 w)) v C ↔ Moderate w v C := by
+  rw [show FiberTrivialization.weight (E := WeightedScalar 𝕜 w) = w from
+    funext WeightedScalar.fiberTrivialization_weight]
+
 end Moderate
 
 section Symbols

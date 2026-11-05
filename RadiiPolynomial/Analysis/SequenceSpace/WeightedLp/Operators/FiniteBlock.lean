@@ -1,6 +1,6 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.TailDefect
 
-/-! Physical finite matrices and composed head leakage. Matrix multiplication and boundary summation occur before entry modulus; block Schur faces give upper bounds. The finite-head solver service (§FiniteHead) proves head injectivity on the finite-dimensional head range from a defect bound `‖P − M K‖ < 1` and turns it into the raw-zero equivalence of a finite-head / diagonal-tail coefficient solver; it is head injectivity, not full-space injectivity from finite range. -/
+/-! Physical finite matrices and composed head leakage. Matrix multiplication and boundary summation occur before entry modulus; block Schur faces give upper bounds. The finite-head solver service (§FiniteHead) proves head injectivity on the finite-dimensional head range from a defect bound `‖P − M K‖ < 1` and turns it into the raw-zero equivalence of a finite-head / diagonal-tail coefficient solver; it is head injectivity, not full-space injectivity from finite range. The head block (§HeadBlock) of a bounded interaction operator `L`, `K_F = Λ_F − P_F L P_F`, and the approximate derivative `B_F = A K_F + Q_F` with head operator `A` carry the projection laws and the block law consumed by `‖P − A K‖` certificates. -/
 
 open scoped ENNReal NNReal
 
@@ -525,6 +525,53 @@ theorem finMatrixCLM_comp_headProj (F : Finset M) (A : M → M → 𝕜) :
       rw [coeff_headProj, ite_eq_left hj]) rfl
 
 end FinMatrixHead
+
+section HeadBlock
+
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} [DecidableEq M] {E : M → Type*}
+  [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 M E]
+  {p : ℝ≥0∞} [Fact (1 ≤ p)]
+variable (F : Finset M) (μ : M → 𝕜) (L : WeightedLp M E p →L[𝕜] WeightedLp M E p)
+
+/-- **The head block** `K_F = Λ_F − P_F L P_F` of a bounded interaction operator `L`. -/
+def headBlock : WeightedLp M E p →L[𝕜] WeightedLp M E p :=
+  headDiag F μ - headProj (𝕜 := 𝕜) F ∘L L ∘L headProj (𝕜 := 𝕜) F
+
+/-- `K_F` has its range in the head: `P_F K_F = K_F`. -/
+theorem headProj_comp_headBlock : headProj (𝕜 := 𝕜) F ∘L headBlock F μ L = headBlock F μ L := by
+  rw [headBlock, ContinuousLinearMap.comp_sub, headProj_comp_headDiag,
+    ← ContinuousLinearMap.comp_assoc, headProj_comp_headProj]
+
+/-- `K_F` reads the head only: `K_F P_F = K_F`. -/
+theorem headBlock_comp_headProj : headBlock F μ L ∘L headProj (𝕜 := 𝕜) F = headBlock F μ L := by
+  rw [headBlock, ContinuousLinearMap.sub_comp, headDiag_comp_headProj,
+    ContinuousLinearMap.comp_assoc, ContinuousLinearMap.comp_assoc, headProj_comp_headProj]
+
+variable (A : WeightedLp M E p →L[𝕜] WeightedLp M E p)
+
+/-- **The approximate derivative** `B_F = A K_F + Q_F` with head operator `A`. -/
+def blockMap : WeightedLp M E p →L[𝕜] WeightedLp M E p :=
+  A ∘L headBlock F μ L + tailProj (𝕜 := 𝕜) F
+
+/-- The defect of the approximate derivative is the head defect: `I − B_F = P_F − A K_F`
+(`id_sub_add_tailProj`). -/
+theorem id_sub_blockMap :
+    ContinuousLinearMap.id 𝕜 _ - blockMap F μ L A = headProj (𝕜 := 𝕜) F - A ∘L headBlock F μ L :=
+  id_sub_add_tailProj F _
+
+/-- **The block law**: under `P_F A = A`, the defect `I − B_F` (the head defect `P_F − A K_F`,
+`id_sub_blockMap`) lives on the block `F × F`, `P_F (I − B_F) P_F = I − B_F`, so
+`norm_le_sqrt_of_block` applies to it. -/
+theorem headProj_comp_id_sub_blockMap_comp_headProj (hPA : headProj (𝕜 := 𝕜) F ∘L A = A) :
+    headProj (𝕜 := 𝕜) F ∘L (ContinuousLinearMap.id 𝕜 _ - blockMap F μ L A) ∘L
+        headProj (𝕜 := 𝕜) F =
+      ContinuousLinearMap.id 𝕜 _ - blockMap F μ L A := by
+  simp only [id_sub_blockMap]
+  rw [ContinuousLinearMap.sub_comp, headProj_comp_headProj, ContinuousLinearMap.comp_assoc,
+    headBlock_comp_headProj, ContinuousLinearMap.comp_sub, headProj_comp_headProj,
+    ← ContinuousLinearMap.comp_assoc, hPA]
+
+end HeadBlock
 
 end RadiiPolynomial.WeightedLp
 

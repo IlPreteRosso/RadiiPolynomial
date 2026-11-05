@@ -51,9 +51,6 @@ open RadiiPolynomial RadiiPolynomial.WeightedLp
 open RadiiPolynomial.WeightedLp.Bilateral RadiiPolynomial.Fourier.Quadratic
   RadiiPolynomial.Fourier.IkData
 
-/-- The moderate constant `C = 1` of the geometric carrier weight against itself (`ν ≥ 1`). -/
-local notation "hC" => Fourier.moderate_geomFiberZ
-
 /-! ### A. The Duffing symbol and its producers -/
 
 section DuffingSymbol
@@ -326,7 +323,8 @@ theorem duffing_existsUnique (hN : c₂ < ((N : ℝ) + 1) ^ 2)
     ∃! a ∈ Metric.closedBall cert.abar r₀, ∀ n : ℤ, rawF (duffing c₁ c₂) (forcing c₃) a n = 0 := by
   have hs := summable_sq_tailSymbol_duffing_headF (c₁ := c₁) hN
   have hZ1' : ‖DG (headF N) (duffing c₁ c₂) hs cert.M cert.abar -
-      B0 (headF N) (duffing c₁ c₂) cert.M (betaOf (headF N) cert.abar cert.abar_supp)‖ ≤ Z₁ := by
+      blockMap (headF N) (duffing c₁ c₂) (symbolAction₀ (p := 2) Fourier.moderate_geomFiberZ
+        (betaOf (headF N) cert.abar cert.abar_supp)) cert.M‖ ≤ Z₁ := by
     refine (norm_DG_sub_B0_le (headF N) (duffing c₁ c₂) hs cert.M cert.abar_supp cert.hPM
       cert.hH (norm_tailSymbol_duffing_le hN)).trans ?_
     rw [mul_one, inv_mul_eq_div]

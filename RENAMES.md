@@ -5615,3 +5615,85 @@ the new enclosure `‖C + C.flip‖ ≤ 2 √(UsqQ + t2Q) ≤ 36` replaces the o
 | `FourierDuffing.Polynomial.Certificate.norm_C : ‖C‖ ≤ AQ * 10` | `FourierDuffing.Polynomial.Certificate.norm_C : ‖C‖ ≤ √(UsqQ + t2Q)` | idem | type change (strengthened): through `C_apply_eq_AY`, `norm_AY_le` and `norm_prodCLM_apply_le`; `Z2_le` (statement unchanged) consumes it with `check_curv` |
 | — | `FourierDuffing.Polynomial.Certificate.{hsS, AY_comp_incl, C_apply_eq_AY, urow_le_aRowQ, norm_AY_le}` | idem | added: the Y route on the same `C` |
 | `FourierDuffing.Polynomial.Certificate.hMP` (hand proof) | same statement, proof `finMatrixCLM_comp_headProj _ _` | idem | proof only: the library lemma has the same statement |
+
+## MAINT the scalar-model moderateness bridge and import/prose maintenance (2026-11-05, batch 7)
+
+One lemma is added to `WeightedLp/Module.lean`: `Moderate.weightedScalar_iff` reduces moderateness
+of the standard frame weight of `WeightedScalar 𝕜 w` to moderateness of `w`. Its two consumers are
+`Fourier.moderate_geomFiberZ` (statement unchanged; body through `Bilateral.geomSubmul`) and the
+polynomial `polyModerate` (now derived from `polyModerate_raw`, which is proved directly). The
+import list of `Geometric/Evaluation.lean` shrinks to its one direct need; the dead `hC` notation of
+`Applications/Fourier/Duffing.lean` is deleted. No declaration is renamed. Design of record:
+`exterior/tmp/lp_api_campaign_20261017/POST_MERGE/promotion_20261104/MAINT/CONSENSUS_maintenance_20261105.md`
+(M2, M3, M4). No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| — | `RadiiPolynomial.WeightedLp.Moderate.weightedScalar_iff {𝕜 : Type*} [NormedField 𝕜] [PosWeight w] : Moderate (FiberTrivialization.weight (E := WeightedScalar 𝕜 w)) v C ↔ Moderate w v C` | `Analysis/SequenceSpace/WeightedLp/Module.lean` | added: the frame/raw conversion of the scalar model (funext of `WeightedScalar.fiberTrivialization_weight`); consumed by `moderate_geomFiberZ` and `polyModerate` |
+| `RadiiPolynomial.WeightedLp.Fourier.moderate_geomFiberZ` (proof: rewrite by `geomFiberZ_weight`, then `Moderate.of_submul (ScaledRealZ.pow_natAbs_add_le ν Fact.out)`); imports `WeightedLp.Module`, `Chebyshev.Scalar` | same statement, proof `Moderate.weightedScalar_iff.mpr (Bilateral.geomSubmul ν)`; imports `WeightedLp.Bilateral.Carrier` only | `Analysis/SequenceSpace/WeightedLp/Fourier/ConvolutionAction.lean` | proof and import change: the frame form of the one geometric producer; statement and consumers unchanged |
+| `FourierDuffing.Polynomial.polyModerate` (pointwise frame rewrites) primary; `polyModerate_raw` derived by `rwa` | `polyModerate_raw : Moderate polyWeight polyWeight 1` proved directly (primary); `polyModerate := Moderate.weightedScalar_iff.mpr polyModerate_raw` | `Examples/Fourier/Duffing/Polynomial/Algebra.lean` | orientation change (raw first); both statements unchanged |
+| `local notation "hC" => Fourier.moderate_geomFiberZ` | — | `Applications/Fourier/Duffing.lean` | deleted: never used in the file (the live `hC` notation of `Applications/Fourier/Quadratic.lean` stays) |
+| imports `Algebra.Convolution.CauchyProduct`, `Geometric.Basic`, `Geometric.Aeval`, `Mathlib.Analysis.Normed.Ring.InfiniteSum`, `Mathlib.Topology.Algebra.InfiniteSum.Real`, `Mathlib.Topology.Algebra.Algebra` | `import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Aeval` alone | `Analysis/SequenceSpace/Geometric/Evaluation.lean` | import change: `Geometric.Aeval` reaches the other five; the transitive import set (and so every importer) is unchanged |
+
+## U-B3 the generic head-block layer (2026-11-05, batch 7)
+
+The finite-head diagonal, the head block of a bounded interaction operator and the approximate
+derivative get ONE weight-generic home in the operator layer: `headDiag F μ` with its coordinate
+and projection laws in `Operators/HeadProj.lean` (new import `Analysis/Norm/FiniteSum`), and
+`headBlock F μ L`, `blockMap F μ L A`, their projection laws, `id_sub_blockMap` and the block law
+`headProj_comp_id_sub_blockMap_comp_headProj` (hypothesis `hPA : P_F A = A`) in
+`Operators/FiniteBlock.lean` (§HeadBlock). The ten polynomial-certificate copies and the nine
+family copies retire; their use sites spell `headDiag S μ` / `headBlock S μ LB` /
+`blockMap S μ LB M` (polynomial) and `headDiag F μ` /
+`headBlock F μ (symbolAction₀ (p := 2) hC β)` / `blockMap F μ (symbolAction₀ (p := 2) hC β) M`
+(family; `hC = Fourier.moderate_geomFiberZ`) directly. Every old body is the new term by `rfl`
+(probe P3). The endpoint statements (`existsUnique_raw`, `xPoly*`, `certified_analytic_solution`,
+the eigenpair endpoints, `duffing_existsUnique`, the Riccati and Even endpoints) are unchanged;
+the `Eigenpair` files and the Even files are untouched. The six operator laws inherit the frame
+assumption of the projection API. Design of record:
+`exterior/tmp/lp_api_campaign_20261017/POST_MERGE/promotion_20261104/U-B3/CONSENSUS_B3_20261105.md`
+(D13–D18). No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| — | `RadiiPolynomial.WeightedLp.headDiag (F : Finset M) (μ : M → 𝕜) : WeightedLp M E p →L[𝕜] WeightedLp M E p := diagCLM ((↑F : Set M).indicator μ) (NormHelpers.bddAbove_norm_indicator_finset F μ)` (`NormedField 𝕜`, `[Fact (1 ≤ p)]`; no frame, no `DecidableEq`) | `Analysis/SequenceSpace/WeightedLp/Operators/HeadProj.lean` | added: the finite-head diagonal `Λ_F` |
+| — | `RadiiPolynomial.WeightedLp.coeff_headDiag : coeff (headDiag F μ x) n = if n ∈ F then μ n * coeff x n else 0` | idem | added (the polynomial `coeff_LamH` script; not `@[simp]`) |
+| — | `RadiiPolynomial.WeightedLp.{headProj_comp_headDiag : headProj F ∘L headDiag F μ = headDiag F μ, headDiag_comp_headProj : headDiag F μ ∘L headProj F = headDiag F μ}` | idem | added |
+| — | `RadiiPolynomial.WeightedLp.headBlock (F) (μ) (L : WeightedLp M E p →L[𝕜] WeightedLp M E p) := headDiag F μ - headProj F ∘L L ∘L headProj F` | `Analysis/SequenceSpace/WeightedLp/Operators/FiniteBlock.lean` | added: the head block `K_F` of an arbitrary bounded `L` |
+| — | `RadiiPolynomial.WeightedLp.{headProj_comp_headBlock : headProj F ∘L headBlock F μ L = headBlock F μ L, headBlock_comp_headProj : headBlock F μ L ∘L headProj F = headBlock F μ L}` | idem | added |
+| — | `RadiiPolynomial.WeightedLp.blockMap (F) (μ) (L) (A) := A ∘L headBlock F μ L + tailProj F` | idem | added: the approximate derivative `B_F` (head operator `A`; `M` is the index type of the layer) |
+| — | `RadiiPolynomial.WeightedLp.id_sub_blockMap : ContinuousLinearMap.id 𝕜 _ - blockMap F μ L A = headProj F - A ∘L headBlock F μ L` | idem | added: `id_sub_add_tailProj F _` |
+| — | `RadiiPolynomial.WeightedLp.headProj_comp_id_sub_blockMap_comp_headProj (hPA : headProj F ∘L A = A) : headProj F ∘L (ContinuousLinearMap.id 𝕜 _ - blockMap F μ L A) ∘L headProj F = ContinuousLinearMap.id 𝕜 _ - blockMap F μ L A` | idem | added: the block law, stated in the `I − blockMap` form (proof `simp only [id_sub_blockMap]` then the block-support chain); consumers holding `P − A K` use `simpa only [id_sub_blockMap] using …` |
+| `FourierDuffing.Polynomial.Certificate.LamH` | `headDiag S μ` | `Examples/Fourier/Duffing/Polynomial/Certificate.lean` | retired (same term by `rfl`) |
+| `FourierDuffing.Polynomial.Certificate.coeff_LamH` | `coeff_headDiag S μ` | idem | retired |
+| `FourierDuffing.Polynomial.Certificate.Kh` | `headBlock S μ LB` | idem | retired (same term by `rfl`) |
+| `FourierDuffing.Polynomial.Certificate.B0` | `blockMap S μ LB M` | idem | retired (same term by `rfl`) |
+| `FourierDuffing.Polynomial.Certificate.one_sub_B0` (private) | `id_sub_blockMap S μ LB M` | idem | retired |
+| `FourierDuffing.Polynomial.Certificate.P_LamH` | `headProj_comp_headDiag S μ` | idem | retired |
+| `FourierDuffing.Polynomial.Certificate.LamH_P` | `headDiag_comp_headProj S μ` | idem | retired |
+| `FourierDuffing.Polynomial.Certificate.P_Kh` | `headProj_comp_headBlock S μ LB` | idem | retired |
+| `FourierDuffing.Polynomial.Certificate.Kh_P` | `headBlock_comp_headProj S μ LB` | idem | retired |
+| `FourierDuffing.Polynomial.Certificate.block_defect : P ∘L (P - M ∘L Kh) ∘L P = P - M ∘L Kh` | `headProj_comp_id_sub_blockMap_comp_headProj S μ LB M hPM` (read through `id_sub_blockMap`) | idem | retired |
+| `FourierDuffing.Polynomial.Certificate.{L := M ∘L LamH + Q, DG}` | `L := M ∘L headDiag S μ + Q` (`DG := L - 2 • C abar` through it) | idem | body respelled (same term) |
+| `FourierDuffing.Polynomial.Certificate.G_apply : G x = M (LamH x - polyProd x x - g) + …` | `G_apply : G x = M (headDiag S μ x - polyProd x x - g) + Q x - T (polyProd x x + g)` | idem | statement respelled |
+| `FourierDuffing.Polynomial.Certificate.{DG_sub_B0 : DG - B0 = …, matrix_Kh : matrixOf Kh i j = …, matrix_defect : matrixOf (P - M ∘L Kh) i j = …, Z0_le : ‖P - M ∘L Kh‖ ≤ …, Z1_le : ‖B0 - quadDeriv L (-C) abar‖ ≤ …}` | `DG_sub_B0 : DG - blockMap S μ LB M = …`, `matrix_Kh : matrixOf (headBlock S μ LB) i j = …`, `matrix_defect : matrixOf (P - M ∘L headBlock S μ LB) i j = …`, `Z0_le : ‖P - M ∘L headBlock S μ LB‖ ≤ …` (through the block law), `Z1_le : ‖blockMap S μ LB M - quadDeriv L (-C) abar‖ ≤ …` | idem | statements respelled (names kept); `existsUnique_G`, `existsUnique_raw` proofs only |
+| `RadiiPolynomial.Fourier.Quadratic.LamH` | `headDiag F μ` | `Applications/Fourier/Quadratic.lean` | retired (same term by `rfl`) |
+| `RadiiPolynomial.Fourier.Quadratic.coeff_LamH` (`@[simp]`) | `coeff_headDiag F μ` | idem | retired |
+| `RadiiPolynomial.Fourier.Quadratic.Kh F μ β` | `headBlock F μ (symbolAction₀ (p := 2) hC β)` | idem | retired (same term by `rfl`) |
+| `RadiiPolynomial.Fourier.Quadratic.B0 F μ M β` | `blockMap F μ (symbolAction₀ (p := 2) hC β) M` | idem | retired (same term by `rfl`) |
+| `RadiiPolynomial.Fourier.Quadratic.headProj_comp_LamH` | `headProj_comp_headDiag F μ` | idem | retired |
+| `RadiiPolynomial.Fourier.Quadratic.LamH_comp_headProj` | `headDiag_comp_headProj F μ` | idem | retired |
+| `RadiiPolynomial.Fourier.Quadratic.headProj_comp_Kh` | `headProj_comp_headBlock F μ _` | idem | retired |
+| `RadiiPolynomial.Fourier.Quadratic.Kh_comp_headProj` | `headBlock_comp_headProj F μ _` | idem | retired |
+| `RadiiPolynomial.Fourier.Quadratic.block_one_sub_B0 (hPM) (β)` | `headProj_comp_id_sub_blockMap_comp_headProj F μ _ M hPM` (read through `id_sub_blockMap`) | idem | retired |
+| `RadiiPolynomial.Fourier.Quadratic.{G, DG}` (bodies with `LamH F μ`) | bodies with `headDiag F μ` | idem | bodies respelled (same terms) |
+| `RadiiPolynomial.Fourier.Quadratic.{G_eq, DG_eq}` (`M ∘L LamH F μ + tailProj F`) | `M ∘L headDiag F μ + tailProj F` | idem | statements respelled |
+| `RadiiPolynomial.Fourier.Quadratic.{DG_sub_B0, norm_DG_sub_B0_le}` (`B0 F μ M (betaOf F ā hā)`) | `blockMap F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā)) M` | idem | statements respelled (names kept) |
+| `RadiiPolynomial.Fourier.Quadratic.Cert.hZ₀ : ‖headProj F - M ∘L Kh F μ (betaOf F abar abar_supp)‖ ≤ Z₀` | `Cert.hZ₀ : ‖headProj F - M ∘L headBlock F μ (symbolAction₀ (p := 2) hC (betaOf F abar abar_supp))‖ ≤ Z₀` | idem | field statement respelled; field inventory unchanged |
+| `RadiiPolynomial.Fourier.Quadratic.{existsUnique_G, existsUnique_rawF}` (`hZ₀` with `Kh F μ (betaOf F ā hā)`, `hZ₁` with `B0 F μ M (betaOf F ā hā)`) | `hZ₀ : ‖headProj F - M ∘L headBlock F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā))‖ ≤ Z₀`, `hZ₁ : ‖DG F μ hs M ā - blockMap F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā)) M‖ ≤ Z₁` | idem | statements respelled |
+| `have hZ1'` with `B0 (headF N) (duffing c₁ c₂) cert.M (betaOf …)` | `blockMap (headF N) (duffing c₁ c₂) (symbolAction₀ (p := 2) Fourier.moderate_geomFiberZ (betaOf …)) cert.M` | `Applications/Fourier/Duffing.lean` | proof only (`duffing_existsUnique` unchanged) |
+| `RadiiPolynomial.Certification.Fourier.Quadratic.QuadFourierLeafQ.{matrixOf_Kh, matrixOf_Z0op_eq}` (`Kh (headF L.N) μ (betaOf …)`); private `Z0_le` | `headBlock (headF L.N) μ (symbolAction₀ (p := 2) RadiiPolynomial.WeightedLp.Fourier.moderate_geomFiberZ (betaOf …))`; `Z0_le` through the block law | `Certification/Fourier/Quadratic.lean` | statements respelled (names kept) |
+| `FourierRiccati.{Z0_identity, Z0_le, Z1_le}` | `Z0_identity`/`Z0_le` with `M ∘L headBlock F μ LB`, `Z1_le` with `blockMap F μ LB M`; `G_abar` proof only | `Examples/Fourier/Riccati/Certificate.lean` | statements respelled (names kept) |
+| `FourierRiccati.M_LamH : M ∘L LamH F μ = headProj F` | `FourierRiccati.M_headDiag : M ∘L headDiag F μ = headProj F` | `Examples/Fourier/Riccati/Certificate.lean` | renamed: the retired name `LamH` does not survive inside a kept name; statement respelled; use site `Z0_identity` |
+| `FourierRiccati.LamH_abar : LamH F μ abar = g` | `FourierRiccati.headDiag_abar : headDiag F μ abar = g` | `Examples/Fourier/Riccati/Certificate.lean` | renamed: the retired name `LamH` does not survive inside a kept name; statement respelled; use site `G_abar` |
+| imports `Analysis.Norm.FiniteSum`, `WeightedLp.Bilateral.Quadratic`, `WeightedLp.Operators.Reality`, `Core.Quadratic`, `Core.Transport` | the same list without `Analysis.Norm.FiniteSum` | `Applications/Fourier/Quadratic.lean` | import change: its one consumer in the file (`LamH`) retired; `FiniteSum` arrives through `Operators/HeadProj`, so the transitive import set is unchanged |

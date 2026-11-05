@@ -1,6 +1,7 @@
+import RadiiPolynomial.Analysis.Norm.FiniteSum
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.TailDiagonal
 
-/-! Finite-head coordinate projections and their complement over arbitrary framed NormedField carriers. -/
+/-! Finite-head coordinate projections and their complement over arbitrary framed NormedField carriers, and the finite-head diagonal `Λ_F = diag(1_F μ)` with its projection laws. -/
 
 open scoped ENNReal NNReal
 
@@ -127,6 +128,48 @@ theorem norm_headProj_apply_le (S : Finset M) (x : WeightedLp M E p) :
     exact norm_nonneg _
 
 end ProjectionApplyNorm
+
+section HeadDiag
+
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*}
+  [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)]
+  {p : ℝ≥0∞} [Fact (1 ≤ p)]
+
+/-- **The finite-head diagonal** `Λ_F = diag(1_F μ)`: the diagonal operator with the finite-head
+symbol `1_F μ = (↑F : Set M).indicator μ`. -/
+def headDiag (F : Finset M) (μ : M → 𝕜) : WeightedLp M E p →L[𝕜] WeightedLp M E p :=
+  diagCLM ((↑F : Set M).indicator μ) (NormHelpers.bddAbove_norm_indicator_finset F μ)
+
+end HeadDiag
+
+section HeadDiagLaws
+
+variable {𝕜 : Type*} [NormedField 𝕜] {M : Type*} [DecidableEq M] {E : M → Type*}
+  [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)] [FiberTrivialization 𝕜 M E]
+  {p : ℝ≥0∞} [Fact (1 ≤ p)]
+variable (F : Finset M) (μ : M → 𝕜)
+
+/-- `Λ_F` in coordinates: `coeff (Λ_F x) n = 1_{n ∈ F} μ n coeff x n`. -/
+theorem coeff_headDiag (x : WeightedLp M E p) (n : M) :
+    coeff (headDiag F μ x) n = if n ∈ F then μ n * coeff x n else 0 := by
+  simp only [headDiag, coeff_diagCLM, Set.indicator_apply, Finset.mem_coe]
+  split_ifs <;> simp
+
+/-- `Λ_F` has its range in the head: `P_F Λ_F = Λ_F`. -/
+theorem headProj_comp_headDiag :
+    headProj (𝕜 := 𝕜) (E := E) (p := p) F ∘L headDiag F μ = headDiag F μ :=
+  ContinuousLinearMap.ext fun x => ext_coeff <| funext fun k => by
+    rw [ContinuousLinearMap.comp_apply, coeff_headProj, coeff_headDiag]
+    split_ifs <;> rfl
+
+/-- `Λ_F` reads the head only: `Λ_F P_F = Λ_F`. -/
+theorem headDiag_comp_headProj :
+    headDiag F μ ∘L headProj (𝕜 := 𝕜) (E := E) (p := p) F = headDiag F μ :=
+  ContinuousLinearMap.ext fun x => ext_coeff <| funext fun k => by
+    rw [ContinuousLinearMap.comp_apply, coeff_headDiag, coeff_headDiag, coeff_headProj]
+    split_ifs <;> rfl
+
+end HeadDiagLaws
 
 end RadiiPolynomial.WeightedLp
 

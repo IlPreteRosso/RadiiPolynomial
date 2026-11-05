@@ -1,4 +1,3 @@
-import RadiiPolynomial.Analysis.Norm.FiniteSum
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Bilateral.Quadratic
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.Reality
 import RadiiPolynomial.Core.Quadratic
@@ -21,7 +20,7 @@ equation (`Examples/Fourier/Riccati/Certificate.lean`, `μₙ = 1 + i n`).
 ## The maps
 
 With projections `P = headProj F`, `Q = tailProj F`, the square-summable tail symbol
-`d = tailSymbol ↑F μ` (hypothesis `hs`), the finite-head diagonal `Λ_H = LamH F μ`, the head
+`d = tailSymbol ↑F μ` (hypothesis `hs`), the finite-head diagonal `Λ_H = headDiag F μ`, the head
 realization `H_F = headReal F` and the cross-exponent tail diagonal `T∞ = tailInf ↑F μ hs`:
 * `rawF μ g a : ℤ → ℂ` is a RAW coefficient family (no typed codomain; it need not lie in
   `ℓ^∞_m`), and so is the raw preconditioner `rawA F μ M f n = coeff (M (headOfRaw F f)) n + dₙ fₙ`;
@@ -36,12 +35,15 @@ realization `H_F = headReal F` and the cross-exponent tail diagonal `T∞ = tail
 ## The services
 
 * **Centre and defect.** At a candidate `ā` supported in `F`, with `β = 2ā ∈ ℓ¹_m` (`betaOf`),
-  `K_H = Λ_H − P L_β P` and `B₀ = M K_H + Q`, the defect is the tail defect of
+  the head block `K_H = Λ_H − P L_β P = headBlock F μ L_β` (on the head range, the finite
+  Jacobian of the book's truncation (10.3) at `β = 2ā`) and `B₀ = M K_H + Q = blockMap F μ L_β M`
+  (`Operators/FiniteBlock.lean`), the defect is the tail defect of
   `Operators/TailDefect.lean`: `DG(ā) − B₀ = −(M P L_β Q + T₂ L_β)` (`DG_sub_B0`).
 * **The four bound faces.** `Y₀`: the exact finite residual
   `‖G ā‖² = ∑_{n ∈ F ∪ (F + F)} ‖coeff (G ā) n‖² ν^{2|n|}` (`norm_sq_G_abar`; the head range of
   `M` confines `M g`, no support of `g` is assumed); `Z₀`: `I − B₀ = P − M K_H` lives on the
-  block `F × F` (`block_one_sub_B0`); `Z₁`: the tail-defect bound (`norm_DG_sub_B0_le`, UPPER);
+  block `F × F` (`headProj_comp_id_sub_blockMap_comp_headProj`); `Z₁`: the tail-defect bound
+  (`norm_DG_sub_B0_le`, UPPER);
   `Z₂`: the symmetrized bilinear norm is at most `2 √(U² + T2)`
   (`norm_quadComp_add_flip_le_of_bounds` with the weight-generic `U_row` head certificate
   `Bilateral.norm_comp_headReal_le_urow`, UPPER).
@@ -88,36 +90,15 @@ variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] (F : Finset ℤ) (μ : ℤ →
   (hs : Summable fun k => ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2) (M : X₂ ℂ ν →L[ℂ] X₂ ℂ ν)
   (g : X₂ ℂ ν)
 
-/-- **The finite-head diagonal** `Λ_H = diag(1_F μ)` on `X₂ ℂ ν`, with the finite-head symbol
-`1_F μ = (↑F : Set ℤ).indicator μ`. -/
-def LamH : X₂ ℂ ν →L[ℂ] X₂ ℂ ν :=
-  diagCLM ((↑F : Set ℤ).indicator μ) (NormHelpers.bddAbove_norm_indicator_finset F μ)
-
-omit [Fact (1 ≤ (ν : ℝ))] in
-/-- `Λ_H` in coordinates. -/
-@[simp] theorem coeff_LamH (x : X₂ ℂ ν) (k : ℤ) :
-    coeff (LamH F μ x) k = if k ∈ F then μ k * coeff x k else 0 := by
-  rw [LamH, coeff_diagCLM, Set.indicator_apply]
-  split_ifs <;> simp_all
-
-/-- The head block `K_H = Λ_H − P L_β P` of the approximate derivative. On the head range it is
-the finite Jacobian `DF^{(N)}(ā)` of the book's truncation (10.3) at `β = 2ā` when `supp ā ⊆ F`:
-the truncation of the convolution to `|j₁|, |j₂| ≤ N` is vacuous on a head-supported candidate. -/
-def Kh (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) : X₂ ℂ ν →L[ℂ] X₂ ℂ ν :=
-  LamH F μ - headProj (𝕜 := ℂ) F ∘L symbolAction₀ (p := 2) hC β ∘L headProj (𝕜 := ℂ) F
-
-/-- **The approximate derivative** `B₀ = M K_H + Q`. -/
-def B0 (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) : X₂ ℂ ν →L[ℂ] X₂ ℂ ν := M ∘L Kh F μ β + tailProj (𝕜 := ℂ) F
-
 /-- **The bounded self-map** `G(a) = M (Λ_H a − H_F (a ⋆ a) − g) + Q a − T∞ (a ⋆ a)`. -/
 def G (a : X₂ ℂ ν) : X₂ ℂ ν :=
-  M (LamH F μ a - headReal F (prodCLM (geomSubmul ν) a a) - g) + tailProj (𝕜 := ℂ) F a -
+  M (headDiag F μ a - headReal F (prodCLM (geomSubmul ν) a a) - g) + tailProj (𝕜 := ℂ) F a -
     tailInf (F : Set ℤ) μ hs (prodCLM (geomSubmul ν) a a)
 
 /-- `G` is the canonical quadratic map, with bilinear part `-quadCLM A_Y`. -/
 theorem G_eq (a : X₂ ℂ ν) :
     G F μ hs M g a = quadMap (-M g)
-      (M ∘L LamH F μ + tailProj (𝕜 := ℂ) F)
+      (M ∘L headDiag F μ + tailProj (𝕜 := ℂ) F)
       (-quadCLM (AY F M (F : Set ℤ) μ hs)) a := by
   simp only [G, quadMap, quadCLM_apply, AY, add_apply, ContinuousLinearMap.comp_apply,
     neg_apply, map_sub]
@@ -125,11 +106,11 @@ theorem G_eq (a : X₂ ℂ ν) :
 
 /-- The derivative in the symmetric product representation used by the head defect. -/
 def DG (a : X₂ ℂ ν) : X₂ ℂ ν →L[ℂ] X₂ ℂ ν :=
-  M ∘L LamH F μ + tailProj (𝕜 := ℂ) F - (2 : ℂ) • quadCLM (AY F M (F : Set ℤ) μ hs) a
+  M ∘L headDiag F μ + tailProj (𝕜 := ℂ) F - (2 : ℂ) • quadCLM (AY F M (F : Set ℤ) μ hs) a
 
 /-- The derivative expression agrees with the canonical quadratic derivative. -/
 theorem DG_eq (a : X₂ ℂ ν) : DG F μ hs M a =
-    quadDeriv (M ∘L LamH F μ + tailProj (𝕜 := ℂ) F)
+    quadDeriv (M ∘L headDiag F μ + tailProj (𝕜 := ℂ) F)
       (-quadCLM (AY F M (F : Set ℤ) μ hs)) a := by
   ext h
   simp only [DG, quadDeriv, sub_apply, smul_apply, two_smul, add_apply,
@@ -173,9 +154,9 @@ theorem convCoeff_eq_sum {x : X₂ ℂ ν} (hx : ∀ k ∉ F, coeff x k = 0) (y 
 reads the forcing through `supp g ⊆ F`, the tail part inverts `μ` off `F`. -/
 theorem coeff_G (hg : ∀ k ∉ F, coeff g k = 0) (hμ : ∀ k ∉ F, μ k ≠ 0) (a : X₂ ℂ ν) :
     coeff (G F μ hs M g a) = rawA F μ M (rawF μ g a) := by
-  have hH : headOfRaw F (rawF μ g a) = LamH F μ a - headReal F (prodCLM (geomSubmul ν) a a) - g :=
+  have hH : headOfRaw F (rawF μ g a) = headDiag F μ a - headReal F (prodCLM (geomSubmul ν) a a) - g :=
     ext_coeff <| funext fun k => by
-      rw [coeff_headOfRaw, coeff_sub, coeff_sub, Pi.sub_apply, Pi.sub_apply, coeff_LamH,
+      rw [coeff_headOfRaw, coeff_sub, coeff_sub, Pi.sub_apply, Pi.sub_apply, coeff_headDiag,
         coeff_headReal, coeff_prodCLM]
       by_cases hk : k ∈ F
       · rw [ite_eq_left hk, ite_eq_left hk, ite_eq_left hk, rawF]
@@ -221,11 +202,11 @@ theorem two_smul_quadCLM_AY_abar {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā
 /-- **The defect identity** `DG(ā) − B₀ = −(M P L_β Q + T₂ L_β)`: the full shared-input
 tail defect at a head-supported centre, with `L_β` supplied by the operator series. -/
 theorem DG_sub_B0 {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) :
-    DG F μ hs M ā - B0 F μ M (betaOf F ā hā) =
+    DG F μ hs M ā - blockMap F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā)) M =
       -tailDefect hC (betaOf F ā hā) F M (tailSymbol (F : Set ℤ) μ)
         (bddAbove_of_summable_sq hs) := by
   refine ContinuousLinearMap.ext fun h => ?_
-  simp only [DG, two_smul_quadCLM_AY_abar F μ hs M hā, B0, Kh, tailDefect, tailProj_eq_id_sub_headProj,
+  simp only [DG, two_smul_quadCLM_AY_abar F μ hs M hā, blockMap, headBlock, tailDefect, tailProj_eq_id_sub_headProj,
     tailDiag, sub_apply, add_apply,
     ContinuousLinearMap.comp_apply, neg_apply, ContinuousLinearMap.id_apply, map_sub]
   abel
@@ -240,43 +221,6 @@ variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] (F : Finset ℤ) (μ : ℤ →
   (hs : Summable fun k => ‖tailSymbol (F : Set ℤ) μ k‖ ^ 2) (M : X₂ ℂ ν →L[ℂ] X₂ ℂ ν)
   (g : X₂ ℂ ν)
 
-omit [Fact (1 ≤ (ν : ℝ))] in
-/-- `Λ_H` has its range in the head: `P Λ_H = Λ_H`. -/
-theorem headProj_comp_LamH :
-    headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L LamH F μ = LamH F μ :=
-  ContinuousLinearMap.ext fun x => ext_coeff <| funext fun k => by
-    rw [ContinuousLinearMap.comp_apply, coeff_headProj, coeff_LamH]
-    split_ifs <;> rfl
-
-omit [Fact (1 ≤ (ν : ℝ))] in
-/-- `Λ_H` reads the head only: `Λ_H P = Λ_H`. -/
-theorem LamH_comp_headProj :
-    LamH F μ ∘L headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F = LamH F μ :=
-  ContinuousLinearMap.ext fun x => ext_coeff <| funext fun k => by
-    rw [ContinuousLinearMap.comp_apply, coeff_LamH, coeff_LamH, coeff_headProj]
-    split_ifs <;> rfl
-
-/-- `K_H` has its range in the head: `P K_H = K_H`. -/
-theorem headProj_comp_Kh (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) :
-    headProj (𝕜 := ℂ) F ∘L Kh F μ β = Kh F μ β := by
-  rw [Kh, ContinuousLinearMap.comp_sub, headProj_comp_LamH, ← ContinuousLinearMap.comp_assoc,
-    headProj_comp_headProj]
-
-/-- `K_H` reads the head only: `K_H P = K_H`. -/
-theorem Kh_comp_headProj (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) :
-    Kh F μ β ∘L headProj (𝕜 := ℂ) F = Kh F μ β := by
-  rw [Kh, ContinuousLinearMap.sub_comp, LamH_comp_headProj, ContinuousLinearMap.comp_assoc,
-    ContinuousLinearMap.comp_assoc, headProj_comp_headProj]
-
-/-- **`I − B₀` lives on the block `F × F`** under `P M = M`: `P (P − M K_H) P = P − M K_H`, so
-`norm_le_sqrt_of_block` applies to the `Z₀` operator. -/
-theorem block_one_sub_B0 (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M)
-    (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) :
-    headProj (𝕜 := ℂ) F ∘L (headProj (𝕜 := ℂ) F - M ∘L Kh F μ β) ∘L headProj (𝕜 := ℂ) F = headProj (𝕜 := ℂ) F - M ∘L Kh F μ β := by
-  rw [ContinuousLinearMap.sub_comp, headProj_comp_headProj, ContinuousLinearMap.comp_assoc,
-    Kh_comp_headProj, ContinuousLinearMap.comp_sub, headProj_comp_headProj,
-    ← ContinuousLinearMap.comp_assoc, hPM]
-
 /-- **The `Z₁` face** (UPPER): the tail-defect bound `norm_tailDefect_le` at the composed head
 bound `H` and a tail bound `R` of the tail symbol (`C = 1`; `0 ≤ R` follows from `hR`). The two
 defect terms share the input, so no exactness is claimed. -/
@@ -284,7 +228,8 @@ theorem norm_DG_sub_B0_le {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0)
     (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M) {H R : ℝ}
     (hH : ‖M ∘L headProj (𝕜 := ℂ) F ∘L symbolAction₀ (p := 2) hC (betaOf F ā hā) ∘L tailProj (𝕜 := ℂ) F‖ ≤ H)
     (hR : ∀ k, ‖tailSymbol (F : Set ℤ) μ k‖ ≤ R) :
-    ‖DG F μ hs M ā - B0 F μ M (betaOf F ā hā)‖ ≤ √(H ^ 2 + (R * 1 * ‖betaOf F ā hā‖) ^ 2) := by
+    ‖DG F μ hs M ā - blockMap F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā)) M‖ ≤
+      √(H ^ 2 + (R * 1 * ‖betaOf F ā hā‖) ^ 2) := by
   rw [DG_sub_B0 F μ hs M hā, norm_neg]
   exact norm_tailDefect_le hC (betaOf F ā hā) F M (tailSymbol (F : Set ℤ) μ)
     (bddAbove_of_summable_sq hs) hPM (fun k hk => tailSymbol_of_mem (Finset.mem_coe.2 hk)) hH
@@ -353,7 +298,7 @@ structure Cert (F : Finset ℤ) (μ : ℤ → ℂ) (ν : PosReal) [Fact (1 ≤ (
   U : ℝ
   abar_supp : ∀ k ∉ F, coeff abar k = 0
   hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M
-  hZ₀ : ‖headProj F - M ∘L Kh F μ (betaOf F abar abar_supp)‖ ≤ Z₀
+  hZ₀ : ‖headProj F - M ∘L headBlock F μ (symbolAction₀ (p := 2) hC (betaOf F abar abar_supp))‖ ≤ Z₀
   hH : ‖M ∘L headProj F ∘L symbolAction₀ (p := 2) hC (betaOf F abar abar_supp) ∘L
     tailProj F‖ ≤ H
   hU : ‖M ∘L headReal F‖ ≤ U
@@ -371,8 +316,8 @@ variable {ν : PosReal} [Fact (1 ≤ (ν : ℝ))] (F : Finset ℤ) (μ : ℤ →
 /-- A unique zero of `G` from the canonical quadratic radii theorem. -/
 theorem existsUnique_G {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) {Y₀ Z₀ Z₁ Z₂ r₀ : ℝ}
     (hr₀ : 0 < r₀) (hY₀ : ‖G F μ hs M g ā‖ ≤ Y₀)
-    (hZ₀ : ‖headProj (𝕜 := ℂ) F - M ∘L Kh F μ (betaOf F ā hā)‖ ≤ Z₀)
-    (hZ₁ : ‖DG F μ hs M ā - B0 F μ M (betaOf F ā hā)‖ ≤ Z₁)
+    (hZ₀ : ‖headProj (𝕜 := ℂ) F - M ∘L headBlock F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā))‖ ≤ Z₀)
+    (hZ₁ : ‖DG F μ hs M ā - blockMap F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā)) M‖ ≤ Z₁)
     (hZ₂ : ‖quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν)) (-quadCLM (AY F M (F : Set ℤ) μ hs)) +
       (quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν))
         (-quadCLM (AY F M (F : Set ℤ) μ hs))).flip‖ ≤ Z₂)
@@ -381,8 +326,9 @@ theorem existsUnique_G {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0) {Y
   simp_rw [G_eq F μ hs M g] at hY₀ ⊢
   refine quadratic_radii_theorem_local
     (A := ContinuousLinearMap.id ℂ (X₂ ℂ ν))
-    (A_dagger := B0 F μ M (betaOf F ā hā)) hr₀ hY₀ ?_ ?_ hZ₂ hrad fun _ _ h => h
-  · rwa [ContinuousLinearMap.id_comp, B0, id_sub_add_tailProj]
+    (A_dagger := blockMap F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā)) M) hr₀ hY₀ ?_ ?_ hZ₂ hrad
+    fun _ _ h => h
+  · rwa [ContinuousLinearMap.id_comp, id_sub_blockMap]
   · rwa [ContinuousLinearMap.id_comp, ← DG_eq, norm_sub_rev]
 
 /-- **A unique raw zero of the Fourier map in the ball** (generic `F`, `μ`): the zero of `G` from
@@ -393,14 +339,15 @@ isometry. -/
 theorem existsUnique_rawF {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0)
     (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M) (hg : ∀ k ∉ F, coeff g k = 0)
     (hμ : ∀ k ∉ F, μ k ≠ 0) {Y₀ Z₀ Z₁ Z₂ r₀ : ℝ} (hr₀ : 0 < r₀) (hY₀ : ‖G F μ hs M g ā‖ ≤ Y₀)
-    (hZ₀ : ‖headProj (𝕜 := ℂ) F - M ∘L Kh F μ (betaOf F ā hā)‖ ≤ Z₀)
-    (hZ₁ : ‖DG F μ hs M ā - B0 F μ M (betaOf F ā hā)‖ ≤ Z₁)
+    (hZ₀ : ‖headProj (𝕜 := ℂ) F - M ∘L headBlock F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā))‖ ≤ Z₀)
+    (hZ₁ : ‖DG F μ hs M ā - blockMap F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā)) M‖ ≤ Z₁)
     (hZ₂ : ‖quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν)) (-quadCLM (AY F M (F : Set ℤ) μ hs)) +
       (quadComp (ContinuousLinearMap.id ℂ (X₂ ℂ ν))
         (-quadCLM (AY F M (F : Set ℤ) μ hs))).flip‖ ≤ Z₂)
     (hrad : generalRadiiPolynomial Y₀ Z₀ Z₁ (fun _ => Z₂) r₀ < 0) :
     ∃! a ∈ Metric.closedBall ā r₀, rawF μ g a = 0 := by
-  have hlt : ‖headProj (𝕜 := ℂ) F - M ∘L Kh F μ (betaOf F ā hā)‖ < 1 := by
+  have hlt : ‖headProj (𝕜 := ℂ) F - M ∘L headBlock F μ (symbolAction₀ (p := 2) hC (betaOf F ā hā))‖ <
+      1 := by
     have hY0 : 0 ≤ Y₀ := (norm_nonneg _).trans hY₀
     have hZ10 : 0 ≤ Z₁ := (norm_nonneg _).trans hZ₁
     have hZ20 : 0 ≤ Z₂ := (ContinuousLinearMap.opNorm_nonneg _).trans hZ₂
@@ -408,7 +355,7 @@ theorem existsUnique_rawF {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0)
     simp only [Z_bound_general] at h
     nlinarith [mul_nonneg hZ20 hr₀.le]
   have hinj := eq_zero_of_headProj_eq_of_norm_lt_one F
-    (by rw [← ContinuousLinearMap.comp_assoc, headProj_comp_Kh]) hlt
+    (by rw [← ContinuousLinearMap.comp_assoc, headProj_comp_headBlock]) hlt
   refine existsUnique_zero_transport (IsometryEquiv.refl _) (fun a => ?_)
     (existsUnique_G F μ hs M g hā hr₀ hY₀ hZ₀ hZ₁ hZ₂ hrad)
   exact (eq_zero_iff_of_coeff_eq_headSolve F M (tailSymbol (F : Set ℤ) μ) (coeff_headOfRaw F)
