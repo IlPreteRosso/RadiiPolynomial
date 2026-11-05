@@ -10,10 +10,12 @@ The second carrier of the same Duffing problem: the physical amplitude weight
 rational-leaf adapter `Certification/Fourier/Quadratic.lean` without copies; only the weight
 changes.
 
-This module is finite arithmetic only. The bound constants (`Y₀ = 71/10⁶`, `Z₀ = 1/1000`,
-`H = 7/1000`, `‖2ā‖ ≤ 103/10`, tail `≤ 1/117`, `‖A‖ ≤ 11`, `Z₁ = 9/100`, `Z₂ = 220` from the
-product bound `κ = 10`, radius `1/10000`) are those of the trial certificate. Every clause of
-`Checks` is consumed by `Polynomial/Certificate.lean`; the whole bundle is ONE `native_decide`.
+This module is finite arithmetic only. The bound constants are `Y₀ = 71/10⁶`, `Z₀ = 1/1000`,
+`H = 7/1000`, `‖2ā‖ ≤ 103/10`, tail `≤ 1/117`, `Z₁ = 9/100`, radius `1/10000` and `Z₂ = 36`;
+`Z₂` comes from the exact squared row majorant `UsqQ` of the head matrix `M` and the tail sum
+bound `t2Q = 484/287469` through `4 (UsqQ + t2Q) ≤ Z₂²` (`CurvCheck`, one `decide +kernel`).
+Every clause of `Checks` is consumed by `Polynomial/Certificate.lean`; the whole bundle is ONE
+`native_decide`.
 -/
 
 namespace FourierDuffing.Polynomial.Numbers
@@ -48,12 +50,12 @@ def hRowQ (i : ℤ) : ℚ :=
 def hColQ (k : ℤ) : ℚ :=
   qsum (idx 10) fun i => reim (leaf.KMQ i k) * weightQ i / weightQ k
 
-/-- Weighted rows/columns of `M`, for its `ℓ²` Schur bound. -/
+/-- Weighted rows of `M` (amplitude ratios `m_i / m_j`), for its `U_row` head bound. -/
 def aRowQ (i : ℤ) : ℚ :=
   qsum (idx 10) fun j => reim (leaf.MQ i j) * weightQ i / weightQ j
 
-def aColQ (j : ℤ) : ℚ :=
-  qsum (idx 10) fun i => reim (leaf.MQ i j) * weightQ i / weightQ j
+/-- The exact squared row majorant `∑_{|i| ≤ 10} aRowQ(i)²` of the `U_row` head bound. -/
+def UsqQ : ℚ := qsum (idx 10) fun i => aRowQ i ^ 2
 
 /-- Fixed-centre weighted-`ℓ¹` symbol majorant of `2ā`. -/
 def betaBoundQ : ℚ := qsum (idx 10) fun k => 2 * reim (leaf.abarQ k) * weightQ k
@@ -63,17 +65,16 @@ def Z0Q : ℚ := 1 / 1000
 def HQ : ℚ := 7 / 1000
 def betaQ : ℚ := 103 / 10
 def tailQ : ℚ := 1 / 117
-def AQ : ℚ := 11
+/-- The tail sum bound `∑ ‖dₙ‖² ≤ 4 / (21 (11 − 4/11)²) = 484/287469`. -/
+def t2Q : ℚ := 484 / 287469
 def Z1Q : ℚ := 9 / 100
-def Z2Q : ℚ := 220
+def Z2Q : ℚ := 36
 def radiusQ : ℚ := 1 / 10000
 
 def RzQ : ℚ := 1 / 2000
 def CzQ : ℚ := 3 / 2000
 def RhQ : ℚ := 7 / 1000
 def ChQ : ℚ := 7 / 1000
-def RaQ : ℚ := 25 / 2
-def CaQ : ℚ := 193 / 20
 
 def Y0Check : Prop := ySquaredQ ≤ Y0Q ^ 2
 
@@ -85,10 +86,6 @@ def HCheck : Prop :=
   (∀ i ∈ idx 10, hRowQ i ≤ RhQ) ∧
   (∀ k ∈ leakColsQ 10 7, hColQ k ≤ ChQ) ∧ RhQ * ChQ ≤ HQ ^ 2
 
-def ACheck : Prop :=
-  (∀ i ∈ idx 10, aRowQ i ≤ RaQ) ∧
-  (∀ j ∈ idx 10, aColQ j ≤ CaQ) ∧ RaQ * CaQ ≤ AQ ^ 2 ∧ tailQ ≤ AQ
-
 def BetaCheck : Prop := betaBoundQ ≤ betaQ
 
 def Z1Check : Prop := HQ ^ 2 + (tailQ * betaQ) ^ 2 ≤ Z1Q ^ 2
@@ -98,10 +95,10 @@ def RadiiCheck : Prop :=
 
 /-- The finite-arithmetic bundle; no semantic assumption is hidden here. -/
 def Checks : Prop :=
-  Y0Check ∧ Z0Check ∧ HCheck ∧ ACheck ∧ BetaCheck ∧ Z1Check ∧ RadiiCheck
+  Y0Check ∧ Z0Check ∧ HCheck ∧ BetaCheck ∧ Z1Check ∧ RadiiCheck
 
 instance : Decidable Checks := by
-  unfold Checks Y0Check Z0Check HCheck ACheck BetaCheck Z1Check RadiiCheck
+  unfold Checks Y0Check Z0Check HCheck BetaCheck Z1Check RadiiCheck
   infer_instance
 
 /-- **The certificate call**: the whole bundle by one `native_decide`. -/
@@ -110,9 +107,18 @@ theorem checks : Checks := by native_decide
 theorem check_Y0 : Y0Check := checks.1
 theorem check_Z0 : Z0Check := checks.2.1
 theorem check_H : HCheck := checks.2.2.1
-theorem check_A : ACheck := checks.2.2.2.1
-theorem check_beta : BetaCheck := checks.2.2.2.2.1
-theorem check_Z1 : Z1Check := checks.2.2.2.2.2.1
-theorem check_radii : RadiiCheck := checks.2.2.2.2.2.2
+theorem check_beta : BetaCheck := checks.2.2.2.1
+theorem check_Z1 : Z1Check := checks.2.2.2.2.1
+theorem check_radii : RadiiCheck := checks.2.2.2.2.2
+
+/-- The curvature check `4 (UsqQ + t2Q) ≤ Z₂²`, implying `2 √(UsqQ + t2Q) ≤ Z₂ = 36`. -/
+def CurvCheck : Prop := 4 * (UsqQ + t2Q) ≤ Z2Q ^ 2
+
+instance : Decidable CurvCheck := by
+  unfold CurvCheck
+  infer_instance
+
+/-- **The curvature call**: `CurvCheck` by one `decide +kernel`. -/
+theorem check_curv : CurvCheck := by decide +kernel
 
 end FourierDuffing.Polynomial.Numbers

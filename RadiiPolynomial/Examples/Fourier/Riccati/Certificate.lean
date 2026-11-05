@@ -199,7 +199,8 @@ lemma tail_abar : tailProj (𝕜 := ℂ) F abar = 0 := by
   apply ext_coeff; funext n
   rw [coeff_tailProj, coeff_zero]
   by_cases hn : n ∈ F <;> simp [hn, abar_supp n]
-lemma G_abar : G F μ hs M g abar = -AY F M (F : Set ℤ) μ hs (prodCLM abar abar) := by
+lemma G_abar :
+    G F μ hs M g abar = -AY F M (F : Set ℤ) μ hs (prodCLM (geomSubmul ν) abar abar) := by
   rw [G, LamH_abar, tail_abar, AY]
   simp only [map_sub, add_apply, ContinuousLinearMap.comp_apply]
   abel
@@ -210,9 +211,9 @@ lemma AY_norm : ‖AY F M (F : Set ℤ) μ hs‖ ≤ (4 : ℝ) := by
   exact (Real.sqrt_le_sqrt hsq).trans (by norm_num [Real.sqrt_le_iff])
 lemma Y0_le : ‖G F μ hs M g abar‖ ≤ (1 / 1000 : ℝ) := by
   rw [G_abar, norm_neg]
-  have h1 := (AY F M (F : Set ℤ) μ hs).le_opNorm (prodCLM abar abar)
-  have h2 := norm_prodCLM_apply_le abar abar
-  have h3 : ‖prodCLM abar abar‖ ≤ (9 / 625 : ℝ) * (9 / 625) :=
+  have h1 := (AY F M (F : Set ℤ) μ hs).le_opNorm (prodCLM (geomSubmul ν) abar abar)
+  have h2 := norm_prodCLM_apply_le (geomSubmul ν) abar abar
+  have h3 : ‖prodCLM (geomSubmul ν) abar abar‖ ≤ (9 / 625 : ℝ) * (9 / 625) :=
     h2.trans (mul_le_mul norm_abar norm_abar (norm_nonneg _) (by norm_num))
   exact h1.trans ((mul_le_mul AY_norm h3 (norm_nonneg _) (by norm_num)).trans (by norm_num))
 

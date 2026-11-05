@@ -12,7 +12,8 @@ producer of the services consumed by the second-carrier certificate:
   satisfy `∑_k (m_n / (m_{n−k} m_k))² ≤ 2⁴ · 2 · ∑_k (1 + |k|)⁻⁴ ≤ 32 · 7/3 ≤ 10²`, so the
   carrier `X = ℓ²_m(ℤ; ℂ)` carries the bounded product `polyProd = convCLM polyRowBound`;
 * the self-moderation `polyModerate` (`m` is submultiplicative, constant `1`), for the ℓ¹ symbol
-  action of the derivative at the centre.
+  action of the derivative at the centre, and its raw-weight form `polyModerate_raw`, for the
+  bounded product `X → X → ℓ^∞_m` of the curvature bound.
 
 The reciprocal-mass embedding into unweighted ℓ¹ is not used. The convolution coordinates are
 read in the convention `(f ⋆ g)_n = ∑_k f_k g_{n−k}` of the bilateral consumer (`conv_apply`).
@@ -228,6 +229,14 @@ theorem polyModerate :
   simp only [polyWeight]
   rw [← mul_pow]
   exact pow_le_pow_left₀ (pw_pos (j + l)).le (h.trans_eq (mul_comm _ _)) 2
+
+/-- **Self-moderation at the raw weight**: `polyModerate` with its first (frame) weight rewritten
+to `polyWeight` (`WeightedScalar.fiberTrivialization_weight`), the positive submultiplicativity
+`Moderate polyWeight polyWeight 1` consumed by the bounded product `Bilateral.prodCLM`. -/
+theorem polyModerate_raw : Moderate polyWeight polyWeight 1 := by
+  have h := polyModerate
+  rwa [show FiberTrivialization.weight (E := WeightedScalar ℂ polyWeight) = polyWeight from
+    funext WeightedScalar.fiberTrivialization_weight] at h
 
 /-- The polynomial weight is negation-invariant (the `hw` of `conjReflL`). -/
 theorem polyWeight_neg : ∀ n : ℤ, polyWeight (-n) = polyWeight n := fun n => by

@@ -5555,3 +5555,63 @@ No compatibility aliases.
 |---|---|---|---|
 | `FourierDuffing.Polynomial.Certificate.hsSym` | `Set.indicator` (`(↑S : Set ℤ).indicator μ`) | `Examples/Fourier/Duffing/Polynomial/Certificate.lean` | a copy of Mathlib's zero extension; `LamH` takes the indicator (`coeff_LamH` keeps its statement) |
 | `FourierDuffing.Polynomial.Certificate.hsSym_bdd` | `RadiiPolynomial.NormHelpers.bddAbove_norm_indicator_finset` | `Analysis/Norm/FiniteSum.lean` | the one finite norm bound of the head diagonals |
+
+## U-D2c-B1 the product over a positive submultiplicative weight (2026-11-05, batch 6)
+
+The bilateral product of `Bilateral/Product.lean` is retyped from the geometric carriers
+`X₂ 𝕜 ν`, `Y 𝕜 ν` under `[Fact (1 ≤ ν)]` to the plain carriers
+`WeightedLp ℤ (WeightedScalar 𝕜 w) 2` / `… ∞` over `{w : ℤ → ℝ} [PosWeight w]`, with the explicit
+hypothesis `(hsub : Moderate w w 1)` (positive submultiplicative weight; no `w ≥ 1`) on the faces
+that need it. Signature changes only: no declaration is renamed, the scalar classes per face are
+unchanged and the Reflection section is untouched. The geometric weight passes the new producer
+`Bilateral.geomSubmul ν`, which keeps `[Fact (1 ≤ ν)]` (ν = 1/2 fails at `(1, −1)`). Design of
+record: `exterior/tmp/lp_api_campaign_20261017/POST_MERGE/promotion_20261104/U-D2c/CONSENSUS_B1B2_20261105.md`
+(D8). No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| `RadiiPolynomial.WeightedLp.Bilateral.{convCoeff, convCoeff_comm, convCoeff_smul_left, convCoeff_smul_right}` over `{ν : PosReal}` on `X₂ 𝕜 ν` | same names over `{w : ℤ → ℝ} [PosWeight w]` on `WeightedLp ℤ (WeightedScalar 𝕜 w) 2` (`[NormedField 𝕜]`, no weight hypothesis) | `Analysis/SequenceSpace/WeightedLp/Bilateral/Product.lean` | signature change (weight-generic carrier); geometric call sites elaborate with `w := fun k => ν ^ k.natAbs` |
+| `RadiiPolynomial.WeightedLp.Bilateral.{summable_and_tsum_normMag_mul_le, summable_normMag_mul, tsum_normMag_mul_le}` with magnitudes `‖coeff x j‖ * ν ^ j.natAbs` | same names with magnitudes `‖coeff x j‖ * w j` over `{w} [PosWeight w]` (`[NormedField 𝕜]`, no weight hypothesis) | idem | signature change (Cauchy–Schwarz holds for every positive weight) |
+| `RadiiPolynomial.WeightedLp.Bilateral.norm_conv_term_mul_le` `[Fact (1 ≤ ν)]` | same name, `{w} [PosWeight w] (hsub : Moderate w w 1)`, conclusion `‖coeff x j * coeff y (k - j)‖ * w k ≤ (‖coeff x j‖ * w j) * (‖coeff y (k - j)‖ * w (k - j))` (`[NormedField 𝕜]`) | idem | signature change: the Fact's submultiplicativity use is `hsub` |
+| `RadiiPolynomial.WeightedLp.Bilateral.summable_conv_term` `[CompleteSpace 𝕜] [Fact (1 ≤ ν)]` | same name, `[CompleteSpace 𝕜] {w} [PosWeight w] (hsub : Moderate w w 1)` | idem | signature change: the `one_le_pow₀` step is replaced by dividing by the fixed `w k > 0` |
+| `RadiiPolynomial.WeightedLp.Bilateral.{normMag_convCoeff_le, memℓp_top_convCoeff}` `[Fact (1 ≤ ν)]` | same names, `{w} [PosWeight w] (hsub : Moderate w w 1)` (`[NormedField 𝕜]`; conclusions `‖convCoeff x y k‖ * w k ≤ ‖x‖ * ‖y‖`, membership in `WeightedLp ℤ (WeightedScalar 𝕜 w) ∞`) | idem | signature change |
+| `RadiiPolynomial.WeightedLp.Bilateral.{convCoeff_add_left, convCoeff_add_right, prodLM, coeff_prodLM, norm_prodLM_le}` `[CompleteSpace 𝕜] [Fact (1 ≤ ν)]` | same names, `[CompleteSpace 𝕜] {w} [PosWeight w] (hsub : Moderate w w 1)`; `prodLM hsub` built by the anonymous constructor and `coeff_mk_equiv` (no `ofCoeff`) | idem | signature change |
+| `RadiiPolynomial.WeightedLp.Bilateral.{prodCLM, coeff_prodCLM, norm_prodCLM_apply_le, norm_prodCLM_le, prodCLM_comm}` `[NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] [Fact (1 ≤ ν)]` : `X₂ 𝕜 ν →L[𝕜] X₂ 𝕜 ν →L[𝕜] Y 𝕜 ν` | same names, `[NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] {w} [PosWeight w] (hsub : Moderate w w 1)` : `WeightedLp ℤ (WeightedScalar 𝕜 w) 2 →L[𝕜] … 2 →L[𝕜] … ∞`; `norm_prodCLM_le : ‖prodCLM (𝕜 := 𝕜) hsub‖ ≤ 1` | idem | signature change; geometric callers write `prodCLM (geomSubmul ν)` |
+| — | `RadiiPolynomial.WeightedLp.Bilateral.geomSubmul (ν : PosReal) [Fact (1 ≤ ν)] : Moderate (fun k : ℤ => (ν : ℝ) ^ k.natAbs) (fun k : ℤ => (ν : ℝ) ^ k.natAbs) 1` (`Moderate.of_submul (ScaledRealZ.pow_natAbs_add_le ν Fact.out)`) | `Analysis/SequenceSpace/WeightedLp/Bilateral/Carrier.lean` | added: the one raw, scalar-free geometric producer |
+| `prodCLM a b`, `prodCLM_comm`, `norm_prodCLM_le (𝕜 := 𝕜) (ν := ν)`, `norm_prodCLM_apply_le abar abar` at the geometric call sites | `prodCLM (geomSubmul ν) a b`, `prodCLM_comm (geomSubmul ν)`, `norm_prodCLM_le (𝕜 := 𝕜) (geomSubmul ν)`, `norm_prodCLM_apply_le (geomSubmul ν) abar abar` | `Bilateral/Quadratic.lean` (`quadCLM`, `quadCLM_apply`, `quadCLM_comm`, `norm_quadCLM_le`, `prodCLM_eq_incl_symbolAction₀`, `two_smul_prodCLM_eq_incl_symbolAction₀`); `Applications/Fourier/Quadratic.lean` (`G`, `coeff_G`); `Examples/Fourier/Riccati/Certificate.lean` (`G_abar`, `Y0_le`) | respelled consumers; `quadCLM`, `G`, `DG` and the β bridge keep `[Fact (1 ≤ ν)]` and their names |
+| — | `import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Module` in `Bilateral/Product.lean` and `Bilateral/Carrier.lean` | `Analysis/SequenceSpace/WeightedLp/Bilateral/{Product,Carrier}.lean` | `Moderate`; Carrier's only importer is Product, which takes Module anyway (and Quadratic, through Product, already takes it via `Fourier.ConvolutionAction`) |
+
+## U-D2c-B2 the polynomial certificate's Z₂ through the Y route on the same operator (2026-11-05, batch 6)
+
+The return services of `Bilateral/Quadratic.lean` and the magnitude bound `normMag_le_norm_Y` of
+`Bilateral/Carrier.lean` are generalized in place from the geometric carriers `X₂ 𝕜 ν`, `Y 𝕜 ν` to
+`WeightedLp ℤ (WeightedScalar 𝕜 w) 2` / `… ∞` over `{w : ℤ → ℝ} [PosWeight w]` (no weight
+hypothesis; the geometric consumers elaborate unchanged with `w := fun k => ν ^ k.natAbs`). The
+`U_row` head bound moves from `Applications/Fourier/Quadratic.lean` to `Bilateral/Quadratic.lean`.
+The product comparison `incl_convCLM_eq_prodCLM` gets the new bridge module
+`WeightedLp/Compatibility/ProductConvolution.lean`. The polynomial certificate bounds its unchanged
+curvature `C = A ∘ polyProd` through `C x y = A_Y (prodCLM polyModerate_raw x y)`:
+the new enclosure `‖C + C.flip‖ ≤ 2 √(UsqQ + t2Q) ≤ 36` replaces the old enclosure
+`‖C + C.flip‖ ≤ 2 · 10 · ‖A‖ ≤ 220`. The radius polynomial at
+`r = 1/10000` is `p₃₆(r) = −977/50000000` (the former `p₂₂₀(r) = −177/10⁷`). Design of record:
+`exterior/tmp/lp_api_campaign_20261017/POST_MERGE/promotion_20261104/U-D2c/CONSENSUS_B1B2_20261105.md`
+(D9, D10). No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| `RadiiPolynomial.WeightedLp.Bilateral.{tailInf, coeff_tailInf, headReal, coeff_headReal, inclₗ, incl, coeff_incl, tailInf_comp_incl, headReal_comp_incl}` over `{ν : PosReal}` on `Y 𝕜 ν`, `X₂ 𝕜 ν` | same names over `{w : ℤ → ℝ} [PosWeight w]` on `WeightedLp ℤ (WeightedScalar 𝕜 w) ∞`, `… 2` (`[NormedField 𝕜]`); `tailInf = tailDiagInf w`; the identities target `tailDiag (E := WeightedScalar 𝕜 w)` / `headProj (E := WeightedScalar 𝕜 w)` | `Analysis/SequenceSpace/WeightedLp/Bilateral/Quadratic.lean` | signature change (weight-generic carrier); `coeff_incl` is now proved by `rw` through `incl_apply` (no bare `rfl` at a generic weight) |
+| — | `RadiiPolynomial.WeightedLp.Bilateral.incl_apply (x) (k) : incl x k = x k` | idem | added: the fibre-value face behind `coeff_incl` |
+| `RadiiPolynomial.WeightedLp.Bilateral.{AY, coeff_eq_zero_of_headProj_comp, norm_sq_AY_apply, norm_AY_le, norm_AY_le_sqrt_tsum}` over `{ν}` with `M : X₂ 𝕜 ν →L[𝕜] X₂ 𝕜 ν` and `hPM : headProj (E := geomFiberZ 𝕜 ν) (p := 2) F ∘L M = M` | same names over `{w} [PosWeight w]`, `M : WeightedLp ℤ (WeightedScalar 𝕜 w) 2 →L[𝕜] … 2`, `hPM : headProj (E := WeightedScalar 𝕜 w) (p := 2) F ∘L M = M` (scalar classes unchanged) | idem | signature change; `hPM` kept |
+| `RadiiPolynomial.WeightedLp.Bilateral.normMag_le_norm_Y (c : Y 𝕜 ν) (k) : ‖coeff c k‖ * ν ^ k.natAbs ≤ ‖c‖` | same name, `{w} [PosWeight w] (c : WeightedLp ℤ (WeightedScalar 𝕜 w) ∞) (k) : ‖coeff c k‖ * w k ≤ ‖c‖` | `Analysis/SequenceSpace/WeightedLp/Bilateral/Carrier.lean` | signature change; consumer `Applications/Fourier/Realization.lean` (`summable_moment_Y`) unchanged |
+| `RadiiPolynomial.Fourier.Quadratic.norm_comp_headReal_le_urow` (`Applications/Fourier/Quadratic.lean`, geometric, bound `‖matrixOf M i j‖ * ν ^ i.natAbs / ν ^ j.natAbs`) | `RadiiPolynomial.WeightedLp.Bilateral.norm_comp_headReal_le_urow {w} [PosWeight w] (F) (M) (hPM) : ‖M ∘L headReal F‖ ≤ √(∑ i ∈ F, (∑ j ∈ F, ‖matrixOf M i j‖ * w i / w j) ^ 2)` (ℂ as before) | `Analysis/SequenceSpace/WeightedLp/Bilateral/Quadratic.lean` | moved to the owner of `headReal`, weight-generic; consumers `Certification/Fourier/Quadratic.lean` (`U_le`) and `Examples/Fourier/Riccati/Certificate.lean` (`U_le`) unchanged in spelling |
+| — | `import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.FiniteBlock` in `Bilateral/Quadratic.lean` | `Analysis/SequenceSpace/WeightedLp/Bilateral/Quadratic.lean` | `matrixOf`, `coeff_apply_of_coeff_eq_zero` of the moved `U_row` bound; FiniteBlock imports no Bilateral module |
+| — | `RadiiPolynomial.WeightedLp.Bilateral.incl_convCLM_eq_prodCLM (h : RowBound (FiberTrivialization.weight (E := WeightedScalar 𝕜 w)) 2 K) (hsub : Moderate w w 1) (x y) : incl (convCLM h x y) = prodCLM hsub x y` | `Analysis/SequenceSpace/WeightedLp/Compatibility/ProductConvolution.lean` (new module; imports `Bilateral/Quadratic`, `WeightedLp/Convolution`; registered in `RadiiPolynomial.lean`) | added: the two bounded products agree coefficientwise |
+| — | `FourierDuffing.Polynomial.polyModerate_raw : Moderate polyWeight polyWeight 1` | `Examples/Fourier/Duffing/Polynomial/Algebra.lean` | added: the raw-weight form of `polyModerate` (unchanged, framed) for `prodCLM` |
+| `FourierDuffing.Polynomial.Numbers.{AQ = 11, RaQ = 25/2, CaQ = 193/20, aColQ, ACheck, check_A}` | — | `Examples/Fourier/Duffing/Polynomial/Numbers.lean` | deleted: the Schur bound `‖A‖ ≤ 11` of the former `Z₂` has no consumer |
+| — | `FourierDuffing.Polynomial.Numbers.{UsqQ := qsum (idx 10) (aRowQ i ^ 2), t2Q := 484/287469, CurvCheck := 4 * (UsqQ + t2Q) ≤ Z2Q ^ 2, check_curv : CurvCheck}` (`check_curv` by `decide +kernel`) | idem | added: the curvature clause, consumed by `Certificate.Z2_le` |
+| `FourierDuffing.Polynomial.Numbers.Z2Q : ℚ := 220` | `FourierDuffing.Polynomial.Numbers.Z2Q : ℚ := 36` | idem | value change: `RadiiCheck` keeps its shape and now decides `36 r² − (1 − Z₀ − Z₁) r + Y₀ < 0` (`= −977/50000000` at `r = 1/10000`; at 220 it was `−177/10⁷`) |
+| `FourierDuffing.Polynomial.Numbers.Checks := Y0Check ∧ Z0Check ∧ HCheck ∧ ACheck ∧ BetaCheck ∧ Z1Check ∧ RadiiCheck` | `Checks := Y0Check ∧ Z0Check ∧ HCheck ∧ BetaCheck ∧ Z1Check ∧ RadiiCheck` (one `native_decide`, `checks`) | idem | content change: `ACheck` removed, `RadiiCheck` at the new `Z2Q`; projections `check_beta`, `check_Z1`, `check_radii` shift by one; the native axiom's printed name `checks._native.native_decide.ax_1_1` is unchanged; it is carried (with the new predicate) by the nine endpoints existsUnique_raw, xPoly_ball, xPoly_zero, unique_eq_xPoly, embed_aTilde_eq_xPoly, certified_analytic_solution, duffing_eigenpair, duffing_eigenpair_enclosure, duffing_eigenfunction_analytic |
+| `FourierDuffing.Polynomial.Certificate.{norm_T : ‖T‖ ≤ tailQ, norm_M : ‖M‖ ≤ AQ, T_Q : T ∘L Q = T, norm_A : ‖A‖ ≤ AQ}` | — | `Examples/Fourier/Duffing/Polynomial/Certificate.lean` | deleted: the chain of the former `norm_C`; no other consumer |
+| `FourierDuffing.Polynomial.Certificate.norm_C : ‖C‖ ≤ AQ * 10` | `FourierDuffing.Polynomial.Certificate.norm_C : ‖C‖ ≤ √(UsqQ + t2Q)` | idem | type change (strengthened): through `C_apply_eq_AY`, `norm_AY_le` and `norm_prodCLM_apply_le`; `Z2_le` (statement unchanged) consumes it with `check_curv` |
+| — | `FourierDuffing.Polynomial.Certificate.{hsS, AY_comp_incl, C_apply_eq_AY, urow_le_aRowQ, norm_AY_le}` | idem | added: the Y route on the same `C` |
+| `FourierDuffing.Polynomial.Certificate.hMP` (hand proof) | same statement, proof `finMatrixCLM_comp_headProj _ _` | idem | proof only: the library lemma has the same statement |

@@ -9,6 +9,7 @@ import RadiiPolynomial.Algebra.Convolution
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Compatibility.FiniteBlockTransport
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Compatibility.ProductConvolution
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.Reality
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.RealityConvolution
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Pairing

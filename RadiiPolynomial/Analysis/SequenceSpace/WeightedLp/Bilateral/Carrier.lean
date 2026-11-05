@@ -1,7 +1,8 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Carrier
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Scalar
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Module
 
-/-! Bilateral geometric state X₂ and bounded coefficient codomain Y, with coefficient reconstruction. No multiplication instance is added. -/
+/-! Bilateral geometric state X₂ and bounded coefficient codomain Y, with coefficient reconstruction, and the positive submultiplicativity `geomSubmul` of the geometric weight at ν ≥ 1. No multiplication instance is added. -/
 
 open scoped ENNReal NNReal
 
@@ -57,9 +58,13 @@ theorem norm_sq_X₂ (x : X₂ 𝕜 ν) :
   refine h.trans (tsum_congr fun k => ?_)
   rw [norm_apply_X₂, mul_pow, ← pow_mul']
 
-/-- Every normalized magnitude of `c ∈ Y 𝕜 ν` is at most the norm. -/
-theorem normMag_le_norm_Y (c : Y 𝕜 ν) (k : ℤ) : ‖coeff c k‖ * (ν : ℝ) ^ k.natAbs ≤ ‖c‖ :=
-  (norm_apply_Y c k).symm.trans_le (norm_apply_le_norm c k)
+/-- Every normalized magnitude of `c ∈ WeightedLp ℤ (WeightedScalar 𝕜 w) ∞` is at most the norm:
+`‖coeff c k‖ * w k ≤ ‖c‖` (at the geometric carrier `Y 𝕜 ν`, `w k = ν ^ |k|`). -/
+theorem normMag_le_norm_Y {w : ℤ → ℝ} [PosWeight w] (c : WeightedLp ℤ (WeightedScalar 𝕜 w) ∞)
+    (k : ℤ) : ‖coeff c k‖ * w k ≤ ‖c‖ :=
+  (show ‖c k‖ = ‖coeff c k‖ * w k by
+    rw [norm_apply_eq, WeightedScalar.fiberTrivialization_weight]).symm.trans_le
+    (norm_apply_le_norm c k)
 
 variable (𝕜 ν) in
 /-- The raw unit atom `e_k ∈ X₂ 𝕜 ν`: raw coefficient `1` at `k`, `0` elsewhere. -/
@@ -85,6 +90,20 @@ theorem memℓp_top_of_bdd (f : ℤ → 𝕜) {D : ℝ} (h : ∀ k, ‖f k‖ * 
     exact (norm_equiv_geomFiberZ ν k (f k)).trans_le (h k)⟩
 
 end Geometry
+
+section GeometricSubmul
+
+variable (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
+
+/-- **The geometric weight is positive submultiplicative** (`ν ≥ 1`):
+`ν ^ |j + l| ≤ 1 * ν ^ |l| * ν ^ |j|`, the moderation `Moderate (ν ^ |·|) (ν ^ |·|) 1` that the
+product over `X₂ 𝕜 ν` consumes (`prodCLM (geomSubmul ν)`). The hypothesis `ν ≥ 1` is decisive:
+`ν = 1/2` fails at `(j, l) = (1, −1)`. -/
+theorem geomSubmul :
+    Moderate (fun k : ℤ => (ν : ℝ) ^ k.natAbs) (fun k : ℤ => (ν : ℝ) ^ k.natAbs) 1 :=
+  Moderate.of_submul (ScaledRealZ.pow_natAbs_add_le ν Fact.out)
+
+end GeometricSubmul
 
 section OfCoeff
 

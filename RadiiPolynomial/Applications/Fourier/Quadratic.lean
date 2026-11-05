@@ -43,8 +43,8 @@ realization `H_F = headReal F` and the cross-exponent tail diagonal `T∞ = tail
   `M` confines `M g`, no support of `g` is assumed); `Z₀`: `I − B₀ = P − M K_H` lives on the
   block `F × F` (`block_one_sub_B0`); `Z₁`: the tail-defect bound (`norm_DG_sub_B0_le`, UPPER);
   `Z₂`: the symmetrized bilinear norm is at most `2 √(U² + T2)`
-  (`norm_quadComp_add_flip_le_of_bounds` with the `U_row` head certificate
-  `norm_comp_headReal_le_urow`, UPPER).
+  (`norm_quadComp_add_flip_le_of_bounds` with the weight-generic `U_row` head certificate
+  `Bilateral.norm_comp_headReal_le_urow`, UPPER).
 * **The head certificate.** `Cert F μ ν` packages a candidate supported in `F`, a head matrix
   with `P M = M` and the three head numbers `Z₀`, `H`, `U` with their operator bounds; the forcing,
   tail and radius hypotheses stay with the consuming theorem.
@@ -111,7 +111,8 @@ def B0 (β : lpOneAlg ℤ (geomFiberZ ℂ ν)) : X₂ ℂ ν →L[ℂ] X₂ ℂ 
 
 /-- **The bounded self-map** `G(a) = M (Λ_H a − H_F (a ⋆ a) − g) + Q a − T∞ (a ⋆ a)`. -/
 def G (a : X₂ ℂ ν) : X₂ ℂ ν :=
-  M (LamH F μ a - headReal F (prodCLM a a) - g) + tailProj (𝕜 := ℂ) F a - tailInf (F : Set ℤ) μ hs (prodCLM a a)
+  M (LamH F μ a - headReal F (prodCLM (geomSubmul ν) a a) - g) + tailProj (𝕜 := ℂ) F a -
+    tailInf (F : Set ℤ) μ hs (prodCLM (geomSubmul ν) a a)
 
 /-- `G` is the canonical quadratic map, with bilinear part `-quadCLM A_Y`. -/
 theorem G_eq (a : X₂ ℂ ν) :
@@ -172,7 +173,7 @@ theorem convCoeff_eq_sum {x : X₂ ℂ ν} (hx : ∀ k ∉ F, coeff x k = 0) (y 
 reads the forcing through `supp g ⊆ F`, the tail part inverts `μ` off `F`. -/
 theorem coeff_G (hg : ∀ k ∉ F, coeff g k = 0) (hμ : ∀ k ∉ F, μ k ≠ 0) (a : X₂ ℂ ν) :
     coeff (G F μ hs M g a) = rawA F μ M (rawF μ g a) := by
-  have hH : headOfRaw F (rawF μ g a) = LamH F μ a - headReal F (prodCLM a a) - g :=
+  have hH : headOfRaw F (rawF μ g a) = LamH F μ a - headReal F (prodCLM (geomSubmul ν) a a) - g :=
     ext_coeff <| funext fun k => by
       rw [coeff_headOfRaw, coeff_sub, coeff_sub, Pi.sub_apply, Pi.sub_apply, coeff_LamH,
         coeff_headReal, coeff_prodCLM]
@@ -288,38 +289,6 @@ theorem norm_DG_sub_B0_le {ā : X₂ ℂ ν} (hā : ∀ k ∉ F, coeff ā k = 0)
   exact norm_tailDefect_le hC (betaOf F ā hā) F M (tailSymbol (F : Set ℤ) μ)
     (bddAbove_of_summable_sq hs) hPM (fun k hk => tailSymbol_of_mem (Finset.mem_coe.2 hk)) hH
     (norm_tail_term_le_of_bound hC (betaOf F ā hā) _ _ hR ((norm_nonneg _).trans (hR 0)))
-
-omit [Fact (1 ≤ (ν : ℝ))] in
-/-- **The `U_row` head certificate** (UPPER): with `B_ij = m_i M_ij / m_j`,
-`‖M H_F‖ ≤ √(∑_{i ∈ F} (∑_{j ∈ F} |B_ij|)²)` under `P M = M`. -/
-theorem norm_comp_headReal_le_urow (hPM : headProj (𝕜 := ℂ) (E := geomFiberZ ℂ ν) (p := 2) F ∘L M = M) :
-    ‖M ∘L headReal F‖ ≤ √(∑ i ∈ F, (∑ j ∈ F, ‖matrixOf M i j‖ * (ν : ℝ) ^ i.natAbs /
-      (ν : ℝ) ^ j.natAbs) ^ 2) := by
-  refine ContinuousLinearMap.opNorm_le_bound _ (Real.sqrt_nonneg _) fun y => ?_
-  have hHy : ∀ k ∉ F, coeff (headReal F y) k = 0 := fun k hk => by
-    rw [coeff_headReal, ite_eq_right hk]
-  have hterm : ∀ i, ‖coeff (M (headReal F y)) i‖ * (ν : ℝ) ^ i.natAbs ≤
-      (∑ j ∈ F, ‖matrixOf M i j‖ * (ν : ℝ) ^ i.natAbs / (ν : ℝ) ^ j.natAbs) * ‖y‖ := fun i => by
-    rw [coeff_apply_of_coeff_eq_zero M hHy i, Finset.sum_mul]
-    refine (mul_le_mul_of_nonneg_right (norm_sum_le _ _) (pow_pos ν.coe_pos _).le).trans ?_
-    rw [Finset.sum_mul]
-    refine Finset.sum_le_sum fun j hj => ?_
-    rw [norm_mul, coeff_headReal, ite_eq_left hj]
-    have hνj : 0 < (ν : ℝ) ^ j.natAbs := pow_pos ν.coe_pos _
-    have hy := mul_le_mul_of_nonneg_left (normMag_le_norm_Y y j)
-      (div_nonneg (mul_nonneg (norm_nonneg (matrixOf M i j)) (pow_pos ν.coe_pos i.natAbs).le)
-        hνj.le)
-    refine Eq.trans_le ?_ hy
-    field_simp
-  have hsq : ‖(M ∘L headReal F) y‖ ^ 2 ≤ (√(∑ i ∈ F, (∑ j ∈ F, ‖matrixOf M i j‖ *
-      (ν : ℝ) ^ i.natAbs / (ν : ℝ) ^ j.natAbs) ^ 2) * ‖y‖) ^ 2 := by
-    rw [ContinuousLinearMap.comp_apply, norm_sq_X₂, tsum_eq_sum (s := F) fun i hi => by
-        rw [coeff_eq_zero_of_headProj_comp F M hPM _ hi, norm_zero, sq, zero_mul, zero_mul],
-      mul_pow, Real.sq_sqrt (Finset.sum_nonneg fun _ _ => sq_nonneg _), Finset.sum_mul]
-    refine Finset.sum_le_sum fun i _ => ?_
-    rw [pow_mul', ← mul_pow, ← mul_pow]
-    exact pow_le_pow_left₀ (mul_nonneg (norm_nonneg _) (pow_pos ν.coe_pos _).le) (hterm i) 2
-  exact (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 hsq
 
 /-- The curvature socket for the canonical quadratic map, from the geometry bounds. -/
 theorem norm_quadComp_add_flip_le_of_bounds

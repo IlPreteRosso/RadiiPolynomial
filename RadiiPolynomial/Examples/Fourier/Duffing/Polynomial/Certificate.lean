@@ -1,6 +1,7 @@
 import RadiiPolynomial.Examples.Fourier.Duffing.Polynomial.Algebra
 import RadiiPolynomial.Examples.Fourier.Duffing.Polynomial.Numbers
 import RadiiPolynomial.Examples.Fourier.Duffing.Certificate
+import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Compatibility.ProductConvolution
 
 /-!
 # Book §10.1 Helmholtz–Duffing on the polynomial carrier: the certificate
@@ -11,12 +12,17 @@ and head matrix `M` on `|n| ≤ 10`) on the physical polynomial carrier `X = ℓ
 carrier-free rational bridges of `Examples/Fourier/Duffing/Certificate.lean` are reused.
 
 The quadratic map is `G(x) = M (Λ_H x − x ⋆ x − g) + Q x − T (x ⋆ x + g)` with the bounded
-self-product `x ⋆ x = polyProd x x` of the carrier (`Polynomial/Algebra.lean`); the product
-bound `κ = 10` enters `Z₂ = 2κ‖A‖`, and the coherence of the product with the ℓ¹ symbol action
-(`convCLM_eq_symbolAction₀`) turns the derivative at the centre into the tail-defect operator of
-`Operators/TailDefect.lean` for `Z₁`. One application of `quadratic_radii_theorem_local` gives a
-unique zero of `G` in the closed ball of radius `1/10000`; the finite-head injectivity of `M`
-transfers it to the unique zero `xPoly` of the raw Fourier map `rawF` in that ball.
+self-product `x ⋆ x = polyProd x x` of the carrier (`Polynomial/Algebra.lean`). The curvature
+`C = A ∘ polyProd` is bounded on the same operator through the bounded product to `ℓ^∞_m`: the
+inclusion `ι` of `polyProd` is `Bilateral.prodCLM polyModerate_raw` (`incl_convCLM_eq_prodCLM`,
+norm at most `1`), and `A = A_Y ∘ ι` with `A_Y = M H_S + T∞ : ℓ^∞_m → X`, whose head/tail split
+gives `‖A_Y‖ ≤ √(UsqQ + t2Q)`; so the curvature norm is at most `2 √(UsqQ + t2Q) ≤ Z₂ = 36`
+(`Numbers.CurvCheck`). The coherence
+of the product with the ℓ¹ symbol action (`convCLM_eq_symbolAction₀`) turns the derivative at the
+centre into the tail-defect operator of `Operators/TailDefect.lean` for `Z₁`. One application of
+`quadratic_radii_theorem_local` gives a unique zero of `G` in the closed ball of radius `1/10000`;
+the finite-head injectivity of `M` transfers it to the unique zero `xPoly` of the raw Fourier map
+`rawF` in that ball.
 -/
 
 open scoped ENNReal NNReal DiscreteConvolution
@@ -87,13 +93,7 @@ def M : X →L[ℂ] X := finMatrixCLM S MC
 def T : X →L[ℂ] X := diagCLM (tailSymbol (S : Set ℤ) μ) tail_bdd
 def A : X →L[ℂ] X := M + T
 lemma hPM : P ∘L M = M := headProj_comp_finMatrixCLM _ _
-lemma hMP : M ∘L P = M := by
-  apply ContinuousLinearMap.ext; intro x; apply ext_coeff; funext n
-  simp only [M, ContinuousLinearMap.comp_apply, coeff_finMatrixCLM]
-  split_ifs with hn
-  · apply Finset.sum_congr rfl; intro j hj
-    rw [coeff_headProj, ite_eq_left hj]
-  · rfl
+lemma hMP : M ∘L P = M := finMatrixCLM_comp_headProj _ _
 lemma matrix_M (i j : ℤ) : matrixOf M i j = toC (leaf.MQ i j) := by
   rw [M, matrixOf_finMatrixCLM]
   split_ifs with h
@@ -101,8 +101,6 @@ lemma matrix_M (i j : ℤ) : matrixOf M i j = toC (leaf.MQ i j) := by
   · rw [leaf.MQ_eq_zero h, toC_zero]
 lemma coeff_T (x : X) (n : ℤ) : coeff (T x) n = tailSymbol (S : Set ℤ) μ n * coeff x n :=
   coeff_diagCLM _ _ _ _
-lemma norm_T : ‖T‖ ≤ (Numbers.tailQ : ℝ) :=
-  norm_diagCLM_le _ _ tail_bound (by norm_num [Numbers.tailQ])
 
 def β : lpOneAlg ℤ E := ofRaw (fun n => 2 * coeff abar n)
   (summable_of_ne_finset_zero (s := S) fun n hn => by
@@ -283,75 +281,67 @@ lemma H_le : ‖M ∘L P ∘L LB ∘L Q‖ ≤ (Numbers.HQ : ℝ) := by
     exact weighted_le_reim _ i k
   · refine (Real.sqrt_le_sqrt (show (Numbers.RhQ : ℝ) * Numbers.ChQ ≤ (Numbers.HQ : ℝ)^2 by
       exact_mod_cast hsq)).trans_eq (Real.sqrt_sq (by norm_num [Numbers.HQ]))
-lemma norm_M : ‖M‖ ≤ (Numbers.AQ : ℝ) := by
-  rcases Numbers.check_A with ⟨hrow, hcol, hsq, _⟩
-  have hblock : P ∘L M ∘L P = M := by rw [hMP, hPM]
-  refine (norm_le_sqrt_of_block _ hblock (R := (Numbers.RaQ : ℝ)) (C := (Numbers.CaQ : ℝ))
-    (by norm_num [Numbers.RaQ]) (by norm_num [Numbers.CaQ]) ?_ ?_).trans ?_
-  · intro i hi
-    refine le_trans ?_ (show (Numbers.aRowQ i : ℝ) ≤ (Numbers.RaQ : ℝ) by
-      exact_mod_cast hrow i (mem_idx.mpr (Finset.mem_Icc.mp hi)))
-    rw [Numbers.aRowQ, cast_qsum, ← sum_headF_eq_list]
-    apply Finset.sum_le_sum; intro j hj
-    rw [schurEntry, matrix_M, WeightedScalar.fiberTrivialization_weight,
-      WeightedScalar.fiberTrivialization_weight]
-    exact weighted_le_reim _ i j
-  · intro j hj
-    refine le_trans ?_ (show (Numbers.aColQ j : ℝ) ≤ (Numbers.CaQ : ℝ) by
-      exact_mod_cast hcol j (mem_idx.mpr (Finset.mem_Icc.mp hj)))
-    rw [Numbers.aColQ, cast_qsum, ← sum_headF_eq_list]
-    apply Finset.sum_le_sum; intro i hi
-    rw [schurEntry, matrix_M, WeightedScalar.fiberTrivialization_weight,
-      WeightedScalar.fiberTrivialization_weight]
-    exact weighted_le_reim _ i j
-  · refine (Real.sqrt_le_sqrt (show (Numbers.RaQ : ℝ) * Numbers.CaQ ≤ (Numbers.AQ : ℝ)^2 by
-      exact_mod_cast hsq)).trans_eq (Real.sqrt_sq (by norm_num [Numbers.AQ]))
-lemma T_Q : T ∘L Q = T := by
-  apply ContinuousLinearMap.ext; intro x; apply ext_coeff; funext n
-  rw [ContinuousLinearMap.comp_apply, coeff_T, coeff_T, coeff_tailProj]
-  by_cases hn : n ∈ S
-  · rw [tailSymbol_of_mem (Finset.mem_coe.mpr hn)]
-    simp [hn]
-  · simp [hn]
-lemma norm_A : ‖A‖ ≤ (Numbers.AQ : ℝ) := by
-  have hT : ‖T‖ ≤ (Numbers.AQ : ℝ) := norm_T.trans (by exact_mod_cast Numbers.check_A.2.2.2)
-  apply ContinuousLinearMap.opNorm_le_bound _ (by norm_num [Numbers.AQ])
-  intro x
-  have hdis : ∀ n, coeff (M x) n = 0 ∨ coeff (T x) n = 0 := fun n => by
-    by_cases hn : n ∈ S
-    · exact Or.inr (by rw [coeff_T, tailSymbol_of_mem (Finset.mem_coe.mpr hn), zero_mul])
-    · exact Or.inl (by rw [M, coeff_finMatrixCLM, ite_eq_right hn])
-  have hdisPQ : ∀ n, coeff (P x) n = 0 ∨ coeff (Q x) n = 0 := fun n => by
-    by_cases hn : n ∈ S
-    · exact Or.inr (by rw [coeff_tailProj, ite_eq_left hn])
-    · exact Or.inl (by rw [coeff_headProj, ite_eq_right hn])
-  have hx : P x + Q x = x := by simp [Q, tailProj_eq_id_sub_headProj]
-  have hsum : ‖P x‖^2 + ‖Q x‖^2 = ‖x‖^2 := by
-    rw [← norm_add_sq_of_disjoint hdisPQ, hx]
-  have hM : ‖M x‖ ≤ (Numbers.AQ : ℝ) * ‖P x‖ := by
-    rw [← DFunLike.congr_fun hMP x]
-    exact (M.le_opNorm _).trans (mul_le_mul_of_nonneg_right norm_M (norm_nonneg _))
-  have hT' : ‖T x‖ ≤ (Numbers.AQ : ℝ) * ‖Q x‖ := by
-    rw [← DFunLike.congr_fun T_Q x]
-    exact (T.le_opNorm _).trans (mul_le_mul_of_nonneg_right hT (norm_nonneg _))
-  apply (pow_le_pow_iff_left₀ (norm_nonneg _)
-    (mul_nonneg (by norm_num [Numbers.AQ]) (norm_nonneg x)) two_ne_zero).mp
-  rw [A, add_apply, norm_add_sq_of_disjoint hdis, mul_pow]
-  nlinarith [pow_le_pow_left₀ (norm_nonneg _) hM 2, pow_le_pow_left₀ (norm_nonneg _) hT' 2]
-lemma norm_C : ‖C‖ ≤ (Numbers.AQ : ℝ) * 10 := by
-  refine (ContinuousLinearMap.opNorm_comp_le _ _).trans ?_
-  have hcomp : ‖ContinuousLinearMap.compL ℂ X X X A‖ ≤ ‖A‖ :=
-    ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun B => ContinuousLinearMap.opNorm_comp_le A B
-  exact mul_le_mul (hcomp.trans norm_A) (norm_convCLM_le polyRowBound) (norm_nonneg _)
-    (by norm_num [Numbers.AQ])
+/-! The curvature through the bounded product to `ℓ^∞_m`, on the same operator `C`. -/
+
+lemma hsS : Summable fun n => ‖tailSymbol (S : Set ℤ) μ n‖ ^ 2 :=
+  summable_sq_tailSymbol_duffing_headF control_hN
+
+/-- `A_Y ∘ ι = A` (`H_S ι = P`, `T∞ ι = T` and `M P = M`). -/
+lemma AY_comp_incl : Bilateral.AY S M (S : Set ℤ) μ hsS ∘L Bilateral.incl = A := by
+  rw [Bilateral.AY, ContinuousLinearMap.add_comp, ContinuousLinearMap.comp_assoc,
+    Bilateral.headReal_comp_incl, Bilateral.tailInf_comp_incl, hMP]
+  rfl
+
+/-- `C x y = A_Y (prodCLM x y)`: the curvature read through the bounded product to `ℓ^∞_m`
+(`ι (polyProd x y) = prodCLM x y`, `A_Y ι = A`). -/
+lemma C_apply_eq_AY (x y : X) :
+    C x y = Bilateral.AY S M (S : Set ℤ) μ hsS (Bilateral.prodCLM polyModerate_raw x y) := by
+  rw [C_apply, ← Bilateral.incl_convCLM_eq_prodCLM polyRowBound polyModerate_raw,
+    ← ContinuousLinearMap.comp_apply (Bilateral.AY S M (S : Set ℤ) μ hsS), AY_comp_incl]
+
+/-- The `U_row` of `M` against `Numbers.aRowQ` (amplitude ratios `m_i / m_j`). -/
+lemma urow_le_aRowQ (i : ℤ) :
+    ∑ j ∈ S, ‖matrixOf M i j‖ * polyWeight i / polyWeight j ≤ (Numbers.aRowQ i : ℝ) := by
+  rw [Numbers.aRowQ, cast_qsum, ← sum_headF_eq_list]
+  exact Finset.sum_le_sum fun j _ => by rw [matrix_M]; exact weighted_le_reim _ i j
+
+/-- `‖A_Y‖ ≤ √(UsqQ + t2Q)`: the `U_row` head bound and the tail sum bound. -/
+lemma norm_AY_le : ‖Bilateral.AY S M (S : Set ℤ) μ hsS‖ ≤
+    √((Numbers.UsqQ : ℝ) + Numbers.t2Q) := by
+  refine (Bilateral.norm_AY_le_sqrt_tsum S M μ hsS hPM).trans
+    (Real.sqrt_le_sqrt (add_le_add ?_ ?_))
+  · refine ((pow_le_pow_left₀ (norm_nonneg _) (Bilateral.norm_comp_headReal_le_urow S M hPM)
+      2).trans_eq (Real.sq_sqrt (Finset.sum_nonneg fun _ _ => sq_nonneg _))).trans ?_
+    rw [Numbers.UsqQ, cast_qsum, ← sum_headF_eq_list]
+    refine Finset.sum_le_sum fun i _ => ?_
+    rw [Rat.cast_pow]
+    exact pow_le_pow_left₀ (Finset.sum_nonneg fun j _ => div_nonneg
+      (mul_nonneg (norm_nonneg _) (PosWeight.weight_nonneg (w := polyWeight) i))
+      (PosWeight.weight_nonneg (w := polyWeight) j)) (urow_le_aRowQ i) 2
+  · refine (tsum_sq_tailSymbol_duffing_le (c₁ := 1 / 10) control_hN (by norm_num)).trans_eq ?_
+    norm_num [Numbers.t2Q]
+
+/-- **The curvature bound** `‖C‖ ≤ √(UsqQ + t2Q)` (`‖prodCLM‖ ≤ 1`). -/
+lemma norm_C : ‖C‖ ≤ √((Numbers.UsqQ : ℝ) + Numbers.t2Q) := by
+  refine ContinuousLinearMap.opNorm_le_bound₂ _ (Real.sqrt_nonneg _) fun x y => ?_
+  rw [C_apply_eq_AY, mul_assoc]
+  exact ((Bilateral.AY S M (S : Set ℤ) μ hsS).le_opNorm _).trans
+    (mul_le_mul norm_AY_le (Bilateral.norm_prodCLM_apply_le polyModerate_raw x y)
+      (norm_nonneg _) (Real.sqrt_nonneg _))
+
 lemma Z2_le : ‖quadComp (ContinuousLinearMap.id ℂ X) (-C) +
     (quadComp (ContinuousLinearMap.id ℂ X) (-C)).flip‖ ≤ (Numbers.Z2Q : ℝ) := by
   refine (norm_quadComp_add_flip_le _ _).trans ?_
   have hid : quadComp (ContinuousLinearMap.id ℂ X) (-C) = -C := by ext x y; rfl
   rw [hid, ContinuousLinearMap.opNorm_neg]
-  have hnorm := norm_C
-  norm_num [Numbers.Z2Q, Numbers.AQ] at hnorm ⊢
-  linarith
+  have hcurv : 4 * ((Numbers.UsqQ : ℝ) + Numbers.t2Q) ≤ (Numbers.Z2Q : ℝ) ^ 2 := by
+    exact_mod_cast (show 4 * (Numbers.UsqQ + Numbers.t2Q) ≤ Numbers.Z2Q ^ 2 from
+      Numbers.check_curv)
+  have h4 : √(4 : ℝ) = 2 := by
+    rw [show (4 : ℝ) = 2 ^ 2 by norm_num, Real.sqrt_sq zero_le_two]
+  have h2 := Real.sqrt_le_sqrt hcurv
+  rw [Real.sqrt_mul (by norm_num), h4, Real.sqrt_sq (by norm_num [Numbers.Z2Q])] at h2
+  exact (mul_le_mul_of_nonneg_left norm_C zero_le_two).trans h2
 lemma Z1_le : ‖B0 - quadDeriv L (-C) abar‖ ≤ (Numbers.Z1Q : ℝ) := by
   rw [← DG_eq_quadDeriv, norm_sub_rev, DG_sub_B0, norm_neg]
   refine (norm_tailDefect_le polyModerate β S M (tailSymbol (S : Set ℤ) μ) tail_bdd hPM
