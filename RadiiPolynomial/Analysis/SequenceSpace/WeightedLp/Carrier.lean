@@ -240,6 +240,24 @@ theorem norm_coeffCLM_le (m : M) :
 
 end OpNorm
 
+section Summability
+
+/-- If `∑ (weight n)⁻¹ ^ 2 < ∞`, then every `x : WeightedLp M E 2` has
+`Summable fun n => ‖WeightedLp.coeff x n‖`. -/
+theorem summable_norm_coeff_of_summable_inv_sq {𝕜 : Type*} [NormedField 𝕜] {M : Type*}
+    {E : M → Type*} [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)]
+    [FiberTrivialization 𝕜 M E]
+    (hw : Summable fun n => (FiberTrivialization.weight (E := E) n)⁻¹ ^ 2)
+    (x : WeightedLp M E 2) : Summable fun n => ‖WeightedLp.coeff x n‖ := by
+  have hx : Summable fun n => ‖x n‖ ^ 2 := by
+    simpa only [ENNReal.toReal_ofNat, Real.rpow_two] using (lp.memℓp x).summable (by norm_num)
+  refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun n => ?_)
+    ((hx.add hw).div_const 2)
+  rw [WeightedLp.norm_coeff, div_eq_mul_inv]
+  nlinarith [two_mul_le_add_sq ‖x n‖ (FiberTrivialization.weight (E := E) n)⁻¹]
+
+end Summability
+
 end WeightedLp
 
 end RadiiPolynomial

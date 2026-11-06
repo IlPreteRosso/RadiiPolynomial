@@ -1,5 +1,4 @@
 import RadiiPolynomial.Core.Quadratic
-import RadiiPolynomial.Analysis.Norm.FiniteSum
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Pairing
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.RealityConvolution
 import RadiiPolynomial.Operators.BlockDiagonal.ProdBlock
@@ -128,16 +127,6 @@ variable {M : Type*} [DecidableEq M] {w : M → ℝ} [PosWeight w]
 
 local notation "X" => WeightedLp M (WeightedScalar ℂ w) 2
 
-/-- `Λ_S`, the diagonal multiplier by the head part `(↑S : Set M).indicator μ` of `μ`
-(`μ n` on the head `S`, `0` off it). -/
-def eigenLam (R : EigenRaw M w) : X →L[ℂ] X :=
-  diagCLM ((↑R.S : Set M).indicator R.μ) (NormHelpers.bddAbove_norm_indicator_finset _ _)
-
-/-- `Λ_S` in coordinates: `coeff (Λ_S x) n = Λ_S(n) coeff x n`. -/
-theorem coeff_eigenLam (R : EigenRaw M w) (x : X) (n : M) :
-    coeff (eigenLam R x) n = (↑R.S : Set M).indicator R.μ n * coeff x n :=
-  coeff_diagCLM _ _ x n
-
 /-- The corrected tail inverse `T_t = tailDiag S (μ - lbar)`. -/
 def eigenTail (R : EigenRaw M w) : X →L[ℂ] X :=
   tailDiag (↑R.S : Set M) (fun n => R.μ n - (R.lbar : ℂ)) R.hr
@@ -171,8 +160,8 @@ def eigenPot (R : EigenRaw M w) : X →L[ℂ] X :=
 
 /-- The `v`-block of `L_G`: `Mv P_S (Λ_S + q ⋆) + Q_S + T_t (q ⋆) + lbar T_t`. -/
 def eigenLin (R : EigenRaw M w) : X →L[ℂ] X :=
-  R.Mv ∘L headProj R.S ∘L (eigenLam R + eigenPot h R) + tailProj R.S + eigenTail R ∘L eigenPot h R +
-    (R.lbar : ℂ) • eigenTail R
+  R.Mv ∘L headProj R.S ∘L (headDiag R.S R.μ + eigenPot h R) + tailProj R.S +
+    eigenTail R ∘L eigenPot h R + (R.lbar : ℂ) • eigenTail R
 
 end Potential
 
@@ -182,14 +171,6 @@ variable {M : Type*} [InvolutiveNeg M] [DecidableEq M] {w : M → ℝ} [PosWeigh
   (hw : ∀ n, w (-n) = w n)
 
 local notation "X" => WeightedLp M (WeightedScalar ℂ w) 2
-
-/-- `Λ_S` commutes with `K`. -/
-theorem conjReflL_eigenLam (D : EigenData hw) (x : X) :
-    conjReflL hw (eigenLam D.toEigenRaw x) = eigenLam D.toEigenRaw (conjReflL hw x) :=
-  conjReflL_diagCLM hw _ (fun n => by
-    rw [map_indicator]
-    exact Set.indicator_eq_indicator
-      (Finset.mem_coe.trans ((D.hS n).trans Finset.mem_coe.symm)) (D.hμ n)) x
 
 /-- `T_t` commutes with `K`. -/
 theorem conjReflL_eigenTail (D : EigenData hw) (x : X) :
@@ -225,7 +206,9 @@ theorem conjReflL_eigenLin (D : EigenData hw) (x : X) :
     conjReflL hw (eigenLin h D.toEigenRaw x) = eigenLin h D.toEigenRaw (conjReflL hw x) :=
   conjReflL_comm_add hw (conjReflL_comm_add hw (conjReflL_comm_add hw
     (conjReflL_comm_comp hw D.hKMv (conjReflL_comm_comp hw (conjReflL_headProj hw D.S D.hS)
-      (conjReflL_comm_add hw (conjReflL_eigenLam hw D) (conjReflL_eigenPot hw h D))))
+      (conjReflL_comm_add hw
+        (conjReflL_headDiag hw D.S (fun n => (D.hS n).2) (fun n _ => D.hμ n))
+        (conjReflL_eigenPot hw h D))))
     (conjReflL_tailProj hw D.S D.hS))
     (conjReflL_comm_comp hw (conjReflL_eigenTail hw D) (conjReflL_eigenPot hw h D)))
     (conjReflL_comm_ofReal_smul hw D.lbar (conjReflL_eigenTail hw D)) x
@@ -249,7 +232,7 @@ variable (h1 : ∀ n, 1 ≤ w n) {Kc : ℝ}
 
 /-- The head residual `ρ(v, l) = P_S (Λ_S v + q ⋆ v - l v)`. -/
 def eigenHeadRes (R : EigenRaw M w) (v : X) (l : ℝ) : X :=
-  headProj (𝕜 := ℂ) R.S (eigenLam R v + eigenPot h R v - l • v)
+  headProj (𝕜 := ℂ) R.S (headDiag R.S R.μ v + eigenPot h R v - l • v)
 
 /-- The first component of `G`. -/
 def eigenFst (R : EigenRaw M w) (v : X) (l : ℝ) : X :=
@@ -276,7 +259,9 @@ theorem eigenHeadRes_mem (D : EigenData hw) {v : X} (hv : v ∈ realSub hw) (l :
     eigenHeadRes h D.toEigenRaw v l ∈ realSub hw := by
   rw [mem_realSub hw] at hv ⊢
   rw [eigenHeadRes, conjReflL_headProj hw D.S D.hS, map_sub (conjReflL hw), map_add (conjReflL hw),
-    map_smul (conjReflL hw), conjReflL_eigenLam hw D, conjReflL_eigenPot hw h D, hv]
+    map_smul (conjReflL hw),
+    conjReflL_headDiag hw D.S (fun n => (D.hS n).2) (fun n _ => D.hμ n),
+    conjReflL_eigenPot hw h D, hv]
 
 /-- The first component of `G` at a real `v` is real. -/
 theorem eigenFst_mem (D : EigenData hw) {v : X} (hv : v ∈ realSub hw) (l : ℝ) :
@@ -370,7 +355,7 @@ def LG (D : EigenData hw) : (realSub hw × ℝ) →L[ℝ] (realSub hw × ℝ) :=
       (ContinuousLinearMap.fst ℝ (realSub hw) ℝ)).prod
     (((pairing h1 D.ψ).comp
         ((headProj (𝕜 := ℂ) D.S ∘L
-          (eigenLam D.toEigenRaw + eigenPot h D.toEigenRaw)).restrictScalars ℝ)).comp
+          (headDiag D.S D.μ + eigenPot h D.toEigenRaw)).restrictScalars ℝ)).comp
       ((realSub hw).subtypeL.comp (ContinuousLinearMap.fst ℝ (realSub hw) ℝ)))
 
 /-- The first component of `L_G y` is `eigenLin v`. -/
@@ -380,7 +365,7 @@ theorem coe_LG_fst (D : EigenData hw) (y : realSub hw × ℝ) :
 /-- The second component of `L_G y` is `b(ψ, P_S (Λ_S v + q ⋆ v))`. -/
 theorem LG_snd (D : EigenData hw) (y : realSub hw × ℝ) :
     (LG hw h1 h D y).2 = pairing h1 D.ψ (headProj (𝕜 := ℂ) D.S
-      (eigenLam D.toEigenRaw (y.1 : X) + eigenPot h D.toEigenRaw (y.1 : X))) := rfl
+      (headDiag D.S D.μ (y.1 : X) + eigenPot h D.toEigenRaw (y.1 : X))) := rfl
 
 /-- `G` is the shipped quadratic map `quadMap c_G L_G Bil_G`. -/
 theorem eigenMap_eq_quadMap (D : EigenData hw) :
@@ -444,7 +429,7 @@ theorem coeff_eigenHeadRes_of_mem (R : EigenRaw M w) (v : X) (l : ℝ) {n : M} (
     coeff (eigenHeadRes h R v l) n =
       R.μ n * coeff v n + coeff (convCLM h R.q v) n - (l : ℂ) * coeff v n := by
   rw [eigenHeadRes, eigenPot, coeff_headProj, ite_eq_left hn, coeff_sub, coeff_add, Pi.sub_apply,
-    Pi.add_apply, coeff_eigenLam, Set.indicator_of_mem (Finset.mem_coe.2 hn), coeff_real_smul]
+    Pi.add_apply, coeff_headDiag, ite_eq_left hn, coeff_real_smul]
 
 private theorem eigenHeadRes_eq_zero (R : EigenRaw M w) (v : X) (l : ℝ)
     (hE1 : ∀ n ∈ R.S, R.μ n * coeff v n + coeff (convCLM h R.q v) n - (l : ℂ) * coeff v n = 0) :
@@ -753,7 +738,7 @@ variable (h1 : ∀ n, 1 ≤ w n) {Kc : ℝ}
 `G_{q̄}` that a consumer evaluates for `hfin₁`). -/
 theorem eigenFst_withPot (R : EigenRaw M w) (qbar v : X) (l : ℝ) :
     eigenFst h1 h (R.withPot qbar) v l =
-      R.Mv (headProj (𝕜 := ℂ) R.S (eigenLam R v + convCLM h qbar v - l • v)) +
+      R.Mv (headProj (𝕜 := ℂ) R.S (headDiag R.S R.μ v + convCLM h qbar v - l • v)) +
         (pairing h1 v v - 1) • R.mv + tailProj (𝕜 := ℂ) R.S v +
           eigenTail R (convCLM h qbar v - (l - R.lbar) • v) :=
   rfl
@@ -762,7 +747,7 @@ theorem eigenFst_withPot (R : EigenRaw M w) (qbar v : X) (l : ℝ) :
 `G_{q̄}` that a consumer evaluates for `hfin₂`). -/
 theorem eigenSnd_withPot (R : EigenRaw M w) (qbar v : X) (l : ℝ) :
     eigenSnd h1 h (R.withPot qbar) v l =
-      pairing h1 R.ψ (headProj (𝕜 := ℂ) R.S (eigenLam R v + convCLM h qbar v - l • v)) +
+      pairing h1 R.ψ (headProj (𝕜 := ℂ) R.S (headDiag R.S R.μ v + convCLM h qbar v - l • v)) +
         R.c * (pairing h1 v v - 1) :=
   rfl
 
@@ -789,7 +774,7 @@ theorem eigenSnd_sub_withPot (R : EigenRaw M w) (qbar v : X) (l : ℝ) :
 the finite potential `q̄`. -/
 def eigenHeadJac (R : EigenRaw M w) (qbar : X) : X →L[ℂ] X :=
   headProj (𝕜 := ℂ) R.S ∘L
-    (eigenLam R + convCLM h qbar - (R.lbar : ℂ) • ContinuousLinearMap.id ℂ X) ∘L
+    (headDiag R.S R.μ + convCLM h qbar - (R.lbar : ℂ) • ContinuousLinearMap.id ℂ X) ∘L
       headProj (𝕜 := ℂ) R.S
 
 end Split
@@ -870,11 +855,13 @@ theorem conjReflL_eigenHeadJac (D : EigenData hw) (qbar : X) (hqbar : qbar ∈ r
     (x : X) :
     conjReflL hw (eigenHeadJac h D.toEigenRaw qbar x) =
       eigenHeadJac h D.toEigenRaw qbar (conjReflL hw x) := by
-  have hA : ∀ y, conjReflL hw ((eigenLam D.toEigenRaw + convCLM h qbar -
-      (D.lbar : ℂ) • ContinuousLinearMap.id ℂ X) y) = (eigenLam D.toEigenRaw + convCLM h qbar -
-        (D.lbar : ℂ) • ContinuousLinearMap.id ℂ X) (conjReflL hw y) := fun y => by
+  have hA : ∀ y, conjReflL hw ((headDiag (E := WeightedScalar ℂ w) (p := 2) D.S D.μ +
+      convCLM h qbar - (D.lbar : ℂ) • ContinuousLinearMap.id ℂ X) y) =
+        (headDiag (E := WeightedScalar ℂ w) (p := 2) D.S D.μ + convCLM h qbar -
+          (D.lbar : ℂ) • ContinuousLinearMap.id ℂ X) (conjReflL hw y) := fun y => by
     rw [sub_apply, add_apply, smul_apply, ContinuousLinearMap.id_apply, map_sub, map_add,
-      conjReflL_eigenLam hw D, conjReflL_convCLM hw h, (mem_realSub hw).1 hqbar, conjReflL_smul,
+      conjReflL_headDiag hw D.S (fun n => (D.hS n).2) (fun n _ => D.hμ n),
+      conjReflL_convCLM hw h, (mem_realSub hw).1 hqbar, conjReflL_smul,
       Complex.conj_ofReal, sub_apply, add_apply, smul_apply, ContinuousLinearMap.id_apply]
   simp only [eigenHeadJac, ContinuousLinearMap.comp_apply, conjReflL_headProj hw D.S D.hS, hA]
 
@@ -973,15 +960,6 @@ variable {M : Type*} [DecidableEq M] {w : M → ℝ} [PosWeight w]
 
 local notation "X" => WeightedLp M (WeightedScalar ℂ w) 2
 
-/-- `Λ_S P_S = Λ_S`: the head part of the symbol vanishes off the head. -/
-private theorem eigenLam_headProj (R : EigenRaw M w) (x : X) :
-    eigenLam R (headProj (𝕜 := ℂ) R.S x) = eigenLam R x :=
-  ext_coeff <| funext fun n => by
-    rw [coeff_eigenLam, coeff_eigenLam, coeff_headProj]
-    by_cases hn : n ∈ R.S
-    · rw [ite_eq_left hn]
-    · rw [ite_eq_right hn, Set.indicator_of_notMem (mt Finset.mem_coe.1 hn), zero_mul, zero_mul]
-
 /-- `P_S P_S = P_S`, applied. -/
 private theorem headProj_headProj_apply (S : Finset M) (x : X) :
     headProj (𝕜 := ℂ) S (headProj (𝕜 := ℂ) S x) = headProj (𝕜 := ℂ) S x :=
@@ -1027,6 +1005,9 @@ theorem coe_quadDeriv_sub_eigenB0_fst (D : EigenData hw) (qbar : X) (hqbar : qba
     rw [← pairing_headProj_comm, hvS]
   have hsm : ∀ z : X, (D.lbar : ℂ) • z = D.lbar • z := fun z => by
     rw [RCLike.real_smul_eq_coe_smul (K := ℂ), RCLike.ofReal_eq_complex_ofReal]
+  have hΛP (z : X) : headDiag D.S D.μ (headProj (𝕜 := ℂ) D.S z) = headDiag D.S D.μ z :=
+    DFunLike.congr_fun
+      (headDiag_comp_headProj (𝕜 := ℂ) (E := WeightedScalar ℂ w) (p := 2) D.S D.μ) z
   rw [sub_apply, Prod.fst_sub, Submodule.coe_sub, add_apply, add_apply,
     ContinuousLinearMap.flip_apply, Prod.fst_add, Prod.fst_add, Submodule.coe_add,
     Submodule.coe_add, coe_LG_fst, coe_BilG_fst, coe_BilG_fst, coe_eigenB0_fst]
@@ -1034,7 +1015,7 @@ theorem coe_quadDeriv_sub_eigenB0_fst (D : EigenData hw) (qbar : X) (hqbar : qba
   rw [hBv, pairing_comm h1 (y.1 : X) (vbar : X), hb, tailProj_eq_id_sub_headProj]
   simp only [eigenLin, eigenHeadJac, eigenBilOp, eigenPot, tailProj_eq_id_sub_headProj, add_apply,
     sub_apply, smul_apply, ContinuousLinearMap.comp_apply, ContinuousLinearMap.id_apply, map_add,
-    map_sub, ContinuousLinearMap.map_smul_of_tower, eigenLam_headProj, headProj_headProj_apply, hsm]
+    map_sub, ContinuousLinearMap.map_smul_of_tower, hΛP, headProj_headProj_apply, hsm]
   module
 
 /-- **Exactness (scalar row).** The scalar row of `DG(ȳ) - B₀` is the scalar-row
@@ -1050,13 +1031,16 @@ theorem quadDeriv_sub_eigenB0_snd (D : EigenData hw) (qbar : X) (hqbar : qbar �
     rw [← pairing_headProj_comm, hvS]
   have hsm : ∀ z : X, (D.lbar : ℂ) • z = D.lbar • z := fun z => by
     rw [RCLike.real_smul_eq_coe_smul (K := ℂ), RCLike.ofReal_eq_complex_ofReal]
+  have hΛP (z : X) : headDiag D.S D.μ (headProj (𝕜 := ℂ) D.S z) = headDiag D.S D.μ z :=
+    DFunLike.congr_fun
+      (headDiag_comp_headProj (𝕜 := ℂ) (E := WeightedScalar ℂ w) (p := 2) D.S D.μ) z
   rw [sub_apply, Prod.snd_sub, add_apply, add_apply, ContinuousLinearMap.flip_apply, Prod.snd_add,
     Prod.snd_add, LG_snd, BilG_snd, BilG_snd, eigenB0_snd]
   dsimp only
   rw [hvS, pairing_comm h1 (y.1 : X) (vbar : X), hb, tailProj_eq_id_sub_headProj]
   simp only [eigenHeadJac, eigenPot, add_apply, sub_apply, smul_apply,
     ContinuousLinearMap.comp_apply, ContinuousLinearMap.id_apply, map_add, map_sub, map_smul,
-    ContinuousLinearMap.map_smul_of_tower, eigenLam_headProj, headProj_headProj_apply, hsm,
+    ContinuousLinearMap.map_smul_of_tower, hΛP, headProj_headProj_apply, hsm,
     smul_eq_mul]
   ring
 
@@ -1283,7 +1267,7 @@ theorem eigenJbar_mapsTo (D : EigenData hw) (qbar : X) (hqbar : qbar ∈ realSub
   have hJ : headProj (𝕜 := ℂ) D.S (eigenHeadJac h D.toEigenRaw qbar (y.1 : X)) =
       eigenHeadJac h D.toEigenRaw qbar (y.1 : X) :=
     DFunLike.congr_fun (headProj_comp_headProj (𝕜 := ℂ) (E := WeightedScalar ℂ w) (p := 2) D.S)
-      (((eigenLam D.toEigenRaw + convCLM h qbar - (D.lbar : ℂ) • ContinuousLinearMap.id ℂ X) ∘L
+      (((headDiag D.S D.μ + convCLM h qbar - (D.lbar : ℂ) • ContinuousLinearMap.id ℂ X) ∘L
         headProj (𝕜 := ℂ) D.S) (y.1 : X))
   rw [mem_headSubY, coe_eigenJbar_fst, map_sub, ContinuousLinearMap.map_smul_of_tower, hvS, hJ]
 

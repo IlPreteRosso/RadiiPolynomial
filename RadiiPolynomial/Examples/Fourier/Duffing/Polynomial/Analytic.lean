@@ -20,7 +20,8 @@ The analytic endpoint `certified_analytic_solution` reads the coefficients of `x
 function. By the identification they are the coefficients of `aTilde`, so the realization
 `solution t = ∑ xPolyₙ e^{int}` is the shipped `FourierDuffing.Certificate.solution`, and its
 analysis is the shipped endpoint `duffing_analytic_solution` of the canonical realization bridge
-`Applications/Fourier/Realization.lean` (no second derivation). The uniqueness is among raw
+`Analysis/SequenceSpace/Fourier/Realization.lean` and its equation transfer
+`Applications/Fourier/Transfer.lean` (no second derivation). The uniqueness is among raw
 coefficient zeros in the polynomial ball.
 -/
 

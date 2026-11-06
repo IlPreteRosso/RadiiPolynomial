@@ -376,7 +376,7 @@ theorem eigenHeadJac_qbarX_eq :
   by_cases hk : k ∈ headF 10
   · rw [ite_eq_left hk, ite_eq_left hk, sub_apply,
       add_apply, coeff_sub, coeff_add, Pi.sub_apply, Pi.add_apply,
-      coeff_eigenLam, duffEigen_S, Set.indicator_of_mem (Finset.mem_coe.2 hk), duffEigen_μ,
+      coeff_headDiag, ite_eq_left hk, duffEigen_μ,
       smul_apply, ContinuousLinearMap.id_apply, coeff_smul, Pi.smul_apply,
       smul_eq_mul, coeff_convCLM_qbarX_of_head _ hPx k, coeff_headProj, ite_eq_left hk,
       duffEigen_lbar]

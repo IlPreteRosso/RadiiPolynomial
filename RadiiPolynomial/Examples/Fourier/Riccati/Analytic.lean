@@ -1,5 +1,5 @@
 import RadiiPolynomial.Examples.Fourier.Riccati.Certificate
-import RadiiPolynomial.Applications.Fourier.Realization
+import RadiiPolynomial.Applications.Fourier.Transfer
 
 /-!
 # Forced Riccati: the real-analytic periodic solution of `u′ + u − u² = cos (2t) / 100`
@@ -13,7 +13,8 @@ ball of radius `1/100` around `ā` and conjugate-symmetric, is realized as
 on the full strip `|Im z| < log (6/5)`.
 
 The analysis and the equation transfer are the generic faces of
-`Applications/Fourier/Realization.lean` (`realRealization_firstOrder` at `c₀ = c₁ = 1`, `b = g`);
+`Analysis/SequenceSpace/Fourier/Realization.lean` and `Applications/Fourier/Transfer.lean`
+(`realRealization_firstOrder` at `c₀ = c₁ = 1`, `b = g`);
 only the forcing identity `u_g(t) = cos (2t) / 100` is proved here.
 -/
 
@@ -97,7 +98,7 @@ theorem riccati_analytic_solution :
     fun t => (Fourier.complexRealization_ofReal _ t).trans (solution_ofReal t).symm, fun t => ?_⟩
   · rw [solution_ofReal]
     exact Fourier.hasSum_realization
-      ((Fourier.summable_moment_Y (incl a) zero_le_one one_lt_ν 0).congr fun n => by
+      ((Bilateral.summable_moment_Y (incl a) zero_le_one one_lt_ν 0).congr fun n => by
         rw [coeff_incl, pow_zero, one_mul, one_pow, mul_one]) t
   · have h := Fourier.realRealization_firstOrder one_lt_ν a
       ((conjReflL_eq_self_iff_coeff _ a).1 coefficient_reality) coeff_equation t

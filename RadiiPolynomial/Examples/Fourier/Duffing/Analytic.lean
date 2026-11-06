@@ -1,5 +1,5 @@
 import RadiiPolynomial.Examples.Fourier.Duffing.Certificate
-import RadiiPolynomial.Applications.Fourier.Realization
+import RadiiPolynomial.Applications.Fourier.Transfer
 
 /-!
 # Book §10.1 Helmholtz–Duffing: the real-analytic periodic solution
@@ -12,7 +12,8 @@ solution of `u'' + u'/10 + 4u − u² = cos t` on `ℝ`, with the holomorphic ex
 `extension z = ∑ ãₙ e^{inz}` on the full strip `|Im z| < log (6/5)`.
 
 Nothing structural is stated here: the analysis and the equation transfer are the
-parameter-generic faces of `Applications/Fourier/Realization.lean`, instantiated at
+parameter-generic faces of `Analysis/SequenceSpace/Fourier/Realization.lean` and
+`Applications/Fourier/Transfer.lean`, instantiated at
 `c₁ = 1/10`, `c₂ = 4`, `c₃ = 1`, `ν = 6/5`. The uniqueness is among coefficient zeros in the
 `ℓ²_{6/5}` ball, as in `duffing_l2_real`.
 -/
@@ -90,7 +91,7 @@ theorem duffing_analytic_solution :
     fun t => (Fourier.complexRealization_ofReal _ t).trans (solution_ofReal t).symm, fun t => ?_⟩
   · rw [solution_ofReal]
     exact Fourier.hasSum_realization
-      ((Fourier.summable_moment_Y (incl aTilde) zero_le_one one_lt_ν₆₅ 0).congr fun n => by
+      ((Bilateral.summable_moment_Y (incl aTilde) zero_le_one one_lt_ν₆₅ 0).congr fun n => by
         rw [coeff_incl, pow_zero, one_mul, one_pow, mul_one]) t
   · have h := Fourier.realRealization_duffing one_lt_ν₆₅ aTilde
       ((conjReflL_eq_self_iff_coeff _ aTilde).1 hreal) hcoeff t

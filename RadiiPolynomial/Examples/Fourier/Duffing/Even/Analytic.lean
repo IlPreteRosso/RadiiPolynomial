@@ -1,5 +1,5 @@
 import RadiiPolynomial.Examples.Fourier.Duffing.Even.Certificate
-import RadiiPolynomial.Applications.Fourier.Realization
+import RadiiPolynomial.Applications.Fourier.Transfer
 
 /-!
 # The even Duffing instance: the real-analytic even solution of `u'' − u + u² = (4/5) cos t`
@@ -16,7 +16,8 @@ real analyticity on `ℝ`, `2π`-periodicity, the holomorphic extension
 `u'' − u + u² = (4/5) cos t` on `ℝ`.
 
 As in `Examples/Fourier/Duffing/Analytic.lean`, the analysis and the equation transfer are the
-parameter-generic faces of `Applications/Fourier/Realization.lean`, instantiated at
+parameter-generic faces of `Analysis/SequenceSpace/Fourier/Realization.lean` and
+`Applications/Fourier/Transfer.lean`, instantiated at
 `c₁ = 0`, `c₂ = −1`, `c₃ = −4/5`, `ν = 6/5`; the evenness of the realization of an even family is
 `Fourier.realization_neg_of_even`, and the sign change `u = −v` is proved here. The uniqueness is
 among coefficient zeros in the `ℓ²_{6/5}` ball, as in `even_l2_even`.
@@ -102,7 +103,7 @@ theorem even_analytic_solution :
     fun t => ?_, fun t => ?_, fun t => ?_⟩
   · rw [solution, Complex.ofReal_neg, realSolution_ofReal]
     simpa only [neg_mul] using (Fourier.hasSum_realization
-      ((Fourier.summable_moment_Y (incl aTilde) zero_le_one one_lt_ν₆₅ 0).congr fun n => by
+      ((Bilateral.summable_moment_Y (incl aTilde) zero_le_one one_lt_ν₆₅ 0).congr fun n => by
         rw [coeff_incl, pow_zero, one_mul, one_pow, mul_one]) t).neg
   · rw [extension, solution, Complex.ofReal_neg, Fourier.complexRealization_ofReal,
       realSolution_ofReal]

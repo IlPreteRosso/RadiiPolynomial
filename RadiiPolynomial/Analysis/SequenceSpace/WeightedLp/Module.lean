@@ -448,5 +448,17 @@ theorem norm_symbolAction_le : ‖(symbolAction (p := p) hC).toContinuousLinearM
 
 end Lift
 
+section Summability
+
+/-- If `∑ (w n)⁻¹ ^ 2 < ∞`, then every `x : WeightedLp M (WeightedScalar 𝕜 w) 2` has
+`Summable fun n => ‖WeightedLp.coeff x n‖`. -/
+theorem summable_norm_coeff_weightedScalar {𝕜 : Type*} [NormedField 𝕜] {M : Type*}
+    {w : M → ℝ} [PosWeight w] (hw : Summable fun n => (w n)⁻¹ ^ 2)
+    (x : WeightedLp M (WeightedScalar 𝕜 w) 2) : Summable fun n => ‖WeightedLp.coeff x n‖ :=
+  summable_norm_coeff_of_summable_inv_sq
+    (by simpa only [WeightedScalar.fiberTrivialization_weight] using hw) x
+
+end Summability
+
 end WeightedLp
 end RadiiPolynomial

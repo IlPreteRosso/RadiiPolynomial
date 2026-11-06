@@ -1,8 +1,9 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Carrier
 import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev.Scalar
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Module
+import RadiiPolynomial.Analysis.Norm.InfiniteSum
 
-/-! Bilateral geometric state X₂ and bounded coefficient codomain Y, with coefficient reconstruction, and the positive submultiplicativity `geomSubmul` of the geometric weight at ν ≥ 1. No multiplication instance is added. -/
+/-! Bilateral geometric state X₂ and bounded coefficient codomain Y, with coefficient reconstruction, and the positive submultiplicativity `geomSubmul` of the geometric weight at ν ≥ 1. The coefficients of `ℓ¹_ν` (`ν ≥ 1`) are absolutely summable (`summable_norm_toRealSeq`), and the bounded carrier decays into weighted ℓ¹: the moments `summable_moment_Y` and the coefficient-preserving map `toL1 : Y 𝕜 ν →L[𝕜] ℓ¹_{ν'}` (`0 < ν' < ν`, constant `(1 + ν'/ν) / (1 − ν'/ν)`). No multiplication instance is added. -/
 
 open scoped ENNReal NNReal
 
@@ -105,6 +106,20 @@ theorem geomSubmul :
 
 end GeometricSubmul
 
+section GeometricCoordinates
+
+variable {𝕜 : Type*} [NormedField 𝕜] (ν : PosReal) [Fact (1 ≤ (ν : ℝ))]
+
+/-- **Absolute convergence** of the coefficients of `a ∈ ℓ¹_ν` (`ν ≥ 1`): the geometric case of
+`lpOneAlg.summable_norm_toRealSeq`. -/
+theorem summable_norm_toRealSeq (a : lpOneAlg ℤ (geomFiberZ 𝕜 ν)) :
+    Summable fun n => ‖lpOneAlg.toRealSeq a n‖ :=
+  lpOneAlg.summable_norm_toRealSeq (fun n => by
+    rw [geomFiberZ_weight]
+    exact one_le_pow₀ Fact.out) a
+
+end GeometricCoordinates
+
 section OfCoeff
 
 variable {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal}
@@ -132,6 +147,73 @@ theorem ofCoeff_coeff (x : WeightedLp ℤ (geomFiberZ 𝕜 ν) p) :
   ext_coeff <| funext <| coeff_ofCoeff _ _
 
 end OfCoeff
+
+/-! ### Exponential decay: `ℓ^∞_ν → ℓ¹_{ν'}` -/
+
+section Decay
+
+open lpOneAlg
+
+variable {𝕜 : Type*} [NormedField 𝕜] {ν : PosReal}
+
+/-- **The decay estimate of `Y ℂ ν`**: `‖aₙ‖ ρ^|n| ≤ ‖a‖ (ρ/ν)^|n|`. -/
+theorem norm_coeff_mul_pow_le_Y (a : Y 𝕜 ν) {ρ : ℝ} (hρ0 : 0 ≤ ρ) (n : ℤ) :
+    ‖coeff a n‖ * ρ ^ n.natAbs ≤ ‖a‖ * (ρ / ν) ^ n.natAbs := by
+  have hν : (ν : ℝ) ^ n.natAbs ≠ 0 := pow_ne_zero _ ν.coe_pos.ne'
+  rw [show ‖coeff a n‖ * ρ ^ n.natAbs =
+      (‖coeff a n‖ * (ν : ℝ) ^ n.natAbs) * (ρ / ν) ^ n.natAbs by rw [div_pow]; field_simp]
+  exact mul_le_mul_of_nonneg_right (normMag_le_norm_Y a n)
+    (pow_nonneg (div_nonneg hρ0 ν.coe_pos.le) _)
+
+/-- **The moments of `a ∈ Y ℂ ν` at every weight `ρ < ν`**: `∑ |n|^j ‖aₙ‖ ρ^|n| < ∞`. At `j = 0`
+this is `a ∈ ℓ¹_ρ`; at `j = 1` it puts the derivative coefficients `i n aₙ` in `ℓ¹_ρ`. -/
+theorem summable_moment_Y (a : Y 𝕜 ν) {ρ : ℝ} (hρ0 : 0 ≤ ρ) (hρ : ρ < ν) (j : ℕ) :
+    Summable fun n : ℤ => (n.natAbs : ℝ) ^ j * (‖coeff a n‖ * ρ ^ n.natAbs) :=
+  ((NormHelpers.summable_natAbs_pow_mul_geometric j
+      ((abs_of_nonneg (div_nonneg hρ0 ν.coe_pos.le)).trans_lt
+      ((div_lt_one ν.coe_pos).2 hρ))).mul_left ‖a‖).of_nonneg_of_le (fun _ => by positivity)
+    fun n => (mul_le_mul_of_nonneg_left (norm_coeff_mul_pow_le_Y a hρ0 n)
+      (by positivity)).trans_eq (mul_left_comm _ _ _)
+
+variable {ν' : PosReal}
+
+/-- The coefficients of `a ∈ Y 𝕜 ν` lie in `ℓ¹_{ν'}` for `ν' < ν`. -/
+theorem memL1v_coeff_Y (h : (ν' : ℝ) < ν) (a : Y 𝕜 ν) :
+    MemL1v (fun k : ℤ => (ν' : ℝ) ^ k.natAbs) (coeff a) :=
+  (summable_moment_Y a ν'.coe_pos.le h 0).congr fun n => by rw [pow_zero, one_mul]
+
+/-- The bound of `toL1` before bundling. -/
+private theorem norm_ofRaw_coeff_le (h : (ν' : ℝ) < ν) (a : Y 𝕜 ν) :
+    ‖ofRaw (coeff a) (memL1v_coeff_Y h a)‖ ≤ (1 + ν' / ν) / (1 - ν' / ν) * ‖a‖ := by
+  have hq : |(ν' : ℝ) / ν| < 1 := (abs_of_nonneg (div_nonneg ν'.coe_pos.le ν.coe_pos.le)).trans_lt
+    ((div_lt_one ν.coe_pos).2 h)
+  rw [norm_symbol_eq]
+  exact (hasSum_le (fun n => norm_coeff_mul_pow_le_Y a ν'.coe_pos.le n)
+    (memL1v_coeff_Y h a).hasSum ((NormHelpers.hasSum_geometric_natAbs hq).mul_left ‖a‖)).trans_eq
+    (mul_comm _ _)
+
+/-- **The map `Y_ν → ℓ¹_{ν'}`** (`0 < ν' < ν`), keeping the coefficients
+(`toRealSeq_toL1`), with constant `(1 + q) / (1 − q)`, `q = ν'/ν` (`norm_toL1_apply_le`). -/
+def toL1 (h : (ν' : ℝ) < ν) : Y 𝕜 ν →L[𝕜] lpOneAlg ℤ (geomFiberZ 𝕜 ν') :=
+  LinearMap.mkContinuous
+    { toFun := fun a => ofRaw (coeff a) (memL1v_coeff_Y h a)
+      map_add' := fun a b => ext_toRealSeq ((coeff_add a b).trans
+        (toRealSeq_add (ofRaw (coeff a) (memL1v_coeff_Y h a))
+          (ofRaw (coeff b) (memL1v_coeff_Y h b))).symm)
+      map_smul' := fun r a => ext_toRealSeq ((coeff_smul r a).trans
+        (toRealSeq_smul r (ofRaw (coeff a) (memL1v_coeff_Y h a))).symm) }
+    ((1 + ν' / ν) / (1 - ν' / ν)) (norm_ofRaw_coeff_le h)
+
+/-- `toL1` keeps the coefficients. -/
+@[simp] theorem toRealSeq_toL1 (h : (ν' : ℝ) < ν) (a : Y 𝕜 ν) :
+    toRealSeq (toL1 h a) = coeff a := rfl
+
+/-- The explicit constant: `‖toL1 a‖ ≤ (1 + q) / (1 − q) ‖a‖`, `q = ν'/ν`. -/
+theorem norm_toL1_apply_le (h : (ν' : ℝ) < ν) (a : Y 𝕜 ν) :
+    ‖toL1 h a‖ ≤ (1 + ν' / ν) / (1 - ν' / ν) * ‖a‖ :=
+  norm_ofRaw_coeff_le h a
+
+end Decay
 
 end RadiiPolynomial.WeightedLp.Bilateral
 

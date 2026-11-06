@@ -51,23 +51,25 @@ theorem ρ₀_lt_six_fifths : (ρ₀ : ℝ) < 6 / 5 := by
   norm_num
 
 /-- For `ρ : PosReal` with `(ρ : ℝ) < 6 / 5`, the element
-`Fourier.toL1 _ (Bilateral.incl FourierDuffing.Certificate.aTilde)` of
+`Bilateral.toL1 _ (Bilateral.incl FourierDuffing.Certificate.aTilde)` of
 `lpOneAlg ℤ (geomFiberZ ℂ ρ)`. -/
 def uStarL1 (ρ : PosReal) (hρ : (ρ : ℝ) < 6 / 5) : lpOneAlg ℤ (geomFiberZ ℂ ρ) :=
-  Fourier.toL1 (hρ.trans_eq FourierDuffing.Certificate.coe_ν₆₅.symm)
+  Bilateral.toL1 (hρ.trans_eq FourierDuffing.Certificate.coe_ν₆₅.symm)
     (Bilateral.incl FourierDuffing.Certificate.aTilde)
 
 /-- For `ρ : PosReal` with `(ρ : ℝ) < 6 / 5`,
 `lpOneAlg.toRealSeq (uStarL1 ρ hρ) = coeff Certificate.xPoly`. -/
 theorem toRealSeq_uStarL1 (ρ : PosReal) (hρ : (ρ : ℝ) < 6 / 5) :
     lpOneAlg.toRealSeq (uStarL1 ρ hρ) = coeff Certificate.xPoly := by
-  rw [uStarL1, Fourier.toRealSeq_toL1, coeff_xPoly_eq_coeff_aTilde]
+  rw [uStarL1, Bilateral.toRealSeq_toL1, coeff_xPoly_eq_coeff_aTilde]
   exact funext (Bilateral.coeff_incl FourierDuffing.Certificate.aTilde)
 
 /-- For every `x : X`, `n ↦ ‖coeff x n‖` is summable. -/
 theorem summable_norm_coeff_X (x : X) : Summable fun n => ‖coeff x n‖ :=
-  Fourier.summable_norm_coeff_weightedScalar (w := polyWeight)
-    (Fourier.summable_inv_one_add_abs_pow_sq (j := 2) one_le_two) x
+  summable_norm_coeff_weightedScalar (w := polyWeight)
+    ((NormHelpers.summable_inv_one_add_abs_rpow (s := 4) (by norm_num)).congr fun n => by
+      rw [polyWeight, inv_pow, ← pow_mul, one_div, show (4 : ℝ) = ((2 * 2 : ℕ) : ℝ) by norm_num,
+        Real.rpow_natCast]) x
 
 /-- For `c : ℂ`, `f v : ℤ → ℂ` and `n : ℤ`, `((c • f) ⋆ᵣ₊ v) n = c * (f ⋆ᵣ₊ v) n`. -/
 private theorem smul_addRingConvolution_apply (c : ℂ) (f v : ℤ → ℂ) (n : ℤ) :

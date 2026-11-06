@@ -1,5 +1,6 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Convolution
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Operators.TailDiagonal
+import RadiiPolynomial.Analysis.Norm.InfiniteSum
 import Mathlib.Analysis.PSeries
 
 /-!
@@ -108,26 +109,14 @@ private theorem polyW_ratio_le {s : ℝ} (hs : 0 ≤ s) (n k : ℤ) :
   refine (add_rpow_le_two_rpow_mul (by positivity) (by positivity) hs).trans_eq ?_
   rw [div_rpow zero_le_one hr.le, div_rpow zero_le_one hq.le, one_rpow]
 
-/-- `∑_{k ∈ ℤ} 1/(1+|k|)^s < ∞` for `s > 1`. -/
-private theorem summable_inv_pw_rpow {s : ℝ} (hs : 1 < s) :
-    Summable fun k : ℤ => 1 / pw k ^ s := by
-  have hN := (summable_one_div_nat_add_rpow 1 s).2 hs
-  refine Summable.of_nat_of_neg ?_ ?_
-  · refine hN.congr fun n => ?_
-    simp only [pw, Int.cast_natCast, abs_of_nonneg (Nat.cast_nonneg (α := ℝ) n),
-      abs_of_nonneg (by positivity : (0 : ℝ) ≤ n + 1), add_comm]
-  · refine hN.congr fun n => ?_
-    simp only [pw, Int.cast_neg, Int.cast_natCast, abs_neg,
-      abs_of_nonneg (Nat.cast_nonneg (α := ℝ) n),
-      abs_of_nonneg (by positivity : (0 : ℝ) ≤ n + 1), add_comm]
-
 /-- The row estimate for the mass weight `(1 + |n|)^s`, `s > 1`. -/
 private theorem polyW_row_bound {s : ℝ} (hs : 1 < s) (n : ℤ) :
     Summable (fun k => polyW s n / (polyW s (n - k) * polyW s k)) ∧
       ∑' k, polyW s n / (polyW s (n - k) * polyW s k) ≤
         2 ^ s * (2 * ∑' k : ℤ, 1 / pw k ^ s) := by
   have hs0 : (0 : ℝ) ≤ s := by linarith
-  have hz : Summable fun k : ℤ => 1 / pw k ^ s := summable_inv_pw_rpow hs
+  have hz : Summable fun k : ℤ => 1 / pw k ^ s := by
+    simpa only [pw] using NormHelpers.summable_inv_one_add_abs_rpow hs
   have hz' : Summable fun k : ℤ => 1 / pw (n - k) ^ s :=
     ((Equiv.subLeft n).summable_iff (f := fun j : ℤ => 1 / pw j ^ s)).2 hz
   have hdom : Summable fun k : ℤ => 2 ^ s * (1 / pw k ^ s + 1 / pw (n - k) ^ s) :=
@@ -168,7 +157,8 @@ private theorem polyW_four_eq (n : ℤ) : polyW 4 n = polyWeight n ^ 2 := by
 /-- The reciprocal mass sum `∑_k (1 + |k|)⁻⁴ ≤ 7/3`. -/
 private theorem invPolyMass_le : ∑' n : ℤ, 1 / pw n ^ (4 : ℝ) ≤ (7 / 3 : ℝ) := by
   let f : ℤ → ℝ := fun n => 1 / pw n ^ (4 : ℝ)
-  have hs : Summable f := summable_inv_pw_rpow (by norm_num)
+  have hs : Summable f := by
+    simpa only [f, pw] using NormHelpers.summable_inv_one_add_abs_rpow (s := 4) (by norm_num)
   have hn : Summable (fun n : ℕ => f n) := hs.comp_injective Nat.cast_injective
   have hm : Summable (fun n : ℕ => f (-((n : ℤ) + 1))) := hs.comp_injective fun a b h =>
     Int.ofNat_inj.mp (add_right_cancel (neg_injective h))

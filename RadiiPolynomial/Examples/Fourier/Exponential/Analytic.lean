@@ -1,5 +1,5 @@
 import RadiiPolynomial.Examples.Fourier.Exponential.Certificate
-import RadiiPolynomial.Applications.Fourier.Realization
+import RadiiPolynomial.Analysis.SequenceSpace.Fourier.Realization
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedLp.Compatibility.WeightedL1Iso
 
 /-!
@@ -17,9 +17,9 @@ ValidatedSlabEquilibrium.lean`, Apache-2.0).
 Nothing structural is stated here: the exponential is realized by `Fourier.realization_exp`
 (`map_exp` through the algebra lift `circleLift`), the analysis by the inclusion
 `lpOneAlg.toLinf : ℓ¹_ν →L Y ℂ ν` (`Compatibility/WeightedL1Iso`) and the faces of
-`Applications/Fourier/Realization.lean`: termwise derivatives from the moments of `Y ℂ ν`
-(`summable_moment_Y`), real analyticity, the strip holomorphy on `|Im z| < log (6/5)` and the
-parity `realization_neg_of_even`.
+`Analysis/SequenceSpace/Fourier/Realization.lean`: termwise derivatives from the moments of
+`Y ℂ ν` (`WeightedLp.Bilateral.summable_moment_Y`), real analyticity, the strip holomorphy on
+`|Im z| < log (6/5)` and the parity `realization_neg_of_even`.
 -/
 
 open scoped ComplexConjugate
@@ -70,7 +70,7 @@ theorem coeff_equation (n : ℤ) :
 
 private theorem moments (j : ℕ) :
     Summable fun n : ℤ => (n.natAbs : ℝ) ^ j * ‖toRealSeq uTilde n‖ :=
-  (Fourier.summable_moment_Y (lpOneAlg.toLinf (𝕜 := ℂ) uTilde) zero_le_one one_lt_ν₆₅ j).congr
+  (Bilateral.summable_moment_Y (lpOneAlg.toLinf (𝕜 := ℂ) uTilde) zero_le_one one_lt_ν₆₅ j).congr
     fun n => by rw [lpOneAlg.coeff_toLinf, one_pow, mul_one]
 
 private theorem summable_deriv1 :
@@ -99,7 +99,7 @@ private theorem realization_equation (t : ℝ) :
       51 / 50 * (Fourier.realization (toRealSeq (NormedSpace.exp uTilde)) t - 1) = 0 := by
   have h2 := Fourier.hasSum_realization summable_deriv2 t
   have hE := Fourier.hasSum_realization
-    (Fourier.summable_norm_toRealSeq ν₆₅ (NormedSpace.exp uTilde)) t
+    (Bilateral.summable_norm_toRealSeq ν₆₅ (NormedSpace.exp uTilde)) t
   have h1 : HasSum (fun n : ℤ => (if n = 0 then (1 : ℂ) else 0) *
       Complex.exp (n * t * Complex.I)) 1 := by
     convert hasSum_ite_eq (0 : ℤ) (1 : ℂ) using 1
@@ -150,7 +150,7 @@ theorem exponential_analytic_solution :
     fun t => ?_, ?_, Fourier.realRealization_periodic _, ?_, fun t => ?_, fun t => ?_,
     fun t => ?_⟩
   · rw [solution_ofReal]
-    exact Fourier.hasSum_realization (Fourier.summable_norm_toRealSeq ν₆₅ uTilde) t
+    exact Fourier.hasSum_realization (Bilateral.summable_norm_toRealSeq ν₆₅ uTilde) t
   · have h := Fourier.analyticOnNhd_realRealization (lpOneAlg.toLinf (𝕜 := ℂ) uTilde) one_lt_ν₆₅
     rwa [lpOneAlg.coeff_toLinf] at h
   · have h := Fourier.analyticOnNhd_complexRealization (lpOneAlg.toLinf (𝕜 := ℂ) uTilde)

@@ -188,6 +188,15 @@ theorem norm_eq_abs_mulToReal_mul_weight (f : lpOneAlg M E) (m : M) :
     ‖f m‖ = ‖mulToRealSeq f m‖ * FiberTrivialization.weight (E := E) m := by
   rw [← FiberTrivialization.norm_equiv_apply, equiv_mulToRealSeq]
 
+/-- **Absolute convergence of the coordinates** under the explicit lower bound `1 ≤ ω_m`:
+`∑ ‖toRealSeq a m‖ ≤ ∑ ‖a m‖ < ∞`. -/
+theorem summable_norm_toRealSeq
+    (h1 : ∀ m, 1 ≤ FiberTrivialization.weight (E := E) m)
+    (a : lpOneAlg M E) : Summable fun m => ‖toRealSeq a m‖ :=
+  (summable_norm a).of_nonneg_of_le (fun _ => norm_nonneg _) fun m => by
+    rw [norm_eq_abs_toReal_mul_weight a m]
+    exact le_mul_of_one_le_right (norm_nonneg _) (h1 m)
+
 /-- Extensionality via toRealSeq. -/
 @[to_additive (dont_translate := E 𝕜) ext_toRealSeq]
 theorem ext_mulToRealSeq {f g : lpOneAlg M E}

@@ -10,8 +10,8 @@ On `X = WeightedLp M (WeightedScalar ℂ w) 2` with a negation-invariant weight
 are the conjugate-symmetric families (`conjReflL_eq_self_iff_coeff`). Its fixed ℝ-subspace
 `realSub hw = {x : x₋ₙ = conj xₙ}` (`mem_realSub_iff_coeff`) is complete, and a `K`-commuting
 operator restricts to it (`restrictReal`). The commutation faces with `K`: diagonal multipliers
-with conjugate-symmetric symbols and `tailDiag`, the head and tail projections of a symmetric
-head, and finite matrices with `A (-i) (-j) = conj (A i j)`.
+with conjugate-symmetric symbols, `tailDiag` and the finite-head diagonal `headDiag`, the head and
+tail projections of a symmetric head, and finite matrices with `A (-i) (-j) = conj (A i j)`.
 
 These are carrier faces: none needs a product on `X`. The commutation of `K` with the
 row-bounded product `convCLM` is in `Operators/RealityConvolution.lean`, the only face that
@@ -186,6 +186,18 @@ theorem conjReflL_tailDiag {S : Set M} [DecidablePred (· ∈ S)] (hS : ∀ n, -
     (hd : BddAbove (Set.range fun k => ‖tailSymbol S μ k‖)) (x : X) :
     conjReflL hw (tailDiag S μ hd x) = tailDiag S μ hd (conjReflL hw x) :=
   conjReflL_diagCLM hw hd (tailSymbol_neg hS hμ) x
+
+/-- `headDiag S μ` is `diagCLM (1_S μ)`: on a head closed under negation, with `μ` conjugate
+symmetric on the head, it commutes with `K`. The symbol off the head is never read. -/
+theorem conjReflL_headDiag (S : Finset M) (hS : ∀ n ∈ S, -n ∈ S) {μ : M → ℂ}
+    (hμ : ∀ n ∈ S, μ (-n) = starRingEnd ℂ (μ n)) (x : X) :
+    conjReflL hw (headDiag S μ x) = headDiag S μ (conjReflL hw x) :=
+  conjReflL_diagCLM hw _ (fun n => by
+    by_cases hn : n ∈ S
+    · rw [Set.indicator_of_mem (Finset.mem_coe.2 (hS n hn)),
+        Set.indicator_of_mem (Finset.mem_coe.2 hn), hμ n hn]
+    · rw [Set.indicator_of_notMem (fun h => hn (neg_neg n ▸ hS (-n) (Finset.mem_coe.1 h))),
+        Set.indicator_of_notMem (mt Finset.mem_coe.1 hn), map_zero]) x
 
 end Diagonal
 

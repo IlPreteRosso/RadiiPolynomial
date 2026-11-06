@@ -19,6 +19,8 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev
 import RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry
 import RadiiPolynomial.Analysis.Norm.FiniteSum
 import RadiiPolynomial.Analysis.Norm.Exponential
+import RadiiPolynomial.Analysis.Norm.InfiniteSum
+import RadiiPolynomial.Analysis.SequenceSpace.Fourier.Realization
 import RadiiPolynomial.Core
 import RadiiPolynomial.Algebra.Polynomial
 import RadiiPolynomial.Operators.Matrix
@@ -43,7 +45,7 @@ import RadiiPolynomial.Certification.PowerSeries.PolynomialZero
 import RadiiPolynomial.Applications.Fourier.IkData
 import RadiiPolynomial.Applications.Fourier.Quadratic
 import RadiiPolynomial.Applications.Fourier.Duffing
-import RadiiPolynomial.Applications.Fourier.Realization
+import RadiiPolynomial.Applications.Fourier.Transfer
 import RadiiPolynomial.Applications.Fourier.Eigenpair
 import RadiiPolynomial.Certification.Fourier.Quadratic
 import RadiiPolynomial.Examples
