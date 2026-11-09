@@ -1,8 +1,7 @@
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.AnalyticExt
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.EvalC
 import RadiiPolynomial.Analysis.SequenceSpace.Geometric.Omega
-import Mathlib.Analysis.Calculus.SmoothSeries
-import Mathlib.Analysis.Calculus.Deriv.Pow
+import RadiiPolynomial.Analysis.Calculus.ScalarSeries
 
 /-!
 # Full-disc analyticity of Taylor coefficient realizations
@@ -76,46 +75,13 @@ theorem complexEval_eq_evalC (a : l1Weighted ν) (z : ℂ) (hz : ‖z‖ ≤ (ν
 /-- The complex derivative is synthesis of the same coefficient derivative shift. -/
 theorem hasDerivAt_complexEval (a : l1Weighted ν) {z : ℂ} (hz : ‖z‖ < (ν : ℝ)) :
     HasDerivAt (complexEval a) (complexOmegaEval (derivShift a) z) z := by
-  obtain ⟨r, hzr, hrν⟩ := exists_between hz
-  have hr := (norm_nonneg z).trans_lt hzr
-  have hbound : ∀ n : ℕ, ∀ y ∈ Metric.ball (0 : ℂ) r,
-      ‖(l1Weighted.toSeq a n : ℂ) * (n : ℂ) * y ^ (n - 1)‖ ≤
-        |l1Weighted.toSeq a n| * (n : ℝ) * r ^ (n - 1) := by
-    intro n y hy
-    rw [Metric.mem_ball, dist_zero_right] at hy
-    simp only [norm_mul, norm_pow, Complex.norm_real, Real.norm_eq_abs,
-      Complex.norm_natCast]
-    exact mul_le_mul_of_nonneg_left (pow_le_pow_left₀ (norm_nonneg y) hy.le _)
-      (mul_nonneg (abs_nonneg _) (Nat.cast_nonneg _))
-  have hsum0 : Summable (fun n : ℕ => (l1Weighted.toSeq a n : ℂ) * (0 : ℂ) ^ n) := by
-    refine summable_of_ne_finset_zero (s := {0}) fun n hn => ?_
-    have hn0 : n ≠ 0 := by simpa only [Finset.mem_singleton] using hn
-    simp only [zero_pow hn0, mul_zero]
-  have hmain : HasDerivAt (complexEval a)
-      (∑' n : ℕ, (l1Weighted.toSeq a n : ℂ) * (n : ℂ) * z ^ (n - 1)) z := by
-    exact hasDerivAt_tsum_of_isPreconnected (𝕜 := ℂ)
-      (g := fun n y => (l1Weighted.toSeq a n : ℂ) * y ^ n)
-      (g' := fun n y => (l1Weighted.toSeq a n : ℂ) * (n : ℂ) * y ^ (n - 1))
-      (summable_abs_mul_pow_pred a hr.le hrν)
-      Metric.isOpen_ball (convex_ball (0 : ℂ) r).isPreconnected
-      (fun n y _ => by simpa only [mul_assoc] using
-        (hasDerivAt_pow n y).const_mul (l1Weighted.toSeq a n : ℂ))
-      hbound (Metric.mem_ball_self hr) hsum0
-      (show z ∈ Metric.ball (0 : ℂ) r by
-        simpa only [Metric.mem_ball, dist_zero_right] using hzr)
-  have hs : Summable (fun n : ℕ =>
-      (l1Weighted.toSeq a n : ℂ) * (n : ℂ) * z ^ (n - 1)) :=
-    Summable.of_norm_bounded (summable_abs_mul_pow_pred a hr.le hrν)
-      (fun n => hbound n z (by simpa only [Metric.mem_ball, dist_zero_right] using hzr))
-  have heq : (∑' n : ℕ, (l1Weighted.toSeq a n : ℂ) * (n : ℂ) * z ^ (n - 1)) =
-      complexOmegaEval (derivShift a) z := by
-    rw [complexOmegaEval, hs.tsum_eq_zero_add]
-    simp only [Nat.cast_zero, mul_zero, zero_mul, zero_add]
-    refine tsum_congr fun n => ?_
-    rw [derivShift_apply]
-    push_cast
-    ring
-  exact heq ▸ hmain
+  have hm : z ∈ Metric.eball (0 : ℂ) (ν : ℝ≥0) := by
+    simpa only [Metric.eball_coe, mem_ball_zero_iff, PosReal.coe_toNNReal] using hz
+  convert ScalarSeries.hasDerivAt_ofScalars (hasFPowerSeriesOnBall_complexEval a) hm using 1
+  refine tsum_congr fun n => ?_
+  rw [derivShift_apply]
+  push_cast
+  ring
 
 end l1Weighted
 

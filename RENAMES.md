@@ -5748,3 +5748,18 @@ executed at the generic and the polynomial carrier before deletion), with the ne
 | `RadiiPolynomial.Fourier.Eigenpair.{LG_snd, eigenFst_withPot, eigenSnd_withPot}` (statements with `eigenLam`) | the same statements with `headDiag D.S D.μ` / `headDiag R.S R.μ` | idem | statements respelled (names kept; still `rfl`) |
 | imports `Core.Quadratic`, `Analysis.Norm.FiniteSum`, `WeightedLp.Pairing`, `Operators.RealityConvolution`, `Operators.BlockDiagonal.ProdBlock` | the same list without `Analysis.Norm.FiniteSum` | `Applications/Fourier/Eigenpair.lean` | import change: its one consumer (`eigenLam`) retired; `FiniteSum` arrives through `Operators/HeadProj` |
 | imports `WeightedLp.Convolution`, `WeightedLp.Operators.TailDiagonal`, `Mathlib.Analysis.PSeries` | the same list plus `Analysis.Norm.InfiniteSum` | `Examples/Fourier/Duffing/Polynomial/Algebra.lean` | import change: the reciprocal-power series now comes from the analytic leaf |
+
+## P2 the evaluation derivatives through the scalar power-series derivative (2026-11-09)
+
+The real and complex Geometric evaluation derivatives `l1Weighted.hasDerivAt_eval` and
+`l1Weighted.hasDerivAt_complexEval` (statements unchanged) are rebased on the new module
+`Analysis/Calculus/ScalarSeries.lean` (namespace `RadiiPolynomial.ScalarSeries`). The isolated
+majorant proof-support branch of `Geometric/Omega.lean` is retired with its import
+`Mathlib.Analysis.SpecificLimits.Normed`. Review of record:
+`tmp/agents_bus/checks/codex-p2-rebase-review-20261109/VERDICT.md`. No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| `RadiiPolynomial.l1Weighted.summable_abs_mul_pow_pred` | None for the standalone Summable contract | `Analysis/SequenceSpace/Geometric/Omega.lean` | Retired after P2: the isolated majorant proof-support branch has no remaining production callers. The unchanged derivative endpoints now use RadiiPolynomial.ScalarSeries.hasDerivAt_ofScalars with their existing power-series witnesses; that replaces their proof route, not this standalone smaller-radius absolute derivative-majorant summability interface. No alias. |
+| `RadiiPolynomial.l1Omega.summable_abs_eval` | None for the standalone Summable contract | `Analysis/SequenceSpace/Geometric/Omega.lean` | Retired after P2: the isolated majorant proof-support branch has no remaining production callers. The unchanged derivative endpoints now use RadiiPolynomial.ScalarSeries.hasDerivAt_ofScalars with their existing power-series witnesses; that replaces their proof route, not this standalone absolute summability of omega evaluation interface. No alias. |
+| `RadiiPolynomial.l1Omega.summable_eval` | None for the standalone Summable contract | `Analysis/SequenceSpace/Geometric/Omega.lean` | Retired after P2: the isolated majorant proof-support branch has no remaining production callers. The unchanged derivative endpoints now use RadiiPolynomial.ScalarSeries.hasDerivAt_ofScalars with their existing power-series witnesses; that replaces their proof route, not this standalone summability of omega evaluation interface. No alias. |

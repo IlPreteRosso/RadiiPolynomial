@@ -19,6 +19,7 @@ import RadiiPolynomial.Analysis.SequenceSpace.Chebyshev
 import RadiiPolynomial.Analysis.SequenceSpace.CrossGeometry
 import RadiiPolynomial.Analysis.Norm.FiniteSum
 import RadiiPolynomial.Analysis.Norm.Exponential
+import RadiiPolynomial.Analysis.Calculus.ScalarSeries
 import RadiiPolynomial.Analysis.Norm.InfiniteSum
 import RadiiPolynomial.Analysis.SequenceSpace.Fourier.Realization
 import RadiiPolynomial.Core
