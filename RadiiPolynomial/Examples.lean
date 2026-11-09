@@ -26,6 +26,7 @@ import RadiiPolynomial.Examples.Fourier.Duffing.Certificate
 import RadiiPolynomial.Examples.Fourier.Duffing.Analytic
 import RadiiPolynomial.Examples.Fourier.Duffing.Polynomial.Analytic
 import RadiiPolynomial.Examples.Fourier.Duffing.Polynomial.Eigenpair.Analytic
+import RadiiPolynomial.Examples.Fourier.Duffing.Combined.Analytic
 import RadiiPolynomial.Examples.Fourier.Duffing.Even.Analytic
 import RadiiPolynomial.Examples.Fourier.Riccati.Analytic
 import RadiiPolynomial.Examples.Fourier.Exponential.Analytic

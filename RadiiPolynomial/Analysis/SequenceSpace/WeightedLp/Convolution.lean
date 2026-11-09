@@ -30,7 +30,9 @@ convolution `convCLM h : X →L[𝕜] X →L[𝕜] X`, `X = WeightedLp M E p`, w
 
 At `p = q = 2` the row condition is `∑_{a + b = n} (m_n / (m_a m_b))² ≤ K²` with summable rows,
 in the amplitude convention `‖x‖² = ∑ |x_n|² m_n²` of the library (the mass weight is `ω = m²`).
-`RowBound.of_tsum_rpow_le` produces it from summable `q`-th powers at finite `q`.
+`RowBound.of_tsum_rpow_le` produces it from summable `q`-th powers at finite `q`, and
+`RowBound.mul_submul` transfers it from a positive weight `w` to `w · u` for every positive
+submultiplicative factor `u`.
 
 ## Scope of the hypotheses
 
@@ -113,6 +115,35 @@ theorem RowBound.of_tsum_rpow_le {q : ℝ≥0∞} (hq : 0 < q.toReal) (hw : ∀ 
   exact ⟨fun n => memℓp_gen ((hs n).congr fun ab => by rw [hnorm]), fun n =>
     lp.norm_le_of_tsum_le hq hK ((tsum_congr fun ab => by
       rw [hnorm]).trans_le (hle n))⟩
+
+/-- The ratio-row comparison: a row bound of `v` is a row bound of a positive weight `w` whose
+every ratio row is dominated by the ratio row of `v` (`q ≠ 0`). -/
+private theorem RowBound.of_ratioRow_le {v : M → ℝ} {q : ℝ≥0∞} {K : ℝ} (hq : q ≠ 0)
+    (hw : ∀ m, 0 < w m) (hle : ∀ n (ab : addFiber n), ratioRow w n ab ≤ ratioRow v n ab)
+    (h : RowBound v q K) : RowBound w q K := by
+  have hnn (n : M) (ab : addFiber n) : 0 ≤ ratioRow w n ab :=
+    div_nonneg (hw n).le (mul_pos (hw _) (hw _)).le
+  have hn (n : M) (ab : addFiber n) : ‖ratioRow w n ab‖ ≤ ‖ratioRow v n ab‖ := by
+    rw [Real.norm_of_nonneg (hnn n ab)]
+    exact (hle n ab).trans (le_abs_self _)
+  refine ⟨fun n => (h.mem n).mono' (hn n), fun n => (lp.norm_mono hq ?_).trans (h.le n)⟩
+  exact fun ab => hn n ab
+
+/-- **Transfer by a submultiplicative factor**: a row bound of a positive weight `w` is a row
+bound, at the same `q ≠ 0` and `K`, of `w · u` for every positive submultiplicative factor `u`
+(`u (i + j) ≤ u i u j`), since every ratio row of `w · u` is dominated by that of `w`. -/
+theorem RowBound.mul_submul {u : M → ℝ} {q : ℝ≥0∞} {K : ℝ} (hq : q ≠ 0) (hw : ∀ m, 0 < w m)
+    (hu : ∀ m, 0 < u m) (hsub : ∀ i j, u (i + j) ≤ u i * u j)
+    (h : RowBound w q K) : RowBound (fun m => w m * u m) q K := by
+  refine RowBound.of_ratioRow_le hq (fun m => mul_pos (hw m) (hu m)) (fun n ab => ?_) h
+  obtain ⟨⟨i, j⟩, hij⟩ := ab
+  have hn : i + j = n := (mem_addFiber).1 hij
+  simp only [ratioRow]
+  have hun : u n ≤ u i * u j := hn ▸ hsub i j
+  have hW : 0 ≤ w n * (w i * w j) := by have := hw n; have := hw i; have := hw j; positivity
+  have h1 := hw i; have h2 := hw j; have h3 := hu i; have h4 := hu j
+  rw [div_le_div_iff₀ (by positivity) (by positivity)]
+  nlinarith [mul_le_mul_of_nonneg_right hun hW]
 
 end Rows
 
