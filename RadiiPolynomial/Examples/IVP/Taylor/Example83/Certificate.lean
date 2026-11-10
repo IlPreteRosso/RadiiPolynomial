@@ -22,15 +22,34 @@ every radius and the computed active set is `{1, 2}`. `Z₁` keeps the recipe ro
 open scoped BigOperators Topology
 open Metric Set Filter ContinuousLinearMap RadiiPolynomial Example83
 
+namespace Example83.Cert
+
+/-- The ν-free stored rational fields of `data`, assembled field by field (not through
+`IVP.StdIVPDataQ.ofStd data`, whose compiled code would depend on the real weight).
+`IVP.StdIVPDataQ.toStdIVPData` realizes them at a specified weight. -/
+private def dataQ : IVP.StdIVPDataQ L N where
+  A_col := A_col
+  DF_col := DF_col
+  abar_Q := abar_Q
+  ν_q := ν_q
+  habar_size := fun l => by fin_cases l <;> simp [abar_Q, abar_0, abar_1, abar_2]
+
+/-- The `Y₀` clause `dataQ.ChecksY₀ f_cpoly x₀_q Y₀_bound`, stated on the raw rational mass and
+closed by `native_decide`. -/
+private theorem y0_check :
+    ∀ l, (∑ n ∈ Finset.Icc 0 (IVP.supportM f_cpoly N),
+      |RadiiPolynomial.blockActionQ (N := N) (fun l j k => dataQ.A_col l j k.val)
+        (fun _ n => 1 / (n : ℚ))
+        (IVP.ivpCoeffsQ f_cpoly dataQ.abar_Q x₀_q) l n| * dataQ.ν_q ^ n) ≤ Y₀_bound := by
+  native_decide
+
+end Example83.Cert
+
 noncomputable section
 
 namespace Example83.Cert
 
 /-! ## Z₀ -/
-
-/-- The ν-free stored rational fields of `data`, packaged by `IVP.StdIVPDataQ.ofStd`.
-`IVP.StdIVPDataQ.toStdIVPData` realizes them at a specified weight. -/
-private def dataQ : IVP.StdIVPDataQ L N := IVP.StdIVPDataQ.ofStd data
 
 /-- The `Z₀` clause at the grid slot, grid denominator `10⁶⁰`. -/
 private theorem z0_grid10 : dataQ.ChecksZ₀By .grid (10 ^ 60) Z₀_bound := by decide +kernel
@@ -39,39 +58,15 @@ lemma Z₀_finBlockNorm_le :
     finiteBlockMatrixNorm ν_val data.defect.finBlock ≤ (Z₀_bound : ℝ) :=
   dataQ.defectZBy_sound ν_val_eq_q .grid (10 ^ 60) z0_grid10
 
-/-! ## ‖A‖ bound -/
-
-private def ABlockCols (l j : Fin L) (k : Fin (N + 1)) : Array ℚ :=
-  A_col l j (k : ℕ)
-
-
 /-! ## Y₀ bound -/
-
-private def Y₀_eval (l : Fin L) :=
-  systemBlockDiagActionEval ABlockCols (fun l n => F_Q l n)
-    (fun _l n => 1 / (n : ℚ)) ν_q l
-
-private lemma Y₀_eval_correct (l : Fin L) (n : ℕ) :
-    (|data.approxInverse.action (F data.abar) l n| * (ν_val : ℝ) ^ n : ℝ) ∈
-      Y₀_eval l n {} :=
-  systemBlockDiagActionEval_correct data.approxInverse (F data.abar)
-    (fun l n => F_Q l n) ABlockCols (fun _l n => 1 / (n : ℚ)) ν_q
-    (fun l j k i => data.A_finBlock_eq l j i k)
-    (fun l n => F_bridge l n)
-    (fun _l n hn => by simp [IVP.StdIVPData.approxInverse, ite_eq_right (by omega : n ≠ 0)])
-    ν_val_eq_q l n {}
 
 lemma Y₀_le :
     Y₀_norm (data.G f x₀) data.abar
       (ContinuousLinearMap.id ℝ (XL1 ν_val L)) ≤ (Y₀_bound : ℝ) := by
-  show ‖data.G f x₀ data.abar‖ ≤ _
-  refine IVP.ivp_Y₀_le data.approxInverse f x₀ _ data.abar (2 * N + 1) (by omega)
-    F_abar_support (by unfold Y₀_bound; positivity) (fun l => ?_)
-  unfold Y₀_bound
-  fin_cases l
-  -- `finsum_bound` requires a literal range endpoint, so unfold `N` first.
-  all_goals simp only [N]
-  all_goals finsum_bound using (Y₀_eval _) (fun k _ _ => Y₀_eval_correct _ k)
+  have hx₀ : ∀ l, x₀ l = (x₀_q l : ℝ) := by
+    intro l
+    fin_cases l <;> norm_num [x₀, x₀_q]
+  exact dataQ.Y₀_sound ν_val_eq_q f_cpoly x₀ x₀_q hx₀ y0_check
 
 /-! ## Z₁ bound -/
 

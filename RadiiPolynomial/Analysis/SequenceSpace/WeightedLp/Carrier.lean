@@ -1,6 +1,7 @@
 import RadiiPolynomial.Analysis.SequenceSpace.WeightedL1.FiberTrivialization
 import Mathlib.Analysis.Normed.Lp.lpSpace
 import Mathlib.Analysis.Normed.Operator.Basic
+import Mathlib.Analysis.MeanInequalities
 
 /-!
 # The weighted ℓᵖ carrier `WeightedLp M E p`
@@ -242,6 +243,61 @@ end OpNorm
 
 section Summability
 
+/-- The quantitative coordinate estimate at exponent `2`: for a real majorant `v` with
+`∑ (v m / ω_m) ^ 2 < ∞`, every `x : WeightedLp M E 2` has `Summable fun m => ‖coeff x m‖ * v m`
+and `∑' m, ‖coeff x m‖ * v m ≤ √(∑' m, (v m / ω_m) ^ 2) * ‖x‖`. The proof applies Mathlib's Hölder
+inequality `Real.summable_and_inner_le_Lp_mul_Lq_tsum_of_nonneg` in frame coordinates to the
+absolute majorant `|v|`, which has the same squared ratios, and compares termwise. No sign
+condition on `v` is needed; only the frame weight `ω` enters. -/
+theorem summable_norm_coeff_mul_and_tsum_le {𝕜 : Type*} [NormedField 𝕜] {M : Type*}
+    {E : M → Type*} [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)]
+    [FiberTrivialization 𝕜 M E] (v : M → ℝ)
+    (hvw : Summable fun m => (v m / FiberTrivialization.weight (E := E) m) ^ 2)
+    (x : WeightedLp M E 2) :
+    Summable (fun m => ‖coeff x m‖ * v m) ∧
+    (∑' m, ‖coeff x m‖ * v m) ≤
+      Real.sqrt (∑' m, (v m / FiberTrivialization.weight (E := E) m) ^ 2) * ‖x‖ := by
+  have hsq : ∀ m, (|v m| / FiberTrivialization.weight (E := E) m) ^ 2 =
+      (v m / FiberTrivialization.weight (E := E) m) ^ 2 := fun m => by
+    rw [div_pow, div_pow, sq_abs]
+  have habs : Summable (fun m => ‖coeff x m‖ * |v m|) ∧
+      (∑' m, ‖coeff x m‖ * |v m|) ≤
+        Real.sqrt (∑' m, (|v m| / FiberTrivialization.weight (E := E) m) ^ 2) * ‖x‖ := by
+    have hg : ∀ m, 0 ≤ |v m| / FiberTrivialization.weight (E := E) m :=
+      fun m => div_nonneg (abs_nonneg _) (FiberTrivialization.weight_nonneg m)
+    have hf2 : Summable fun m => ‖x m‖ ^ (2 : ℝ) := by
+      simpa only [ENNReal.toReal_ofNat] using
+        (lp.memℓp x).summable (p := 2) (by norm_num)
+    have hg2 : Summable fun m =>
+        (|v m| / FiberTrivialization.weight (E := E) m) ^ (2 : ℝ) :=
+      (hvw.congr fun m => (hsq m).symm).congr fun m => (Real.rpow_two _).symm
+    obtain ⟨hs, hle⟩ := Real.summable_and_inner_le_Lp_mul_Lq_tsum_of_nonneg
+      Real.HolderConjugate.two_two (fun m => norm_nonneg (x m)) hg hf2 hg2
+    have hx : ‖x‖ = (∑' m, ‖x m‖ ^ (2 : ℝ)) ^ (1 / (2 : ℝ)) := by
+      simpa only [ENNReal.toReal_ofNat] using
+        lp.norm_eq_tsum_rpow (p := 2) (by norm_num) x
+    have hc : Real.sqrt (∑' m,
+        (|v m| / FiberTrivialization.weight (E := E) m) ^ 2) =
+        (∑' m, (|v m| / FiberTrivialization.weight (E := E) m) ^ (2 : ℝ)) ^
+          (1 / (2 : ℝ)) := by
+      rw [Real.sqrt_eq_rpow]
+      exact congrArg (· ^ (1 / (2 : ℝ)))
+        (tsum_congr fun m => (Real.rpow_two _).symm)
+    have he : (fun m => ‖coeff x m‖ * |v m|) =
+        fun m => ‖x m‖ * (|v m| / FiberTrivialization.weight (E := E) m) := by
+      funext m
+      rw [norm_coeff]
+      ring
+    refine ⟨he ▸ hs, ?_⟩
+    rw [he, hx, hc, mul_comm]
+    exact hle
+  simp only [hsq] at habs
+  have hs : Summable (fun m => ‖coeff x m‖ * v m) :=
+    Summable.of_norm (habs.1.congr fun m => by
+      rw [Real.norm_eq_abs, abs_mul, abs_norm])
+  refine ⟨hs, (Summable.tsum_le_tsum (fun m => ?_) hs habs.1).trans habs.2⟩
+  exact mul_le_mul_of_nonneg_left (le_abs_self _) (norm_nonneg _)
+
 /-- If `∑ (weight n)⁻¹ ^ 2 < ∞`, then every `x : WeightedLp M E 2` has
 `Summable fun n => ‖WeightedLp.coeff x n‖`. -/
 theorem summable_norm_coeff_of_summable_inv_sq {𝕜 : Type*} [NormedField 𝕜] {M : Type*}
@@ -249,12 +305,9 @@ theorem summable_norm_coeff_of_summable_inv_sq {𝕜 : Type*} [NormedField 𝕜]
     [FiberTrivialization 𝕜 M E]
     (hw : Summable fun n => (FiberTrivialization.weight (E := E) n)⁻¹ ^ 2)
     (x : WeightedLp M E 2) : Summable fun n => ‖WeightedLp.coeff x n‖ := by
-  have hx : Summable fun n => ‖x n‖ ^ 2 := by
-    simpa only [ENNReal.toReal_ofNat, Real.rpow_two] using (lp.memℓp x).summable (by norm_num)
-  refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun n => ?_)
-    ((hx.add hw).div_const 2)
-  rw [WeightedLp.norm_coeff, div_eq_mul_inv]
-  nlinarith [two_mul_le_add_sq ‖x n‖ (FiberTrivialization.weight (E := E) n)⁻¹]
+  have h := (summable_norm_coeff_mul_and_tsum_le (fun _ => 1)
+    (by simpa only [one_div] using hw) x).1
+  simpa only [mul_one] using h
 
 end Summability
 

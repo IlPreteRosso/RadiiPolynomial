@@ -22,7 +22,9 @@ The computations are `abarNormQ`, `DLipBoundQ`, `activeQ`, `evalArr`, `kerColMax
 from a realized bundle, and `toStdIVPData` realizes them at a specified weight. The clauses
 `ChecksZ₀`, `ChecksZ₀By`, `ChecksZ₁ker` and `ChecksZ₂` have their soundness bridges here
 (`Z₀_sound`, `ChecksZ₀By_sound`, `defectZBy_sound`, `Z₁ker_sound`, `Z₂_sound`); the Jacobian
-clause `ChecksDF` is a hypothesis of `Z₁ker_sound`.
+clause `ChecksDF` is a hypothesis of `Z₁ker_sound`. The `Y₀` clause `ChecksY₀` bounds the exact
+rational residual mass `Y₀Q` per component; `Y₀_sound` turns it into the real `Y₀` bound,
+deriving the residual support, the coefficient and action casts and the norm estimate.
 The shared rational block action and cast bridge are in `Rational.Matrix`.
 -/
 
@@ -310,6 +312,20 @@ theorem Z₁_le_ker_of_Q (d : IVP.StdIVPData ν L N) (f_cpoly : Fin L → CompPo
 
 end StdIVPData
 
+section Y₀Q
+
+variable {L N : ℕ} [NeZero L]
+
+/-- Exact rational weighted mass of the Taylor-preconditioned residual. -/
+def Y₀Q (N : ℕ) (A_col : Fin L → Fin L → ℕ → Array ℚ)
+    (abar_Q : Fin L → Array ℚ) (ν_q : ℚ)
+    (f : Fin L → CompPoly L) (x₀q : Fin L → ℚ) (l : Fin L) : ℚ :=
+  ∑ n ∈ Finset.Icc 0 (supportM f N),
+    |blockActionQ (N := N) (fun l j k => A_col l j k.val)
+      (fun _ n => 1 / (n : ℚ)) (ivpCoeffsQ f abar_Q x₀q) l n| * ν_q ^ n
+
+end Y₀Q
+
 /-! ## The ν-free record and its per-bound clauses -/
 
 /-- **ν-free rational Taylor-IVP record**: the ℚ fields of `IVP.StdIVPData` and its stored
@@ -364,6 +380,12 @@ def ofStd {ν : PosReal} (d : IVP.StdIVPData ν L N) : StdIVPDataQ L N :=
 /-- Kernel `Z₁` clause: `Σ_m kerColMaxQ (∂_m f_l) ≤ Z₁` for every component (decidable). -/
 abbrev ChecksZ₁ker (q : StdIVPDataQ L N) (f_cpoly : Fin L → CompPoly L) (Z₁ : ℚ) : Prop :=
   ∀ l, ∑ m : Fin L, kerColMaxQ N q.abar_Q q.ν_q ((f_cpoly l).pderiv m) ≤ Z₁
+
+/-- `Y₀` clause: the rational residual mass `Y₀Q` of every component is at most `Y₀`
+(decidable). -/
+abbrev ChecksY₀ (q : StdIVPDataQ L N) (f : Fin L → CompPoly L)
+    (x₀q : Fin L → ℚ) (Y₀ : ℚ) : Prop :=
+  ∀ l, Y₀Q N q.A_col q.abar_Q q.ν_q f x₀q l ≤ Y₀
 
 /-! #### ν-free slot checks (each decidable, no `ν`) -/
 
@@ -424,6 +446,36 @@ theorem Z₂_sound (f_cpoly : Fin L → CompPoly L) (x₀ : Fin L → ℝ) {r₀
   StdIVPData.Z₂_le_of_Q (q.toStdIVPData ν hν) f_cpoly x₀ hr₀ h
 
 end Sound
+
+/-- A finite rational check supplies the real Taylor residual bound. -/
+theorem Y₀_sound (q : StdIVPDataQ L N) {ν : PosReal}
+    (hν : (ν : ℝ) = ((q.ν_q : ℚ) : ℝ))
+    (f : Fin L → CompPoly L) (x₀ : Fin L → ℝ) (x₀q : Fin L → ℚ)
+    (hx₀ : ∀ l, x₀ l = (x₀q l : ℝ)) {Y₀ : ℚ}
+    (h : q.ChecksY₀ f x₀q Y₀) :
+    Y₀_norm ((q.toStdIVPData ν hν).G (IVP.banachField f) x₀)
+      (q.toStdIVPData ν hν).abar
+      (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ (Y₀ : ℝ) := by
+  let d := q.toStdIVPData ν hν
+  have hCq : (0 : ℚ) ≤ Y₀ :=
+    (Finset.sum_nonneg (fun n _ => mul_nonneg (abs_nonneg _)
+      (pow_nonneg d.ν_q_pos.le n))).trans (h 0)
+  have hC : (0 : ℝ) ≤ Y₀ := by exact_mod_cast hCq
+  change ‖d.G (banachField f) x₀ d.abar‖ ≤ _
+  apply ivp_Y₀_le d.approxInverse (banachField f) x₀ _ d.abar
+    (supportM f N) (by unfold supportM; omega)
+    (d.ivpCoeffs_abar_eq_zero_of_compPoly f x₀) hC
+  intro l
+  have heq : ∀ n,
+      d.approxInverse.action (ivpCoeffs (banachField f) x₀ d.abar) l n =
+        (blockActionQ (N := N) (fun l j k => q.A_col l j k.val)
+          (fun _ n => 1 / (n : ℚ)) (ivpCoeffsQ f q.abar_Q x₀q) l n : ℝ) := fun n =>
+    d.approxInverse.action_eq_blockActionQ _ _
+      (fun l j k i => d.A_finBlock_eq l j i k)
+      (fun l n hn => by rw [d.htail_diag_inv l n hn]; push_cast; rfl)
+      _ _ (d.ivpCoeffs_abar_eq_cast_of_compPoly f x₀ x₀q hx₀) l n
+  simp_rw [heq, hν]
+  exact_mod_cast h l
 
 end StdIVPDataQ
 

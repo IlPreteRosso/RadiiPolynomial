@@ -1,5 +1,4 @@
 import RadiiPolynomial.Applications.IVP.Taylor
-import RadiiPolynomial.Certification.LeanCertAdapter
 import RadiiPolynomial.Certification.IVP.Taylor
 import RadiiPolynomial.Algebra.Polynomial
 import RadiiPolynomial.Examples.IVP.Taylor.Example81.Numbers
@@ -12,7 +11,7 @@ Scalar IVP: x' = x(x-1), x(0) = 1/2, with N = 10, ν = 1.
 Uses `StdIVPData` to auto-derive all standard IVP constructions (approxInverse,
 approxDeriv, tailCancel, abar, G, differentiable_G, composedApprox, Z₀, etc.).
 
-Only equation-specific code remains: f, Df, fderiv proofs, ℚ bridges.
+Only equation-specific code remains: f, Df, fderiv proofs, the ℚ initial datum `x₀_q`.
 -/
 
 open scoped BigOperators Topology
@@ -73,14 +72,7 @@ def f (a : Fin L → l1Weighted ν_val) (l : Fin L) : l1Weighted ν_val :=
 
 
 
-/-! ## 6. ℚ Bridges -/
-
-/-- ℚ mirror of `F(ābar)` — the IVP Taylor recurrence run in exact ℚ
-arithmetic. The nonlinear term is `(f_cpoly 0).evalCoeff` rather than a
-hand-written closed form, so the same definition works for any polynomial
-nonlinearity. -/
-def F_Q (n : ℕ) : ℚ :=
-  IVP.ivpCoeffsQ f_cpoly data.abar_Q x₀_q 0 n
+/-! ## 6. The coefficient operator `F` -/
 
 /-- The sequence-space operator `F`, generated from the vector field `f`
 via the IVP Taylor recurrence `IVP.ivpCoeffs`:
@@ -89,28 +81,6 @@ via the IVP Taylor recurrence `IVP.ivpCoeffs`:
 Codomain is the raw coefficient sequence `SystemCoeff L = Fin L → ℕ → ℝ`. -/
 def F (a : XL1 ν_val L) : SystemCoeff L :=
   fun l n => IVP.ivpCoeffs f x₀ a l n
-
-lemma F_bridge (l : Fin L) (n : ℕ) :
-    F data.abar l n = (F_Q n : ℝ) := by
-  have hl : l = 0 := Subsingleton.elim l 0
-  subst l
-  have hx₀ : ∀ j, x₀ j = (x₀_q j : ℝ) := by
-    intro j
-    have hj : j = 0 := Subsingleton.elim j 0
-    subst j
-    norm_num [x₀, x₀_q]
-  change IVP.ivpCoeffs (fun a j => (f_cpoly j).evalBanach a) x₀ data.abar 0 n =
-    (IVP.ivpCoeffsQ f_cpoly data.abar_Q x₀_q 0 n : ℝ)
-  exact data.ivpCoeffs_abar_eq_cast_of_compPoly f_cpoly x₀ x₀_q hx₀ 0 n
-
-
-/-- The support index of `F(ā)` read off the syntax: `supportM f_cpoly N = 2N + 1`. -/
-private lemma supportM_eq : IVP.supportM f_cpoly N = 2 * N + 1 := by decide
-
-
-lemma F_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) :
-    IVP.ivpCoeffs f x₀ data.abar l n = 0 :=
-  data.ivpCoeffs_abar_eq_zero_of_compPoly f_cpoly x₀ l n (supportM_eq ▸ hn)
 
 
 /-! ## 7. Norm bounds for ā components -/

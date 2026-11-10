@@ -237,7 +237,7 @@ The Y₀ bound `‖G(ā)‖ ≤ C` reduces to:
 1. `‖G(ā)‖` is the sup over components `l` of `‖G(ā) l‖`
 2. beyond the support bound `S ≥ N` the action of `A` is the tail diagonal times a zero
    coefficient, so `‖G(ā) l‖` is the finite sum `Σ_{n ≤ S} |A.action(ivpCoeffs ā) l n| ν^n`
-3. the caller bounds each component sum (e.g. by `finsum_bound`)
+3. the caller bounds each component sum (e.g. by a finite rational check)
 
 The caller provides: the support bound `S` with its vanishing proof and the
 per-component finite-sum bounds. -/
@@ -245,14 +245,15 @@ per-component finite-sum bounds. -/
 /-- **Generic Y₀ bound**: `‖ivpMap A φ x₀ hmem ā‖ ≤ C`.
 
 Reduces to per-component finite sums of `|A.action(ivpCoeffs ā) l n| * ν^n`,
-which the caller closes via `finsum_bound using systemBlockDiagActionEval`.
+which the caller closes by a finite rational check, e.g. `IVP.StdIVPDataQ.Y₀_sound`.
 
 Takes:
 - `S` with `hSN : N ≤ S`: support bound for `ivpCoeffs φ x₀ ā` (typically `2*N+1` for
   degree-2 φ)
 - `hsupport`: `ivpCoeffs` vanishes beyond S
 - `hC`: `0 ≤ C`
-- `hcomp`: per-component bound (user closes with `finsum_bound`) -/
+- `hcomp`: per-component bound (closed by a finite rational check, e.g.
+  `IVP.StdIVPDataQ.Y₀_sound`) -/
 lemma ivp_Y₀_le
     (A : SystemBlockDiagData L N) (φ : XL1 ν L → Fin L → l1Weighted ν)
     (x₀ : Fin L → ℝ)
@@ -262,7 +263,7 @@ lemma ivp_Y₀_le
     -- Support bound: ivpCoeffs vanishes beyond S
     (hsupport : ∀ l : Fin L, ∀ n, S < n → ivpCoeffs φ x₀ ā l n = 0)
     {C : ℝ} (hC : 0 ≤ C)
-    -- Per-component bound (closed by finsum_bound using systemBlockDiagActionEval)
+    -- Per-component bound (closed by a finite rational check, e.g. `IVP.StdIVPDataQ.Y₀_sound`)
     (hcomp : ∀ l : Fin L,
       ∑ n ∈ Finset.Icc 0 S,
         |A.action (ivpCoeffs φ x₀ ā) l n| * (ν : ℝ) ^ n ≤ C) :

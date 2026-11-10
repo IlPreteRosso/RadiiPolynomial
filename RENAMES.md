@@ -5763,3 +5763,63 @@ majorant proof-support branch of `Geometric/Omega.lean` is retired with its impo
 | `RadiiPolynomial.l1Weighted.summable_abs_mul_pow_pred` | None for the standalone Summable contract | `Analysis/SequenceSpace/Geometric/Omega.lean` | Retired after P2: the isolated majorant proof-support branch has no remaining production callers. The unchanged derivative endpoints now use RadiiPolynomial.ScalarSeries.hasDerivAt_ofScalars with their existing power-series witnesses; that replaces their proof route, not this standalone smaller-radius absolute derivative-majorant summability interface. No alias. |
 | `RadiiPolynomial.l1Omega.summable_abs_eval` | None for the standalone Summable contract | `Analysis/SequenceSpace/Geometric/Omega.lean` | Retired after P2: the isolated majorant proof-support branch has no remaining production callers. The unchanged derivative endpoints now use RadiiPolynomial.ScalarSeries.hasDerivAt_ofScalars with their existing power-series witnesses; that replaces their proof route, not this standalone absolute summability of omega evaluation interface. No alias. |
 | `RadiiPolynomial.l1Omega.summable_eval` | None for the standalone Summable contract | `Analysis/SequenceSpace/Geometric/Omega.lean` | Retired after P2: the isolated majorant proof-support branch has no remaining production callers. The unchanged derivative endpoints now use RadiiPolynomial.ScalarSeries.hasDerivAt_ofScalars with their existing power-series witnesses; that replaces their proof route, not this standalone summability of omega evaluation interface. No alias. |
+
+## E2 the Taylor `Y₀` clause and its two consumers (2026-11-10, batch 11)
+
+The rational `Y₀` clause of the ν-free Taylor record joins its `Z₀`/`Z₁`/`Z₂` siblings in
+`Certification/IVP/Taylor.lean`: the exact residual mass `IVP.Y₀Q`, the clause
+`IVP.StdIVPDataQ.ChecksY₀` and its soundness `IVP.StdIVPDataQ.Y₀_sound`. Examples 8.1 and 8.3
+close `Y₀_le` (statements unchanged) inside `Certificate.lean`: a short `namespace Example8x.Cert`
+block before the `noncomputable section` holds the field-built rational record `dataQ` (the
+same five fields `A_col`, `DF_col`, `abar_Q`, `ν_q`, `habar_size` as `data`; it replaces the
+former `dataQ := IVP.StdIVPDataQ.ofStd data`, whose compiled code in Example 8.3 would depend
+on the real weight; in Example 8.1 the two records agree by `rfl`) and the `native_decide` leaf
+`y0_check`; `Y₀_le` is one `dataQ.Y₀_sound` call, and the `Z` clauses keep their `dataQ`
+spelling. The LeanCert interval route of `Y₀` is retired in both, together with the helpers it
+alone used (rows below). The axiom set of `Y₀_le` and of every
+downstream endpoint replaces the `Example8x.Cert.Y₀_le._native.native_decide.ax_*` leaves by
+the single leaf
+`_private.RadiiPolynomial.Examples.IVP.Taylor.Example8x.Certificate.0.Example8x.Cert.y0_check._native.native_decide.ax_1_1`
+(printed by `#print axioms` as `Example8x.Cert.y0_check._native.native_decide.ax_1_1✝`).
+Evidence of record: `CANDIDATE_API_PIECES/E2_taylor_y0_20261109`, `L1_y0_reach_20261109`
+(API_RATIONAL_NATIVE generation), `POST_MERGE/batch11_20261110`. No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| — | `IVP.Y₀Q {L : ℕ} (N : ℕ) (A_col : Fin L → Fin L → ℕ → Array ℚ) (abar_Q : Fin L → Array ℚ) (ν_q : ℚ) (f : Fin L → CompPoly L) (x₀q : Fin L → ℚ) (l : Fin L) : ℚ` | `Certification/IVP/Taylor.lean` | added: exact rational weighted mass of the Taylor-preconditioned residual |
+| — | `IVP.StdIVPDataQ.ChecksY₀ (q : StdIVPDataQ L N) (f : Fin L → CompPoly L) (x₀q : Fin L → ℚ) (Y₀ : ℚ) : Prop` | idem | added: the `Y₀` clause (decidable) |
+| — | `IVP.StdIVPDataQ.Y₀_sound (q) {ν : PosReal} (hν) (f) (x₀ : Fin L → ℝ) (x₀q) (hx₀ : ∀ l, x₀ l = (x₀q l : ℝ)) {Y₀ : ℚ} (h : q.ChecksY₀ f x₀q Y₀) : Y₀_norm ((q.toStdIVPData ν hν).G (IVP.banachField f) x₀) (q.toStdIVPData ν hν).abar (ContinuousLinearMap.id ℝ (XL1 ν L)) ≤ (Y₀ : ℝ)` | idem | added: soundness of the `Y₀` clause |
+| `Example81.Cert.dataQ` (private) `: IVP.StdIVPDataQ L N := IVP.StdIVPDataQ.ofStd data` | `Example81.Cert.dataQ` (private) `: IVP.StdIVPDataQ L N` with fields `A_col := A_col`, `DF_col := DF_col`, `abar_Q := (fun _ => abar_0)`, `ν_q := ν_q`, `habar_size := fun _ => by simp [abar_0]` | `Examples/IVP/Taylor/Example81/Certificate.lean` | definition rebased field by field and moved before the `noncomputable section` (same record; `rfl`-equal to `ofStd data`); consumed by `y0_check` and the `Z` clauses |
+| `Example83.Cert.dataQ` (private) `: IVP.StdIVPDataQ L N := IVP.StdIVPDataQ.ofStd data` | `Example83.Cert.dataQ` (private) `: IVP.StdIVPDataQ L N` with fields `A_col := A_col`, `DF_col := DF_col`, `abar_Q := abar_Q`, `ν_q := ν_q`, `habar_size := fun l => by fin_cases l <;> simp [abar_Q, abar_0, abar_1, abar_2]` | `Examples/IVP/Taylor/Example83/Certificate.lean` | idem (`ofStd data` does not compile for `native_decide` here) |
+| — | `Example81.Cert.y0_check` (private) `: ∀ l, (∑ n ∈ Finset.Icc 0 (IVP.supportM f_cpoly N), \|RadiiPolynomial.blockActionQ (N := N) (fun l j k => dataQ.A_col l j k.val) (fun _ n => 1 / (n : ℚ)) (IVP.ivpCoeffsQ f_cpoly dataQ.abar_Q x₀_q) l n\| * dataQ.ν_q ^ n) ≤ Y₀_bound` | `Examples/IVP/Taylor/Example81/Certificate.lean` | added: the `Y₀` clause of `dataQ` on the raw rational mass, one `native_decide` |
+| — | `Example83.Cert.y0_check` (private), the same statement | `Examples/IVP/Taylor/Example83/Certificate.lean` | added: idem for Example 8.3 |
+| `Example81.Cert.Y₀_eval` (private) | — | `Examples/IVP/Taylor/Example81/Certificate.lean` | deleted: the interval evaluator of the retired `Y₀` route; no remaining use |
+| `Example81.Cert.Y₀_eval_correct` (private) | — | idem | deleted: idem |
+| `Example83.Cert.Y₀_eval` (private) | — | `Examples/IVP/Taylor/Example83/Certificate.lean` | deleted: idem |
+| `Example83.Cert.Y₀_eval_correct` (private) | — | idem | deleted: idem |
+| `Example81.Cert.ABlockCols` (private) `(l j : Fin L) (k : Fin (N + 1)) : Array ℚ` | — | `Examples/IVP/Taylor/Example81/Certificate.lean` | deleted: input of the retired interval evaluator only; no remaining use (with its heading `‖A‖ bound (for Z₂)`) |
+| `Example83.Cert.ABlockCols` (private) `(l j : Fin L) (k : Fin (N + 1)) : Array ℚ` | — | `Examples/IVP/Taylor/Example83/Certificate.lean` | deleted: idem (with its heading `‖A‖ bound`) |
+| `Example81.F_Q (n : ℕ) : ℚ` | — | `Examples/IVP/Taylor/Example81/Algebra.lean` | deleted: the ℚ residual of the retired interval route; its only other use was `F_bridge`; `IVP.ivpCoeffsQ` inside `y0_check` takes its place |
+| `Example81.F_bridge (l : Fin L) (n : ℕ) : F data.abar l n = (F_Q n : ℝ)` | — | idem | deleted: no consumer; the cast bridge used by `Y₀_sound` is `IVP.StdIVPData.ivpCoeffs_abar_eq_cast_of_compPoly` |
+| `Example81.supportM_eq` (private) `: IVP.supportM f_cpoly N = 2 * N + 1` | — | idem | deleted: used only by `F_abar_support` |
+| `Example81.F_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) : IVP.ivpCoeffs f x₀ data.abar l n = 0` | — | idem | deleted: no consumer; `Y₀_sound` derives the support through `IVP.StdIVPData.ivpCoeffs_abar_eq_zero_of_compPoly` at `IVP.supportM f_cpoly N` |
+| `Example83.F_Q (l : Fin L) (n : ℕ) : ℚ` | — | `Examples/IVP/Taylor/Example83/Algebra.lean` | deleted: idem 8.1 |
+| `Example83.F_bridge (l : Fin L) (n : ℕ) : F data.abar l n = (F_Q l n : ℝ)` | — | idem | deleted: idem 8.1 |
+| `Example83.supportM_eq` (private) `: IVP.supportM f_cpoly N = 2 * N + 1` | — | idem | deleted: idem 8.1 |
+| `Example83.F_abar_support (l : Fin L) (n : ℕ) (hn : 2 * N + 1 < n) : IVP.ivpCoeffs f x₀ data.abar l n = 0` | — | idem | deleted: idem 8.1 |
+| `Example81.Cert.Y₀_le` (proof: `IVP.ivp_Y₀_le` + `finsum_bound`) | same statement; proof `dataQ.Y₀_sound ν_val_eq_q f_cpoly x₀ x₀_q hx₀ y0_check` | `Examples/IVP/Taylor/Example81/Certificate.lean` | proof rebased (statement unchanged; axiom leaf replaced as above) |
+| `Example83.Cert.Y₀_le` (idem) | idem | `Examples/IVP/Taylor/Example83/Certificate.lean` | idem |
+| imports of `Example81/Algebra.lean`: `Applications.IVP.Taylor`, `Certification.LeanCertAdapter`, `Certification.IVP.Taylor`, `Algebra.Polynomial`, `Example81.Numbers` | the same list without `Certification.LeanCertAdapter` | `Examples/IVP/Taylor/Example81/Algebra.lean` | import change: no LeanCert name is used in the module (Example 8.3's `Algebra` keeps it for `abar_norm_{0,1,2}_le`); the `Certification` facade still imports `LeanCertAdapter` transitively |
+
+## The signed quantitative coordinate estimate at exponent 2 (2026-11-10, batch 11)
+
+`WeightedLp/Carrier` gains the quantitative coordinate estimate for an arbitrary real majorant
+(no sign hypothesis), proved directly by Hölder's inequality on `|v|` and a termwise
+comparison; the old summability wrapper is its case `v = 1` (statement unchanged). Consumer:
+`Examples/Fourier/Duffing/Combined/Enclosure` (`weighted_sum_bound`). Review of record:
+`tmp/agents_bus/checks/codex-batch11-review-20261110/` (D-B1). No compatibility aliases.
+
+| old | new | file | reason |
+|---|---|---|---|
+| — | `RadiiPolynomial.WeightedLp.summable_norm_coeff_mul_and_tsum_le {𝕜 : Type*} [NormedField 𝕜] {M : Type*} {E : M → Type*} [∀ m, NormedAddCommGroup (E m)] [∀ m, NormedSpace 𝕜 (E m)] [FiberTrivialization 𝕜 M E] (v : M → ℝ) (hvw : Summable fun m => (v m / FiberTrivialization.weight (E := E) m) ^ 2) (x : WeightedLp M E 2) : Summable (fun m => ‖coeff x m‖ * v m) ∧ (∑' m, ‖coeff x m‖ * v m) ≤ Real.sqrt (∑' m, (v m / FiberTrivialization.weight (E := E) m) ^ 2) * ‖x‖` | `Analysis/SequenceSpace/WeightedLp/Carrier.lean` | added: the quantitative coordinate estimate; new import `Mathlib.Analysis.MeanInequalities` |
+| `RadiiPolynomial.WeightedLp.summable_norm_coeff_of_summable_inv_sq` (proof: `two_mul_le_add_sq` + `nlinarith`) | same statement; proof `summable_norm_coeff_mul_and_tsum_le (fun _ => 1)` | idem | proof rebased (statement unchanged) |
